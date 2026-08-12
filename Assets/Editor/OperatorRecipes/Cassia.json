@@ -6,6 +6,7 @@
   "sourceTowerRosterPath": "Assets/Data/Prefabs/TowerRoaster.asset",
   "sourceCardRosterPath": "Assets/Data/Cards/Unlock/플레이어 카드 로스터.asset",
   "dialogueSetPath": "Assets/Data/Prefabs/UI/New Operator Dialogue Set.asset",
+  "remoteContent": false,
   "playerData": {
     "maxHealth": 30.0,
     "moveSpeed": 5.0,

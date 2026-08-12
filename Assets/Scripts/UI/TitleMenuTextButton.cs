@@ -18,6 +18,7 @@ namespace RCCom.UI
         [SerializeField] private MenuAction action;
         [SerializeField] private TitleSceneController titleSceneController;
         [SerializeField] private TitleConfigurationController configurationController;
+        [SerializeField] private OperatorSelectionUI operatorSelectionUI;
         [SerializeField] private string defenseSceneName = "DefenseScene";
         [SerializeField] private float hoverScale = 1.12f;
         [SerializeField] private float scaleSpeed = 12f;
@@ -103,7 +104,15 @@ namespace RCCom.UI
             switch (action)
             {
                 case MenuAction.NewGame:
-                    SceneManager.LoadScene(defenseSceneName);
+                    if (operatorSelectionUI != null)
+                    {
+                        operatorSelectionUI.Open();
+                    }
+                    else
+                    {
+                        // 선택 UI가 아직 배선되지 않은 개발 씬에서도 기존 진입 경로는 유지한다.
+                        SceneManager.LoadScene(defenseSceneName);
+                    }
                     break;
                 case MenuAction.Preference:
                     configurationController?.Open();

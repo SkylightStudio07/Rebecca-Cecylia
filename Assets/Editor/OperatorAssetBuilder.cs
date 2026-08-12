@@ -55,6 +55,10 @@ namespace RCCom.EditorTools
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
 
+            // 에셋과 카탈로그/Addressables 그룹을 같은 레시피에서 갱신해 서로 어긋나는
+            // 수작업 상태가 생기지 않게 한다.
+            OperatorCatalogBuilder.BuildAll();
+
             if (!OperatorAssetValidator.ValidateAll(false))
             {
                 throw new InvalidOperationException("오퍼레이터 에셋 생성 후 검증에 실패했습니다. 콘솔 오류를 확인하세요.");
@@ -68,7 +72,7 @@ namespace RCCom.EditorTools
             TowerRoster sourceTowerRoster = LoadRequired<TowerRoster>(recipe.sourceTowerRosterPath, recipe.operatorId);
             CardRoster sourceCardRoster = LoadRequired<CardRoster>(recipe.sourceCardRosterPath, recipe.operatorId);
             OperatorDialogueSet dialogueSet = LoadRequired<OperatorDialogueSet>(recipe.dialogueSetPath, recipe.operatorId);
-            Sprite selectionPortrait = LoadRequired<Sprite>(recipe.selectionPortraitPath, recipe.operatorId);
+            Sprite selectionPortrait = LoadOptional<Sprite>(recipe.selectionPortraitPath);
 
             string operatorFolder = $"{OutputRoot}/{recipe.operatorId}";
             EnsureFolder(operatorFolder);
@@ -103,6 +107,11 @@ namespace RCCom.EditorTools
             }
 
             return asset;
+        }
+
+        private static T LoadOptional<T>(string path) where T : UnityEngine.Object
+        {
+            return string.IsNullOrWhiteSpace(path) ? null : AssetDatabase.LoadAssetAtPath<T>(path);
         }
 
         private static T GetOrCreateOwnedAsset<T>(string path) where T : ScriptableObject

@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 60e3f0fd9f2bdbd4fbdd7ff4fef1c69b, type: 3}
+  m_Name: OperatorCatalog
+  m_EditorClassIdentifier: Assembly-CSharp::RCCom.Definitions.Operator.OperatorCatalog
+  entries:
+  - operatorId: cassia
+    displayName: "\uCE74\uC2DC\uC544"
+    playStyleDescription: "\uD0C0\uC6CC \uAC74\uC124\uACFC \uCE74\uB4DC \uAC15\uD654\uB97C
+      \uC911\uC2EC\uC73C\uB85C \uBC29\uC5B4\uC120\uC744 \uD655\uC7A5\uD558\uB294
+      \uAE30\uBCF8 \uC624\uD37C\uB808\uC774\uD130"
+    previewPortrait: {fileID: 8101380904372118242, guid: 7692c1b2ac922604a964bcd1026289c7, type: 3}
+    address: operator/cassia
+    remoteContent: 0
+    requiredBestWave: 0

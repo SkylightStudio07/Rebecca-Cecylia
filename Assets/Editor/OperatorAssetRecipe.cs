@@ -18,6 +18,7 @@ namespace RCCom.EditorTools
         public string sourceTowerRosterPath;
         public string sourceCardRosterPath;
         public string dialogueSetPath;
+        public bool remoteContent;
         public PlayerData playerData = new();
         public int requiredBestWave;
     }

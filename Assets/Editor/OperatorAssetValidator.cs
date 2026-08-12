@@ -6,6 +6,8 @@ using RCCom.Definitions.Operator;
 using RCCom.Definitions.Tower;
 using RCCom.Effects.Card.Concrete;
 using UnityEditor;
+using UnityEditor.AddressableAssets;
+using UnityEditor.AddressableAssets.Settings;
 using UnityEngine;
 
 namespace RCCom.EditorTools
@@ -30,7 +32,8 @@ namespace RCCom.EditorTools
         {
             var errors = new List<string>();
             var warnings = new List<string>();
-            ValidateOperators(errors);
+            ValidateOperators(errors, warnings);
+            ValidateCatalog(errors);
             ValidateTowerRegistration(errors, warnings);
             ValidateEnemyRegistration(warnings);
 
@@ -52,7 +55,60 @@ namespace RCCom.EditorTools
             return errors.Count == 0;
         }
 
-        private static void ValidateOperators(List<string> errors)
+        private static void ValidateCatalog(List<string> errors)
+        {
+            OperatorCatalog catalog = AssetDatabase.LoadAssetAtPath<OperatorCatalog>(OperatorCatalogBuilder.CatalogPath);
+            AddressableAssetSettings settings = AddressableAssetSettingsDefaultObject.Settings;
+            if (catalog == null || catalog.entries == null || catalog.entries.Count == 0)
+            {
+                errors.Add("OperatorCatalog가 없거나 비어 있습니다.");
+                return;
+            }
+
+            if (settings == null)
+            {
+                errors.Add("Addressables Settings가 없습니다.");
+                return;
+            }
+
+            var ids = new HashSet<string>(StringComparer.Ordinal);
+            foreach (OperatorCatalogEntry catalogEntry in catalog.entries)
+            {
+                if (catalogEntry == null || string.IsNullOrWhiteSpace(catalogEntry.operatorId) ||
+                    string.IsNullOrWhiteSpace(catalogEntry.address))
+                {
+                    errors.Add("OperatorCatalog에 식별자 또는 주소가 비어 있는 항목이 있습니다.");
+                    continue;
+                }
+
+                if (!ids.Add(catalogEntry.operatorId))
+                {
+                    errors.Add($"OperatorCatalog의 operatorId가 중복됩니다: {catalogEntry.operatorId}");
+                }
+
+                string definitionPath = $"Assets/Data/Operators/{catalogEntry.operatorId}/OperatorDefinition.asset";
+                OperatorDefinition definition = AssetDatabase.LoadAssetAtPath<OperatorDefinition>(definitionPath);
+                if (definition == null)
+                {
+                    errors.Add($"카탈로그에 대응하는 Definition이 없습니다: {definitionPath}");
+                    continue;
+                }
+
+                AddressableAssetEntry addressableEntry = settings.FindAssetEntry(AssetDatabase.AssetPathToGUID(definitionPath));
+                if (addressableEntry == null || addressableEntry.address != catalogEntry.address)
+                {
+                    errors.Add($"Definition의 Addressables 주소가 카탈로그와 일치하지 않습니다: {definitionPath}");
+                }
+
+                string expectedGroup = $"Operator-{catalogEntry.operatorId}-{(catalogEntry.remoteContent ? "Remote" : "Local")}";
+                if (addressableEntry != null && addressableEntry.parentGroup.Name != expectedGroup)
+                {
+                    errors.Add($"Definition의 Addressables 그룹이 잘못되었습니다: {definitionPath}");
+                }
+            }
+        }
+
+        private static void ValidateOperators(List<string> errors, List<string> warnings)
         {
             List<OperatorDefinition> definitions = FindAssets<OperatorDefinition>();
             if (definitions.Count == 0)
@@ -82,7 +138,9 @@ namespace RCCom.EditorTools
 
                 if (definition.selectionPortrait == null)
                 {
-                    errors.Add($"선택 화면 초상화가 연결되지 않았습니다: {path}");
+                    // 아트가 코드보다 늦게 들어오는 제작 순서를 허용한다. 런타임 UI는 이미지
+                    // 영역만 숨기므로 플레이 자체는 가능하지만 최종 제출 전에는 확인해야 한다.
+                    warnings.Add($"선택 화면 초상화가 아직 연결되지 않았습니다: {path}");
                 }
 
                 if (definition.playerData == null || definition.playerData.maxHealth <= 0f ||

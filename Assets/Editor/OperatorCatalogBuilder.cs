@@ -1,0 +1,176 @@
+using System;
+using System.Collections.Generic;
+using RCCom.Definitions.Operator;
+using UnityEditor;
+using UnityEditor.AddressableAssets;
+using UnityEditor.AddressableAssets.Settings;
+using UnityEditor.AddressableAssets.Settings.GroupSchemas;
+using UnityEngine;
+
+namespace RCCom.EditorTools
+{
+    /// <summary>
+    /// 오퍼레이터 레시피에서 로컬 카탈로그와 "오퍼레이터 1명 = 그룹 1개" Addressables
+    /// 구성을 함께 만든다. 콘텐츠 추가 시 수작업 그룹 배선이 누락되지 않게 한 경로로 묶는다.
+    /// </summary>
+    public static class OperatorCatalogBuilder
+    {
+        public const string CatalogPath = "Assets/Data/Operators/OperatorCatalog.asset";
+        private const string RecipeFolder = "Assets/Editor/OperatorRecipes";
+        private const string GeneratedLabel = "RCCom.GeneratedOperator";
+        private const string AddressablesLabel = "operator-definition";
+
+        [MenuItem("RCCom/Operators/Build Operator Catalog And Addressables")]
+        public static void BuildAll()
+        {
+            List<OperatorAssetRecipe> recipes = LoadRecipes();
+            OperatorCatalog catalog = GetOrCreateCatalog();
+            var entries = new List<OperatorCatalogEntry>();
+            AddressableAssetSettings settings = AddressableAssetSettingsDefaultObject.GetSettings(true);
+
+            if (settings == null)
+            {
+                throw new InvalidOperationException("Addressables Settings를 만들지 못했습니다.");
+            }
+
+            settings.AddLabel(AddressablesLabel, false);
+
+            foreach (OperatorAssetRecipe recipe in recipes)
+            {
+                string definitionPath = $"Assets/Data/Operators/{recipe.operatorId}/OperatorDefinition.asset";
+                OperatorDefinition definition = AssetDatabase.LoadAssetAtPath<OperatorDefinition>(definitionPath);
+                if (definition == null)
+                {
+                    throw new InvalidOperationException($"먼저 오퍼레이터 에셋을 생성해야 합니다: {definitionPath}");
+                }
+
+                string address = $"operator/{recipe.operatorId}";
+                ConfigureAddressable(settings, definitionPath, recipe, address);
+                entries.Add(new OperatorCatalogEntry
+                {
+                    operatorId = recipe.operatorId,
+                    displayName = recipe.displayName,
+                    playStyleDescription = recipe.playStyleDescription,
+                    previewPortrait = definition.selectionPortrait,
+                    address = address,
+                    remoteContent = recipe.remoteContent,
+                    requiredBestWave = recipe.requiredBestWave,
+                });
+            }
+
+            entries.Sort((left, right) => string.CompareOrdinal(left.operatorId, right.operatorId));
+            catalog.entries = entries;
+            EditorUtility.SetDirty(catalog);
+            EditorUtility.SetDirty(settings);
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+
+            Debug.Log($"[OperatorCatalogBuilder] 카탈로그 {entries.Count}명 및 Addressables 그룹 갱신 완료");
+        }
+
+        private static void ConfigureAddressable(
+            AddressableAssetSettings settings,
+            string definitionPath,
+            OperatorAssetRecipe recipe,
+            string address)
+        {
+            string groupName = $"Operator-{recipe.operatorId}-{(recipe.remoteContent ? "Remote" : "Local")}";
+            AddressableAssetGroup group = settings.FindGroup(groupName);
+            if (group == null)
+            {
+                group = settings.CreateGroup(
+                    groupName,
+                    false,
+                    false,
+                    true,
+                    null,
+                    typeof(BundledAssetGroupSchema),
+                    typeof(ContentUpdateGroupSchema));
+            }
+
+            BundledAssetGroupSchema bundled = group.GetSchema<BundledAssetGroupSchema>();
+            if (bundled == null)
+            {
+                bundled = group.AddSchema<BundledAssetGroupSchema>();
+            }
+
+            if (group.GetSchema<ContentUpdateGroupSchema>() == null)
+            {
+                group.AddSchema<ContentUpdateGroupSchema>();
+            }
+
+            bundled.BuildPath.SetVariableByName(
+                settings,
+                recipe.remoteContent ? AddressableAssetSettings.kRemoteBuildPath : AddressableAssetSettings.kLocalBuildPath);
+            bundled.LoadPath.SetVariableByName(
+                settings,
+                recipe.remoteContent ? AddressableAssetSettings.kRemoteLoadPath : AddressableAssetSettings.kLocalLoadPath);
+            bundled.BundleMode = BundledAssetGroupSchema.BundlePackingMode.PackTogether;
+            bundled.IncludeInBuild = true;
+
+            string guid = AssetDatabase.AssetPathToGUID(definitionPath);
+            AddressableAssetEntry entry = settings.CreateOrMoveEntry(guid, group, false, true);
+            entry.address = address;
+            entry.SetLabel(AddressablesLabel, true, true, false);
+        }
+
+        private static OperatorCatalog GetOrCreateCatalog()
+        {
+            UnityEngine.Object existing = AssetDatabase.LoadMainAssetAtPath(CatalogPath);
+            if (existing != null)
+            {
+                if (existing is not OperatorCatalog catalog)
+                {
+                    throw new InvalidOperationException($"카탈로그 경로에 다른 타입의 에셋이 있습니다: {CatalogPath}");
+                }
+
+                if (Array.IndexOf(AssetDatabase.GetLabels(catalog), GeneratedLabel) < 0)
+                {
+                    throw new InvalidOperationException($"자동 생성 라벨 없는 카탈로그는 덮어쓸 수 없습니다: {CatalogPath}");
+                }
+
+                return catalog;
+            }
+
+            var created = ScriptableObject.CreateInstance<OperatorCatalog>();
+            AssetDatabase.CreateAsset(created, CatalogPath);
+            AssetDatabase.SetLabels(created, new[] { GeneratedLabel });
+            return created;
+        }
+
+        private static List<OperatorAssetRecipe> LoadRecipes()
+        {
+            string[] guids = AssetDatabase.FindAssets("t:TextAsset", new[] { RecipeFolder });
+            var paths = new List<string>();
+            foreach (string guid in guids)
+            {
+                string path = AssetDatabase.GUIDToAssetPath(guid);
+                if (path.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
+                {
+                    paths.Add(path);
+                }
+            }
+
+            paths.Sort(StringComparer.Ordinal);
+            var recipes = new List<OperatorAssetRecipe>();
+            foreach (string path in paths)
+            {
+                TextAsset text = AssetDatabase.LoadAssetAtPath<TextAsset>(path);
+                OperatorAssetRecipe recipe = JsonUtility.FromJson<OperatorAssetRecipe>(text.text);
+                if (recipe == null || string.IsNullOrWhiteSpace(recipe.operatorId))
+                {
+                    throw new InvalidOperationException($"유효하지 않은 오퍼레이터 레시피입니다: {path}");
+                }
+
+                recipes.Add(recipe);
+            }
+
+            if (recipes.Count == 0)
+            {
+                throw new InvalidOperationException($"오퍼레이터 레시피가 없습니다: {RecipeFolder}");
+            }
+
+            return recipes;
+        }
+    }
+}

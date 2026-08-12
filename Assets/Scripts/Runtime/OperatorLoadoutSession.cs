@@ -5,6 +5,8 @@ using RCCom.Definitions.Operator;
 using RCCom.Definitions.Tower;
 using RCCom.UI;
 using UnityEngine;
+using UnityEngine.AddressableAssets;
+using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace RCCom.Runtime
 {
@@ -18,18 +20,40 @@ namespace RCCom.Runtime
     {
         public static OperatorDefinition SelectedDefinition { get; private set; }
 
+        private static AsyncOperationHandle<OperatorDefinition> _addressableHandle;
+        private static bool _ownsAddressableHandle;
+
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetForNewApplicationRun()
         {
             // 에디터에서 도메인 리로드를 꺼도 이전 Play 세션의 선택이 새 실행으로 새지 않게 한다.
             // 씬 재로드에는 호출되지 않으므로 TitleScene에서 고른 값과 Retry 로드아웃은 유지된다.
-            SelectedDefinition = null;
+            ClearSelection();
         }
 
         public static void Select(OperatorDefinition definition)
         {
             ValidateDefinition(definition);
+            ReleaseOwnedHandle();
             SelectedDefinition = definition;
+        }
+
+        /// <summary>
+        /// Addressables로 불러온 Definition과 그 의존 에셋이 DefenseScene에서도 살아 있도록
+        /// 로드 핸들의 소유권을 세션으로 이전한다.
+        /// </summary>
+        public static void SelectAddressable(AsyncOperationHandle<OperatorDefinition> handle)
+        {
+            if (!handle.IsValid() || handle.Status != AsyncOperationStatus.Succeeded || handle.Result == null)
+            {
+                throw new InvalidOperationException("완료되지 않은 오퍼레이터 Addressables 핸들을 선택할 수 없습니다.");
+            }
+
+            ValidateDefinition(handle.Result);
+            ReleaseOwnedHandle();
+            _addressableHandle = handle;
+            _ownsAddressableHandle = true;
+            SelectedDefinition = handle.Result;
         }
 
         /// <summary>
@@ -38,6 +62,7 @@ namespace RCCom.Runtime
         /// </summary>
         public static void ClearSelection()
         {
+            ReleaseOwnedHandle();
             SelectedDefinition = null;
         }
 
@@ -110,6 +135,17 @@ namespace RCCom.Runtime
             {
                 throw new InvalidOperationException($"오퍼레이터 필수 로드아웃 참조가 비어 있습니다: {definition.name}");
             }
+        }
+
+        private static void ReleaseOwnedHandle()
+        {
+            if (_ownsAddressableHandle && _addressableHandle.IsValid())
+            {
+                Addressables.Release(_addressableHandle);
+            }
+
+            _addressableHandle = default;
+            _ownsAddressableHandle = false;
         }
     }
 }
