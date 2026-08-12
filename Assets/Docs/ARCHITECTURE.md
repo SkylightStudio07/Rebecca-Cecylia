@@ -1043,6 +1043,24 @@ Retry는 Editor Play 재시작과 달리 도메인 리로드가 없어(`SceneMan
 
 ---
 
+## WebGL에서 타이틀 영상이 안 나오는 문제 → StreamingAssets URL 재생으로 전환 (2026-07-06)
+{{user}} 발견: 타이틀 실루엣 안 영상(VideoPlayer + RenderTexture)이 데스크톱에선 잘 나오는데 Web 빌드에선 아예 재생 안 됨.
+
+### 원인
+WebGL 플랫폼의 알려진 제약 — VideoPlayer가 **VideoClip 에셋 재생을 지원하지 않고 URL 소스만 지원**함. 에러도 없이 조용히 안 나오는 게 특징.
+
+### 해결: `UI/StreamingVideoSource.cs` (신규)
+- 영상 파일을 `Assets/StreamingAssets/`에 두면 빌드에 원본 그대로 복사되고 WebGL에선 URL로 서빙됨 — `Awake()`에서 `VideoPlayer.source = Url` + `Application.streamingAssetsPath` 기반 URL을 배선.
+- 에디터/데스크톱에서도 같은 경로가 로컬 파일로 동작하므로 플랫폼 분기 없이 이 방식 하나로 통일.
+- 오디오 출력 모드가 '없음'이라 브라우저 자동재생 정책(음소거 아니면 자동재생 차단)에도 안 걸림.
+
+### 씬/에셋 세팅 필요
+- `Assets/StreamingAssets` 폴더 생성(정확히 이 이름), 영상 원본 파일(mp4, H.264 코덱 권장)을 그 안에 복사.
+- Video Player 오브젝트에 `StreamingVideoSource` 부착, `File Name`에 파일명 입력.
+- 기존 `비디오 클립` 필드는 비워도 됨(스크립트가 URL 모드로 덮어씀). 임포트된 VideoClip 에셋은 이제 빌드에 불필요하므로 용량 아끼려면 삭제 가능.
+
+---
+
 ## 진행 로그
 
 ### 2026-07-04 — 데이터 컨테이너 1차 작업

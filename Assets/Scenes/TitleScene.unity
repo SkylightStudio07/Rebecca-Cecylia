@@ -1487,6 +1487,7 @@ GameObject:
   m_Component:
   - component: {fileID: 888091727}
   - component: {fileID: 888091728}
+  - component: {fileID: 888091729}
   m_Layer: 5
   m_Name: Video Player
   m_TagString: Untagged
@@ -1547,6 +1548,19 @@ VideoPlayer:
   m_WaitForFirstFrame: 1
   m_FrameReadyEventEnabled: 0
   m_VideoShaders: []
+--- !u!114 &888091729
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 888091726}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ae847a71260df7a41baa009a9c977abc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RCCom.UI.StreamingVideoSource
+  fileName: K-018.mp4
 --- !u!1 &907478884
 GameObject:
   m_ObjectHideFlags: 0
