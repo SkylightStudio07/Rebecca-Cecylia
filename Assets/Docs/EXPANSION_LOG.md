@@ -333,3 +333,21 @@ Phase 0 자동화 경로를 실제로 열고, 이후 오퍼레이터별 원격 �
 
 ### 검증
 - TitleScene Play Mode에서 선택 화면을 열어 확정 버튼 기본 포커스, 버튼 상태, 패널을 닫았을 때 포커스 및 메인 메뉴 입력 복원을 확인했다.
+
+## 2026-08-13 — Addressables 그룹 정리·원격 프로필·빌드 사전 검증 강화
+
+### 구현
+- `OperatorCatalogBuilder`가 레시피 ID 중복을 에셋 변경 전에 차단하고, 현재 레시피에 대응하지 않는 `Operator-*` 빈 그룹을 정리하도록 했다. 항목이 남은 이전 그룹은 자동 삭제하지 않고 오류로 중단한다.
+- 검증기가 카탈로그 ID뿐 아니라 Addressables 주소 중복/명명 규칙, 필수 라벨, 그룹당 명시적 Definition 1개, Local/Remote Build·Load 경로 유형, 미등록 Definition과 이전 그룹 잔존을 검사한다.
+- `AddressablesRemoteProfileConfigurator`가 `RCCOM_REMOTE_LOAD_PATH`와 선택적 `RCCOM_REMOTE_BUILD_PATH` 환경 변수로 활성 프로필을 재현 가능하게 설정한다. 최종 WebGL에 안전한 HTTPS를 기본 계약으로 하고 localhost HTTP는 로컬 스파이크에서만 허용한다.
+- `AddressablesBuildValidator`가 플레이어 빌드 전에 오퍼레이터 에셋 전체 검증, 설치된 빌드 모듈, 활성 프로필, 원격 콘텐츠의 실제 로드 주소를 한 번에 확인한다.
+
+### 판단 근거
+- `remoteContent`를 Local↔Remote로 바꾸면 Addressables가 새 그룹으로 엔트리를 이동시키지만 예전 빈 그룹은 남는다. 자동화 소유 이름과 빈 상태를 모두 확인한 경우만 제거해 반복 실행의 멱등성과 기존 콘텐츠 보호를 같이 유지했다.
+- 원격 서버 URL은 배포 환경마다 달라지고 저장소에 고정할 값이 아니다. 환경 변수 주입 도구로 코드/에셋 구조와 외부 인프라 값을 분리했다.
+- 잘못된 주소나 그룹 배선은 런타임 다운로드 때 늦게 드러난다. 플레이어 빌드 진입 전에 실패하도록 검증 경계를 앞당겼다.
+
+### 검증
+- 카탈로그/그룹 생성기를 다시 실행해 반복 실행이 현재 에셋을 손상시키지 않는 것을 확인했다.
+- 실제 설치된 WebGL 모듈과 현재 카탈로그·Addressables 구성을 대상으로 빌드 사전 검증을 통과했다.
+- 검증 스니펫으로 HTTPS 주소 정규화와 비-localhost HTTP 거부 계약을 확인했다. Addressables 콘텐츠 및 플레이어 빌드는 실행하지 않았다.

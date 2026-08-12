@@ -8,6 +8,7 @@ using RCCom.Effects.Card.Concrete;
 using UnityEditor;
 using UnityEditor.AddressableAssets;
 using UnityEditor.AddressableAssets.Settings;
+using UnityEditor.AddressableAssets.Settings.GroupSchemas;
 using UnityEngine;
 
 namespace RCCom.EditorTools
@@ -72,6 +73,9 @@ namespace RCCom.EditorTools
             }
 
             var ids = new HashSet<string>(StringComparer.Ordinal);
+            var addresses = new HashSet<string>(StringComparer.Ordinal);
+            var expectedGroups = new HashSet<string>(StringComparer.Ordinal);
+            var catalogDefinitions = new HashSet<OperatorDefinition>();
             foreach (OperatorCatalogEntry catalogEntry in catalog.entries)
             {
                 if (catalogEntry == null || string.IsNullOrWhiteSpace(catalogEntry.operatorId) ||
@@ -86,6 +90,17 @@ namespace RCCom.EditorTools
                     errors.Add($"OperatorCatalog의 operatorId가 중복됩니다: {catalogEntry.operatorId}");
                 }
 
+                if (!addresses.Add(catalogEntry.address))
+                {
+                    errors.Add($"OperatorCatalog의 Addressables 주소가 중복됩니다: {catalogEntry.address}");
+                }
+
+                string expectedAddress = $"operator/{catalogEntry.operatorId}";
+                if (catalogEntry.address != expectedAddress)
+                {
+                    errors.Add($"OperatorCatalog 주소 규칙이 잘못되었습니다: {catalogEntry.address} (기대값 {expectedAddress})");
+                }
+
                 string definitionPath = $"Assets/Data/Operators/{catalogEntry.operatorId}/OperatorDefinition.asset";
                 OperatorDefinition definition = AssetDatabase.LoadAssetAtPath<OperatorDefinition>(definitionPath);
                 if (definition == null)
@@ -94,16 +109,81 @@ namespace RCCom.EditorTools
                     continue;
                 }
 
+                catalogDefinitions.Add(definition);
+
+                if (definition.operatorId != catalogEntry.operatorId ||
+                    definition.requiredBestWave != catalogEntry.requiredBestWave)
+                {
+                    errors.Add($"카탈로그 메타데이터가 Definition과 일치하지 않습니다: {definitionPath}");
+                }
+
                 AddressableAssetEntry addressableEntry = settings.FindAssetEntry(AssetDatabase.AssetPathToGUID(definitionPath));
                 if (addressableEntry == null || addressableEntry.address != catalogEntry.address)
                 {
                     errors.Add($"Definition의 Addressables 주소가 카탈로그와 일치하지 않습니다: {definitionPath}");
                 }
 
-                string expectedGroup = $"Operator-{catalogEntry.operatorId}-{(catalogEntry.remoteContent ? "Remote" : "Local")}";
+                else if (!addressableEntry.labels.Contains(OperatorCatalogBuilder.AddressablesLabel))
+                {
+                    errors.Add($"Definition에 필수 Addressables 라벨이 없습니다: {definitionPath}");
+                }
+
+                string expectedGroup = OperatorCatalogBuilder.GetGroupName(
+                    catalogEntry.operatorId,
+                    catalogEntry.remoteContent);
+                expectedGroups.Add(expectedGroup);
                 if (addressableEntry != null && addressableEntry.parentGroup.Name != expectedGroup)
                 {
                     errors.Add($"Definition의 Addressables 그룹이 잘못되었습니다: {definitionPath}");
+                }
+
+
+                AddressableAssetGroup group = settings.FindGroup(expectedGroup);
+                if (group == null)
+                {
+                    errors.Add($"오퍼레이터 Addressables 그룹이 없습니다: {expectedGroup}");
+                    continue;
+                }
+
+                if (group.entries.Count != 1)
+                {
+                    errors.Add($"오퍼레이터 그룹은 명시적 Definition 1개만 가져야 합니다: {expectedGroup}");
+                }
+
+                BundledAssetGroupSchema bundled = group.GetSchema<BundledAssetGroupSchema>();
+                if (bundled == null)
+                {
+                    errors.Add($"오퍼레이터 그룹에 BundledAssetGroupSchema가 없습니다: {expectedGroup}");
+                    continue;
+                }
+
+                string expectedBuildPath = catalogEntry.remoteContent
+                    ? AddressableAssetSettings.kRemoteBuildPath
+                    : AddressableAssetSettings.kLocalBuildPath;
+                string expectedLoadPath = catalogEntry.remoteContent
+                    ? AddressableAssetSettings.kRemoteLoadPath
+                    : AddressableAssetSettings.kLocalLoadPath;
+                if (bundled.BuildPath.GetName(settings) != expectedBuildPath ||
+                    bundled.LoadPath.GetName(settings) != expectedLoadPath)
+                {
+                    errors.Add($"오퍼레이터 그룹의 Build/Load 경로 유형이 잘못되었습니다: {expectedGroup}");
+                }
+            }
+
+            foreach (AddressableAssetGroup group in settings.groups)
+            {
+                if (group != null && group.Name.StartsWith(OperatorCatalogBuilder.OperatorGroupPrefix, StringComparison.Ordinal) &&
+                    !expectedGroups.Contains(group.Name))
+                {
+                    errors.Add($"카탈로그에 대응하지 않는 이전 오퍼레이터 그룹이 남아 있습니다: {group.Name}");
+                }
+            }
+
+            foreach (OperatorDefinition definition in FindAssets<OperatorDefinition>())
+            {
+                if (!catalogDefinitions.Contains(definition))
+                {
+                    errors.Add($"OperatorCatalog에 등록되지 않은 OperatorDefinition: {AssetDatabase.GetAssetPath(definition)}");
                 }
             }
         }

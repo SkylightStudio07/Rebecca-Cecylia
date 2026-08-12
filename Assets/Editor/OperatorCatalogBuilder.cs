@@ -16,9 +16,10 @@ namespace RCCom.EditorTools
     public static class OperatorCatalogBuilder
     {
         public const string CatalogPath = "Assets/Data/Operators/OperatorCatalog.asset";
+        public const string OperatorGroupPrefix = "Operator-";
+        public const string AddressablesLabel = "operator-definition";
         private const string RecipeFolder = "Assets/Editor/OperatorRecipes";
         private const string GeneratedLabel = "RCCom.GeneratedOperator";
-        private const string AddressablesLabel = "operator-definition";
 
         [MenuItem("RCCom/Operators/Build Operator Catalog And Addressables")]
         public static void BuildAll()
@@ -26,6 +27,7 @@ namespace RCCom.EditorTools
             List<OperatorAssetRecipe> recipes = LoadRecipes();
             OperatorCatalog catalog = GetOrCreateCatalog();
             var entries = new List<OperatorCatalogEntry>();
+            var expectedGroupNames = new HashSet<string>(StringComparer.Ordinal);
             AddressableAssetSettings settings = AddressableAssetSettingsDefaultObject.GetSettings(true);
 
             if (settings == null)
@@ -46,6 +48,7 @@ namespace RCCom.EditorTools
 
                 string address = $"operator/{recipe.operatorId}";
                 ConfigureAddressable(settings, definitionPath, recipe, address);
+                expectedGroupNames.Add(GetGroupName(recipe.operatorId, recipe.remoteContent));
                 entries.Add(new OperatorCatalogEntry
                 {
                     operatorId = recipe.operatorId,
@@ -57,6 +60,8 @@ namespace RCCom.EditorTools
                     requiredBestWave = recipe.requiredBestWave,
                 });
             }
+
+            RemoveStaleGeneratedGroups(settings, expectedGroupNames);
 
             entries.Sort((left, right) => string.CompareOrdinal(left.operatorId, right.operatorId));
             catalog.entries = entries;
@@ -74,7 +79,7 @@ namespace RCCom.EditorTools
             OperatorAssetRecipe recipe,
             string address)
         {
-            string groupName = $"Operator-{recipe.operatorId}-{(recipe.remoteContent ? "Remote" : "Local")}";
+            string groupName = GetGroupName(recipe.operatorId, recipe.remoteContent);
             AddressableAssetGroup group = settings.FindGroup(groupName);
             if (group == null)
             {
@@ -112,6 +117,37 @@ namespace RCCom.EditorTools
             AddressableAssetEntry entry = settings.CreateOrMoveEntry(guid, group, false, true);
             entry.address = address;
             entry.SetLabel(AddressablesLabel, true, true, false);
+        }
+
+        public static string GetGroupName(string operatorId, bool remoteContent)
+        {
+            return $"{OperatorGroupPrefix}{operatorId}-{(remoteContent ? "Remote" : "Local")}";
+        }
+
+        private static void RemoveStaleGeneratedGroups(
+            AddressableAssetSettings settings,
+            HashSet<string> expectedGroupNames)
+        {
+            var groups = new List<AddressableAssetGroup>(settings.groups);
+            foreach (AddressableAssetGroup group in groups)
+            {
+                if (group == null || !group.Name.StartsWith(OperatorGroupPrefix, StringComparison.Ordinal) ||
+                    expectedGroupNames.Contains(group.Name))
+                {
+                    continue;
+                }
+
+                // 자동화 이름을 쓰더라도 항목이 남은 그룹은 사람이 추가한 콘텐츠일 수 있다.
+                // 데이터 유실을 피하기 위해 빈 그룹만 자동 정리하고, 나머지는 명시적으로 중단한다.
+                if (group.entries.Count > 0)
+                {
+                    throw new InvalidOperationException(
+                        $"이전 오퍼레이터 그룹에 항목이 남아 자동 삭제할 수 없습니다: {group.Name}");
+                }
+
+                settings.RemoveGroup(group);
+                Debug.Log($"[OperatorCatalogBuilder] 사용하지 않는 빈 그룹 정리: {group.Name}");
+            }
         }
 
         private static OperatorCatalog GetOrCreateCatalog()
@@ -153,6 +189,7 @@ namespace RCCom.EditorTools
 
             paths.Sort(StringComparer.Ordinal);
             var recipes = new List<OperatorAssetRecipe>();
+            var operatorIds = new HashSet<string>(StringComparer.Ordinal);
             foreach (string path in paths)
             {
                 TextAsset text = AssetDatabase.LoadAssetAtPath<TextAsset>(path);
@@ -160,6 +197,11 @@ namespace RCCom.EditorTools
                 if (recipe == null || string.IsNullOrWhiteSpace(recipe.operatorId))
                 {
                     throw new InvalidOperationException($"유효하지 않은 오퍼레이터 레시피입니다: {path}");
+                }
+
+                if (!operatorIds.Add(recipe.operatorId))
+                {
+                    throw new InvalidOperationException($"오퍼레이터 레시피 ID가 중복됩니다: {recipe.operatorId}");
                 }
 
                 recipes.Add(recipe);
