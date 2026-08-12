@@ -93,6 +93,8 @@ namespace RCCom.Runtime
 
         private void Awake()
         {
+            data = OperatorLoadoutSession.CreatePlayerData(data);
+            attackRangeTrigger.SetWorldRadius(data.attackRange);
             CurrentHealth = data.maxHealth;
 
             if (spriteRenderer != null)

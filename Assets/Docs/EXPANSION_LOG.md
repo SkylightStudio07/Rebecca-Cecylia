@@ -228,3 +228,39 @@ Phase 0 자동화 경로를 실제로 열고, 이후 오퍼레이터별 원격 �
 
 **사람 액션**
 - 신규 오퍼레이터 레시피를 완성하려면 2·3번의 이름/컨셉/대사 톤과 초상화가 필요하다. 유닛 스프라이트는 이후 유닛 Definition 에셋 생성 시 필요하다.
+
+---
+
+## 2026-08-13 — 선택 오퍼레이터의 전투 세션 로드아웃 적용
+
+**맥락**
+`OperatorDefinition`과 카시아 에셋은 존재하지만, 기존 DefenseScene의 각 컴포넌트는 여전히 인스펙터에 직접 연결된 PlayerData, TowerRoster, CardRoster, DialogueSet을 따로 사용하고 있었다. 선택 화면에서 Definition 하나를 골라도 모든 소비자가 같은 패키지를 사용하도록 만드는 런타임 경계가 필요했다.
+
+**결정**
+- `OperatorLoadoutSession`이 타이틀에서 고른 `OperatorDefinition`을 DefenseScene으로 전달한다.
+- `[DefaultExecutionOrder(-1000)]`인 `GameManager.Awake()`가 선택 Definition을 가장 먼저 검증하고, 선택된 Tower/Card Roster의 세션 캐시를 초기화한다.
+- `PlayerController`, `TowerBuildController`, `TowerBuildMenuUI`, `CardManager`, `OperatorDialogueUI`는 각자의 Awake에서 동일한 세션을 통해 PlayerData, TowerRoster, CardRoster, DialogueSet을 해석한다.
+- PlayerData는 필드 단위로 새 값 객체를 만들어 적용하며, 공격 사거리 트리거의 실제 반경도 선택 데이터에 맞춰 갱신한다.
+- 선택 상태는 Retry 씬 재로드에서는 유지하지만 새 애플리케이션/Play 실행에서는 `SubsystemRegistration` 시점에 초기화한다.
+- 선택이 없는 채 DefenseScene을 직접 실행할 때는 기존 인스펙터 연결을 fallback으로 사용한다.
+
+**근거**
+- 한 Definition을 세션의 유일한 진입점으로 삼아야 오퍼레이터별 데이터가 소비자마다 섞이는 것을 막을 수 있다.
+- 별도 OperatorManager를 만들지 않고 정적 세션 경계와 기존 GameManager 초기화 단계만 사용해 "오브젝트 타입별 매니저 금지" 원칙을 유지했다.
+- 플레이어 카드 효과가 `PlayerController.data`를 직접 수정하므로 Definition 안의 PlayerData를 그대로 넘기면 프로젝트 에셋 원본이 오염된다. 매 DefenseScene마다 깊은 값 복제를 만드는 이유다.
+- 공격 수치만 바꾸고 CircleCollider2D 반경을 그대로 두면 표시 수치와 실제 타겟 감지가 달라진다. 로드아웃 적용 시 두 값을 같은 경로에서 동기화했다.
+- 선택 없음 fallback은 선택 UI가 아직 없는 현재 개발 단계와 개별 DefenseScene 디버깅을 모두 보존한다.
+
+**의도적으로 하지 않은 것**
+- TitleScene 선택 UI와 PlayerProfile의 마지막 선택 저장은 아직 연결하지 않았다. 이는 P1-A2의 책임이다.
+- `OperatorLoadoutSession`이 런타임 Roster 복제본을 직접 소유하지 않게 했다. 기존 `TowerRoster.GetRuntimeInstance()` 캐시 계약을 그대로 사용해 중복 상태를 만들지 않았다.
+- 기존 DefenseScene이나 프리팹 YAML을 수정하지 않았다. 현재 인스펙터 참조는 fallback으로 계속 유효하다.
+
+**검증**
+- Unity `6000.3.13f1` 재컴파일 완료, 컴파일 오류 없음.
+- 실제 카시아 Definition을 선택해 TowerRoster, CardRoster, DialogueSet이 모두 같은 Definition의 참조로 해석되는 것을 Pipeline 스니펫으로 확인했다.
+- 런타임 PlayerData가 별도 객체이며 이를 수정해도 Definition 원본 수치가 변하지 않는 것을 확인했다.
+- 검증 종료 시 정적 선택을 비웠고, 현재 Unity 콘솔에는 성공 로그 1건만 존재한다.
+
+**사람 액션**
+- 없음. 선택 화면을 완성하는 다음 단계에서 신규 오퍼레이터 이름·컨셉·초상화가 필요하다.

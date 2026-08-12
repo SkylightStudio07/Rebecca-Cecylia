@@ -38,6 +38,7 @@ namespace RCCom.UI
 
         private void Awake()
         {
+            dialogueSet = OperatorLoadoutSession.ResolveDialogueSet(dialogueSet);
             Hide();
         }
 

@@ -85,6 +85,13 @@ namespace RCCom.Managers
             Instance = this;
             Gold = startingGold;
 
+            // 선택 상태는 TitleScene → DefenseScene 및 Retry를 넘어 유지되어야 하므로 자동으로
+            // 비우지 않는다. 대신 이 최선행 Awake에서 유효성을 검증하고 선택된 Roster로
+            // 초기화 대상을 교체해, 아래 캐시 정리가 실제 플레이할 로드아웃에 적용되게 한다.
+            OperatorLoadoutSession.PrepareForGameplay();
+            towerRoster = OperatorLoadoutSession.ResolveTowerRoster(towerRoster);
+            cardRoster = OperatorLoadoutSession.ResolveCardRoster(cardRoster);
+
             // 재시작(Retry, SceneManager.LoadScene) 시 이전 세션의 잔여 static 캐시를 전부 초기화.
             // Editor Play 재시작은 도메인 리로드로 저절로 비워지지만, 런타임 씬 재로드는 그렇지
             // 않아서 명시적으로 비워야 한다 — [DefaultExecutionOrder(-1000)]로 이게 다른 스크립트의

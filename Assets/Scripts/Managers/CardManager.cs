@@ -40,11 +40,13 @@ namespace RCCom.Managers
 
         private void Awake()
         {
+            cardRoster = OperatorLoadoutSession.ResolveCardRoster(cardRoster);
+
             // 원본 에셋이 아니라 세션 전용 복제본을 참조하도록 교체 — 카드가 Data를 직접
             // 수정해도 원본 .asset이 오염되지 않게 함 (TowerRoster.GetRuntimeInstance 참고).
             // 같은 원본 에셋을 참조하는 TowerBuildController/TowerBuildMenuUI도 각자 이 호출을
             // 하는데, 캐시가 원본 쪽에 있어서 Awake 호출 순서와 무관하게 전부 같은 복제본을 받는다.
-            towerRoster = towerRoster.GetRuntimeInstance();
+            towerRoster = OperatorLoadoutSession.ResolveTowerRoster(towerRoster).GetRuntimeInstance();
         }
 
         private void OnEnable()

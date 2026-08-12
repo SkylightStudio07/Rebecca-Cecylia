@@ -48,7 +48,7 @@ namespace RCCom.Runtime
         {
             // 원본 에셋이 아니라 세션 전용 복제본을 참조하도록 교체 — 카드가 Data를 직접
             // 수정해도 원본 .asset이 오염되지 않게 함 (TowerRoster.GetRuntimeInstance 참고).
-            towerRoster = towerRoster.GetRuntimeInstance();
+            towerRoster = OperatorLoadoutSession.ResolveTowerRoster(towerRoster).GetRuntimeInstance();
         }
 
         private void Update()
