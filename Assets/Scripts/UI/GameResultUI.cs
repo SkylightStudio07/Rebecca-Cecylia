@@ -1,4 +1,7 @@
+using RCCom.Core;
+using RCCom.Data;
 using RCCom.Managers;
+using RCCom.Runtime;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -42,9 +45,11 @@ namespace RCCom.UI
         /// </summary>
         private float? _pendingSceneDelay;
         private string _pendingSceneName;
+        private IProfileStorage _profileStorage;
 
         private void Awake()
         {
+            _profileStorage = new PlayerPrefsProfileStorage();
             Hide();
 
             if (retryButton != null)
@@ -70,6 +75,14 @@ namespace RCCom.UI
 
         private void HandleGameOver()
         {
+            PlayerProfile profile = _profileStorage.Load();
+            if (profile.TryRecordBestWave(waveManager.CurrentWave))
+            {
+                // 결과 화면이 세션 통계를 확정하는 체크포인트이므로 최고 기록도 여기서 한 번만 저장한다.
+                // 매 웨이브마다 PlayerPrefs.Save를 호출하지 않아 WebGL 저장 비용과 중간 상태 기록을 피한다.
+                _profileStorage.Save(profile);
+            }
+
             reachedWaveText.text = $"{waveManager.CurrentWave}";
             defeatedEnemiesText.text = $"{gameManager.EnemiesDefeated}";
             earnedGoldText.text = $"{gameManager.TotalGoldEarned}";

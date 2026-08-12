@@ -15,5 +15,21 @@ namespace RCCom.Data
         public int schemaVersion = CurrentSchemaVersion;
         public int bestWave;
         public string selectedOperatorId = string.Empty;
+
+        /// <summary>
+        /// 결과 화면이 전달한 도달 웨이브를 누적 최고 기록에 반영한다.
+        /// 저장 호출 여부를 소비자가 판단할 수 있게 실제로 기록이 갱신됐을 때만 true를 반환한다.
+        /// </summary>
+        public bool TryRecordBestWave(int reachedWave)
+        {
+            int normalizedWave = Math.Max(0, reachedWave);
+            if (normalizedWave <= bestWave)
+            {
+                return false;
+            }
+
+            bestWave = normalizedWave;
+            return true;
+        }
     }
 }
