@@ -351,3 +351,25 @@ Phase 0 자동화 경로를 실제로 열고, 이후 오퍼레이터별 원격 �
 - 카탈로그/그룹 생성기를 다시 실행해 반복 실행이 현재 에셋을 손상시키지 않는 것을 확인했다.
 - 실제 설치된 WebGL 모듈과 현재 카탈로그·Addressables 구성을 대상으로 빌드 사전 검증을 통과했다.
 - 검증 스니펫으로 HTTPS 주소 정규화와 비-localhost HTTP 거부 계약을 확인했다. Addressables 콘텐츠 및 플레이어 빌드는 실행하지 않았다.
+
+## 2026-08-13 — Unity CLI용 WebGL·Windows 빌드 진입점
+
+### 구현
+- `Assets/Editor/BuildScript.cs`에 `BuildWebGL`, `BuildWindows`/`BuildStandaloneWindows64` 정적 메서드를 추가했다.
+- 빌드 전 오퍼레이터·Addressables 구성, 설치 모듈, 활성 필수 씬과 중복 씬을 검증한다.
+- Addressables 콘텐츠를 먼저 명시적으로 한 번 빌드하고, 이어지는 플레이어 빌드 동안 자동 Addressables 생성을 임시로 끈 뒤 원래 설정으로 복원한다. 콘텐츠 실패와 플레이어 실패를 각각 즉시 예외로 보고한다.
+- 실제 산출물 없이 확인할 수 있는 `ValidateWebGL`과 `ValidateWindows` 진입점을 함께 제공한다.
+
+### 판단 근거
+- Addressables Player Build 설정에만 의존하면 개발자 환경의 Preferences/프로젝트 옵션에 따라 콘텐츠가 생략되거나 중복 생성될 수 있다. CLI 진입점이 콘텐츠 생성 순서를 소유해 동일한 결과를 보장한다.
+- 활성 타깃과 요청 타깃이 다른 상태에서 Addressables를 만들면 잘못된 플랫폼용 번들이 생성될 수 있다. 빌드 메서드는 CLI `--target` 전환을 요구하고 내부에서 암묵적 타깃 전환을 하지 않는다.
+- 빌드 산출 경로는 `Builds/WebGL`, `Builds/Windows/RCCom.exe`로 고정해 로컬과 자동화가 같은 위치를 사용한다.
+
+### 실행 경로
+- WebGL: `unity build --target WebGL --execute-method BuildScript.BuildWebGL`
+- Windows: `unity build --target StandaloneWindows64 --execute-method BuildScript.BuildWindows`
+- 산출물 없는 사전 확인: Pipeline `eval`로 `BuildScript.ValidateWebGL()` 또는 `BuildScript.ValidateWindows()` 호출
+
+### 검증
+- 두 플랫폼의 사전 검증 메서드를 실행해 설치 모듈, 필수 씬, 현재 오퍼레이터/Addressables 구성이 모두 통과하는 것을 확인했다.
+- 작업 합의대로 Addressables 콘텐츠 빌드와 WebGL/Windows 플레이어 빌드는 실행하지 않았다.
