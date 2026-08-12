@@ -6,6 +6,8 @@ using RCCom.Runtime;
 using TMPro;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
+using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -58,6 +60,7 @@ namespace RCCom.UI
             SelectSavedOrFirstUnlocked();
             SetPanelVisible(true);
             RenderSelection();
+            FocusDefaultButton();
         }
 
         public void Close()
@@ -68,6 +71,11 @@ namespace RCCom.UI
             }
 
             SetPanelVisible(false);
+
+            if (EventSystem.current != null)
+            {
+                EventSystem.current.SetSelectedGameObject(null);
+            }
         }
 
         public void Previous()
@@ -89,6 +97,54 @@ namespace RCCom.UI
             }
 
             StartCoroutine(LoadAndStart(entry));
+        }
+
+        private void Update()
+        {
+            // 타이틀 화면에서도 향후 일시정지 오버레이가 추가될 수 있으므로 입력 폴링은
+            // 프로젝트 공통 규칙대로 최상단에서 차단한다.
+            if (Time.timeScale <= 0f)
+            {
+                return;
+            }
+
+            if (_isLoading || panel == null || !panel.activeInHierarchy)
+            {
+                return;
+            }
+
+            Keyboard keyboard = Keyboard.current;
+            Gamepad gamepad = Gamepad.current;
+
+            if ((keyboard != null && (keyboard.leftArrowKey.wasPressedThisFrame || keyboard.aKey.wasPressedThisFrame)) ||
+                (gamepad != null && (gamepad.dpad.left.wasPressedThisFrame || gamepad.leftShoulder.wasPressedThisFrame)))
+            {
+                Previous();
+                FocusDefaultButton();
+                return;
+            }
+
+            if ((keyboard != null && (keyboard.rightArrowKey.wasPressedThisFrame || keyboard.dKey.wasPressedThisFrame)) ||
+                (gamepad != null && (gamepad.dpad.right.wasPressedThisFrame || gamepad.rightShoulder.wasPressedThisFrame)))
+            {
+                Next();
+                FocusDefaultButton();
+                return;
+            }
+
+            if ((keyboard != null && (keyboard.enterKey.wasPressedThisFrame || keyboard.numpadEnterKey.wasPressedThisFrame ||
+                                      keyboard.spaceKey.wasPressedThisFrame)) ||
+                (gamepad != null && gamepad.buttonSouth.wasPressedThisFrame))
+            {
+                Confirm();
+                return;
+            }
+
+            if ((keyboard != null && keyboard.escapeKey.wasPressedThisFrame) ||
+                (gamepad != null && gamepad.buttonEast.wasPressedThisFrame))
+            {
+                Close();
+            }
         }
 
         private IEnumerator LoadAndStart(OperatorCatalogEntry entry)
@@ -286,6 +342,20 @@ namespace RCCom.UI
             {
                 mainMenuGroup.interactable = !visible;
                 mainMenuGroup.blocksRaycasts = !visible;
+            }
+        }
+
+        private void FocusDefaultButton()
+        {
+            if (EventSystem.current == null)
+            {
+                return;
+            }
+
+            Button target = confirmButton != null && confirmButton.interactable ? confirmButton : backButton;
+            if (target != null && target.interactable)
+            {
+                EventSystem.current.SetSelectedGameObject(target.gameObject);
             }
         }
     }
