@@ -187,3 +187,44 @@ Phase 0 자동화 경로를 실제로 열고, 이후 오퍼레이터별 원격 �
 
 **사람 액션**
 - 없음. 이 단계는 코드 계약만으로 완결되며 신규 아트/SO/씬 연결이 필요하지 않다.
+
+---
+
+## 2026-08-13 — 오퍼레이터 에셋 생성 및 검증 자동화
+
+**맥락**
+오퍼레이터 3명마다 Definition, TowerRoster, CardRoster와 참조 연결을 손으로 반복하면 시간이 오래 걸릴 뿐 아니라 누락과 잘못된 연결이 재현되지 않는 수작업으로 남는다. 신규 오퍼레이터가 C# 클래스 추가 없이 데이터 조립만으로 만들어진다는 핵심 주장도 실제 생성 경로로 증명할 필요가 있었다.
+
+**결정**
+- `Assets/Editor/OperatorRecipes/`의 JSON 레시피를 읽어 오퍼레이터별 전용 `OperatorDefinition`, `TowerRoster`, `CardRoster`를 일괄 생성하는 `OperatorAssetBuilder`를 추가했다.
+- 레시피는 식별/표시 정보, 플레이어 수치, 기존 Roster/DialogueSet/초상화 경로만 가진다. Unity 에셋 경로는 에디터에서 강타입 참조로 변환한다.
+- 자동 생성물에는 `RCCom.GeneratedOperator` 라벨을 붙인다. 같은 경로에 라벨 없는 기존 에셋이 있으면 덮어쓰지 않고 실패하도록 했다.
+- `OperatorAssetValidator`는 오퍼레이터의 필수 참조·유효 수치·ID 중복, Roster의 null/중복 항목, 미등록 Tower/Enemy Definition을 검사한다.
+- 필수 참조 오류는 생성 실패로, 미등록 Definition은 기존 데이터 부채를 발견하는 경고로 구분했다.
+
+**근거**
+- JSON 레시피는 신규 오퍼레이터마다 새 C# 클래스를 요구하지 않으면서도 Git diff로 콘텐츠 구성을 검토할 수 있다.
+- 오퍼레이터별 Roster는 기존 목록을 복사한 독립 SO로 생성한다. 이후 각 오퍼레이터의 풀을 조정해도 원본 공용 Roster나 다른 오퍼레이터가 함께 바뀌지 않는다.
+- 자동 생성 라벨은 재실행의 멱등성을 유지하면서, 도구가 만들지 않은 사람 소유 에셋을 실수로 덮어쓰는 것을 막는 소유권 경계다.
+- 미등록 Definition은 삭제 예정·실험 자산일 수도 있어 자동 생성 전체를 막기보다 경고하는 편이 안전하다. 반면 null 참조나 빈 필수 Roster는 즉시 런타임 장애로 이어지므로 오류로 유지했다.
+
+**실행 결과**
+- DefenseScene을 저장 없이 추가 로드해 기존 카시아의 PlayerData와 Tower/Card Roster, DialogueSet, 기본 초상화 참조를 읽고 원래 TitleScene만 열린 상태로 복원했다.
+- `Cassia.json` 레시피로 `Assets/Data/Operators/cassia/` 아래 에셋 3개를 생성했다.
+- 생성기를 두 번 실행해 최초 생성과 재실행 갱신이 모두 성공하는 것을 확인했다.
+- 카시아 전용 TowerRoster 3종, CardRoster 27장, Definition 상호 참조와 자동 생성 라벨을 별도 Pipeline 스니펫으로 검증했다.
+- 기존 `Assets/Data/Definition/Tower/축적.asset`이 어느 TowerRoster와 UnlockTowerCard에도 연결되지 않은 고아 Definition임을 발견했다. 이번 범위에서는 기존 에셋을 임의 수정하지 않고 경고로 기록했다.
+
+**의도적으로 하지 않은 것**
+- 기존 Tower/Card/Dialogue 에셋과 DefenseScene은 수정하지 않았다.
+- 신규 오퍼레이터 2·3번 레시피와 에셋은 이름·컨셉·아트가 확정되지 않아 만들지 않았다.
+- Addressable 그룹 생성과 원격 프로필 설정은 원격 로딩 구조 작업으로 분리했다.
+
+**검증**
+- Unity `6000.3.13f1` 에디터 스크립트 재컴파일 완료, 컴파일 오류 없음.
+- 자동 생성·독립 검증 모두 성공. 알려진 기존 고아 Definition 경고 1건만 남았다.
+- `AssetDatabase.SaveAssets()`와 `Refresh()` 이후 생성 에셋과 Unity 자동 생성 `.meta` 파일이 디스크에 존재함을 확인했다.
+- TitleScene은 유일하게 열린 씬이며 dirty 상태가 아님을 확인했다.
+
+**사람 액션**
+- 신규 오퍼레이터 레시피를 완성하려면 2·3번의 이름/컨셉/대사 톤과 초상화가 필요하다. 유닛 스프라이트는 이후 유닛 Definition 에셋 생성 시 필요하다.

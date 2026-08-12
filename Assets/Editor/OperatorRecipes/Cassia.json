@@ -1,0 +1,22 @@
+{
+  "operatorId": "cassia",
+  "displayName": "카시아",
+  "playStyleDescription": "타워 건설과 카드 강화를 중심으로 방어선을 확장하는 기본 오퍼레이터",
+  "selectionPortraitPath": "Assets/Art/Operator Sprite/Chibby_smile_idle.png",
+  "sourceTowerRosterPath": "Assets/Data/Prefabs/TowerRoaster.asset",
+  "sourceCardRosterPath": "Assets/Data/Cards/Unlock/플레이어 카드 로스터.asset",
+  "dialogueSetPath": "Assets/Data/Prefabs/UI/New Operator Dialogue Set.asset",
+  "playerData": {
+    "maxHealth": 30.0,
+    "moveSpeed": 5.0,
+    "hitInvulnerabilityDuration": 0.0,
+    "attackDamage": 5.0,
+    "attackRange": 4.0,
+    "attackInterval": 1.0,
+    "projectileSpeed": 1.0,
+    "skillCooldown": 12.0,
+    "skillRange": 5.0,
+    "skillDamage": 5.0
+  },
+  "requiredBestWave": 0
+}

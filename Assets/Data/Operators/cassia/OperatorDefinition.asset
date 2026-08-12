@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fd578546f204cbc469b575f5e2be9761, type: 3}
+  m_Name: OperatorDefinition
+  m_EditorClassIdentifier: Assembly-CSharp::RCCom.Definitions.Operator.OperatorDefinition
+  operatorId: cassia
+  displayName: "\uCE74\uC2DC\uC544"
+  playStyleDescription: "\uD0C0\uC6CC \uAC74\uC124\uACFC \uCE74\uB4DC \uAC15\uD654\uB97C
+    \uC911\uC2EC\uC73C\uB85C \uBC29\uC5B4\uC120\uC744 \uD655\uC7A5\uD558\uB294 \uAE30\uBCF8
+    \uC624\uD37C\uB808\uC774\uD130"
+  selectionPortrait: {fileID: 8101380904372118242, guid: 7692c1b2ac922604a964bcd1026289c7, type: 3}
+  playerData:
+    maxHealth: 30
+    moveSpeed: 5
+    hitInvulnerabilityDuration: 0
+    attackDamage: 5
+    attackRange: 4
+    attackInterval: 1
+    projectileSpeed: 1
+    skillCooldown: 12
+    skillRange: 5
+    skillDamage: 5
+  towerRoster: {fileID: 11400000, guid: d659e71c0d7f7cf4b84aa457d6eeadaf, type: 2}
+  cardRoster: {fileID: 11400000, guid: bc89c00a530cb1b478439ed1a1e16841, type: 2}
+  dialogueSet: {fileID: 11400000, guid: 993a8531fa925e94abb55a5603de6975, type: 2}
+  requiredBestWave: 0
