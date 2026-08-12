@@ -127,3 +127,30 @@ Phase 0 자동화 경로를 실제로 열고, 이후 오퍼레이터별 원격 �
 **의도적으로 하지 않은 것**
 - Addressables Settings, 그룹, 프로필 및 원격 경로 에셋은 아직 생성하지 않았다. 패키지 설치와 콘텐츠 구조 결정은 분리해, 다음 작업에서 에디터 API를 통해 재현 가능하게 생성한다.
 - WebGL 빌드는 이번 설치 검증 범위에서 실행하지 않았다. 최종 빌드는 사람이 수행한다는 현재 작업 합의를 따른다.
+
+---
+
+## 2026-08-13 — OperatorDefinition SO 골격 정의
+
+**맥락**
+오퍼레이터를 연출용 캐릭터에서 플레이 스타일 패키지로 승격하려면, 기존 데이터 에셋을 한 곳에서 조립하는 최상위 Definition 계약이 먼저 필요했다.
+
+**결정**
+- `OperatorDefinition`을 `Definitions/Operator/`에 별도 파일로 추가했다.
+- 영구 식별자와 선택 화면 표시 정보, `PlayerData`, `TowerRoster`, `CardRoster`, 기존 `OperatorDialogueSet`, 최고 도달 웨이브 해금 조건을 필드로 둔다.
+- 선택 화면 초상화와 전투 중 상황별 초상화의 책임을 분리했다. 전자는 Definition이, 후자는 기존 DialogueSet이 맡는다.
+- `operatorId`를 표시 이름과 분리해 이름을 바꿔도 저장 데이터와 Addressable 식별 경로가 깨지지 않게 했다.
+
+**근거**
+- 기존 Tower/Card/Dialogue SO를 직접 참조하면 신규 오퍼레이터는 전투 클래스 추가 없이 에셋 조립만으로 구성할 수 있다.
+- 원격 여부와 다운로드 주소는 `OperatorDefinition`을 받기 전에도 선택 화면이 알아야 한다. 따라서 Definition 안에 순환적으로 넣지 않고 후속 `OperatorCatalog`의 로컬/원격 메타데이터 책임으로 남겼다.
+- `PlayerData`는 SO 안에 포함되면 원본 에셋의 일부가 되므로, P1 적용 파이프라인에서는 반드시 세션용 값으로 복제한 뒤 플레이어에 적용해야 한다.
+
+**의도적으로 하지 않은 것**
+- 적용 로직, 선택 UI, SO 에셋 생성과 씬 연결은 P1/P0-6 범위라 추가하지 않았다.
+- 아군 유닛 로스터는 아직 `AllyUnitDefinition` 계약이 없으므로 느슨한 `ScriptableObject` 참조나 임시 타입으로 넣지 않았다. P1-B1에서 강타입 계약이 생기면 필드를 추가한다.
+- 원격 배포 여부, Addressable 키와 URL은 `OperatorCatalog`에 둘 정보라 제외했다.
+
+**검증**
+- Unity `6000.3.13f1` 재컴파일 완료, 컴파일 오류 없음.
+- Unity가 폴더 및 스크립트 `.meta`를 자동 생성한 것을 확인했다.
