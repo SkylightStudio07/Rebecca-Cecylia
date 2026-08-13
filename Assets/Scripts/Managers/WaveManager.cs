@@ -66,6 +66,12 @@ namespace RCCom.Managers
         [SerializeField] private List<string> aliveEnemyNames = new();
 
         private readonly List<EnemyInstance> _aliveEnemies = new();
+        /// <summary>
+        /// UnitDeployController가 아군 Tick에 전달할 읽기 전용 적 후보 목록.
+        /// 리스트 소유권과 추가·제거 권한은 계속 WaveManager에만 둔다.
+        /// </summary>
+        public IReadOnlyList<EnemyInstance> ActiveEnemies => _aliveEnemies;
+
         private readonly Queue<EnemyDefinition> _spawnQueue = new();
         private System.Random _rng;
 

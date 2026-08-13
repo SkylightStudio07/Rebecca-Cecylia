@@ -17,6 +17,7 @@ namespace RCCom.EditorTools
         public string selectionPortraitPath;
         public string sourceTowerRosterPath;
         public string sourceCardRosterPath;
+        public string sourceAllyUnitRosterPath;
         public string dialogueSetPath;
         public bool remoteContent;
         public PlayerData playerData = new();

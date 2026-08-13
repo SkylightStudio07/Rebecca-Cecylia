@@ -373,3 +373,41 @@ Phase 0 자동화 경로를 실제로 열고, 이후 오퍼레이터별 원격 �
 ### 검증
 - 두 플랫폼의 사전 검증 메서드를 실행해 설치 모듈, 필수 씬, 현재 오퍼레이터/Addressables 구성이 모두 통과하는 것을 확인했다.
 - 작업 합의대로 Addressables 콘텐츠 빌드와 WebGL/Windows 플레이어 빌드는 실행하지 않았다.
+
+## 2026-08-13 — 두 클라이언트 병렬 개발용 아군 유닛 공통 기반
+
+### 확정한 기획
+- 아군 유닛은 `MapManager.Waypoints`의 같은 경로 원본을 받아 끝점에서 시작해 역방향으로 진격한다.
+- 공격 범위 내에서 적을 만나면 `Advancing`에서 `Engaging`으로 전환해 정지·발포하고, 대상이 사라지면 다시 진격한다.
+- 오퍼레이터당 기본 유닛 2종을 우선하고 일정 여유가 있을 때 지원/특수형 3종째를 추가한다.
+
+### 구현
+- 순수 데이터 `AllyUnitData`와 `AllyUnitState`, 데이터·효과·스프라이트를 조립하는 `AllyUnitDefinition`, 오퍼레이터별 목록인 `AllyUnitRoster` 계약을 추가했다.
+- 상태 없는 효과 SO 계약 `IAllyUnitEffect`/`AllyUnitEffectBase`와 적·아군 후보를 전달하는 `AllyUnitContext`를 추가했다.
+- 순수 C# `AllyUnitInstance`에 스폰, 역방향 경로 인덱스, 상태·타깃 전이, 공격 훅, 피해·사망 이벤트의 공통 API를 만들었다. 이동·탐색·발포 알고리즘은 클라이언트 A의 후속 구현 범위로 의도적으로 남겼다.
+- 공용 프리팹이 사용할 `AllyUnitView.Bind` 골격과 위치·방향 동기화를 추가했다. 프리팹과 아트는 아직 생성하지 않았다.
+- `WaveManager.ActiveEnemies`를 읽기 전용으로 노출해 UnitDeployController가 별도 EnemyManager 없이 아군 Tick에 적 후보를 전달할 수 있게 했다.
+- `OperatorDefinition`/`OperatorLoadoutSession`에 선택적 `AllyUnitRoster` 경계를 추가했다. 타워 전용 오퍼레이터는 null이 정상이며 이때 후속 배치 UI가 숨겨지는 계약이다.
+- 오퍼레이터 JSON 레시피와 에셋 빌더가 선택적 유닛 로스터를 복제·연결하도록 확장하고, 검증기에 빈 로스터·중복 ID·잘못된 수치 검사를 추가했다.
+
+### 판단 근거
+- 두 클라이언트가 병렬로 작업하려면 전투 구현과 소환/UI가 함께 의존할 타입·메서드 모양이 먼저 고정되어야 한다. 이 커밋은 그 경계만 제공하고 양쪽 기능을 선점하지 않는다.
+- 로스터와 Definition은 읽기 전용으로 소비하며 인스턴스별 체력·쿨다운·상태는 `AllyUnitInstance`에 둔다. 아직 유닛 해금 카드처럼 로스터 자체를 변경하는 요구가 없어 TowerRoster의 런타임 복제 캐시는 선제 도입하지 않았다.
+- WaveManager의 실제 리스트를 `IReadOnlyList`로만 노출해 적 생명주기 소유권은 기존 WaveManager에 유지했다.
+- 유닛 로스터를 필수로 만들면 기존 타워형 카시아가 의미 없는 빈 에셋을 가져야 한다. 선택적 계약으로 두어 유닛형 오퍼레이터에서만 배치 시스템을 활성화한다.
+
+### 후속 작업 분리
+- 클라이언트 A: `AllyUnitInstance` 이동·탐색·발포, `EnemyInstance`의 아군 조우·교전 최소 변경, 근접/원거리 효과.
+- 클라이언트 B: `UnitDeployController`, 지휘 포인트, 선택·소환 UI/HUD, 프리팹·씬·에셋 자동 배선.
+- 디렉터/통합: 공유 파일 변경 검수, 수치·콘텐츠 결정, 양쪽 수직 슬라이스 통합.
+
+### 의도적으로 하지 않은 것
+- `AllyUnitManager`를 추가하지 않았다.
+- `EnemyInstance` 전투 동작, 지휘 포인트, 소환 입력과 UI를 구현하지 않았다.
+- 아군 유닛 Definition/Roster 에셋이나 프리팹을 임의의 임시 데이터로 만들지 않았다.
+
+### 검증 경로
+- `AllyUnitFoundationVerifier`가 메모리 임시 SO만 사용해 역방향 경로 스폰, 진격↔교전 상태 전이, 피해·사망, Roster ID 조회, OperatorLoadoutSession 로스터 해석을 검사한다.
+- 기존 전 스크립트가 asmdef 없는 `Assembly-CSharp` 구조이므로 테스트 어셈블리는 도입하지 않고, Unity 메뉴와 배치 `-executeMethod RCCom.EditorTools.AllyUnitFoundationVerifier.Verify` 양쪽에서 같은 검증을 재사용한다.
+- Unity `6000.3.13f1` 배치 모드에서 전체 스크립트 컴파일과 기반 계약 검증을 통과했다.
+- 기존 카시아의 유닛 로스터가 비어 있는 상태에서도 전체 OperatorAssetValidator를 통과했다. 기존 `축적.asset` 미등록 경고 1건은 동일하다.

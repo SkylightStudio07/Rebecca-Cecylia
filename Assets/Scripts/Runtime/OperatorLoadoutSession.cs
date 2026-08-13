@@ -3,6 +3,7 @@ using RCCom.Data;
 using RCCom.Definitions.Card;
 using RCCom.Definitions.Operator;
 using RCCom.Definitions.Tower;
+using RCCom.Definitions.Unit;
 using RCCom.UI;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
@@ -113,6 +114,15 @@ namespace RCCom.Runtime
             return resolved != null
                 ? resolved
                 : throw new InvalidOperationException("오퍼레이터 CardRoster가 없습니다.");
+        }
+
+        /// <summary>
+        /// 유닛 로스터는 타워 전용 오퍼레이터에서 비어 있을 수 있다. 호출자는 null이면
+        /// 유닛 배치 UI와 입력을 숨기고, 별도 기본 로스터를 암묵적으로 섞지 않는다.
+        /// </summary>
+        public static AllyUnitRoster ResolveAllyUnitRoster(AllyUnitRoster fallback = null)
+        {
+            return SelectedDefinition != null ? SelectedDefinition.allyUnitRoster : fallback;
         }
 
         public static OperatorDialogueSet ResolveDialogueSet(OperatorDialogueSet fallback)

@@ -4,6 +4,7 @@ using RCCom.Definitions.Card;
 using RCCom.Definitions.Enemy;
 using RCCom.Definitions.Operator;
 using RCCom.Definitions.Tower;
+using RCCom.Definitions.Unit;
 using RCCom.Effects.Card.Concrete;
 using UnityEditor;
 using UnityEditor.AddressableAssets;
@@ -247,6 +248,13 @@ namespace RCCom.EditorTools
                     ValidateCardRoster(definition.cardRoster, errors);
                 }
 
+                // 타워 전용 오퍼레이터는 유닛 로스터가 없는 것이 정상이다. 연결했다면
+                // 빈 목록·중복 ID·잘못된 전투 수치를 배포 전에 차단한다.
+                if (definition.allyUnitRoster != null)
+                {
+                    ValidateAllyUnitRoster(definition.allyUnitRoster, errors);
+                }
+
                 if (definition.dialogueSet == null || definition.dialogueSet.idleSprite == null)
                 {
                     errors.Add($"DialogueSet 또는 기본 초상화가 연결되지 않았습니다: {path}");
@@ -308,6 +316,47 @@ namespace RCCom.EditorTools
                 else if (!cards.Add(card))
                 {
                     errors.Add($"CardRoster에 같은 카드가 중복 등록됐습니다: {AssetDatabase.GetAssetPath(card)} ({path})");
+                }
+            }
+        }
+
+        private static void ValidateAllyUnitRoster(AllyUnitRoster roster, List<string> errors)
+        {
+            string path = AssetDatabase.GetAssetPath(roster);
+            if (roster.units == null || roster.units.Count == 0)
+            {
+                errors.Add($"AllyUnitRoster가 비어 있습니다: {path}");
+                return;
+            }
+
+            var unitIds = new HashSet<string>(StringComparer.Ordinal);
+            foreach (AllyUnitDefinition definition in roster.units)
+            {
+                if (definition == null)
+                {
+                    errors.Add($"AllyUnitRoster에 null 항목이 있습니다: {path}");
+                    continue;
+                }
+
+                string definitionPath = AssetDatabase.GetAssetPath(definition);
+                if (definition.data == null || string.IsNullOrWhiteSpace(definition.data.unitId))
+                {
+                    errors.Add($"아군 유닛 Data 또는 unitId가 비어 있습니다: {definitionPath}");
+                    continue;
+                }
+
+                if (!unitIds.Add(definition.data.unitId))
+                {
+                    errors.Add($"한 AllyUnitRoster 안에서 unitId가 중복됩니다: {definition.data.unitId} ({path})");
+                }
+
+                if (string.IsNullOrWhiteSpace(definition.data.displayName) ||
+                    definition.data.maxHealth <= 0f || definition.data.moveSpeed < 0f ||
+                    definition.data.attackInterval <= 0f || definition.data.attackRange < 0f ||
+                    definition.data.detectionRange < definition.data.attackRange ||
+                    definition.data.deployCost < 0)
+                {
+                    errors.Add($"아군 유닛 필수 수치가 유효하지 않습니다: {definitionPath}");
                 }
             }
         }

@@ -4,6 +4,7 @@ using RCCom.Data;
 using RCCom.Definitions.Card;
 using RCCom.Definitions.Operator;
 using RCCom.Definitions.Tower;
+using RCCom.Definitions.Unit;
 using RCCom.UI;
 using UnityEditor;
 using UnityEngine;
@@ -71,6 +72,7 @@ namespace RCCom.EditorTools
         {
             TowerRoster sourceTowerRoster = LoadRequired<TowerRoster>(recipe.sourceTowerRosterPath, recipe.operatorId);
             CardRoster sourceCardRoster = LoadRequired<CardRoster>(recipe.sourceCardRosterPath, recipe.operatorId);
+            AllyUnitRoster sourceAllyUnitRoster = LoadOptional<AllyUnitRoster>(recipe.sourceAllyUnitRosterPath);
             OperatorDialogueSet dialogueSet = LoadRequired<OperatorDialogueSet>(recipe.dialogueSetPath, recipe.operatorId);
             Sprite selectionPortrait = LoadOptional<Sprite>(recipe.selectionPortraitPath);
 
@@ -85,6 +87,14 @@ namespace RCCom.EditorTools
             cardRoster.cards = new List<RCCom.Effects.Card.CardEffectBase>(sourceCardRoster.cards);
             EditorUtility.SetDirty(cardRoster);
 
+            AllyUnitRoster allyUnitRoster = null;
+            if (sourceAllyUnitRoster != null)
+            {
+                allyUnitRoster = GetOrCreateOwnedAsset<AllyUnitRoster>($"{operatorFolder}/AllyUnitRoster.asset");
+                allyUnitRoster.units = new List<AllyUnitDefinition>(sourceAllyUnitRoster.units);
+                EditorUtility.SetDirty(allyUnitRoster);
+            }
+
             OperatorDefinition definition = GetOrCreateOwnedAsset<OperatorDefinition>($"{operatorFolder}/OperatorDefinition.asset");
             definition.operatorId = recipe.operatorId;
             definition.displayName = recipe.displayName;
@@ -93,6 +103,7 @@ namespace RCCom.EditorTools
             definition.playerData = ClonePlayerData(recipe.playerData);
             definition.towerRoster = towerRoster;
             definition.cardRoster = cardRoster;
+            definition.allyUnitRoster = allyUnitRoster;
             definition.dialogueSet = dialogueSet;
             definition.requiredBestWave = recipe.requiredBestWave;
             EditorUtility.SetDirty(definition);
