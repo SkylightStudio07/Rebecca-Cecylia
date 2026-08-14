@@ -11,16 +11,23 @@ namespace RCCom.Runtime
     /// <summary>
     /// 소환된 아군 유닛 1체의 순수 C# 런타임 상태. UnitDeployController가 목록을 소유하고
     /// Tick을 호출하며, 이 클래스에는 MonoBehaviour.Update를 두지 않는다.
-    /// 현재 커밋은 두 클라이언트 작업의 공통 계약만 고정하고 이동·탐색·발포 구현은 후속 작업에 맡긴다.
+    /// 이동·타기팅·발포를 View와 분리해 처리하며, 인스턴스별 타깃·쿨다운은 이 클래스만 소유한다.
     /// </summary>
     public class AllyUnitInstance : IDamageable
     {
         private static readonly IReadOnlyList<EnemyInstance> EmptyEnemies = Array.Empty<EnemyInstance>();
         private static readonly IReadOnlyList<AllyUnitInstance> EmptyAllies = Array.Empty<AllyUnitInstance>();
+        private const float DefaultContactRange = 0.75f;
+        private const float DefaultSeparationMargin = 0.05f;
 
         private IReadOnlyList<Vector2> _path;
         private int _pathIndex;
         private bool _isSpawned;
+        private float _contactRange = DefaultContactRange;
+        private float _separationMargin = DefaultSeparationMargin;
+        private Vector2 _finalWaitPoint;
+        private float _finalWaitProgress;
+        private bool _hasReachedFinalWaitPoint;
         private IReadOnlyList<EnemyInstance> _lastEnemies = EmptyEnemies;
         private IReadOnlyList<AllyUnitInstance> _lastAllies = EmptyAllies;
 
@@ -33,9 +40,36 @@ namespace RCCom.Runtime
         public float AttackCooldownRemaining { get; set; }
         public bool IsSpawned => _isSpawned;
         public bool IsDead => State == AllyUnitState.Dead;
+        public bool IsAlive => _isSpawned && !IsDead;
+        public float ContactRange => _contactRange;
+        public float SeparationMargin => _separationMargin;
+        public float EffectiveAttackRange => Mathf.Max(Data != null ? Data.attackRange : 0f, _contactRange);
 
-        public Vector2? CurrentTargetWaypoint =>
-            _path != null && _pathIndex >= 0 && _pathIndex < _path.Count ? _path[_pathIndex] : (Vector2?)null;
+        /// <summary>
+        /// 경로 시작점 0, 끝점 1인 연속 진행도. 아군은 끝점에서 시작해 값이 자연스럽게
+        /// 감소하므로 적의 진행도와 같은 좌표계에서 전열을 비교할 수 있다.
+        /// </summary>
+        public float PathProgress => AllyUnitTargeting.CalculatePathProgress(_path, Position);
+
+        public Vector2? CurrentTargetWaypoint
+        {
+            get
+            {
+                if (_path == null || _path.Count == 0)
+                {
+                    return null;
+                }
+
+                if (_hasReachedFinalWaitPoint)
+                {
+                    // 최종 대기점에서는 이동을 하지 않지만, 타깃이 없을 때 적 생성점
+                    // 방향을 바라보게 해 View가 마지막 회전 상태에 고정되지 않게 한다.
+                    return _path[0];
+                }
+
+                return _pathIndex >= 0 && _pathIndex < _path.Count ? _path[_pathIndex] : (Vector2?)null;
+            }
+        }
 
         public event Action<float> Damaged;
         public event Action Died;
@@ -45,6 +79,18 @@ namespace RCCom.Runtime
         /// 호출자가 역순 복사본을 만들지 않아도 되어 적과 아군이 같은 경로 원본을 공유할 수 있다.
         /// </summary>
         public void Spawn(AllyUnitDefinition definition, IReadOnlyList<Vector2> path)
+        {
+            Spawn(definition, path, null);
+        }
+
+        /// <summary>
+        /// 전투 거리 설정을 주입해 스폰한다. 설정 SO가 없어도 기존 호출부가 같은 기본
+        /// 거리를 사용하도록 오버로드를 유지하며, 인스턴스에는 해석된 값만 보관한다.
+        /// </summary>
+        public void Spawn(
+            AllyUnitDefinition definition,
+            IReadOnlyList<Vector2> path,
+            UnitCombatSettings settings)
         {
             if (definition == null)
             {
@@ -64,6 +110,12 @@ namespace RCCom.Runtime
             State = AllyUnitState.Advancing;
             CurrentTarget = null;
             AttackCooldownRemaining = 0f;
+            _contactRange = settings != null ? settings.ContactRange : DefaultContactRange;
+            _separationMargin = settings != null ? settings.SeparationMargin : DefaultSeparationMargin;
+            _finalWaitPoint = CalculateFinalWaitPoint(path, _contactRange + _separationMargin);
+            _finalWaitProgress = AllyUnitTargeting.CalculatePathProgress(path, _finalWaitPoint);
+            _hasReachedFinalWaitPoint = path.Count <= 1 ||
+                                        PathProgress <= _finalWaitProgress + 0.0001f;
             _isSpawned = true;
 
             AllyUnitContext ctx = MakeContext(0f, EmptyEnemies, EmptyAllies);
@@ -74,8 +126,8 @@ namespace RCCom.Runtime
         }
 
         /// <summary>
-        /// 후속 전투 구현의 고정 진입점. UnitDeployController가 활성 적·아군 목록과 함께 호출한다.
-        /// 현재는 효과 Tick만 전달하며 이동·타깃 선택·공격 상태 전이는 클라이언트 A가 구현한다.
+        /// UnitDeployController가 활성 적·아군 목록과 함께 호출하는 고정 진입점. 이동도
+        /// 이 순수 C# 인스턴스가 처리해 View와 전투 흐름이 서로 결합되지 않게 한다.
         /// </summary>
         public void Tick(
             float deltaTime,
@@ -89,6 +141,28 @@ namespace RCCom.Runtime
 
             _lastEnemies = activeEnemies ?? EmptyEnemies;
             _lastAllies = activeAllies ?? EmptyAllies;
+
+            // 적에게 전체 아군 목록을 넘기지 않고, 각 아군이 자신을 후보로 제시한다.
+            // 이렇게 하면 적은 현재 전열 후보만 비교하고 WaveManager와 결합하지 않는다.
+            foreach (EnemyInstance enemy in _lastEnemies)
+            {
+                if (enemy != null)
+                {
+                    enemy.TryOfferAttackTarget(this);
+                }
+            }
+
+            RefreshTargetAndState();
+            TickAttack(Mathf.Max(0f, deltaTime));
+            if (IsDead)
+            {
+                return;
+            }
+
+            if (State != AllyUnitState.Engaging)
+            {
+                MoveAlongPath(Mathf.Max(0f, deltaTime));
+            }
 
             AllyUnitContext ctx = MakeContext(deltaTime, _lastEnemies, _lastAllies);
             foreach (IAllyUnitEffect effect in Definition.effects)
@@ -107,6 +181,13 @@ namespace RCCom.Runtime
 
             CurrentTarget = target;
             State = target != null ? AllyUnitState.Engaging : AllyUnitState.Advancing;
+        }
+
+        /// <summary>현재 위치에서 공격 범위 안에 있는지 확인한다.</summary>
+        public bool IsTargetInAttackRange(EnemyInstance target)
+        {
+            return target != null && target.IsAlive &&
+                   AllyUnitTargeting.IsWithinRange(Position, target.position, EffectiveAttackRange);
         }
 
         /// <summary>공격 타이밍을 결정한 런타임 로직이 효과 SO의 OnAttack 훅을 구동한다.</summary>
@@ -149,6 +230,161 @@ namespace RCCom.Runtime
             }
 
             Died?.Invoke();
+        }
+
+        private void RefreshTargetAndState()
+        {
+            EnemyInstance attackTarget = AllyUnitTargeting.FindBestEnemy(this, _lastEnemies);
+            CurrentTarget = attackTarget;
+
+            EnemyInstance contactTarget = AllyUnitTargeting.FindBestContactEnemy(this, _lastEnemies);
+            State = contactTarget != null ? AllyUnitState.Engaging : AllyUnitState.Advancing;
+        }
+
+        private void TickAttack(float deltaTime)
+        {
+            if (!IsTargetInAttackRange(CurrentTarget))
+            {
+                CurrentTarget = null;
+                if (State != AllyUnitState.Dead)
+                {
+                    State = AllyUnitState.Advancing;
+                }
+
+                return;
+            }
+
+            AttackCooldownRemaining -= deltaTime;
+            if (AttackCooldownRemaining > 0f)
+            {
+                return;
+            }
+
+            EnemyInstance target = CurrentTarget;
+            TriggerAttack(target);
+            AttackCooldownRemaining = Data.attackInterval > 0f ? Data.attackInterval : 1f;
+
+            if (target == null || !target.IsAlive || !IsTargetInAttackRange(target))
+            {
+                CurrentTarget = null;
+                if (State != AllyUnitState.Dead)
+                {
+                    State = AllyUnitState.Advancing;
+                }
+            }
+        }
+
+        private void MoveAlongPath(float deltaTime)
+        {
+            if (_hasReachedFinalWaitPoint || _path == null || _path.Count <= 1 ||
+                Data == null || Data.moveSpeed <= 0f)
+            {
+                return;
+            }
+
+            float totalPathLength = CalculatePathLength(_path);
+            float distanceToWaitPoint = Mathf.Max(0f, (PathProgress - _finalWaitProgress) * totalPathLength);
+            if (distanceToWaitPoint <= 0.0001f)
+            {
+                Position = _finalWaitPoint;
+                _hasReachedFinalWaitPoint = true;
+                return;
+            }
+
+            float remainingDistance = Mathf.Min(Data.moveSpeed * deltaTime, distanceToWaitPoint);
+            while (remainingDistance > 0.0001f && !_hasReachedFinalWaitPoint)
+            {
+                if (_pathIndex < 0 || _pathIndex >= _path.Count)
+                {
+                    Position = _finalWaitPoint;
+                    _hasReachedFinalWaitPoint = true;
+                    break;
+                }
+
+                Vector2 target = _path[_pathIndex];
+                Vector2 toTarget = target - Position;
+                float distance = toTarget.magnitude;
+                if (distance <= 0.0001f)
+                {
+                    Position = target;
+                    _pathIndex--;
+                    continue;
+                }
+
+                if (remainingDistance >= distance)
+                {
+                    Position = target;
+                    remainingDistance -= distance;
+                    _pathIndex--;
+                }
+                else
+                {
+                    Position += toTarget / distance * remainingDistance;
+                    remainingDistance = 0f;
+                }
+            }
+
+            if (PathProgress <= _finalWaitProgress + 0.0001f)
+            {
+                Position = _finalWaitPoint;
+                _hasReachedFinalWaitPoint = true;
+            }
+        }
+
+        private static Vector2 CalculateFinalWaitPoint(
+            IReadOnlyList<Vector2> path,
+            float distanceFromPathStart)
+        {
+            if (path.Count <= 1)
+            {
+                return path[0];
+            }
+
+            float totalLength = CalculatePathLength(path);
+            if (totalLength <= 0.0001f)
+            {
+                return path[path.Count - 1];
+            }
+
+            // 경로가 대기 거리보다 짧아도 path[0]에 직접 진입하지 않도록 마지막
+            // 선분 끝에서 아주 작은 여유를 남긴다. 정상적인 맵에서는 요청 거리가
+            // 전체 길이보다 짧아 이 분기가 실행되지 않는다.
+            float safeDistance = Mathf.Clamp(
+                distanceFromPathStart,
+                0.0001f,
+                Mathf.Max(0.0001f, totalLength - 0.0001f));
+            float remainingDistance = safeDistance;
+
+            for (int i = 1; i < path.Count; i++)
+            {
+                Vector2 start = path[i - 1];
+                Vector2 end = path[i];
+                float segmentLength = Vector2.Distance(start, end);
+                if (segmentLength <= 0.0001f)
+                {
+                    continue;
+                }
+
+                if (remainingDistance <= segmentLength)
+                {
+                    return Vector2.Lerp(start, end, remainingDistance / segmentLength);
+                }
+
+                remainingDistance -= segmentLength;
+            }
+
+            return path[path.Count - 1];
+        }
+
+        private static float CalculatePathLength(IReadOnlyList<Vector2> path)
+        {
+            float length = 0f;
+            for (int i = 1; i < path.Count; i++)
+            {
+                length += Vector2.Distance(path[i - 1], path[i]);
+            }
+
+            return length;
         }
 
         private AllyUnitContext MakeContext(

@@ -24,7 +24,11 @@ namespace RCCom.Runtime
         private IReadOnlyList<Vector2> _path;
         private IDamageable _goal;
         private int _pathIndex;
+        private bool _isSpawned;
         private bool _isDead;
+        private bool _hasReachedGoal;
+        private AllyUnitInstance _currentTarget;
+        private float _attackCooldownRemaining;
 
         /// <summary>
         /// 빙결 오라 타워(SlowAuraEffect) 등이 적용하는 이동속도 배율. 지속시간 기반으로
@@ -53,6 +57,14 @@ namespace RCCom.Runtime
         public event Action ReachedGoal;
 
         public EnemyData Data => definition.data;
+        public bool IsDead => _isDead;
+        public bool HasReachedGoal => _hasReachedGoal;
+        public bool IsAlive => _isSpawned && !_isDead && !_hasReachedGoal;
+        public AllyUnitInstance CurrentTarget => _currentTarget;
+        public float AttackCooldownRemaining => _attackCooldownRemaining;
+
+        /// <summary>경로 시작점 0, 끝점 1인 연속 진행도. 현재 선분 안의 이동량도 포함한다.</summary>
+        public float PathProgress => AllyUnitTargeting.CalculatePathProgress(_path, position);
 
         /// <summary>
         /// 지금 향하고 있는 다음 웨이포인트 — EnemyView가 실제 이동 여부(프레임 간 위치 변화량)
@@ -73,6 +85,11 @@ namespace RCCom.Runtime
             _path = path;
             _goal = goal;
             _pathIndex = 0;
+            _isDead = false;
+            _hasReachedGoal = false;
+            _currentTarget = null;
+            _attackCooldownRemaining = 0f;
+            _isSpawned = true;
 
             EnemyContext ctx = MakeContext(0f);
             foreach (IEnemyEffect effect in definition.effects)
@@ -83,16 +100,84 @@ namespace RCCom.Runtime
 
         public void Tick(float deltaTime)
         {
+            if (!IsAlive)
+            {
+                return;
+            }
+
             TickSpeedMultiplier(deltaTime);
             TickPoison(deltaTime);
+            if (!IsAlive)
+            {
+                return;
+            }
+
             TickVulnerable(deltaTime);
-            MoveAlongPath(deltaTime);
+            if (!IsAlive)
+            {
+                return;
+            }
+
+            RefreshCurrentTarget();
+            TickAttack(Mathf.Max(0f, deltaTime));
+            if (!IsAlive)
+            {
+                return;
+            }
+
+            bool isInContactRange = _currentTarget != null &&
+                                    AllyUnitTargeting.IsWithinRange(
+                                        position,
+                                        _currentTarget.Position,
+                                        _currentTarget.ContactRange);
+            if (!isInContactRange)
+            {
+                MoveAlongPath(Mathf.Max(0f, deltaTime));
+            }
+
+            if (!IsAlive)
+            {
+                return;
+            }
 
             EnemyContext ctx = MakeContext(deltaTime);
             foreach (IEnemyEffect effect in definition.effects)
             {
                 effect.OnTick(ctx);
             }
+        }
+
+        /// <summary>
+        /// 아군이 자신을 공격 후보로 제시하는 진입점. 적은 전체 아군 목록을 저장하지
+        /// 않고, 유효 범위 안의 후보 중 적 생성점 방향 전열만 교체해 집중포화를 만든다.
+        /// </summary>
+        public bool TryOfferAttackTarget(AllyUnitInstance candidate)
+        {
+            if (!IsAlive || candidate == null || !candidate.IsSpawned || candidate.IsDead)
+            {
+                return false;
+            }
+
+            RefreshCurrentTarget();
+
+            float attackRange = GetEffectiveAttackRange(candidate);
+            if (!AllyUnitTargeting.IsWithinRange(position, candidate.Position, attackRange))
+            {
+                if (_currentTarget == candidate)
+                {
+                    _currentTarget = null;
+                }
+
+                return false;
+            }
+
+            if (_currentTarget == null ||
+                AllyUnitTargeting.IsPreferredAlly(candidate, _currentTarget, position))
+            {
+                _currentTarget = candidate;
+            }
+
+            return true;
         }
 
         /// <summary>사거리 내에 있는 동안 SlowAuraEffect가 매 틱 갱신 호출한다.</summary>
@@ -157,7 +242,7 @@ namespace RCCom.Runtime
 
         private void MoveAlongPath(float deltaTime)
         {
-            if (_path == null || _pathIndex >= _path.Count)
+            if (!IsAlive || _path == null || _pathIndex >= _path.Count)
             {
                 return;
             }
@@ -173,6 +258,8 @@ namespace RCCom.Runtime
 
                 if (_pathIndex >= _path.Count)
                 {
+                    _hasReachedGoal = true;
+                    _currentTarget = null;
                     DealContactDamageTo(_goal);
                     ReachedGoal?.Invoke();
                 }
@@ -185,6 +272,11 @@ namespace RCCom.Runtime
 
         public void DealContactDamageTo(IDamageable target)
         {
+            if (target == null || definition == null)
+            {
+                return;
+            }
+
             EnemyContext ctx = MakeContext(0f);
             foreach (IEnemyEffect effect in definition.effects)
             {
@@ -194,7 +286,7 @@ namespace RCCom.Runtime
 
         public void TakeDamage(float amount)
         {
-            if (_isDead)
+            if (!IsAlive)
             {
                 return;
             }
@@ -216,6 +308,50 @@ namespace RCCom.Runtime
 
                 Died?.Invoke();
             }
+        }
+
+        private void RefreshCurrentTarget()
+        {
+            if (_currentTarget == null || !_currentTarget.IsAlive ||
+                !AllyUnitTargeting.IsWithinRange(
+                    position,
+                    _currentTarget.Position,
+                    GetEffectiveAttackRange(_currentTarget)))
+            {
+                _currentTarget = null;
+            }
+        }
+
+        private void TickAttack(float deltaTime)
+        {
+            if (_currentTarget == null)
+            {
+                return;
+            }
+
+            _attackCooldownRemaining -= deltaTime;
+            if (_attackCooldownRemaining > 0f)
+            {
+                return;
+            }
+
+            AllyUnitInstance target = _currentTarget;
+            DealContactDamageTo(target);
+            _attackCooldownRemaining = Data.attackInterval > 0f ? Data.attackInterval : 1f;
+
+            if (!target.IsAlive || !AllyUnitTargeting.IsWithinRange(
+                    position,
+                    target.Position,
+                    GetEffectiveAttackRange(target)))
+            {
+                _currentTarget = null;
+            }
+        }
+
+        private float GetEffectiveAttackRange(AllyUnitInstance target)
+        {
+            float configuredRange = Data.attackRange > 0f ? Data.attackRange : target.ContactRange;
+            return Mathf.Max(configuredRange, target.ContactRange);
         }
 
         private EnemyContext MakeContext(float deltaTime) => new()

@@ -18,6 +18,8 @@ namespace RCCom.Data
         public float maxHealth;
         public float moveSpeed;
         public float contactDamage;
+        public float attackRange;
+        public float attackInterval = 1f;
 
         [Header("웨이브 예산 시스템 (GDD 확정값)")]
         public float waveCost;
