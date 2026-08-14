@@ -411,3 +411,34 @@ Phase 0 자동화 경로를 실제로 열고, 이후 오퍼레이터별 원격 �
 - 기존 전 스크립트가 asmdef 없는 `Assembly-CSharp` 구조이므로 테스트 어셈블리는 도입하지 않고, Unity 메뉴와 배치 `-executeMethod RCCom.EditorTools.AllyUnitFoundationVerifier.Verify` 양쪽에서 같은 검증을 재사용한다.
 - Unity `6000.3.13f1` 배치 모드에서 전체 스크립트 컴파일과 기반 계약 검증을 통과했다.
 - 기존 카시아의 유닛 로스터가 비어 있는 상태에서도 전체 OperatorAssetValidator를 통과했다. 기존 `축적.asset` 미등록 경고 1건은 동일하다.
+
+## 2026-08-14 — Manager가 아닌 UnitDeployController 배치 경계
+
+### 맥락
+- 아군 유닛은 순수 C# `AllyUnitInstance`라서 MonoBehaviour `Update`를 스스로 가질 수 없지만, 개체 타입별 `AllyUnitManager`를 추가하면 기존 매니저 원칙을 위반한다.
+- 타워 건설과 대칭으로, 플레이어의 "유닛 배치"라는 한 입력 흐름과 그 흐름이 만든 인스턴스만 소유하는 일반 Controller가 필요했다.
+
+### 결정
+- `Runtime/UnitDeployController.cs`를 MonoBehaviour로 추가했다. 별도 Manager나 싱글톤은 만들지 않았다.
+- 선택된 오퍼레이터의 선택적 `AllyUnitRoster`를 `OperatorLoadoutSession`에서 해석한다. 타워형 오퍼레이터처럼 로스터가 없으면 오류나 암묵적 기본 로스터 없이 안전하게 동작을 멈춘다.
+- UI가 호출할 `SelectUnit`, `ClearSelection`, `TryDeploySelected`, `TryDeploy` API를 제공한다.
+- 배치 시 `AllyUnitInstance.Spawn` 후 공용 `AllyUnitView` 프리팹 하나를 생성해 `Bind`한다. 유닛 종류별 프리팹이나 C# 타입은 추가하지 않는다.
+- Controller가 자신이 배치한 `List<AllyUnitInstance>`만 소유하고 역순으로 Tick한다. 적 후보는 `WaveManager.ActiveEnemies`를 읽기 전용으로 전달하며 적 목록의 소유권을 가져오지 않는다.
+- 사망 이벤트로 목록을 제거하고, UI가 단방향으로 상태를 관찰할 수 있도록 선택·배치·제거 이벤트를 노출한다.
+
+### 판단 근거
+- Manager와 Controller의 차이는 이름이 아니라 책임 범위다. 전자는 유닛 타입 전체의 전역 시스템이 되지만, 후자는 TowerBuildController와 마찬가지로 한 플레이어 행동 흐름만 조율한다.
+- 인스턴스 목록 수정 권한을 Controller 하나에 모으면 향후 적과의 상호 전투가 추가되어도 WaveManager와 서로 상대 목록을 직접 수정하지 않는다.
+- 로스터 선택과 View 주입을 공개 배치 API 안에서 닫아 후속 UI가 런타임 인스턴스 생성 순서를 중복 구현하지 않게 했다.
+
+### 의도적으로 하지 않은 것
+- 지휘 포인트 최대치·시작치·회복량과 유닛 비용 차감은 기획 수치가 미확정이라 임의 구현하지 않았다.
+- 키보드·게임패드의 구체 배치 키도 정하지 않았다. 후속 선택 UI가 공개 API를 호출하도록 경계만 만들었다.
+- DefenseScene 배치, 공용 View 프리팹 생성, 인스펙터 연결은 이번 Controller 코드 범위에 포함하지 않았다.
+- `AllyUnitManager`, 전역 static 목록, 종류별 유닛 프리팹을 만들지 않았다.
+
+### 검증
+- 실행 중인 Unity `6000.3.13f1` Pipeline에서 재컴파일 완료, 컴파일 오류 없음.
+- 기존 `AllyUnitFoundationVerifier`를 다시 실행해 역주행 스폰·상태·피해·Roster·Loadout 계약 통과를 확인했다.
+- Unity가 `UnitDeployController.cs.meta`를 자동 생성한 것을 확인했다.
+- 콘솔에는 이번 변경과 무관한 기존 TMP obsolete 경고 1건과 Pipeline 자동화 모드 주의만 남아 있다.
