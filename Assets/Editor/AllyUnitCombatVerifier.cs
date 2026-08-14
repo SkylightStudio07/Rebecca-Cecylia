@@ -29,6 +29,8 @@ namespace RCCom.EditorTools
                 VerifyFinalWaitPointAcrossShortFirstSegment(temporaryObjects);
                 VerifyAttackWhileAdvancing(temporaryObjects);
                 VerifyContactRangeStopsBothSides(temporaryObjects);
+                VerifyContactBoundaryOnLargeStep(temporaryObjects);
+                VerifySetEngagementTargetUsesContactRange(temporaryObjects);
                 VerifyImmediateAttackAndCooldown(temporaryObjects);
                 VerifyAllyAdvancesAfterEnemyDeath(temporaryObjects);
                 VerifyEnemyAdvancesAfterAllyDeath(temporaryObjects);
@@ -41,7 +43,7 @@ namespace RCCom.EditorTools
                 VerifyBasicAttackDamage(temporaryObjects);
                 VerifyEnemyContactDamageEffectPath(temporaryObjects);
 
-                Debug.Log("[AllyUnitCombatVerifier] 아군 유닛 전투 코어 16개 시나리오 검증 통과");
+                Debug.Log("[AllyUnitCombatVerifier] 아군 유닛 전투 코어 18개 시나리오 검증 통과");
             }
             finally
             {
@@ -131,6 +133,62 @@ namespace RCCom.EditorTools
             AssertNear(enemy.position.x, enemyStart, "접촉 거리 안에서 적이 이동했습니다.");
         }
 
+        private static void VerifyContactBoundaryOnLargeStep(List<UnityEngine.Object> temporaryObjects)
+        {
+            AllyUnitDefinition allyDefinition = CreateAlly(temporaryObjects, 100f, 10f, 0f, 3f, false);
+            EnemyDefinition enemyDefinition = CreateEnemy(temporaryObjects, 100f, 0f, 0f, 3f, 1f, false);
+            var path = new List<Vector2> { new(0f, 0f), new(10f, 0f) };
+            var ally = new AllyUnitInstance();
+            ally.Spawn(allyDefinition, path);
+            EnemyInstance enemy = SpawnEnemy(enemyDefinition, path, new Vector2(8f, 0f));
+
+            ally.Tick(1f, new[] { enemy }, new[] { ally });
+
+            AssertNear(ally.Position.x, 8.75f, "아군이 큰 프레임에도 접촉 경계를 넘어가지 않았습니다.");
+            AssertNear(Vector2.Distance(ally.Position, enemy.position), ally.ContactRange,
+                "아군이 접촉 경계에서 정확한 거리를 유지하지 않았습니다.");
+            Assert(ally.State == AllyUnitState.Engaging, "아군이 접촉 범위 진입 프레임에 Engaging으로 전환되지 않았습니다.");
+
+            AllyUnitDefinition stationaryAllyDefinition = CreateAlly(temporaryObjects, 100f, 0f, 0f, 3f, false);
+            EnemyDefinition advancingEnemyDefinition = CreateEnemy(temporaryObjects, 100f, 10f, 0f, 3f, 1f, false);
+            var enemyPath = new List<Vector2> { new(0f, 0f), new(10f, 0f) };
+            var stationaryAlly = new AllyUnitInstance();
+            stationaryAlly.Spawn(stationaryAllyDefinition, new List<Vector2> { new(0f, 0f), new(2f, 0f) });
+            EnemyInstance advancingEnemy = SpawnEnemy(advancingEnemyDefinition, enemyPath, enemyPath[0]);
+
+            advancingEnemy.Tick(0f);
+            stationaryAlly.Tick(0f, new[] { advancingEnemy }, new[] { stationaryAlly });
+            advancingEnemy.Tick(1f);
+
+            AssertNear(advancingEnemy.position.x, 1.25f,
+                "적이 큰 프레임에도 접촉 경계를 넘어가지 않았습니다.");
+            AssertNear(Vector2.Distance(advancingEnemy.position, stationaryAlly.Position), stationaryAlly.ContactRange,
+                "적이 아군과 접촉 범위에서 정확한 거리를 유지하지 않았습니다.");
+        }
+
+        private static void VerifySetEngagementTargetUsesContactRange(List<UnityEngine.Object> temporaryObjects)
+        {
+            AllyUnitDefinition allyDefinition = CreateAlly(temporaryObjects, 100f, 0f, 0f, 5f, false);
+            EnemyDefinition enemyDefinition = CreateEnemy(temporaryObjects, 100f, 0f, 0f, 5f, 1f, false);
+            var path = new List<Vector2> { new(0f, 0f), new(10f, 0f) };
+            var ally = new AllyUnitInstance();
+            ally.Spawn(allyDefinition, path);
+            EnemyInstance enemy = SpawnEnemy(enemyDefinition, path, new Vector2(8f, 0f));
+
+            ally.SetEngagementTarget(enemy);
+            Assert(ally.CurrentTarget == enemy && ally.State == AllyUnitState.Advancing,
+                "공격 대상이 접촉 거리 밖인데 SetEngagementTarget이 이동을 멈췄습니다.");
+
+            enemy.position = new Vector2(9.5f, 0f);
+            ally.SetEngagementTarget(enemy);
+            Assert(ally.State == AllyUnitState.Engaging,
+                "접촉 거리 안의 SetEngagementTarget이 Engaging으로 전환되지 않았습니다.");
+
+            ally.SetEngagementTarget(null);
+            Assert(ally.CurrentTarget == null && ally.State == AllyUnitState.Advancing,
+                "SetEngagementTarget(null)이 Advancing으로 돌아가지 않았습니다.");
+        }
+
         private static void VerifyImmediateAttackAndCooldown(List<UnityEngine.Object> temporaryObjects)
         {
             AllyUnitDefinition allyDefinition = CreateAlly(temporaryObjects, 10f, 0f, 3f, 3f, true);
@@ -205,18 +263,24 @@ namespace RCCom.EditorTools
 
         private static void VerifyEnemiesFocusAllyFrontline(List<UnityEngine.Object> temporaryObjects)
         {
-            AllyUnitDefinition allyDefinition = CreateAlly(temporaryObjects, 10f, 0f, 0f, 3f, false);
-            EnemyDefinition enemyDefinition = CreateEnemy(temporaryObjects, 100f, 0f, 0f, 2f, 1f, false);
+            AllyUnitDefinition allyDefinition = CreateAlly(temporaryObjects, 10f, 10f, 0f, 20f, false);
+            EnemyDefinition enemyDefinition = CreateEnemy(temporaryObjects, 100f, 0f, 0f, 20f, 1f, false);
             var path = new List<Vector2> { new(0f, 0f), new(10f, 0f) };
-            var ally = new AllyUnitInstance();
-            ally.Spawn(allyDefinition, new List<Vector2> { new(0f, 0f), new(1f, 0f) });
+            var frontline = new AllyUnitInstance();
+            var rear = new AllyUnitInstance();
+            frontline.Spawn(allyDefinition, path);
+            rear.Spawn(allyDefinition, path);
+            frontline.Tick(0.7f, Array.Empty<EnemyInstance>(), new[] { frontline, rear });
             EnemyInstance first = SpawnEnemy(enemyDefinition, path, new Vector2(0f, 0f));
             EnemyInstance second = SpawnEnemy(enemyDefinition, path, new Vector2(0.1f, 0f));
 
-            ally.Tick(0f, new[] { first, second }, new[] { ally });
+            frontline.Tick(0f, new[] { first, second }, new[] { frontline, rear });
+            rear.Tick(0f, new[] { first, second }, new[] { frontline, rear });
 
-            Assert(first.CurrentTarget == ally && second.CurrentTarget == ally,
-                "여러 적이 같은 아군 전열을 집중 공격할 후보를 얻지 못했습니다.");
+            Assert(frontline.PathProgress < rear.PathProgress,
+                "아군 전열 앞뒤에 설정한 진행도 차이가 없습니다.");
+            Assert(first.CurrentTarget == frontline && second.CurrentTarget == frontline,
+                "여러 적이 가장 앞선 아군 전열을 집중 공격할 후보를 얻지 못했습니다.");
         }
 
         private static void VerifyDeadTargetIsNotAttackedAgain(List<UnityEngine.Object> temporaryObjects)

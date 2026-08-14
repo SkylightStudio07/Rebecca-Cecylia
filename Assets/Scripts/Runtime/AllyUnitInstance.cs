@@ -49,7 +49,11 @@ namespace RCCom.Runtime
         /// 경로 시작점 0, 끝점 1인 연속 진행도. 아군은 끝점에서 시작해 값이 자연스럽게
         /// 감소하므로 적의 진행도와 같은 좌표계에서 전열을 비교할 수 있다.
         /// </summary>
-        public float PathProgress => AllyUnitTargeting.CalculatePathProgress(_path, Position);
+        public float PathProgress => AllyUnitTargeting.CalculatePathProgress(
+            _path,
+            _pathIndex,
+            Position,
+            false);
 
         public Vector2? CurrentTargetWaypoint
         {
@@ -112,8 +116,18 @@ namespace RCCom.Runtime
             AttackCooldownRemaining = 0f;
             _contactRange = settings != null ? settings.ContactRange : DefaultContactRange;
             _separationMargin = settings != null ? settings.SeparationMargin : DefaultSeparationMargin;
-            _finalWaitPoint = CalculateFinalWaitPoint(path, _contactRange + _separationMargin);
-            _finalWaitProgress = AllyUnitTargeting.CalculatePathProgress(path, _finalWaitPoint);
+            float totalPathLength = AllyUnitTargeting.CalculatePathLength(path);
+            float requestedWaitDistance = _contactRange + _separationMargin;
+            float safeWaitDistance = totalPathLength > 0.0001f
+                ? Mathf.Clamp(
+                    requestedWaitDistance,
+                    0.0001f,
+                    Mathf.Max(0.0001f, totalPathLength - 0.0001f))
+                : 0f;
+            _finalWaitPoint = AllyUnitTargeting.GetPointAtDistance(path, safeWaitDistance);
+            _finalWaitProgress = totalPathLength > 0.0001f
+                ? safeWaitDistance / totalPathLength
+                : 1f;
             _hasReachedFinalWaitPoint = path.Count <= 1 ||
                                         PathProgress <= _finalWaitProgress + 0.0001f;
             _isSpawned = true;
@@ -179,8 +193,39 @@ namespace RCCom.Runtime
                 return;
             }
 
+            if (target == null)
+            {
+                CurrentTarget = null;
+                State = AllyUnitState.Advancing;
+                return;
+            }
+
+            // 기존 기반 검증기가 사용하는 미생성 대상 호환 분기다. 실제 전투 대상은 접촉 거리로만 정지한다.
+            if (!target.IsSpawned)
+            {
+                CurrentTarget = target;
+                State = AllyUnitState.Engaging;
+                return;
+            }
+
+            if (!target.IsAlive)
+            {
+                CurrentTarget = null;
+                State = AllyUnitState.Advancing;
+                return;
+            }
+
             CurrentTarget = target;
-            State = target != null ? AllyUnitState.Engaging : AllyUnitState.Advancing;
+            State = IsTargetInContactRange(target)
+                ? AllyUnitState.Engaging
+                : AllyUnitState.Advancing;
+        }
+
+        /// <summary>공격 대상이 아니라 실제 접촉선 안에 들어왔는지 확인한다.</summary>
+        public bool IsTargetInContactRange(EnemyInstance target)
+        {
+            return target != null && target.IsAlive &&
+                   AllyUnitTargeting.IsWithinRange(Position, target.position, ContactRange);
         }
 
         /// <summary>현재 위치에서 공격 범위 안에 있는지 확인한다.</summary>
@@ -282,7 +327,7 @@ namespace RCCom.Runtime
                 return;
             }
 
-            float totalPathLength = CalculatePathLength(_path);
+            float totalPathLength = AllyUnitTargeting.CalculatePathLength(_path);
             float distanceToWaitPoint = Mathf.Max(0f, (PathProgress - _finalWaitProgress) * totalPathLength);
             if (distanceToWaitPoint <= 0.0001f)
             {
@@ -311,6 +356,20 @@ namespace RCCom.Runtime
                     continue;
                 }
 
+                float movementDistance = Mathf.Min(remainingDistance, distance);
+                float contactDistance = DistanceBeforeContact(target);
+                if (contactDistance <= movementDistance + 0.0001f)
+                {
+                    if (contactDistance > 0.0001f)
+                    {
+                        Position += toTarget / distance * contactDistance;
+                    }
+
+                    remainingDistance = 0f;
+                    UpdateContactState();
+                    break;
+                }
+
                 if (remainingDistance >= distance)
                 {
                     Position = target;
@@ -329,62 +388,40 @@ namespace RCCom.Runtime
                 Position = _finalWaitPoint;
                 _hasReachedFinalWaitPoint = true;
             }
+
+            UpdateContactState();
         }
 
-        private static Vector2 CalculateFinalWaitPoint(
-            IReadOnlyList<Vector2> path,
-            float distanceFromPathStart)
+        private float DistanceBeforeContact(Vector2 end)
         {
-            if (path.Count <= 1)
+            float minimumDistance = float.PositiveInfinity;
+            foreach (EnemyInstance enemy in _lastEnemies)
             {
-                return path[0];
-            }
-
-            float totalLength = CalculatePathLength(path);
-            if (totalLength <= 0.0001f)
-            {
-                return path[path.Count - 1];
-            }
-
-            // 경로가 대기 거리보다 짧아도 path[0]에 직접 진입하지 않도록 마지막
-            // 선분 끝에서 아주 작은 여유를 남긴다. 정상적인 맵에서는 요청 거리가
-            // 전체 길이보다 짧아 이 분기가 실행되지 않는다.
-            float safeDistance = Mathf.Clamp(
-                distanceFromPathStart,
-                0.0001f,
-                Mathf.Max(0.0001f, totalLength - 0.0001f));
-            float remainingDistance = safeDistance;
-
-            for (int i = 1; i < path.Count; i++)
-            {
-                Vector2 start = path[i - 1];
-                Vector2 end = path[i];
-                float segmentLength = Vector2.Distance(start, end);
-                if (segmentLength <= 0.0001f)
+                if (enemy == null || !enemy.IsAlive)
                 {
                     continue;
                 }
 
-                if (remainingDistance <= segmentLength)
-                {
-                    return Vector2.Lerp(start, end, remainingDistance / segmentLength);
-                }
-
-                remainingDistance -= segmentLength;
+                minimumDistance = Mathf.Min(
+                    minimumDistance,
+                    AllyUnitTargeting.DistanceBeforeContact(
+                        Position,
+                        end,
+                        enemy.position,
+                        ContactRange));
             }
 
-            return path[path.Count - 1];
+            return minimumDistance;
         }
 
-        private static float CalculatePathLength(IReadOnlyList<Vector2> path)
+        private void UpdateContactState()
         {
-            float length = 0f;
-            for (int i = 1; i < path.Count; i++)
+            EnemyInstance contactTarget = AllyUnitTargeting.FindBestContactEnemy(this, _lastEnemies);
+            if (contactTarget != null)
             {
-                length += Vector2.Distance(path[i - 1], path[i]);
+                CurrentTarget = contactTarget;
+                State = AllyUnitState.Engaging;
             }
-
-            return length;
         }
 
         private AllyUnitContext MakeContext(

@@ -57,6 +57,7 @@ namespace RCCom.Runtime
         public event Action ReachedGoal;
 
         public EnemyData Data => definition.data;
+        public bool IsSpawned => _isSpawned;
         public bool IsDead => _isDead;
         public bool HasReachedGoal => _hasReachedGoal;
         public bool IsAlive => _isSpawned && !_isDead && !_hasReachedGoal;
@@ -64,7 +65,11 @@ namespace RCCom.Runtime
         public float AttackCooldownRemaining => _attackCooldownRemaining;
 
         /// <summary>경로 시작점 0, 끝점 1인 연속 진행도. 현재 선분 안의 이동량도 포함한다.</summary>
-        public float PathProgress => AllyUnitTargeting.CalculatePathProgress(_path, position);
+        public float PathProgress => AllyUnitTargeting.CalculatePathProgress(
+            _path,
+            _pathIndex,
+            position,
+            true);
 
         /// <summary>
         /// 지금 향하고 있는 다음 웨이포인트 — EnemyView가 실제 이동 여부(프레임 간 위치 변화량)
@@ -249,9 +254,10 @@ namespace RCCom.Runtime
 
             Vector2 target = _path[_pathIndex];
             Vector2 toTarget = target - position;
+            float distance = toTarget.magnitude;
             float step = Data.moveSpeed * _speedMultiplier * deltaTime;
 
-            if (toTarget.sqrMagnitude <= step * step)
+            if (distance <= 0.0001f)
             {
                 position = target;
                 _pathIndex++;
@@ -263,10 +269,39 @@ namespace RCCom.Runtime
                     DealContactDamageTo(_goal);
                     ReachedGoal?.Invoke();
                 }
+                return;
             }
-            else
+
+            float movementDistance = Mathf.Min(step, distance);
+            if (_currentTarget != null && _currentTarget.IsAlive)
             {
-                position += toTarget.normalized * step;
+                float contactDistance = AllyUnitTargeting.DistanceBeforeContact(
+                    position,
+                    target,
+                    _currentTarget.Position,
+                    _currentTarget.ContactRange);
+                movementDistance = Mathf.Min(movementDistance, contactDistance);
+            }
+
+            if (movementDistance < distance - 0.0001f)
+            {
+                if (movementDistance > 0.0001f)
+                {
+                    position += toTarget / distance * movementDistance;
+                }
+
+                return;
+            }
+
+            position = target;
+            _pathIndex++;
+
+            if (_pathIndex >= _path.Count)
+            {
+                _hasReachedGoal = true;
+                _currentTarget = null;
+                DealContactDamageTo(_goal);
+                ReachedGoal?.Invoke();
             }
         }
 

@@ -145,13 +145,69 @@ namespace RCCom.Core
         }
 
         /// <summary>
-        /// 폴리라인의 누적 길이를 기준으로 위치를 0~1 진행도로 변환한다. 이 메서드는
-        /// 결과를 캐시하지 않고 호출 시 계산하므로 공용 후보 목록이나 이전 프레임 상태를
-        /// 오염시키지 않는다. 같은 선분 길이 안의 이동량도 진행도에 포함된다.
+        /// 인스턴스가 현재 향하는 실제 선분과 그 선분 안의 보간값으로 진행도를 계산한다.
+        /// 가장 가까운 선분을 추측하지 않는 이유는 경로가 교차하거나 되감기는 지형에서
+        /// 위치만으로 선분을 고르면 진행도가 다른 구간으로 순간 이동할 수 있기 때문이다.
         /// </summary>
-        public static float CalculatePathProgress(IReadOnlyList<Vector2> path, Vector2 position)
+        public static float CalculatePathProgress(
+            IReadOnlyList<Vector2> path,
+            int nextWaypointIndex,
+            Vector2 position,
+            bool movingForward)
         {
-            if (path == null || path.Count <= 1)
+            if (path == null || path.Count == 0)
+            {
+                return 0f;
+            }
+
+            if (path.Count == 1)
+            {
+                return movingForward ? 0f : 1f;
+            }
+
+            float totalLength = CalculatePathLength(path);
+            if (totalLength <= DistanceEpsilon)
+            {
+                return movingForward ? 0f : 1f;
+            }
+
+            if (movingForward && nextWaypointIndex >= path.Count)
+            {
+                return 1f;
+            }
+
+            if (!movingForward && nextWaypointIndex < 0)
+            {
+                return 0f;
+            }
+
+            int segmentIndex = movingForward ? nextWaypointIndex - 1 : nextWaypointIndex;
+            segmentIndex = Mathf.Clamp(segmentIndex, 0, path.Count - 2);
+
+            float distanceAtSegmentStart = 0f;
+            for (int i = 1; i <= segmentIndex; i++)
+            {
+                distanceAtSegmentStart += Vector2.Distance(path[i - 1], path[i]);
+            }
+
+            Vector2 start = path[segmentIndex];
+            Vector2 end = path[segmentIndex + 1];
+            Vector2 segment = end - start;
+            float segmentLength = segment.magnitude;
+            if (segmentLength <= DistanceEpsilon)
+            {
+                return Mathf.Clamp01(distanceAtSegmentStart / totalLength);
+            }
+
+            float interpolation = Mathf.Clamp01(Vector2.Dot(position - start, segment) /
+                                                 (segmentLength * segmentLength));
+            float distanceAlongPath = distanceAtSegmentStart + segmentLength * interpolation;
+            return Mathf.Clamp01(distanceAlongPath / totalLength);
+        }
+
+        public static float CalculatePathLength(IReadOnlyList<Vector2> path)
+        {
+            if (path == null)
             {
                 return 0f;
             }
@@ -162,43 +218,88 @@ namespace RCCom.Core
                 totalLength += Vector2.Distance(path[i - 1], path[i]);
             }
 
-            if (totalLength <= DistanceEpsilon)
+            return totalLength;
+        }
+
+        public static Vector2 GetPointAtDistance(
+            IReadOnlyList<Vector2> path,
+            float distanceFromStart)
+        {
+            if (path == null || path.Count == 0)
             {
-                return 0f;
+                return Vector2.zero;
             }
 
-            float distanceAtClosestPoint = 0f;
-            float distanceAtSegmentStart = 0f;
-            float closestSqrDistance = float.PositiveInfinity;
+            if (path.Count == 1)
+            {
+                return path[0];
+            }
+
+            float remainingDistance = Mathf.Max(0f, distanceFromStart);
 
             for (int i = 1; i < path.Count; i++)
             {
                 Vector2 start = path[i - 1];
                 Vector2 end = path[i];
-                Vector2 segment = end - start;
-                float segmentLength = segment.magnitude;
+                float segmentLength = Vector2.Distance(start, end);
 
                 if (segmentLength <= DistanceEpsilon)
                 {
-                    distanceAtSegmentStart += segmentLength;
                     continue;
                 }
 
-                float projection = Mathf.Clamp01(Vector2.Dot(position - start, segment) /
-                                                 (segmentLength * segmentLength));
-                Vector2 closestPoint = start + segment * projection;
-                float sqrDistance = (position - closestPoint).sqrMagnitude;
-
-                if (sqrDistance < closestSqrDistance)
+                if (remainingDistance <= segmentLength)
                 {
-                    closestSqrDistance = sqrDistance;
-                    distanceAtClosestPoint = distanceAtSegmentStart + segmentLength * projection;
+                    return Vector2.Lerp(start, end, remainingDistance / segmentLength);
                 }
 
-                distanceAtSegmentStart += segmentLength;
+                remainingDistance -= segmentLength;
             }
 
-            return Mathf.Clamp01(distanceAtClosestPoint / totalLength);
+            return path[path.Count - 1];
+        }
+
+        /// <summary>
+        /// 한 번의 직선 이동이 접촉 원에 처음 들어가는 지점까지 허용할 거리다.
+        /// 시작점이 이미 원 안이면 0, 선분이 원과 만나지 않으면 무한대를 반환한다.
+        /// </summary>
+        public static float DistanceBeforeContact(
+            Vector2 start,
+            Vector2 end,
+            Vector2 contactCenter,
+            float contactRange)
+        {
+            if (contactRange <= 0f)
+            {
+                return float.PositiveInfinity;
+            }
+
+            Vector2 movement = end - start;
+            float movementLength = movement.magnitude;
+            if (movementLength <= DistanceEpsilon)
+            {
+                return float.PositiveInfinity;
+            }
+
+            Vector2 offset = start - contactCenter;
+            float radiusSquared = contactRange * contactRange;
+            if (offset.sqrMagnitude <= radiusSquared)
+            {
+                return 0f;
+            }
+
+            Vector2 direction = movement / movementLength;
+            float projection = Vector2.Dot(offset, direction);
+            float discriminant = projection * projection - (offset.sqrMagnitude - radiusSquared);
+            if (discriminant < 0f)
+            {
+                return float.PositiveInfinity;
+            }
+
+            float firstIntersection = -projection - Mathf.Sqrt(discriminant);
+            return firstIntersection >= 0f && firstIntersection <= movementLength
+                ? firstIntersection
+                : float.PositiveInfinity;
         }
 
         private static bool IsCloser(

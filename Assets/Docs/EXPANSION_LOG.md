@@ -441,8 +441,20 @@ Phase 0 자동화 경로를 실제로 열고, 이후 오퍼레이터별 원격 �
 
 **검증**
 - Unity `6000.3.13f1`에서 단계별 `recompile`/`recompile_status`를 반복 실행했고 최종 `failed=false`를 확인했다. 최종 컴파일 이후 신규 콘솔 오류는 0건이었다. 기존 `OperatorSelectionSetup.cs`의 obsolete 경고와 Pipeline 자동화 모드 경고는 기존 경고다.
-- `AllyUnitFoundationVerifier`와 신규 `AllyUnitCombatVerifier`를 Unity Pipeline `eval`로 실행했다. 신규 검증기는 끝점 스폰, 연속 진행도 감소, 짧은 첫 선분을 포함한 최종 대기점 0.8, 이동 중 공격, 양측 contactRange 정지, 즉시 첫 공격/쿨다운, 양측 사망 후 진격 재개, 양측 전열 집중포화, 죽은 대상 재공격 방지, 범위 이탈 해제, 교전 없는 기존 적 이동, 거점 피해/`ReachedGoal` 1회, 기본 공격 피해, 기존 `ContactDamageEffect` 경로 등 16개 시나리오를 모두 통과했다.
+- `AllyUnitFoundationVerifier`와 신규 `AllyUnitCombatVerifier`를 Unity Pipeline `eval`로 실행했다. 신규 검증기는 끝점 스폰, 연속 진행도 감소, 짧은 첫 선분을 포함한 최종 대기점 0.8, 이동 중 공격, 양측 contactRange 정지, 즉시 첫 공격/쿨다운, 양측 사망 후 진격 재개, 양측 전열 집중포화, 죽은 대상 재공격 방지, 범위 이탈 해제, 교전 없는 기존 적 이동, 거점 피해/`ReachedGoal` 1회, 기본 공격 피해, 기존 `ContactDamageEffect` 경로 등 18개 시나리오를 모두 통과했다.
 - 검증기는 종료 시 생성한 임시 SO를 모두 `DestroyImmediate`로 정리했으며 프로젝트 `.asset`/프리팹/씬에는 변경이 없다.
 
 **사람 액션**
 - 없음. 통합 단계에서 실제 `UnitCombatSettings` 에셋을 만들고 `UnitDeployController`가 새 Spawn 오버로드에 전달하면 된다. 이번 작업에서는 해당 파일이 없는 브랜치 계약을 보존하기 위해 컨트롤러를 건드리지 않았다.
+
+## 2026-08-14 전투 코어 검토 보완
+
+### 보완 내용
+- 큰 프레임에서도 아군과 적이 접촉선을 관통하지 않도록, 각 이동 선분과 `contactRange` 원의 첫 교차점까지만 이동을 허용했다. 범위 밖에서 접촉 범위로 진입하는 프레임에 양쪽이 즉시 `Engaging`이 되는 이유는 실제 프레임 순서에서 한 번도 접촉 상태를 놓치지 않게 하기 위해서다.
+- 진행도는 위치에서 가장 가까운 선분을 추측하지 않고 각 인스턴스가 가진 현재 웨이포인트 인덱스와 해당 선분의 보간값으로 계산한다. 교차·되감기 경로에서도 전열이 다른 구간으로 순간 이동하지 않으며, 최종 대기점도 같은 누적 경로 길이 계산을 사용한다.
+- `SetEngagementTarget`은 생성된 대상이 `contactRange` 안에 있을 때만 `Engaging`으로 전환한다. 공격 범위 안이지만 접촉 범위 밖인 원거리 유닛은 계속 `Advancing`할 수 있고, 기존 기반 검증기의 미생성 대상 호출은 별도 호환 분기로 유지했다.
+- 적 전열 집중 공격 검증은 서로 다른 진행도를 가진 전방·후방 아군을 함께 배치하고 두 적이 전방 아군을 선택하는지 확인하도록 보강했다.
+
+### 검증 결과
+- `AllyUnitFoundationVerifier`와 `AllyUnitCombatVerifier`를 Unity Pipeline `eval`로 다시 실행했다. 컴파일 `failed=false`, 신규 콘솔 오류 없음, 전투 검증기 18개 시나리오 통과를 확인했다.
+- 큰 프레임 양방향 진입, 접촉 범위 정지, 실제 구간 진행도, `SetEngagementTarget`의 원거리 이동 의미, 전·후방 아군을 둔 적 집중 공격을 추가로 검증했다.
