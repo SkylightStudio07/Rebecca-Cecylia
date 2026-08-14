@@ -452,9 +452,13 @@ Phase 0 자동화 경로를 실제로 열고, 이후 오퍼레이터별 원격 �
 ### 보완 내용
 - 큰 프레임에서도 아군과 적이 접촉선을 관통하지 않도록, 각 이동 선분과 `contactRange` 원의 첫 교차점까지만 이동을 허용했다. 범위 밖에서 접촉 범위로 진입하는 프레임에 양쪽이 즉시 `Engaging`이 되는 이유는 실제 프레임 순서에서 한 번도 접촉 상태를 놓치지 않게 하기 위해서다.
 - 진행도는 위치에서 가장 가까운 선분을 추측하지 않고 각 인스턴스가 가진 현재 웨이포인트 인덱스와 해당 선분의 보간값으로 계산한다. 교차·되감기 경로에서도 전열이 다른 구간으로 순간 이동하지 않으며, 최종 대기점도 같은 누적 경로 길이 계산을 사용한다.
-- `SetEngagementTarget`은 생성된 대상이 `contactRange` 안에 있을 때만 `Engaging`으로 전환한다. 공격 범위 안이지만 접촉 범위 밖인 원거리 유닛은 계속 `Advancing`할 수 있고, 기존 기반 검증기의 미생성 대상 호출은 별도 호환 분기로 유지했다.
+- `SetEngagementTarget`은 유효하게 스폰된 대상이 `contactRange` 안에 있을 때만 `Engaging`으로 전환한다. 공격 범위 안이지만 접촉 범위 밖인 원거리 유닛은 계속 `Advancing`할 수 있다.
 - 적 전열 집중 공격 검증은 서로 다른 진행도를 가진 전방·후방 아군을 함께 배치하고 두 적이 전방 아군을 선택하는지 확인하도록 보강했다.
+- 적 최초 조우의 이동 순서는 `AllyUnitInstance.OfferAttackCandidates`를 모든 아군에 먼저 호출한 뒤 `EnemyInstance.Tick`을 호출하는 단계 계약으로 명시했다. 적이 전체 아군 목록을 보유하지 않는 구조를 유지하면서도 접촉 경계 제한이 실행 순서에 의해 빠지지 않게 통합 컨트롤러가 지켜야 할 경계다.
 
 ### 검증 결과
-- `AllyUnitFoundationVerifier`와 `AllyUnitCombatVerifier`를 Unity Pipeline `eval`로 다시 실행했다. 컴파일 `failed=false`, 신규 콘솔 오류 없음, 전투 검증기 18개 시나리오 통과를 확인했다.
-- 큰 프레임 양방향 진입, 접촉 범위 정지, 실제 구간 진행도, `SetEngagementTarget`의 원거리 이동 의미, 전·후방 아군을 둔 적 집중 공격을 추가로 검증했다.
+- `AllyUnitFoundationVerifier`와 `AllyUnitCombatVerifier`를 Unity Pipeline `eval`로 다시 실행했다. 컴파일 `failed=false`, 신규 콘솔 오류 없음, 전투 검증기 19개 시나리오 통과를 확인했다.
+- 큰 프레임 양방향 진입, 후보 제시 후 적 이동 순서, 접촉 범위 정지, 교차·되감기 경로의 실제 구간 진행도, `SetEngagementTarget`의 원거리 이동 의미, 전·후방 아군을 둔 적 집중 공격을 추가로 검증했다.
+
+### 통합 시 남은 순서 계약
+- `WaveManager`는 이번 작업에서 수정하지 않았다. `UnitDeployController` 통합 시 같은 프레임의 모든 아군에 `OfferAttackCandidates(activeEnemies)`를 먼저 호출하고, 그 뒤 `EnemyInstance.Tick(deltaTime)`을 호출해야 한다. 이 순서를 보장하지 않는 Update 배선은 적 최초 조우 프레임의 접촉 제한을 우회할 수 있다.

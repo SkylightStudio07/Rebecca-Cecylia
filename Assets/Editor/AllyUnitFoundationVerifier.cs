@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using RCCom.Data;
 using RCCom.Definitions.Card;
+using RCCom.Definitions.Enemy;
 using RCCom.Definitions.Operator;
 using RCCom.Definitions.Tower;
 using RCCom.Definitions.Unit;
@@ -22,6 +23,7 @@ namespace RCCom.EditorTools
         public static void Verify()
         {
             AllyUnitDefinition unitDefinition = ScriptableObject.CreateInstance<AllyUnitDefinition>();
+            EnemyDefinition enemyDefinition = ScriptableObject.CreateInstance<EnemyDefinition>();
             AllyUnitRoster unitRoster = ScriptableObject.CreateInstance<AllyUnitRoster>();
             OperatorDefinition operatorDefinition = ScriptableObject.CreateInstance<OperatorDefinition>();
             TowerRoster towerRoster = ScriptableObject.CreateInstance<TowerRoster>();
@@ -40,6 +42,15 @@ namespace RCCom.EditorTools
                     attackRange = 2f,
                     detectionRange = 3f,
                 };
+                enemyDefinition.data = new EnemyData
+                {
+                    enemyId = "verification-enemy",
+                    displayName = "검증 적",
+                    maxHealth = 10f,
+                    moveSpeed = 0f,
+                    attackRange = 1f,
+                    attackInterval = 1f,
+                };
                 unitRoster.units.Add(unitDefinition);
 
                 var path = new List<Vector2>
@@ -57,7 +68,13 @@ namespace RCCom.EditorTools
                     throw new InvalidOperationException("역방향 스폰 또는 초기 상태 계약이 올바르지 않습니다.");
                 }
 
-                var target = new EnemyInstance();
+                var target = new EnemyInstance
+                {
+                    definition = enemyDefinition,
+                    position = path[2],
+                };
+                target.Spawn(path, null);
+                target.position = path[2];
                 instance.SetEngagementTarget(target);
                 if (instance.State != AllyUnitState.Engaging || instance.CurrentTarget != target)
                 {
@@ -100,6 +117,7 @@ namespace RCCom.EditorTools
             {
                 OperatorLoadoutSession.ClearSelection();
                 UnityEngine.Object.DestroyImmediate(unitDefinition);
+                UnityEngine.Object.DestroyImmediate(enemyDefinition);
                 UnityEngine.Object.DestroyImmediate(unitRoster);
                 UnityEngine.Object.DestroyImmediate(operatorDefinition);
                 UnityEngine.Object.DestroyImmediate(towerRoster);

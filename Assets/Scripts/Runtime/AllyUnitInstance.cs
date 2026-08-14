@@ -156,15 +156,7 @@ namespace RCCom.Runtime
             _lastEnemies = activeEnemies ?? EmptyEnemies;
             _lastAllies = activeAllies ?? EmptyAllies;
 
-            // 적에게 전체 아군 목록을 넘기지 않고, 각 아군이 자신을 후보로 제시한다.
-            // 이렇게 하면 적은 현재 전열 후보만 비교하고 WaveManager와 결합하지 않는다.
-            foreach (EnemyInstance enemy in _lastEnemies)
-            {
-                if (enemy != null)
-                {
-                    enemy.TryOfferAttackTarget(this);
-                }
-            }
+            OfferAttackCandidates(_lastEnemies);
 
             RefreshTargetAndState();
             TickAttack(Mathf.Max(0f, deltaTime));
@@ -185,6 +177,27 @@ namespace RCCom.Runtime
             }
         }
 
+        /// <summary>
+        /// 적 이동보다 먼저 실행해야 하는 후보 제시 단계다. 통합 컨트롤러는 모든 아군에 대해
+        /// 이 단계를 먼저 끝낸 뒤 적 Tick을 호출해야 첫 조우 프레임의 접촉 경계를 보장할 수 있다.
+        /// </summary>
+        public void OfferAttackCandidates(IReadOnlyList<EnemyInstance> activeEnemies)
+        {
+            if (!_isSpawned || IsDead)
+            {
+                return;
+            }
+
+            _lastEnemies = activeEnemies ?? EmptyEnemies;
+            foreach (EnemyInstance enemy in _lastEnemies)
+            {
+                if (enemy != null)
+                {
+                    enemy.TryOfferAttackTarget(this);
+                }
+            }
+        }
+
         /// <summary>전투 구현이 타깃 획득·상실 시 호출하는 공통 상태 전이.</summary>
         public void SetEngagementTarget(EnemyInstance target)
         {
@@ -197,14 +210,6 @@ namespace RCCom.Runtime
             {
                 CurrentTarget = null;
                 State = AllyUnitState.Advancing;
-                return;
-            }
-
-            // 기존 기반 검증기가 사용하는 미생성 대상 호환 분기다. 실제 전투 대상은 접촉 거리로만 정지한다.
-            if (!target.IsSpawned)
-            {
-                CurrentTarget = target;
-                State = AllyUnitState.Engaging;
                 return;
             }
 

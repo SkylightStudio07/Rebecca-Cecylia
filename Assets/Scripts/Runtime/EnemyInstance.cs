@@ -103,6 +103,10 @@ namespace RCCom.Runtime
             }
         }
 
+        /// <summary>
+        /// 같은 프레임의 아군 후보 제시 단계가 끝난 뒤 호출한다. 적은 전체 아군 목록을 알 수 없으므로
+        /// 통합 컨트롤러가 모든 아군의 OfferAttackCandidates를 먼저 실행해야 첫 조우 이동도 접촉선에서 제한된다.
+        /// </summary>
         public void Tick(float deltaTime)
         {
             if (!IsAlive)

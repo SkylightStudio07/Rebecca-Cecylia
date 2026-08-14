@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using RCCom.Core;
 using RCCom.Data;
 using RCCom.Definitions.Enemy;
 using RCCom.Definitions.Unit;
@@ -26,6 +27,7 @@ namespace RCCom.EditorTools
             {
                 VerifySettingsAndEndpointSpawn(temporaryObjects);
                 VerifyContinuousReverseProgress(temporaryObjects);
+                VerifyProgressUsesCurrentWaypointSegment(temporaryObjects);
                 VerifyFinalWaitPointAcrossShortFirstSegment(temporaryObjects);
                 VerifyAttackWhileAdvancing(temporaryObjects);
                 VerifyContactRangeStopsBothSides(temporaryObjects);
@@ -43,7 +45,7 @@ namespace RCCom.EditorTools
                 VerifyBasicAttackDamage(temporaryObjects);
                 VerifyEnemyContactDamageEffectPath(temporaryObjects);
 
-                Debug.Log("[AllyUnitCombatVerifier] 아군 유닛 전투 코어 18개 시나리오 검증 통과");
+                Debug.Log("[AllyUnitCombatVerifier] 아군 유닛 전투 코어 19개 시나리오 검증 통과");
             }
             finally
             {
@@ -83,6 +85,50 @@ namespace RCCom.EditorTools
 
             AssertNear(unit.Position.x, 9f, "아군 역방향 이동량이 moveSpeed와 다릅니다.");
             AssertNear(unit.PathProgress, 0.9f, "선분 내부 이동량이 연속 진행도에 반영되지 않았습니다.");
+        }
+
+        private static void VerifyProgressUsesCurrentWaypointSegment(List<UnityEngine.Object> temporaryObjects)
+        {
+            var path = new List<Vector2>
+            {
+                new(-2f, 0f),
+                new(2f, 0f),
+                new(0f, 0f),
+                new(2f, 0f),
+            };
+            Vector2 sharedPosition = new(0f, 0f);
+
+            float firstForwardProgress = AllyUnitTargeting.CalculatePathProgress(
+                path,
+                1,
+                sharedPosition,
+                true);
+            float secondForwardProgress = AllyUnitTargeting.CalculatePathProgress(
+                path,
+                2,
+                sharedPosition,
+                true);
+            float firstReverseProgress = AllyUnitTargeting.CalculatePathProgress(
+                path,
+                0,
+                sharedPosition,
+                false);
+            float secondReverseProgress = AllyUnitTargeting.CalculatePathProgress(
+                path,
+                1,
+                sharedPosition,
+                false);
+
+            AssertNear(firstForwardProgress, 0.25f,
+                "교차·되감기 경로의 첫 번째 실제 구간 진행도가 잘못되었습니다.");
+            AssertNear(secondForwardProgress, 0.75f,
+                "전진 적 진행도가 실제 nextWaypointIndex 구간을 따르지 않습니다.");
+            AssertNear(firstReverseProgress, 0.25f,
+                "교차·되감기 경로의 아군 첫 번째 실제 구간 진행도가 잘못되었습니다.");
+            AssertNear(secondReverseProgress, 0.75f,
+                "역주행 아군 진행도가 실제 nextWaypointIndex 구간을 따르지 않습니다.");
+            Assert(secondForwardProgress > firstForwardProgress && secondReverseProgress > firstReverseProgress,
+                "같은 좌표의 서로 다른 실제 구간이 같은 진행도로 계산되었습니다.");
         }
 
         private static void VerifyFinalWaitPointAcrossShortFirstSegment(List<UnityEngine.Object> temporaryObjects)
@@ -156,8 +202,10 @@ namespace RCCom.EditorTools
             stationaryAlly.Spawn(stationaryAllyDefinition, new List<Vector2> { new(0f, 0f), new(2f, 0f) });
             EnemyInstance advancingEnemy = SpawnEnemy(advancingEnemyDefinition, enemyPath, enemyPath[0]);
 
-            advancingEnemy.Tick(0f);
-            stationaryAlly.Tick(0f, new[] { advancingEnemy }, new[] { stationaryAlly });
+            stationaryAlly.OfferAttackCandidates(new[] { advancingEnemy });
+            Assert(advancingEnemy.CurrentTarget == stationaryAlly,
+                "적 이동 전에 아군 후보 제시가 완료되지 않았습니다.");
+            advancingEnemy.Tick(1f);
             advancingEnemy.Tick(1f);
 
             AssertNear(advancingEnemy.position.x, 1.25f,
