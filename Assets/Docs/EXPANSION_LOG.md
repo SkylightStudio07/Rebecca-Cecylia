@@ -442,3 +442,23 @@ Phase 0 자동화 경로를 실제로 열고, 이후 오퍼레이터별 원격 �
 - 기존 `AllyUnitFoundationVerifier`를 다시 실행해 역주행 스폰·상태·피해·Roster·Loadout 계약 통과를 확인했다.
 - Unity가 `UnitDeployController.cs.meta`를 자동 생성한 것을 확인했다.
 - 콘솔에는 이번 변경과 무관한 기존 TMP obsolete 경고 1건과 Pipeline 자동화 모드 주의만 남아 있다.
+
+## 2026-08-14 — 유닛 로스터 가용성에 따른 배치 입력·UI 차단
+
+### 결정
+- `UnitDeployController.IsDeployInputEnabled`를 유닛 배치 입력의 단일 게이트로 두고, 일시정지 중이거나 선택된 오퍼레이터의 `AllyUnitRoster`가 null·빈 목록이면 선택과 배치 요청을 거부한다.
+- `UnitDeployMenuUI`는 `UnitDeployController.IsAvailable`을 읽어 유닛 패널의 `CanvasGroup`을 표시·숨김 처리한다. 로스터가 없는 타워형 오퍼레이터는 오류가 아니라 정상 비활성 상태로 취급한다.
+- 패널은 `GameObject.SetActive`로 끄지 않고 `alpha`, `interactable`, `blocksRaycasts`를 함께 변경한다.
+
+### 판단 근거
+- UI를 숨기는 것만으로는 단축키나 다른 호출 경로가 배치 API를 직접 실행할 수 있으므로 실제 생성 책임자인 Controller에서도 입력을 거부해야 한다.
+- 게임플레이가 UI를 직접 찾아 끄지 않고 UI가 공개 가용성 상태를 읽게 해 UI→게임플레이 단방향 참조 원칙을 유지한다.
+- `GameObject.SetActive(false)`로 UI 자신을 끄면 후속 이벤트 구독이나 갱신 경로까지 사라졌던 기존 `CardSelectionUI` 사례가 있어 같은 `CanvasGroup` 계약을 재사용한다.
+
+### 의도적으로 하지 않은 것
+- 키보드·게임패드의 구체 배치 키는 아직 기획이 확정되지 않아 추가하지 않았다.
+- 실제 유닛 패널과 `UnitDeployController`가 DefenseScene에 아직 없으므로 기존 씬이나 임시 UI 에셋을 만들지 않았다. 신규 오퍼레이터·유닛 UI가 준비되면 `UnitDeployMenuUI`의 Controller와 CanvasGroup만 연결한다.
+
+### 검증
+- Unity `6000.3.13f1` Pipeline 재컴파일을 완료했고 컴파일 오류가 없음을 확인했다.
+- `AllyUnitFoundationVerifier`에서 null 로스터일 때 선택 요청 거부와 패널 비표시·비상호작용, 유효 로스터일 때 입력 허용과 패널 표시·상호작용 계약을 모두 검증했다.

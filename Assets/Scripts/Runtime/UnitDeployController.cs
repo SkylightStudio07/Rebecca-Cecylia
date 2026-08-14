@@ -31,6 +31,7 @@ namespace RCCom.Runtime
         public AllyUnitRoster Roster => allyUnitRoster;
         public bool IsAvailable =>
             allyUnitRoster != null && allyUnitRoster.units != null && allyUnitRoster.units.Count > 0;
+        public bool IsDeployInputEnabled => Time.timeScale > 0f && IsAvailable;
 
         public AllyUnitDefinition SelectedDefinition =>
             _selectedIndex.HasValue && IsValidRosterIndex(_selectedIndex.Value)
@@ -53,7 +54,7 @@ namespace RCCom.Runtime
         {
             // 현재는 UI가 공개 배치 API를 호출하지만, 후속 입력 폴링이 추가되어도 카드 선택·
             // 게임오버·튜토리얼 뒤에서 유닛이 배치되거나 Tick되지 않도록 경계를 먼저 둔다.
-            if (Time.timeScale <= 0f || !IsAvailable)
+            if (!IsDeployInputEnabled)
             {
                 return;
             }
@@ -75,7 +76,7 @@ namespace RCCom.Runtime
         /// <summary>배치 UI 버튼이 호출한다. 구체 입력 키는 UI/입력 설계가 확정될 때 연결한다.</summary>
         public bool SelectUnit(int index)
         {
-            if (!IsValidRosterIndex(index))
+            if (!IsDeployInputEnabled || !IsValidRosterIndex(index))
             {
                 return false;
             }
@@ -107,7 +108,7 @@ namespace RCCom.Runtime
         /// </summary>
         public bool TryDeploy(int index)
         {
-            if (Time.timeScale <= 0f || !IsValidRosterIndex(index))
+            if (!IsDeployInputEnabled || !IsValidRosterIndex(index))
             {
                 return false;
             }

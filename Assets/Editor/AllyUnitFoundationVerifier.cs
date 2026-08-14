@@ -27,6 +27,7 @@ namespace RCCom.EditorTools
             TowerRoster towerRoster = ScriptableObject.CreateInstance<TowerRoster>();
             CardRoster cardRoster = ScriptableObject.CreateInstance<CardRoster>();
             OperatorDialogueSet dialogueSet = ScriptableObject.CreateInstance<OperatorDialogueSet>();
+            GameObject deployUiObject = null;
 
             try
             {
@@ -94,7 +95,37 @@ namespace RCCom.EditorTools
                     throw new InvalidOperationException("오퍼레이터 유닛 로스터 해석 계약이 올바르지 않습니다.");
                 }
 
-                Debug.Log("[AllyUnitFoundationVerifier] 역주행 스폰·상태·피해·Roster·Loadout 계약 검증 통과");
+                deployUiObject = new GameObject("AllyUnitDeployAvailabilityVerification");
+                deployUiObject.SetActive(false);
+                CanvasGroup panelGroup = deployUiObject.AddComponent<CanvasGroup>();
+                UnitDeployController deployController = deployUiObject.AddComponent<UnitDeployController>();
+                UnitDeployMenuUI deployMenuUI = deployUiObject.AddComponent<UnitDeployMenuUI>();
+
+                var menuSerializedObject = new SerializedObject(deployMenuUI);
+                menuSerializedObject.FindProperty("deployController").objectReferenceValue = deployController;
+                menuSerializedObject.FindProperty("panelGroup").objectReferenceValue = panelGroup;
+                menuSerializedObject.ApplyModifiedPropertiesWithoutUndo();
+
+                deployMenuUI.RefreshAvailability();
+                if (deployController.IsDeployInputEnabled || deployController.SelectUnit(0) ||
+                    deployMenuUI.IsVisible || panelGroup.interactable || panelGroup.blocksRaycasts ||
+                    panelGroup.alpha != 0f)
+                {
+                    throw new InvalidOperationException("null 로스터의 배치 입력 또는 UI 비활성 계약이 올바르지 않습니다.");
+                }
+
+                var controllerSerializedObject = new SerializedObject(deployController);
+                controllerSerializedObject.FindProperty("allyUnitRoster").objectReferenceValue = unitRoster;
+                controllerSerializedObject.ApplyModifiedPropertiesWithoutUndo();
+                deployMenuUI.RefreshAvailability();
+
+                if (!deployController.IsDeployInputEnabled || !deployMenuUI.IsVisible ||
+                    !panelGroup.interactable || !panelGroup.blocksRaycasts || panelGroup.alpha != 1f)
+                {
+                    throw new InvalidOperationException("유효한 로스터의 배치 입력 또는 UI 활성 계약이 올바르지 않습니다.");
+                }
+
+                Debug.Log("[AllyUnitFoundationVerifier] 역주행 스폰·상태·피해·Roster·Loadout·배치 가용성 계약 검증 통과");
             }
             finally
             {
@@ -105,6 +136,11 @@ namespace RCCom.EditorTools
                 UnityEngine.Object.DestroyImmediate(towerRoster);
                 UnityEngine.Object.DestroyImmediate(cardRoster);
                 UnityEngine.Object.DestroyImmediate(dialogueSet);
+
+                if (deployUiObject != null)
+                {
+                    UnityEngine.Object.DestroyImmediate(deployUiObject);
+                }
             }
         }
     }
