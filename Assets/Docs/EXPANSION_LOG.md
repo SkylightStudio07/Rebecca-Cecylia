@@ -462,3 +462,24 @@ Phase 0 자동화 경로를 실제로 열고, 이후 오퍼레이터별 원격 �
 ### 검증
 - Unity `6000.3.13f1` Pipeline 재컴파일을 완료했고 컴파일 오류가 없음을 확인했다.
 - `AllyUnitFoundationVerifier`에서 null 로스터일 때 선택 요청 거부와 패널 비표시·비상호작용, 유효 로스터일 때 입력 허용과 패널 표시·상호작용 계약을 모두 검증했다.
+
+## 2026-08-14 — AllyUnitRoster 기반 동적 Definition 선택 UI
+
+### 구현
+- `UnitDeployMenuUI`가 선택된 오퍼레이터의 `AllyUnitRoster.units`를 순회해 공용 `UnitDeployButton` 프리팹을 동적으로 생성한다.
+- 각 버튼은 `AllyUnitDefinition`의 스프라이트, 표시 이름, 배치 비용을 표시하고 로스터 인덱스를 캡처해 `UnitDeployController.SelectUnit`을 호출한다.
+- `UnitDeployButton`은 자신이 표시하는 Definition만 보유하며 로스터나 Controller를 직접 참조하지 않는다. 선택 인덱스와 생성 책임은 메뉴에 남겼다.
+- 메뉴는 `SelectionChanged` 이벤트를 구독해 현재 Definition과 일치하는 버튼에만 선택 표시를 켠다. `ClearSelection`이 호출되면 모든 표시가 꺼진다.
+
+### 판단 근거
+- 버튼 개수를 고정하면 오퍼레이터마다 유닛 수가 달라질 때 씬이나 코드를 다시 수정해야 한다. Roster 기반 동적 생성은 신규 오퍼레이터를 에셋 조립만으로 추가한다는 확장 목표를 유지한다.
+- 버튼이 로스터 인덱스를 직접 계산하거나 Controller를 소유하게 하지 않고 콜백만 받게 해 기존 `TowerBuildButton`/`TowerBuildMenuUI`의 책임 분리를 따른다.
+- 자동 기본 선택은 기획으로 확정되지 않았으므로 넣지 않았다. 플레이어가 버튼을 누른 Definition만 선택 상태가 된다.
+
+### 의도적으로 하지 않은 것
+- 실제 버튼 프리팹과 DefenseScene의 스크롤 Content 배치는 유닛 아트와 UI 레이아웃이 아직 없어 생성하지 않았다.
+- 배치 비용은 표시만 하며 지휘 포인트 차감은 별도 자원 작업에서 구현한다.
+
+### 검증
+- Unity `6000.3.13f1`에서 전체 스크립트 재컴파일을 완료했고 오류가 없었다.
+- `AllyUnitFoundationVerifier`가 메모리 임시 버튼 템플릿으로 로스터 수만큼 생성, Definition 연결, 이름·비용 표시, 클릭 콜백 선택, 선택 표시와 해제를 검증했다.
