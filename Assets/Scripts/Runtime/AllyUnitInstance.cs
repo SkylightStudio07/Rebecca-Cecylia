@@ -360,9 +360,10 @@ namespace RCCom.Runtime
                 float contactDistance = DistanceBeforeContact(target);
                 if (contactDistance <= movementDistance + 0.0001f)
                 {
-                    if (contactDistance > 0.0001f)
+                    float safeContactDistance = Mathf.Min(contactDistance, movementDistance);
+                    if (safeContactDistance > 0.0001f)
                     {
-                        Position += toTarget / distance * contactDistance;
+                        Position += toTarget / distance * safeContactDistance;
                     }
 
                     remainingDistance = 0f;
