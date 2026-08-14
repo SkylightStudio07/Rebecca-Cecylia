@@ -30,6 +30,7 @@ namespace RCCom.Runtime
         private bool _hasReachedFinalWaitPoint;
         private IReadOnlyList<EnemyInstance> _lastEnemies = EmptyEnemies;
         private IReadOnlyList<AllyUnitInstance> _lastAllies = EmptyAllies;
+        private bool _attackCandidatesOffered;
 
         public AllyUnitDefinition Definition { get; private set; }
         public AllyUnitData Data => Definition != null ? Definition.data : null;
@@ -114,6 +115,7 @@ namespace RCCom.Runtime
             State = AllyUnitState.Advancing;
             CurrentTarget = null;
             AttackCooldownRemaining = 0f;
+            _attackCandidatesOffered = false;
             _contactRange = settings != null ? settings.ContactRange : DefaultContactRange;
             _separationMargin = settings != null ? settings.SeparationMargin : DefaultSeparationMargin;
             float totalPathLength = AllyUnitTargeting.CalculatePathLength(path);
@@ -156,12 +158,16 @@ namespace RCCom.Runtime
             _lastEnemies = activeEnemies ?? EmptyEnemies;
             _lastAllies = activeAllies ?? EmptyAllies;
 
-            OfferAttackCandidates(_lastEnemies);
+            if (!_attackCandidatesOffered)
+            {
+                OfferAttackCandidates(_lastEnemies, Mathf.Max(0f, deltaTime));
+            }
 
             RefreshTargetAndState();
             TickAttack(Mathf.Max(0f, deltaTime));
             if (IsDead)
             {
+                _attackCandidatesOffered = false;
                 return;
             }
 
@@ -169,6 +175,9 @@ namespace RCCom.Runtime
             {
                 MoveAlongPath(Mathf.Max(0f, deltaTime));
             }
+
+            // 선행 후보 제시 단계가 있었다면 같은 프레임의 Tick에서 다시 전체 적을 순회하지 않는다.
+            _attackCandidatesOffered = false;
 
             AllyUnitContext ctx = MakeContext(deltaTime, _lastEnemies, _lastAllies);
             foreach (IAllyUnitEffect effect in Definition.effects)
@@ -183,19 +192,34 @@ namespace RCCom.Runtime
         /// </summary>
         public void OfferAttackCandidates(IReadOnlyList<EnemyInstance> activeEnemies)
         {
+            OfferAttackCandidates(activeEnemies, float.PositiveInfinity);
+        }
+
+        /// <summary>
+        /// 현재 프레임에 실제로 이동할 선분을 함께 전달한다. 공격 사거리 밖의 아군은 공격 타깃으로는
+        /// 거부하되, 이번 이동 중 contactRange에 진입할 수 있으면 적의 이동 차단 타깃으로 기록한다.
+        /// </summary>
+        public void OfferAttackCandidates(
+            IReadOnlyList<EnemyInstance> activeEnemies,
+            float deltaTime)
+        {
             if (!_isSpawned || IsDead)
             {
                 return;
             }
 
             _lastEnemies = activeEnemies ?? EmptyEnemies;
+            float safeDeltaTime = deltaTime > 0f ? deltaTime : 0f;
             foreach (EnemyInstance enemy in _lastEnemies)
             {
                 if (enemy != null)
                 {
                     enemy.TryOfferAttackTarget(this);
+                    enemy.TryOfferMovementTarget(this, safeDeltaTime);
                 }
             }
+
+            _attackCandidatesOffered = true;
         }
 
         /// <summary>전투 구현이 타깃 획득·상실 시 호출하는 공통 상태 전이.</summary>
