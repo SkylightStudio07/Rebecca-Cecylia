@@ -195,26 +195,30 @@ namespace RCCom.EditorTools
                 "아군이 접촉 경계에서 정확한 거리를 유지하지 않았습니다.");
             Assert(ally.State == AllyUnitState.Engaging, "아군이 접촉 범위 진입 프레임에 Engaging으로 전환되지 않았습니다.");
 
-            AllyUnitDefinition stationaryAllyDefinition = CreateAlly(temporaryObjects, 100f, 0f, 0f, 3f, false);
+            AllyUnitDefinition movingAllyDefinition = CreateAlly(temporaryObjects, 100f, 2f, 0f, 3f, false);
             EnemyDefinition advancingEnemyDefinition = CreateEnemy(temporaryObjects, 100f, 10f, 0f, 3f, 1f, false);
             var enemyPath = new List<Vector2> { new(0f, 0f), new(10f, 0f) };
-            var stationaryAlly = new AllyUnitInstance();
-            stationaryAlly.Spawn(stationaryAllyDefinition, enemyPath);
+            var movingAllyPath = new List<Vector2> { new(0f, 0f), new(11f, 0f) };
+            var movingAlly = new AllyUnitInstance();
+            movingAlly.Spawn(movingAllyDefinition, movingAllyPath);
             EnemyInstance advancingEnemy = SpawnEnemy(advancingEnemyDefinition, enemyPath, enemyPath[0]);
 
-            // 첫 프레임의 현재 구간을 확정한 뒤, 초기 거리 10에서 이동량 10을 적용한다.
+            // 적의 현재 구간을 확정한 뒤 아군이 먼저 이동한다. 후보를 이동 전에 제시하면
+            // 아군의 옛 위치가 sweep 밖이라 적이 같은 프레임에 전열을 관통할 수 있다.
             advancingEnemy.Tick(0f);
-            Assert(Vector2.Distance(advancingEnemy.position, stationaryAlly.Position) >
+            Assert(Vector2.Distance(advancingEnemy.position, movingAlly.Position) >
                    advancingEnemy.Data.attackRange,
                 "최초 조우 회귀 조건의 초기 거리가 attackRange보다 크지 않습니다.");
-            stationaryAlly.OfferAttackCandidates(new[] { advancingEnemy });
+            movingAlly.Tick(1f, new[] { advancingEnemy }, new[] { movingAlly });
+            AssertNear(movingAlly.Position.x, 9f,
+                "고속 조우 검증에서 아군의 선행 이동 위치가 잘못되었습니다.");
             Assert(advancingEnemy.CurrentTarget == null,
                 "attackRange 밖의 아군이 공격 타깃으로 잘못 등록되었습니다.");
             advancingEnemy.Tick(1f);
 
-            AssertNear(advancingEnemy.position.x, 9.25f,
+            AssertNear(advancingEnemy.position.x, 8.25f,
                 "attackRange 밖 최초 조우에서 적이 contactRange 경계를 관통했습니다.");
-            AssertNear(Vector2.Distance(advancingEnemy.position, stationaryAlly.Position), stationaryAlly.ContactRange,
+            AssertNear(Vector2.Distance(advancingEnemy.position, movingAlly.Position), movingAlly.ContactRange,
                 "attackRange 밖 최초 조우에서 적이 contactRange 경계에 정지하지 않았습니다.");
         }
 

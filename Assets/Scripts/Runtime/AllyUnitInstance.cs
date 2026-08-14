@@ -30,7 +30,6 @@ namespace RCCom.Runtime
         private bool _hasReachedFinalWaitPoint;
         private IReadOnlyList<EnemyInstance> _lastEnemies = EmptyEnemies;
         private IReadOnlyList<AllyUnitInstance> _lastAllies = EmptyAllies;
-        private bool _attackCandidatesOffered;
 
         public AllyUnitDefinition Definition { get; private set; }
         public AllyUnitData Data => Definition != null ? Definition.data : null;
@@ -115,7 +114,6 @@ namespace RCCom.Runtime
             State = AllyUnitState.Advancing;
             CurrentTarget = null;
             AttackCooldownRemaining = 0f;
-            _attackCandidatesOffered = false;
             _contactRange = settings != null ? settings.ContactRange : DefaultContactRange;
             _separationMargin = settings != null ? settings.SeparationMargin : DefaultSeparationMargin;
             float totalPathLength = AllyUnitTargeting.CalculatePathLength(path);
@@ -158,16 +156,10 @@ namespace RCCom.Runtime
             _lastEnemies = activeEnemies ?? EmptyEnemies;
             _lastAllies = activeAllies ?? EmptyAllies;
 
-            if (!_attackCandidatesOffered)
-            {
-                OfferAttackCandidates(_lastEnemies, Mathf.Max(0f, deltaTime));
-            }
-
             RefreshTargetAndState();
             TickAttack(Mathf.Max(0f, deltaTime));
             if (IsDead)
             {
-                _attackCandidatesOffered = false;
                 return;
             }
 
@@ -176,32 +168,23 @@ namespace RCCom.Runtime
                 MoveAlongPath(Mathf.Max(0f, deltaTime));
             }
 
-            // 선행 후보 제시 단계가 있었다면 같은 프레임의 Tick에서 다시 전체 적을 순회하지 않는다.
-            _attackCandidatesOffered = false;
-
             AllyUnitContext ctx = MakeContext(deltaTime, _lastEnemies, _lastAllies);
             foreach (IAllyUnitEffect effect in Definition.effects)
             {
                 effect.OnTick(ctx);
             }
+
+            // 적이 이동 차단 sweep을 최신 아군 위치로 계산해야 하므로 이동과 효과 처리가
+            // 끝난 뒤 후보를 제시한다. UnitDeployController는 모든 아군 Tick을 WaveManager보다
+            // 먼저 끝내기만 하면 별도의 후보 선행 순회를 할 필요가 없다.
+            OfferAttackCandidates(_lastEnemies);
         }
 
         /// <summary>
-        /// 적 이동보다 먼저 실행해야 하는 후보 제시 단계다. 통합 컨트롤러는 모든 아군에 대해
-        /// 이 단계를 먼저 끝낸 뒤 적 Tick을 호출해야 첫 조우 프레임의 접촉 경계를 보장할 수 있다.
+        /// 현재 위치를 기준으로 공격·이동 차단 후보를 적에게 제시한다. Tick은 이동을 마친 뒤
+        /// 이 메서드를 한 번 호출하므로 통합 컨트롤러가 같은 후보 목록을 다시 순회하지 않는다.
         /// </summary>
         public void OfferAttackCandidates(IReadOnlyList<EnemyInstance> activeEnemies)
-        {
-            OfferAttackCandidates(activeEnemies, float.PositiveInfinity);
-        }
-
-        /// <summary>
-        /// 현재 프레임에 실제로 이동할 선분을 함께 전달한다. 공격 사거리 밖의 아군은 공격 타깃으로는
-        /// 거부하되, 이번 이동 중 contactRange에 진입할 수 있으면 적의 이동 차단 타깃으로 기록한다.
-        /// </summary>
-        public void OfferAttackCandidates(
-            IReadOnlyList<EnemyInstance> activeEnemies,
-            float deltaTime)
         {
             if (!_isSpawned || IsDead)
             {
@@ -209,17 +192,16 @@ namespace RCCom.Runtime
             }
 
             _lastEnemies = activeEnemies ?? EmptyEnemies;
-            float safeDeltaTime = deltaTime > 0f ? deltaTime : 0f;
             foreach (EnemyInstance enemy in _lastEnemies)
             {
                 if (enemy != null)
                 {
                     enemy.TryOfferAttackTarget(this);
-                    enemy.TryOfferMovementTarget(this, safeDeltaTime);
+                    // 실제 적 Tick에서 deltaTime과 둔화 만료를 다시 검증한다. 여기서는 현재
+                    // 웨이포인트 선분 전체를 후보로 잡아 프레임 중 속도 변화도 놓치지 않는다.
+                    enemy.TryOfferMovementTarget(this, float.PositiveInfinity);
                 }
             }
-
-            _attackCandidatesOffered = true;
         }
 
         /// <summary>전투 구현이 타깃 획득·상실 시 호출하는 공통 상태 전이.</summary>

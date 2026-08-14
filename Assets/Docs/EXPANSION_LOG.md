@@ -454,13 +454,13 @@ Phase 0 자동화 경로를 실제로 열고, 이후 오퍼레이터별 원격 �
 - 진행도는 위치에서 가장 가까운 선분을 추측하지 않고 각 인스턴스가 가진 현재 웨이포인트 인덱스와 해당 선분의 보간값으로 계산한다. 교차·되감기 경로에서도 전열이 다른 구간으로 순간 이동하지 않으며, 최종 대기점도 같은 누적 경로 길이 계산을 사용한다.
 - `SetEngagementTarget`은 유효하게 스폰된 대상이 `contactRange` 안에 있을 때만 `Engaging`으로 전환한다. 공격 범위 안이지만 접촉 범위 밖인 원거리 유닛은 계속 `Advancing`할 수 있다.
 - 적 전열 집중 공격 검증은 서로 다른 진행도를 가진 전방·후방 아군을 함께 배치하고 두 적이 전방 아군을 선택하는지 확인하도록 보강했다.
-- 적 최초 조우의 이동 순서는 `AllyUnitInstance.OfferAttackCandidates`를 모든 아군에 먼저 호출한 뒤 `EnemyInstance.Tick`을 호출하는 단계 계약으로 명시했다. 적이 전체 아군 목록을 보유하지 않는 구조를 유지하면서도 접촉 경계 제한이 실행 순서에 의해 빠지지 않게 통합 컨트롤러가 지켜야 할 경계다.
+- 적 최초 조우의 이동 순서는 모든 `AllyUnitInstance.Tick`을 먼저 끝낸 뒤 `EnemyInstance.Tick`을 호출하는 단계 계약으로 명시했다. 각 아군은 이동을 마친 최신 위치에서 Tick 마지막에 후보를 제시하므로, 적이 전체 아군 목록을 보유하지 않으면서도 같은 프레임 위치 변화로 접촉 경계 제한이 빠지지 않는다.
 - `attackRange` 밖의 아군은 공격 타깃으로는 계속 거부하되, 현재 프레임 이동 선분이 그 아군의 `contactRange`와 만날 경우 별도의 이동 차단 타깃으로 기록한다. 따라서 최초 후보 제시 시점에 공격 사거리를 벗어나 있어도 긴 프레임 이동으로 접촉선을 관통하지 않는다.
-- 선행 `OfferAttackCandidates` 실행 여부를 아군 인스턴스가 같은 프레임 동안 기억한다. 통합 컨트롤러가 선행 단계를 사용하면 `AllyUnitInstance.Tick`이 동일 후보 순회를 반복하지 않는다.
+- `OfferAttackCandidates`는 아군 이동과 효과 Tick이 끝난 뒤 한 번만 실행한다. 통합 컨트롤러가 별도 후보 선행 순회를 하지 않아 아군×적 후보 비교가 중복되지 않는다.
 
 ### 검증 결과
 - `AllyUnitFoundationVerifier`와 `AllyUnitCombatVerifier`를 Unity Pipeline `eval`로 다시 실행했다. 컴파일 `failed=false`, 신규 콘솔 오류 없음, 전투 검증기 19개 시나리오 통과를 확인했다.
-- 큰 프레임 양방향 진입, 초기 거리 10·`attackRange` 3·이동량 10인 공격 사거리 밖 최초 조우, 후보 제시 후 적 이동 순서, 접촉 범위 정지, 교차·되감기 경로의 실제 구간 진행도, `SetEngagementTarget`의 원거리 이동 의미, 전·후방 아군을 둔 적 집중 공격을 추가로 검증했다.
+- 큰 프레임 양방향 진입, 초기 거리 11에서 아군이 먼저 2만큼 이동한 뒤 `attackRange` 3인 적이 10만큼 이동하는 최초 조우, 최신 위치 후보 제시 후 적 이동 순서, 접촉 범위 정지, 교차·되감기 경로의 실제 구간 진행도, `SetEngagementTarget`의 원거리 이동 의미, 전·후방 아군을 둔 적 집중 공격을 추가로 검증했다.
 
 ### 통합 시 남은 순서 계약
-- `WaveManager`는 이번 작업에서 수정하지 않았다. `UnitDeployController` 통합 시 같은 프레임의 모든 아군에 `OfferAttackCandidates(activeEnemies)`를 먼저 호출하고, 그 뒤 `EnemyInstance.Tick(deltaTime)`을 호출해야 한다. 이 순서를 보장하지 않는 Update 배선은 적 최초 조우 프레임의 접촉 제한을 우회할 수 있다.
+- `WaveManager`는 이번 작업에서 수정하지 않았다. `UnitDeployController` 통합 시 같은 프레임의 모든 아군 `Tick(deltaTime, activeEnemies, activeAllies)`을 먼저 완료하고, 그 뒤 기존 `WaveManager.Update`가 `EnemyInstance.Tick(deltaTime)`을 실행하도록 명시적인 실행 순서를 부여해야 한다. 아군 Tick이 최신 위치 후보 제시까지 소유하므로 별도의 `OfferAttackCandidates` 선행 호출은 하지 않는다.
