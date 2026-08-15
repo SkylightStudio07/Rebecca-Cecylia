@@ -23,15 +23,20 @@ namespace RCCom.Runtime
         [Header("모든 유닛이 공유하는 View 프리팹")]
         [SerializeField] private AllyUnitView viewPrefab;
 
+        [Header("지휘 포인트")]
+        [SerializeField, Min(0)] private int startingCommandPoints;
+
         private readonly List<AllyUnitInstance> _activeUnits = new();
         private readonly Dictionary<AllyUnitInstance, Action> _deathHandlers = new();
         private int? _selectedIndex;
+        private int _commandPoints;
 
         public IReadOnlyList<AllyUnitInstance> ActiveUnits => _activeUnits;
         public AllyUnitRoster Roster => allyUnitRoster;
         public bool IsAvailable =>
             allyUnitRoster != null && allyUnitRoster.units != null && allyUnitRoster.units.Count > 0;
         public bool IsDeployInputEnabled => Time.timeScale > 0f && IsAvailable;
+        public int CommandPoints => _commandPoints;
 
         public AllyUnitDefinition SelectedDefinition =>
             _selectedIndex.HasValue && IsValidRosterIndex(_selectedIndex.Value)
@@ -42,12 +47,15 @@ namespace RCCom.Runtime
         public event Action<AllyUnitInstance> UnitDeployed;
         public event Action<AllyUnitInstance> UnitRemoved;
         public event Action<AllyUnitDefinition> SelectionChanged;
+        public event Action<int> CommandPointsChanged;
+        public event Action<AllyUnitDefinition> DeployFailedInsufficientCommandPoints;
 
         private void Awake()
         {
             // 타워형 오퍼레이터는 유닛 로스터가 없는 것이 정상이다. 이 경우 비어 있는 기본
             // 로스터를 섞지 않고 Controller를 안전한 비활성 상태로 유지해 로드아웃 경계를 지킨다.
             allyUnitRoster = OperatorLoadoutSession.ResolveAllyUnitRoster(allyUnitRoster);
+            _commandPoints = Mathf.Max(0, startingCommandPoints);
         }
 
         private void Update()
@@ -93,9 +101,8 @@ namespace RCCom.Runtime
         }
 
         /// <summary>
-        /// 현재 선택을 배치한다. 지휘 포인트 수치와 차감 규칙은 아직 미확정이므로 이 단계에서는
-        /// 섞지 않는다. 후속 자원 구현은 실제 생성 직전의 TryDeploy 내부에 추가해 모든 호출
-        /// 경로가 같은 비용 검증을 거치게 한다.
+        /// 현재 선택을 배치한다. 직접 인덱스로 배치하는 경로와 같은 TryDeploy를 사용해
+        /// 버튼·단축키 등 호출 위치와 무관하게 동일한 지휘 포인트 검증을 거친다.
         /// </summary>
         public bool TryDeploySelected()
         {
@@ -127,6 +134,20 @@ namespace RCCom.Runtime
             }
 
             AllyUnitDefinition definition = allyUnitRoster.units[index];
+            int deployCost = definition.data.deployCost;
+            if (deployCost < 0)
+            {
+                Debug.LogError($"[UnitDeploy] {definition.data.displayName}의 배치 비용이 음수입니다.");
+                return false;
+            }
+
+            if (!CanSpendCommandPoints(deployCost))
+            {
+                Debug.Log($"[UnitDeploy] 지휘 포인트 부족 (필요 {deployCost}, 보유 {_commandPoints})");
+                DeployFailedInsufficientCommandPoints?.Invoke(definition);
+                return false;
+            }
+
             var instance = new AllyUnitInstance();
             instance.Spawn(definition, path);
 
@@ -139,10 +160,61 @@ namespace RCCom.Runtime
             AllyUnitView view = Instantiate(viewPrefab, instance.Position, Quaternion.identity);
             view.Bind(instance);
 
+            // 스폰 효과와 View 바인딩까지 성공한 뒤에만 소비해, 실패한 배치가 자원만
+            // 차감하는 일을 막는다. 그 사이 지휘 포인트를 바꾸는 비동기 경로는 없다.
+            if (!TrySpendCommandPoints(deployCost))
+            {
+                Destroy(view.gameObject);
+                return false;
+            }
+
             RegisterInstance(instance);
             UnitDeployed?.Invoke(instance);
-            Debug.Log($"[UnitDeploy] {definition.data.displayName} 배치 완료");
+            Debug.Log($"[UnitDeploy] {definition.data.displayName} 배치 완료 (-{deployCost} CP, 남은 {_commandPoints})");
             return true;
+        }
+
+        public bool CanSpendCommandPoints(int amount)
+        {
+            return amount >= 0 && _commandPoints >= amount;
+        }
+
+        public bool CanAfford(AllyUnitDefinition definition)
+        {
+            return definition != null && definition.data != null &&
+                   CanSpendCommandPoints(definition.data.deployCost);
+        }
+
+        public bool TrySpendCommandPoints(int amount)
+        {
+            if (!CanSpendCommandPoints(amount))
+            {
+                return false;
+            }
+
+            if (amount == 0)
+            {
+                return true;
+            }
+
+            _commandPoints -= amount;
+            CommandPointsChanged?.Invoke(_commandPoints);
+            return true;
+        }
+
+        /// <summary>
+        /// 후속 자동 회복이나 보상 경로가 지휘 포인트를 지급할 공용 진입점.
+        /// 최대치는 아직 미확정이므로 이 단계에서는 상한을 임의로 두지 않는다.
+        /// </summary>
+        public void AddCommandPoints(int amount)
+        {
+            if (amount <= 0)
+            {
+                return;
+            }
+
+            _commandPoints += amount;
+            CommandPointsChanged?.Invoke(_commandPoints);
         }
 
         private void TickActiveUnits(float deltaTime)

@@ -192,7 +192,28 @@ namespace RCCom.EditorTools
                     throw new InvalidOperationException("유닛 Definition 선택 해제 계약이 올바르지 않습니다.");
                 }
 
-                Debug.Log("[AllyUnitFoundationVerifier] 역주행 스폰·상태·피해·Roster·Loadout·배치 가용성·Definition 선택 계약 검증 통과");
+                int changedCommandPoints = -1;
+                deployController.CommandPointsChanged += points => changedCommandPoints = points;
+                deployController.AddCommandPoints(5);
+                if (deployController.CommandPoints != 5 || changedCommandPoints != 5 ||
+                    !deployController.CanAfford(unitDefinition))
+                {
+                    throw new InvalidOperationException("지휘 포인트 지급 또는 비용 확인 계약이 올바르지 않습니다.");
+                }
+
+                if (!deployController.TrySpendCommandPoints(unitDefinition.data.deployCost) ||
+                    deployController.CommandPoints != 2 || changedCommandPoints != 2)
+                {
+                    throw new InvalidOperationException("지휘 포인트 소비 계약이 올바르지 않습니다.");
+                }
+
+                if (deployController.TrySpendCommandPoints(unitDefinition.data.deployCost) ||
+                    deployController.CommandPoints != 2 || changedCommandPoints != 2)
+                {
+                    throw new InvalidOperationException("지휘 포인트 부족 시 소비 거부 계약이 올바르지 않습니다.");
+                }
+
+                Debug.Log("[AllyUnitFoundationVerifier] 역주행 스폰·상태·피해·Roster·Loadout·배치 가용성·Definition 선택·지휘 포인트 계약 검증 통과");
             }
             finally
             {

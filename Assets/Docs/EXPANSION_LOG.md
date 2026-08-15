@@ -483,3 +483,24 @@ Phase 0 자동화 경로를 실제로 열고, 이후 오퍼레이터별 원격 �
 ### 검증
 - Unity `6000.3.13f1`에서 전체 스크립트 재컴파일을 완료했고 오류가 없었다.
 - `AllyUnitFoundationVerifier`가 메모리 임시 버튼 템플릿으로 로스터 수만큼 생성, Definition 연결, 이름·비용 표시, 클릭 콜백 선택, 선택 표시와 해제를 검증했다.
+
+## 2026-08-15 — 유닛 배치 지휘 포인트 비용 확인·소비
+
+### 구현
+- `UnitDeployController`에 시작 지휘 포인트와 세션 중 현재 잔액을 추가하고 `CommandPoints`, `CanSpendCommandPoints`, `CanAfford`, `TrySpendCommandPoints`, `AddCommandPoints`를 공개했다.
+- 모든 배치 호출 경로가 합류하는 `TryDeploy`에서 `AllyUnitData.deployCost`를 검사한다. 잔액이 부족하면 생성 없이 실패하고 `DeployFailedInsufficientCommandPoints`를 알린다.
+- 순수 인스턴스 스폰과 공용 View 바인딩까지 성공한 뒤 비용을 소비하고, 잔액 변경은 `CommandPointsChanged`로 알린다.
+- 음수 비용은 잘못된 Definition으로 보고 배치를 거부하며, 비용 0은 정상적인 무료 배치로 처리한다.
+
+### 판단 근거
+- UI에서만 비용을 확인하면 단축키나 후속 자동 배치 경로가 검증을 우회할 수 있으므로 실제 생성 책임자인 Controller를 단일 소비 경계로 삼았다.
+- 스폰 효과 중 즉시 사망하거나 View 생성 준비가 실패한 배치에서는 지휘 포인트가 빠지지 않아야 하므로, 성공 조건을 확인한 뒤 소비한다.
+- 지휘 포인트는 유닛 배치 흐름 전용 상태라 별도 Manager나 `GameManager` 확장 없이 `UnitDeployController`가 소유한다.
+
+### 의도적으로 하지 않은 것
+- 최대 지휘 포인트, 자동 회복 속도, 오퍼레이터별 시작값은 `EXPANSION_PLAN.md` §5 미확정 수치이므로 정하지 않았다. 시작 잔액만 인스펙터 입력으로 두고 현재 구현에는 상한을 넣지 않았다.
+- HUD 표시와 부족 피드백 연출은 공개 값과 이벤트만 준비하고 이번 범위에는 포함하지 않았다.
+
+### 검증
+- Unity `6000.3.13f1` Pipeline에서 전체 스크립트 재컴파일을 완료했고 오류가 없었다.
+- `AllyUnitFoundationVerifier`에서 5포인트 지급, 비용 3의 구매 가능 판정과 소비 후 잔액 2, 다시 비용 3을 소비하려 할 때 거부되고 잔액과 변경 이벤트 값이 유지되는 계약을 검증했다.
