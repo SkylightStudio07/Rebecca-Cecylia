@@ -504,3 +504,24 @@ Phase 0 자동화 경로를 실제로 열고, 이후 오퍼레이터별 원격 �
 ### 검증
 - Unity `6000.3.13f1` Pipeline에서 전체 스크립트 재컴파일을 완료했고 오류가 없었다.
 - `AllyUnitFoundationVerifier`에서 5포인트 지급, 비용 3의 구매 가능 판정과 소비 후 잔액 2, 다시 비용 3을 소비하려 할 때 거부되고 잔액과 변경 이벤트 값이 유지되는 계약을 검증했다.
+
+## 2026-08-15 — 공용 AllyUnitView 프리팹 생성
+
+### 구현
+- `AllyUnitViewPrefabBuilder`를 추가해 `Assets/Data/Prefabs/AllyUnitView.prefab`을 Unity Editor API로 반복 생성할 수 있게 했다.
+- 공용 프리팹은 루트 하나에 `SpriteRenderer`와 `AllyUnitView`만 둔다. 스프라이트는 비워 두며 `UnitDeployController`가 생성 직후 호출하는 `Bind`에서 `AllyUnitDefinition.sprite`를 주입한다.
+- 기존 EnemyView와 같은 기본 Sorting Layer와 Order 2를 사용하고, `AllyUnitView.targetVisualSize` 기본값 0.9를 유지한다.
+- 빌더가 저장 직후 프리팹 존재 여부, 필수 컴포넌트, 빈 기본 스프라이트, 단일 `AllyUnitView` 계약을 검증한다.
+
+### 판단 근거
+- 유닛별 프리팹에 스프라이트를 고정하면 신규 오퍼레이터마다 프리팹 복제가 필요해져 Definition 주입 원칙과 데이터 드랍 목표가 깨진다.
+- 현재 아군 교전은 순수 C# Instance가 담당하고 `AllyUnitView`에는 물리 충돌이나 체력바 계약이 없으므로 Collider·Rigidbody2D·체력바를 선제 추가하지 않았다.
+- 같은 에셋을 다시 만들 일이 생겨도 YAML을 직접 편집하지 않도록 커밋 가능한 에디터 빌더를 생성 경로로 남겼다.
+
+### 의도적으로 하지 않은 것
+- `UnitDeployController`와 공용 프리팹의 DefenseScene 배선은 Controller 오브젝트와 유닛 로스터가 아직 씬에 없어 이번 범위에서 수정하지 않았다.
+- 유닛별 스프라이트는 신규 오퍼레이터 아트가 준비된 뒤 각 `AllyUnitDefinition`에 연결한다.
+
+### 검증
+- Unity `6000.3.13f1` Pipeline에서 빌더 컴파일을 완료했고 오류가 없었다.
+- 빌더를 실제 실행해 프리팹과 Unity 생성 `.meta`가 디스크에 저장됐으며, 생성 직후 구조 검증을 통과했다.
