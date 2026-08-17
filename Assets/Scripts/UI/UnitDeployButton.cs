@@ -23,12 +23,29 @@ namespace RCCom.UI
         public void Setup(AllyUnitDefinition definition, Action onClick)
         {
             Definition = definition;
-            icon.sprite = definition.sprite;
-            nameText.text = definition.data.displayName;
-            costText.text = definition.data.deployCost.ToString();
+            if (icon != null)
+            {
+                icon.sprite = definition.sprite;
+                // 정식 아이콘이 들어오기 전에도 Definition의 회색상자 색으로 유닛을
+                // 구분한다. 스프라이트가 연결되면 흰색으로 복귀해 원본 색을 보존한다.
+                icon.color = definition.sprite != null ? Color.white : definition.tint;
+            }
 
-            button.onClick.RemoveAllListeners();
-            button.onClick.AddListener(() => onClick());
+            if (nameText != null)
+            {
+                nameText.text = definition.data.displayName;
+            }
+
+            if (costText != null)
+            {
+                costText.text = $"{definition.data.deployCost} CP";
+            }
+
+            if (button != null)
+            {
+                button.onClick.RemoveAllListeners();
+                button.onClick.AddListener(() => onClick());
+            }
         }
 
         public void SetSelected(bool selected)

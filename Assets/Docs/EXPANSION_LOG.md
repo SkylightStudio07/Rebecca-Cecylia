@@ -622,3 +622,24 @@ Phase 0 자동화 경로를 실제로 열고, 이후 오퍼레이터별 원격 �
 ### 검증
 - 실행 중 Unity `6000.3.13f1`에서 컴파일 오류 없이 빌더를 실행했고, 생성 에셋·Cassia Roster·DefenseScene Controller/UI 참조 검증을 통과했다.
 - `OperatorAssetValidator`, `AllyUnitFoundationVerifier`, `AllyUnitCombatVerifier`를 다시 실행해 각각 필수 참조, 배치/지휘 포인트 계약, 전투 19개 시나리오 통과를 확인했다. 기존 `축적.asset` 미등록 경고와 TMP obsolete 경고는 동일하다.
+
+## 2026-08-18 — uGUI 회색상자 선택·유닛 배치 화면 정리
+
+### 맥락
+- 오퍼레이터 선택과 유닛 소환의 기능 경로는 이미 있었지만, 선택 화면은 단일 초상화·좌우 이동 중심이고 DefenseScene 패널은 우측 기준점 밖으로 밀릴 수 있는 임시 RectTransform 값이었다.
+- 신규 아트와 오퍼레이터 2·3의 최종 데이터는 아직 없으므로, 이미지 제작을 기다리는 대신 데이터 수에 따라 늘어나는 uGUI 구조를 먼저 확정할 필요가 있었다.
+
+### 결정
+- `OperatorSelectionUI`가 카탈로그 항목마다 공용 `OperatorSelectionCard`를 동적으로 만들도록 바꿨다. 카드는 로컬/원격, 잠김/사용 가능 상태와 선택 테두리만 표현하고, 선택·다운로드·씬 전환의 책임은 기존 UI Controller에 유지했다.
+- `OperatorSelectionSetup`은 카드 프리팹과 TitleScene의 카드 행·상세 패널·출격 버튼을 에디터 API로 생성한다. 카탈로그에 새 항목이 들어오면 별도 UI 프리팹 복제 없이 같은 행에 표시된다.
+- 유닛 배치 패널은 우측 하단 앵커와 음수 여백으로 고정해 화면 바깥으로 밀리지 않게 했고, 현재 CP·유닛 비용·선택 유닛 출격 버튼·마지막 웨이포인트 출격 안내를 함께 표시한다.
+- 유닛 버튼은 스프라이트가 비어 있으면 Definition의 `tint`를 임시 아이콘 색으로 사용한다. 정식 스프라이트가 연결되면 자동으로 원본 색을 사용한다.
+
+### 의도적으로 하지 않은 것
+- 오퍼레이터 2·3의 임시 영구 ID·콘텐츠 데이터를 만들지 않았다. 현재 카탈로그가 Cassia 한 명인 것은 기획 미확정 상태를 보존하기 위한 것이며, 카드 UI는 후속 데이터가 들어올 때 자동 확장된다.
+- 별도의 UI 테마 SO, 맵 클릭 배치, 유닛 단축키, 아트 에셋은 추가하지 않았다. 마지막 웨이포인트에서의 즉시 출격은 기존 `AllyUnitInstance.Spawn` 계약을 그대로 사용한다.
+
+### 검증
+- Unity `6000.3.13f1` 재컴파일을 통과했다.
+- `OperatorSelectionSetup.ValidateTitleSelectionUI`로 카드 프리팹, TitleScene 필수 참조, New Game 연결을 검증했다.
+- `AllyUnitVerticalSliceBuilder.Validate`로 DefenseScene의 Controller·메뉴·지휘 포인트 참조를 다시 검증했다.

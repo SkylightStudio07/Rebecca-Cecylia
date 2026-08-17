@@ -20,6 +20,8 @@ namespace RCCom.EditorTools
         private const string TitleScenePath = "Assets/Scenes/TitleScene.unity";
         private const string SystemName = "OperatorSelectionSystem";
         private const string PanelName = "OperatorSelectionPanel";
+        private const string CardPrefabPath = "Assets/Data/Prefabs/OperatorSelectionCard.prefab";
+        private const string GeneratedLabel = "RCCom.GeneratedOperatorSelectionUI";
         private const string KoreanFontPath = "Assets/Resource/Font/Pretendard-Bold SDF.asset";
         private const string TitleFontPath = "Assets/Resource/Font/PlayfairDisplay-ExtraBold SDF.asset";
 
@@ -62,6 +64,8 @@ namespace RCCom.EditorTools
                 throw new InvalidOperationException("선택 UI용 TMP 글꼴을 찾지 못했습니다.");
             }
 
+            OperatorSelectionCard cardPrefab = BuildCardPrefab(koreanFont);
+
             Transform existingSystem = canvas.transform.Find(SystemName);
             GameObject systemObject = existingSystem != null
                 ? existingSystem.gameObject
@@ -85,41 +89,52 @@ namespace RCCom.EditorTools
 
             ClearChildren(panel.transform);
 
-            CreateText("Header", panel.transform, "SELECT OPERATOR", titleFont, 64f,
+            CreateText("Header", panel.transform, "SELECT OPERATOR", titleFont, 60f,
                 new Vector2(0f, 430f), new Vector2(900f, 90f), TextAlignmentOptions.Center);
 
-            GameObject portraitFrame = CreateImageObject(
-                "PortraitFrame", panel.transform, new Color(0.08f, 0.11f, 0.17f, 1f));
-            SetRect((RectTransform)portraitFrame.transform, new Vector2(-430f, 20f), new Vector2(540f, 620f));
-            Image portrait = CreateImageObject("Portrait", portraitFrame.transform, Color.white).GetComponent<Image>();
-            Stretch((RectTransform)portrait.transform, 24f);
-            portrait.preserveAspect = true;
+            GameObject cardArea = CreateImageObject("CardArea", panel.transform, new Color(0.045f, 0.065f, 0.1f, 0.92f));
+            SetRect((RectTransform)cardArea.transform, new Vector2(0f, 125f), new Vector2(1260f, 330f));
+            GameObject cardContent = CreateRectObject("CardContent", cardArea.transform);
+            SetRect((RectTransform)cardContent.transform, Vector2.zero, new Vector2(1200f, 300f));
+            HorizontalLayoutGroup cardLayout = cardContent.AddComponent<HorizontalLayoutGroup>();
+            cardLayout.spacing = 18f;
+            cardLayout.childAlignment = TextAnchor.MiddleCenter;
+            cardLayout.childControlWidth = false;
+            cardLayout.childControlHeight = false;
+            cardLayout.childForceExpandWidth = false;
+            cardLayout.childForceExpandHeight = false;
 
             GameObject detail = CreateImageObject("Detail", panel.transform, new Color(0.045f, 0.065f, 0.1f, 0.96f));
-            SetRect((RectTransform)detail.transform, new Vector2(300f, 45f), new Vector2(780f, 560f));
+            SetRect((RectTransform)detail.transform, new Vector2(0f, -175f), new Vector2(1260f, 150f));
+            GameObject portraitFrame = CreateImageObject(
+                "SelectedPortraitFrame", detail.transform, new Color(0.08f, 0.11f, 0.17f, 1f));
+            SetRect((RectTransform)portraitFrame.transform, new Vector2(-535f, 0f), new Vector2(120f, 120f));
+            Image portrait = CreateImageObject("Portrait", portraitFrame.transform, Color.white).GetComponent<Image>();
+            Stretch((RectTransform)portrait.transform, 8f);
+            portrait.preserveAspect = true;
 
-            TextMeshProUGUI nameText = CreateText("Name", detail.transform, string.Empty, koreanFont, 54f,
-                new Vector2(0f, 185f), new Vector2(680f, 90f), TextAlignmentOptions.Left);
-            TextMeshProUGUI descriptionText = CreateText("Description", detail.transform, string.Empty, koreanFont, 29f,
-                new Vector2(0f, 45f), new Vector2(680f, 180f), TextAlignmentOptions.TopLeft);
-            TextMeshProUGUI unlockText = CreateText("Unlock", detail.transform, string.Empty, koreanFont, 28f,
-                new Vector2(0f, -90f), new Vector2(680f, 70f), TextAlignmentOptions.Left);
+            TextMeshProUGUI nameText = CreateText("Name", detail.transform, string.Empty, koreanFont, 34f,
+                new Vector2(-310f, 34f), new Vector2(310f, 48f), TextAlignmentOptions.Left);
+            TextMeshProUGUI descriptionText = CreateText("Description", detail.transform, string.Empty, koreanFont, 23f,
+                new Vector2(190f, 15f), new Vector2(640f, 92f), TextAlignmentOptions.TopLeft);
+            TextMeshProUGUI unlockText = CreateText("Unlock", detail.transform, string.Empty, koreanFont, 20f,
+                new Vector2(-310f, -20f), new Vector2(310f, 34f), TextAlignmentOptions.Left);
             unlockText.color = new Color(0.5f, 0.85f, 1f, 1f);
-            TextMeshProUGUI statusText = CreateText("Status", detail.transform, string.Empty, koreanFont, 23f,
-                new Vector2(0f, -165f), new Vector2(680f, 70f), TextAlignmentOptions.Left);
+            TextMeshProUGUI statusText = CreateText("Status", detail.transform, string.Empty, koreanFont, 18f,
+                new Vector2(-310f, -52f), new Vector2(310f, 30f), TextAlignmentOptions.Left);
             statusText.color = new Color(0.75f, 0.8f, 0.88f, 1f);
 
             Slider slider = CreateSlider("DownloadProgress", detail.transform);
-            SetRect((RectTransform)slider.transform, new Vector2(0f, -225f), new Vector2(680f, 24f));
+            SetRect((RectTransform)slider.transform, new Vector2(190f, -48f), new Vector2(640f, 20f));
 
-            Button previous = CreateButton("PreviousButton", panel.transform, "<", koreanFont,
-                new Vector2(-250f, -380f), new Vector2(150f, 72f));
-            Button next = CreateButton("NextButton", panel.transform, ">", koreanFont,
-                new Vector2(-70f, -380f), new Vector2(150f, 72f));
-            Button confirm = CreateButton("ConfirmButton", panel.transform, "선택", koreanFont,
-                new Vector2(360f, -380f), new Vector2(260f, 72f));
+            Button previous = CreateButton("PreviousButton", panel.transform, "PREV", koreanFont,
+                new Vector2(-530f, -390f), new Vector2(180f, 62f));
+            Button next = CreateButton("NextButton", panel.transform, "NEXT", koreanFont,
+                new Vector2(-320f, -390f), new Vector2(180f, 62f));
+            Button confirm = CreateButton("ConfirmButton", panel.transform, "출격", koreanFont,
+                new Vector2(270f, -390f), new Vector2(270f, 62f));
             Button back = CreateButton("BackButton", panel.transform, "뒤로", koreanFont,
-                new Vector2(660f, -380f), new Vector2(220f, 72f));
+                new Vector2(560f, -390f), new Vector2(220f, 62f));
 
             CanvasGroup mainMenuGroup = GetOrAddCanvasGroup(canvas.transform.Find("MainMenuBackground")?.gameObject);
 
@@ -127,6 +142,8 @@ namespace RCCom.EditorTools
             serialized.FindProperty("catalog").objectReferenceValue = catalog;
             serialized.FindProperty("panel").objectReferenceValue = panel;
             serialized.FindProperty("mainMenuGroup").objectReferenceValue = mainMenuGroup;
+            serialized.FindProperty("cardContent").objectReferenceValue = cardContent.transform;
+            serialized.FindProperty("cardPrefab").objectReferenceValue = cardPrefab;
             serialized.FindProperty("portraitImage").objectReferenceValue = portrait;
             serialized.FindProperty("nameText").objectReferenceValue = nameText;
             serialized.FindProperty("descriptionText").objectReferenceValue = descriptionText;
@@ -167,6 +184,117 @@ namespace RCCom.EditorTools
             AssetDatabase.Refresh();
 
             Debug.Log("[OperatorSelectionSetup] TitleScene 선택 UI 생성 및 New Game 배선 완료");
+        }
+
+        [MenuItem("RCCom/Operators/Validate Title Selection UI")]
+        public static void ValidateTitleSelectionUI()
+        {
+            Scene scene = EditorSceneManager.OpenScene(TitleScenePath, OpenSceneMode.Single);
+            OperatorSelectionUI controller = UnityEngine.Object.FindFirstObjectByType<OperatorSelectionUI>(
+                FindObjectsInactive.Include);
+            OperatorSelectionCard card = AssetDatabase.LoadAssetAtPath<GameObject>(CardPrefabPath)
+                ?.GetComponent<OperatorSelectionCard>();
+            TitleMenuTextButton newGameButton = FindNewGameButton();
+
+            if (controller == null || card == null || newGameButton == null)
+            {
+                throw new InvalidOperationException("TitleScene의 오퍼레이터 선택 UI 구성 요소를 찾지 못했습니다.");
+            }
+
+            var controllerSerialized = new SerializedObject(controller);
+            if (controllerSerialized.FindProperty("catalog").objectReferenceValue == null ||
+                controllerSerialized.FindProperty("panel").objectReferenceValue == null ||
+                controllerSerialized.FindProperty("mainMenuGroup").objectReferenceValue == null ||
+                controllerSerialized.FindProperty("cardContent").objectReferenceValue == null ||
+                controllerSerialized.FindProperty("cardPrefab").objectReferenceValue != card ||
+                controllerSerialized.FindProperty("portraitImage").objectReferenceValue == null ||
+                controllerSerialized.FindProperty("confirmButton").objectReferenceValue == null)
+            {
+                throw new InvalidOperationException("TitleScene 오퍼레이터 선택 UI 참조가 올바르지 않습니다.");
+            }
+
+            var newGameSerialized = new SerializedObject(newGameButton);
+            if (newGameSerialized.FindProperty("operatorSelectionUI").objectReferenceValue != controller)
+            {
+                throw new InvalidOperationException("New Game 버튼의 오퍼레이터 선택 UI 연결이 올바르지 않습니다.");
+            }
+
+            if (scene.path != TitleScenePath)
+            {
+                throw new InvalidOperationException("검증 대상 TitleScene을 열지 못했습니다.");
+            }
+
+            Debug.Log("[OperatorSelectionSetup] 카드형 TitleScene 선택 UI 검증 통과");
+        }
+
+        private static OperatorSelectionCard BuildCardPrefab(TMP_FontAsset font)
+        {
+            EnsureFolder("Assets/Data");
+            EnsureFolder("Assets/Data/Prefabs");
+            EnsureCanOverwriteGenerated(CardPrefabPath);
+
+            GameObject root = new GameObject(
+                "OperatorSelectionCard",
+                typeof(RectTransform),
+                typeof(CanvasRenderer),
+                typeof(Image),
+                typeof(Button),
+                typeof(LayoutElement),
+                typeof(OperatorSelectionCard));
+
+            try
+            {
+                Image background = root.GetComponent<Image>();
+                background.color = new Color(0.075f, 0.12f, 0.19f, 1f);
+                Button button = root.GetComponent<Button>();
+                button.targetGraphic = background;
+                LayoutElement layout = root.GetComponent<LayoutElement>();
+                layout.preferredWidth = 370f;
+                layout.preferredHeight = 270f;
+
+                GameObject portraitFrame = CreateImageObject("PortraitFrame", root.transform, new Color(0.11f, 0.17f, 0.25f, 1f));
+                SetRect((RectTransform)portraitFrame.transform, new Vector2(0f, 36f), new Vector2(330f, 142f));
+                Image portrait = CreateImageObject("Portrait", portraitFrame.transform, Color.white).GetComponent<Image>();
+                Stretch((RectTransform)portrait.transform, 7f);
+                portrait.preserveAspect = true;
+
+                TextMeshProUGUI type = CreateText("Type", root.transform, string.Empty, font, 16f,
+                    new Vector2(0f, -54f), new Vector2(330f, 28f), TextAlignmentOptions.Center);
+                type.color = new Color(0.6f, 0.77f, 0.92f, 1f);
+                TextMeshProUGUI name = CreateText("Name", root.transform, string.Empty, font, 28f,
+                    new Vector2(0f, -88f), new Vector2(330f, 42f), TextAlignmentOptions.Center);
+                TextMeshProUGUI state = CreateText("State", root.transform, string.Empty, font, 16f,
+                    new Vector2(0f, -122f), new Vector2(330f, 26f), TextAlignmentOptions.Center);
+
+                Image selection = CreateImageObject("SelectionFrame", root.transform, new Color(0.32f, 0.84f, 1f, 0.9f)).GetComponent<Image>();
+                Stretch(selection.rectTransform, 3f);
+                selection.raycastTarget = false;
+                selection.enabled = false;
+
+                OperatorSelectionCard card = root.GetComponent<OperatorSelectionCard>();
+                var serialized = new SerializedObject(card);
+                serialized.FindProperty("button").objectReferenceValue = button;
+                serialized.FindProperty("portraitImage").objectReferenceValue = portrait;
+                serialized.FindProperty("selectionFrame").objectReferenceValue = selection;
+                serialized.FindProperty("nameText").objectReferenceValue = name;
+                serialized.FindProperty("typeText").objectReferenceValue = type;
+                serialized.FindProperty("stateText").objectReferenceValue = state;
+                serialized.ApplyModifiedPropertiesWithoutUndo();
+
+                GameObject prefab = PrefabUtility.SaveAsPrefabAsset(root, CardPrefabPath, out bool succeeded);
+                if (!succeeded || prefab == null)
+                {
+                    throw new InvalidOperationException("오퍼레이터 선택 카드 프리팹을 저장하지 못했습니다.");
+                }
+
+                AssetDatabase.SetLabels(prefab, new[] { GeneratedLabel });
+                EditorUtility.SetDirty(prefab);
+                return prefab.GetComponent<OperatorSelectionCard>();
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(root);
+            }
         }
 
         private static TitleMenuTextButton FindNewGameButton()
@@ -220,7 +348,7 @@ namespace RCCom.EditorTools
             text.text = value;
             text.alignment = alignment;
             text.color = Color.white;
-            text.enableWordWrapping = true;
+            text.textWrappingMode = TextWrappingModes.Normal;
             text.raycastTarget = false;
             return text;
         }
@@ -282,6 +410,41 @@ namespace RCCom.EditorTools
             {
                 UnityEngine.Object.DestroyImmediate(parent.GetChild(i).gameObject);
             }
+        }
+
+        private static void EnsureFolder(string folder)
+        {
+            string[] parts = folder.Split('/');
+            string current = parts[0];
+            for (int i = 1; i < parts.Length; i++)
+            {
+                string next = current + "/" + parts[i];
+                if (!AssetDatabase.IsValidFolder(next))
+                {
+                    AssetDatabase.CreateFolder(current, parts[i]);
+                }
+
+                current = next;
+            }
+        }
+
+        private static void EnsureCanOverwriteGenerated(string path)
+        {
+            UnityEngine.Object asset = AssetDatabase.LoadMainAssetAtPath(path);
+            if (asset == null)
+            {
+                return;
+            }
+
+            foreach (string label in AssetDatabase.GetLabels(asset))
+            {
+                if (label == GeneratedLabel)
+                {
+                    return;
+                }
+            }
+
+            throw new InvalidOperationException($"자동 생성물이 아닌 기존 에셋은 덮어쓸 수 없습니다: {path}");
         }
 
         private static void SetRect(RectTransform rect, Vector2 position, Vector2 dimensions)

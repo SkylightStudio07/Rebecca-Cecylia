@@ -342,8 +342,10 @@ namespace RCCom.EditorTools
 
             background.color = new Color(0.025f, 0.055f, 0.09f, 0.94f);
             RectTransform rootRect = (RectTransform)root.transform;
-            SetRect(rootRect, new Vector2(-24f, 24f), new Vector2(360f, 276f),
-                Vector2.one, Vector2.one, new Vector2(1f, 0f));
+            // 우측 하단 고정 패널이다. 기존의 양수 offsetMax는 기준점 바깥으로 밀려
+            // 해상도에 따라 일부가 잘릴 수 있어, 같은 앵커 기준의 음수 여백으로 통일한다.
+            SetRect(rootRect, new Vector2(-404f, 24f), new Vector2(-24f, 342f),
+                new Vector2(1f, 0f), new Vector2(1f, 0f), new Vector2(1f, 0f));
             ClearChildren(root.transform);
 
             CanvasGroup group = root.GetComponent<CanvasGroup>();
@@ -352,7 +354,7 @@ namespace RCCom.EditorTools
                 group = root.AddComponent<CanvasGroup>();
             }
 
-            TextMeshProUGUI title = CreateText("Title", root.transform, font, 22f, TextAlignmentOptions.Left);
+            TextMeshProUGUI title = CreateText("Title", root.transform, font, 24f, TextAlignmentOptions.Left);
             title.text = "UNIT DEPLOY";
             SetRect(title.rectTransform, new Vector2(16f, -10f), new Vector2(-16f, -38f),
                 new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(0.5f, 0.5f));
@@ -369,7 +371,7 @@ namespace RCCom.EditorTools
                 typeof(ContentSizeFitter));
             content.transform.SetParent(root.transform, false);
             RectTransform contentRect = (RectTransform)content.transform;
-            SetRect(contentRect, new Vector2(14f, 64f), new Vector2(-14f, -52f),
+            SetRect(contentRect, new Vector2(14f, 92f), new Vector2(-14f, -56f),
                 Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f));
             VerticalLayoutGroup layout = content.GetComponent<VerticalLayoutGroup>();
             layout.spacing = 6f;
@@ -381,9 +383,15 @@ namespace RCCom.EditorTools
             fitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
             fitter.verticalFit = ContentSizeFitter.FitMode.Unconstrained;
 
-            Button deployButton = CreateTextButton("DeployButton", root.transform, "소환", font);
+            TextMeshProUGUI rallyHint = CreateText("RallyHint", root.transform, font, 14f, TextAlignmentOptions.Center);
+            rallyHint.text = "LAST RALLY POINT에서 즉시 출격";
+            rallyHint.color = new Color(0.62f, 0.74f, 0.86f, 1f);
+            SetRect(rallyHint.rectTransform, new Vector2(14f, 62f), new Vector2(-14f, 86f),
+                new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(0.5f, 0.5f));
+
+            Button deployButton = CreateTextButton("DeployButton", root.transform, "선택 유닛 출격", font);
             SetRect((RectTransform)deployButton.transform, new Vector2(14f, 12f), new Vector2(-14f, 56f),
-                Vector2.zero, Vector2.zero, new Vector2(0.5f, 0.5f));
+                new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(0.5f, 0.5f));
 
             UnitDeployMenuUI menu = root.GetComponent<UnitDeployMenuUI>();
             if (menu == null)

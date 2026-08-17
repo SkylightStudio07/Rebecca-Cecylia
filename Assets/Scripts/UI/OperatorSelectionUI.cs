@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using RCCom.Core;
 using RCCom.Data;
 using RCCom.Definitions.Operator;
@@ -23,6 +24,8 @@ namespace RCCom.UI
         [SerializeField] private OperatorCatalog catalog;
         [SerializeField] private GameObject panel;
         [SerializeField] private CanvasGroup mainMenuGroup;
+        [SerializeField] private Transform cardContent;
+        [SerializeField] private OperatorSelectionCard cardPrefab;
         [SerializeField] private Image portraitImage;
         [SerializeField] private TextMeshProUGUI nameText;
         [SerializeField] private TextMeshProUGUI descriptionText;
@@ -39,6 +42,7 @@ namespace RCCom.UI
         private PlayerProfile _profile;
         private int _selectedIndex;
         private bool _isLoading;
+        private readonly List<OperatorSelectionCard> _cards = new();
 
         private void Awake()
         {
@@ -59,6 +63,7 @@ namespace RCCom.UI
             _profile = _profileStorage.Load();
             SelectSavedOrFirstUnlocked();
             SetPanelVisible(true);
+            RebuildCards();
             RenderSelection();
             FocusDefaultButton();
         }
@@ -256,6 +261,56 @@ namespace RCCom.UI
             RenderSelection();
         }
 
+        private void RebuildCards()
+        {
+            ClearCards();
+
+            if (cardContent == null || cardPrefab == null || catalog == null || catalog.entries == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < catalog.entries.Count; i++)
+            {
+                OperatorCatalogEntry entry = catalog.entries[i];
+                if (entry == null)
+                {
+                    continue;
+                }
+
+                int index = i;
+                OperatorSelectionCard card = Instantiate(cardPrefab, cardContent);
+                card.Setup(entry, entry.IsUnlocked(_profile?.bestWave ?? 0), index == _selectedIndex,
+                    () => SelectCard(index));
+                _cards.Add(card);
+            }
+        }
+
+        private void SelectCard(int index)
+        {
+            if (_isLoading || catalog == null || catalog.entries == null ||
+                index < 0 || index >= catalog.entries.Count || catalog.entries[index] == null)
+            {
+                return;
+            }
+
+            _selectedIndex = index;
+            RenderSelection();
+        }
+
+        private void ClearCards()
+        {
+            foreach (OperatorSelectionCard card in _cards)
+            {
+                if (card != null)
+                {
+                    Destroy(card.gameObject);
+                }
+            }
+
+            _cards.Clear();
+        }
+
         private void SelectSavedOrFirstUnlocked()
         {
             if (catalog == null || catalog.entries == null || catalog.entries.Count == 0)
@@ -299,7 +354,19 @@ namespace RCCom.UI
 
             if (statusText != null) { statusText.text = unlocked ? "선택하면 필요한 콘텐츠를 확인합니다." : "잠긴 오퍼레이터입니다."; }
             if (downloadProgress != null) { downloadProgress.value = 0f; }
+            RefreshCardSelection();
             UpdateButtons();
+        }
+
+        private void RefreshCardSelection()
+        {
+            for (int i = 0; i < _cards.Count; i++)
+            {
+                if (_cards[i] != null)
+                {
+                    _cards[i].SetSelected(i == _selectedIndex);
+                }
+            }
         }
 
         private bool TryGetSelectedEntry(out OperatorCatalogEntry entry)
