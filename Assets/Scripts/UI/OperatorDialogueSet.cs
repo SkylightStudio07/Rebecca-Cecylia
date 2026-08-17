@@ -28,6 +28,10 @@ namespace RCCom.UI
         [Tooltip("대사가 없을 때(평소) 보여줄 기본 초상화")]
         public Sprite idleSprite;
 
+        [Header("0. 로비에서 오퍼레이터 클릭")]
+        [Tooltip("비어 있으면 기존 게임 개시 대사를 임시로 사용한다.")]
+        public OperatorLineSet lobbyInteraction;
+
         [Header("1. 게임 개시")]
         public OperatorLineSet gameStart;
 

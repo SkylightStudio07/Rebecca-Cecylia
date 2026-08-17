@@ -643,3 +643,47 @@ Phase 0 자동화 경로를 실제로 열고, 이후 오퍼레이터별 원격 �
 - Unity `6000.3.13f1` 재컴파일을 통과했다.
 - `OperatorSelectionSetup.ValidateTitleSelectionUI`로 카드 프리팹, TitleScene 필수 참조, New Game 연결을 검증했다.
 - `AllyUnitVerticalSliceBuilder.Validate`로 DefenseScene의 Controller·메뉴·지휘 포인트 참조를 다시 검증했다.
+
+## 2026-08-18 — 타이틀 로비 오퍼레이터 클릭 대사 분리
+
+### 맥락
+- 기존 `OperatorDialogueUI`는 전투 중 플레이어·거점·건설 이벤트를 구독하므로 TitleScene에 그대로 재사용하면 필수 참조가 없는 로비에서 null 참조가 발생한다.
+- 로비 캐릭터 아트는 아직 확정 전이지만, 캐릭터와 클릭 영역을 분리하면 후속 아트 교체를 기다리지 않고 상호작용 배선을 먼저 닫을 수 있다.
+
+### 결정
+- `LobbyOperatorDialogueUI`를 추가해 오퍼레이터 클릭, 랜덤 한 줄 표시, 대사창 클릭 닫기, 4초 유지 후 페이드만 담당하게 했다. 로비 타이머는 게임플레이 일시정지와 무관해야 하므로 `Time.unscaledDeltaTime`을 사용한다.
+- `OperatorDialogueSet`에 선택적인 `lobbyInteraction` 슬롯을 추가했다. 최종 로비 대사가 비어 있는 동안에는 기존 `gameStart` 배열을 폴백으로 사용해 현재 Cassia 데이터만으로 즉시 동작한다.
+- `LobbyOperatorDialogueSetup`이 TitleScene의 `MainMenuBackground` 아래에 왼쪽 오퍼레이터용 투명 클릭 영역과 하단 대사창을 생성하고 모든 필드를 연결한다. 실제 캐릭터 Image, 투명 Button, TMP 텍스트를 분리해 아트 교체가 클릭·대사 로직을 변경하지 않게 했다.
+
+### 의도적으로 하지 않은 것
+- 전투용 `OperatorDialogueUI`에 TitleScene 예외 분기를 넣지 않았다. 전투 이벤트 구독 책임과 로비 클릭 책임을 한 컴포넌트에 섞으면 두 씬 모두 불필요한 참조를 갖게 된다.
+- Cassia의 최종 로비 전용 대사는 창작 방향이 확정되지 않아 임의 작성하지 않았다. `lobbyInteraction` 데이터만 채우면 코드나 씬 변경 없이 교체된다.
+- 오퍼레이터 캐릭터 스프라이트와 최종 대사창 아트는 아직 연결하지 않았다. 현재 배선은 후속 로비 아트 위에 그대로 유지되는 회색상자다.
+
+### 검증
+- Unity `6000.3.13f1` Pipeline 재컴파일에서 `failed=false`를 확인했다.
+- `LobbyOperatorDialogueSetup.Build`와 `Validate`를 실행해 TitleScene 씬 저장, 대사 데이터·클릭 버튼·닫기 버튼·TMP·CanvasGroup 참조 연결을 확인했다.
+- 저장된 TitleScene 계층에서 `LobbyOperatorDialogueSystem/OperatorClickTarget`과 `DialogueBubble/DialogueText` 생성을 확인했다.
+
+## 2026-08-18 — 2.5D 커맨드 로비 메뉴 배치와 기존 화면 흐름 통합
+
+### 맥락
+- 사용자가 `HomeBackground`에 새 로비 배경과 오퍼레이터 이미지를 직접 배치했지만, 실제 타이틀 전환은 기존 `MainMenuBackground`만 제어하고 있어 플레이 시 두 로비가 겹치거나 새 로비가 항상 표시될 수 있었다.
+- 메뉴 패널의 원근은 래스터 스프라이트에 들어 있고, 클릭 영역과 글자는 별도 uGUI/TMP로 유지해야 아트 교체와 기능 배선을 독립시킬 수 있었다.
+
+### 결정
+- `CommandLobbyMenuSetup`이 사용자의 `HomeBackground`를 새 `MainMenuBackground`로 승격하고, 기존 메뉴 루트는 삭제하지 않고 `LegacyMainMenuBackground`로 비활성 보존한다. 로비 대사 시스템은 새 루트로 옮긴다.
+- `Live Content`, `Operators`, `Operation`, `Records`, `Configuration` 패널을 우측에 서로 다른 크기·원근 위치로 배치하고 각 패널의 Normal/Hover Sprite와 TMP 제목·부제를 연결한다.
+- `CommandLobbyMenuItem`은 포인터·키보드 선택에 따른 Sprite/TMP 색 전환만 담당한다. `Operation`은 기존 오퍼레이터 선택 화면, `Configuration`은 기존 설정 화면에 `TitleMenuTextButton`으로 연결한다.
+- 아직 실제 화면이 없는 `Live Content`, `Operators`, `Records`는 가짜 동작을 만들지 않고 Hover 표현까지만 제공한다.
+- `TitleSceneController`, `TitleConfigurationController`, `OperatorSelectionUI`의 메인 메뉴 참조를 모두 새 로비 루트와 CanvasGroup으로 다시 연결했다.
+
+### 의도적으로 하지 않은 것
+- 사용자가 임시로 늘여 배치한 단일 흰 패널은 삭제하지 않고 `ManualPanelPreview_Disabled`로 비활성 보존했다.
+- 아이콘 에셋이 아직 없으므로 패널 스프라이트에 아이콘이나 문자를 굽지 않았고, 별도 TMP만 배치했다.
+- 미구현 메뉴에 임시 팝업이나 빈 화면 전환을 추가하지 않았다.
+
+### 검증
+- Unity `6000.3.13f1`에서 런타임·에디터 스크립트 재컴파일을 통과했다.
+- `CommandLobbyMenuSetup.Validate`로 패널 5종, Button, Normal/Hover 시각 컴포넌트, TMP 자식과 `TitleSceneController` 참조를 검증했다.
+- 저장된 TitleScene 계층에서 새 `MainMenuBackground/CommandMenuPanels`와 비활성 보존된 `LegacyMainMenuBackground`, 이동된 `LobbyOperatorDialogueSystem`을 확인했다.
