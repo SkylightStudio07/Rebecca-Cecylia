@@ -1,7 +1,9 @@
 using System.Collections.Generic;
 using RCCom.Definitions.Unit;
 using RCCom.Runtime;
+using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace RCCom.UI
 {
@@ -16,6 +18,8 @@ namespace RCCom.UI
         [SerializeField] private CanvasGroup panelGroup;
         [SerializeField] private Transform contentParent;
         [SerializeField] private UnitDeployButton buttonPrefab;
+        [SerializeField] private Button deployButton;
+        [SerializeField] private TextMeshProUGUI commandPointsText;
 
         private readonly List<UnitDeployButton> _buttons = new();
 
@@ -32,6 +36,9 @@ namespace RCCom.UI
             {
                 Rebuild();
             }
+
+            RefreshCommandPoints();
+            RefreshDeployButton();
         }
 
         private void OnEnable()
@@ -39,6 +46,7 @@ namespace RCCom.UI
             if (deployController != null)
             {
                 deployController.SelectionChanged += HandleSelectionChanged;
+                deployController.CommandPointsChanged += HandleCommandPointsChanged;
             }
         }
 
@@ -47,6 +55,7 @@ namespace RCCom.UI
             if (deployController != null)
             {
                 deployController.SelectionChanged -= HandleSelectionChanged;
+                deployController.CommandPointsChanged -= HandleCommandPointsChanged;
             }
         }
 
@@ -101,6 +110,48 @@ namespace RCCom.UI
                     button.SetSelected(button.Definition == selectedDefinition);
                 }
             }
+
+            RefreshDeployButton();
+        }
+
+        /// <summary>씬의 소환 버튼이 호출한다. 선택과 실제 생성의 경계를 Controller에 유지한다.</summary>
+        public void TryDeploySelected()
+        {
+            if (deployController == null)
+            {
+                return;
+            }
+
+            deployController.TryDeploySelected();
+            RefreshCommandPoints();
+            RefreshDeployButton();
+        }
+
+        private void HandleCommandPointsChanged(int _)
+        {
+            RefreshCommandPoints();
+            RefreshDeployButton();
+        }
+
+        private void RefreshCommandPoints()
+        {
+            if (commandPointsText != null && deployController != null)
+            {
+                commandPointsText.text = $"CP {deployController.CommandPoints} / {deployController.MaxCommandPoints}";
+            }
+        }
+
+        private void RefreshDeployButton()
+        {
+            if (deployButton == null)
+            {
+                return;
+            }
+
+            AllyUnitDefinition selected = deployController != null ? deployController.SelectedDefinition : null;
+            deployButton.interactable = deployController != null && selected != null &&
+                                       deployController.IsDeployInputEnabled &&
+                                       deployController.CanAfford(selected);
         }
 
         private void ClearButtons()

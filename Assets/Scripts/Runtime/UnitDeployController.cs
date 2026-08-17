@@ -28,11 +28,14 @@ namespace RCCom.Runtime
 
         [Header("지휘 포인트")]
         [SerializeField, Min(0)] private int startingCommandPoints;
+        [SerializeField, Min(1)] private int maxCommandPoints = 100;
+        [SerializeField, Min(0f)] private float commandPointRecoveryPerSecond = 4f;
 
         private readonly List<AllyUnitInstance> _activeUnits = new();
         private readonly Dictionary<AllyUnitInstance, Action> _deathHandlers = new();
         private int? _selectedIndex;
         private int _commandPoints;
+        private float _commandPointRecoveryRemainder;
 
         public IReadOnlyList<AllyUnitInstance> ActiveUnits => _activeUnits;
         public AllyUnitRoster Roster => allyUnitRoster;
@@ -40,6 +43,8 @@ namespace RCCom.Runtime
             allyUnitRoster != null && allyUnitRoster.units != null && allyUnitRoster.units.Count > 0;
         public bool IsDeployInputEnabled => Time.timeScale > 0f && IsAvailable;
         public int CommandPoints => _commandPoints;
+        public int MaxCommandPoints => maxCommandPoints;
+        public float CommandPointRecoveryPerSecond => commandPointRecoveryPerSecond;
 
         public AllyUnitDefinition SelectedDefinition =>
             _selectedIndex.HasValue && IsValidRosterIndex(_selectedIndex.Value)
@@ -58,7 +63,9 @@ namespace RCCom.Runtime
             // 타워형 오퍼레이터는 유닛 로스터가 없는 것이 정상이다. 이 경우 비어 있는 기본
             // 로스터를 섞지 않고 Controller를 안전한 비활성 상태로 유지해 로드아웃 경계를 지킨다.
             allyUnitRoster = OperatorLoadoutSession.ResolveAllyUnitRoster(allyUnitRoster);
-            _commandPoints = Mathf.Max(0, startingCommandPoints);
+            maxCommandPoints = Mathf.Max(1, maxCommandPoints);
+            _commandPoints = Mathf.Clamp(startingCommandPoints, 0, maxCommandPoints);
+            _commandPointRecoveryRemainder = 0f;
         }
 
         private void OnEnable()
@@ -87,6 +94,7 @@ namespace RCCom.Runtime
             }
 
             TickActiveUnits(deltaTime);
+            TickCommandPointRecovery(deltaTime);
         }
 
         private void OnDestroy()
@@ -222,8 +230,8 @@ namespace RCCom.Runtime
         }
 
         /// <summary>
-        /// 후속 자동 회복이나 보상 경로가 지휘 포인트를 지급할 공용 진입점.
-        /// 최대치는 아직 미확정이므로 이 단계에서는 상한을 임의로 두지 않는다.
+        /// 보상처럼 정수 단위로 지휘 포인트를 지급할 공용 진입점.
+        /// 회복·보상 어느 경로도 상한을 우회하지 않도록 여기서 함께 제한한다.
         /// </summary>
         public void AddCommandPoints(int amount)
         {
@@ -232,8 +240,38 @@ namespace RCCom.Runtime
                 return;
             }
 
-            _commandPoints += amount;
-            CommandPointsChanged?.Invoke(_commandPoints);
+            int previous = _commandPoints;
+            _commandPoints = Mathf.Min(maxCommandPoints, _commandPoints + amount);
+            if (_commandPoints != previous)
+            {
+                CommandPointsChanged?.Invoke(_commandPoints);
+            }
+        }
+
+        private void TickCommandPointRecovery(float deltaTime)
+        {
+            // 빌드 페이즈에서 회복하면 첫 웨이브 전에 자원이 상한까지 차 버려 소환 선택의
+            // 의미가 사라진다. 전투가 실제로 진행되는 동안에만 회복시킨다.
+            if (waveManager == null || waveManager.IsWaitingForNextWave ||
+                _commandPoints >= maxCommandPoints || commandPointRecoveryPerSecond <= 0f)
+            {
+                return;
+            }
+
+            _commandPointRecoveryRemainder += Mathf.Max(0f, deltaTime) * commandPointRecoveryPerSecond;
+            int recovered = Mathf.FloorToInt(_commandPointRecoveryRemainder);
+            if (recovered <= 0)
+            {
+                return;
+            }
+
+            _commandPointRecoveryRemainder -= recovered;
+            AddCommandPoints(recovered);
+
+            if (_commandPoints >= maxCommandPoints)
+            {
+                _commandPointRecoveryRemainder = 0f;
+            }
         }
 
         private void TickActiveUnits(float deltaTime)

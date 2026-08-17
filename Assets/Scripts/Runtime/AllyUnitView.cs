@@ -10,6 +10,8 @@ namespace RCCom.Runtime
     [RequireComponent(typeof(SpriteRenderer))]
     public class AllyUnitView : MonoBehaviour
     {
+        private static Sprite _fallbackSprite;
+
         [SerializeField] private float targetVisualSize = 0.9f;
         [SerializeField] private Color hitFlashColor = Color.red;
         [SerializeField] private float hitFlashDuration = 0.1f;
@@ -43,12 +45,36 @@ namespace RCCom.Runtime
             Instance.Died += HandleDied;
             transform.position = Instance.Position;
 
-            if (Instance.Definition.sprite != null)
+            _baseColor = Instance.Definition.tint;
+            _spriteRenderer.color = _baseColor;
+
+            Sprite visualSprite = Instance.Definition.sprite != null
+                ? Instance.Definition.sprite
+                : GetFallbackSprite();
+            if (visualSprite != null)
             {
-                _spriteRenderer.sprite = Instance.Definition.sprite;
-                float scale = SpriteFit.CalculateUniformScale(Instance.Definition.sprite, targetVisualSize);
+                // 아트가 들어오기 전에도 회색상자 전투의 위치·전열을 눈으로 검증할 수 있게
+                // 내장 흰 텍스처로 만든 사각형만 임시 사용한다. Definition 스프라이트가 들어오면
+                // 이 경로는 자동으로 사라져 프리팹이나 유닛별 C# 타입을 추가할 필요가 없다.
+                _spriteRenderer.sprite = visualSprite;
+                float scale = SpriteFit.CalculateUniformScale(visualSprite, targetVisualSize);
                 transform.localScale = new Vector3(scale, scale, 1f);
             }
+        }
+
+        private static Sprite GetFallbackSprite()
+        {
+            if (_fallbackSprite != null)
+            {
+                return _fallbackSprite;
+            }
+
+            _fallbackSprite = Sprite.Create(
+                Texture2D.whiteTexture,
+                new Rect(0f, 0f, 1f, 1f),
+                new Vector2(0.5f, 0.5f),
+                1f);
+            return _fallbackSprite;
         }
 
         private void OnDestroy()

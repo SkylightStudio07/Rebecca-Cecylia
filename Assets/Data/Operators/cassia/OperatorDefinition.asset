@@ -31,5 +31,6 @@ MonoBehaviour:
     skillDamage: 5
   towerRoster: {fileID: 11400000, guid: d659e71c0d7f7cf4b84aa457d6eeadaf, type: 2}
   cardRoster: {fileID: 11400000, guid: bc89c00a530cb1b478439ed1a1e16841, type: 2}
+  allyUnitRoster: {fileID: 11400000, guid: a618eb8977cac2042be3b9eb7d1b9539, type: 2}
   dialogueSet: {fileID: 11400000, guid: 993a8531fa925e94abb55a5603de6975, type: 2}
   requiredBestWave: 0

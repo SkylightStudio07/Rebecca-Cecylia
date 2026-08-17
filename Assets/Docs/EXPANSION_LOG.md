@@ -601,3 +601,24 @@ Phase 0 자동화 경로를 실제로 열고, 이후 오퍼레이터별 원격 �
 - `AllyUnitCombatVerifier`의 이동·접촉 경계·공격·타깃 해제·전열 집중 19개 시나리오를 통과했다.
 - `AllyUnitViewPrefabBuilder.Validate`로 공용 View 프리팹 구조와 Definition 스프라이트 주입 전제를 확인했다.
 - `OperatorAssetValidator`의 필수 참조 검증을 통과했다. 기존 `축적.asset` 미등록 경고 1건은 동일하다.
+
+## 2026-08-17 — Cassia 임시 아군 수직 슬라이스 배선
+
+### 맥락
+- 전투 코어와 배치 Controller는 각각 검증됐지만, 실제 Definition·Roster·지휘 포인트 회복·UI·DefenseScene 참조가 비어 있어 게임 안에서 한 흐름으로 확인할 수 없었다.
+- 신규 유닛 아트와 오퍼레이터 2·3의 최종 콘셉트는 아직 없으므로, 그 결정을 기다리지 않고 데이터 조립 구조를 실증할 수 있는 회색상자 기준이 필요했다.
+
+### 결정
+- Cassia에 임시 `AllyUnitRoster`를 연결했다. `전진 사수`는 비용 25, 체력 40, 이동 2.7, 피해 6/0.55초, 사거리 3.8의 저비용 원거리 지원이고, `방호 요원`은 비용 55, 체력 110, 이동 1.6, 피해 9/0.9초, 사거리 1.1의 전열 유지 역할이다. 둘 다 상태 없는 `BasicAttackEffect` 하나만 조립한다.
+- 지휘 포인트는 최대 100, 시작 40, 전투 중 초당 4로 둔다. 빌드 페이즈에서 회복하면 첫 웨이브 전에 자원이 쌓여 선택이 사라지므로, `WaveManager.IsWaitingForNextWave`일 때는 회복하지 않는다. 일시정지는 기존 `Time.timeScale` 게이트로 함께 멈춘다.
+- `UnitDeployMenuUI`는 로스터 버튼으로 유닛을 선택하고 별도 `소환` 버튼으로 Controller의 `TryDeploySelected`만 호출한다. 현재/최대 CP를 표시하며 잔액이 부족하면 소환 버튼을 비활성화한다. UI는 게임플레이 상태를 읽고 이벤트를 구독할 뿐 역참조하지 않는다.
+- 정식 스프라이트가 없는 동안 `AllyUnitView`는 런타임 흰 사각형 마커를 만들고 Definition의 `tint`를 적용한다. 이는 이미지 에셋을 대신하는 회색상자 표현이며, Definition에 스프라이트가 연결되면 자동으로 실제 스프라이트 경로를 사용한다.
+- `AllyUnitVerticalSliceBuilder`가 임시 SO 2개, 공용 공격 효과, Roster, CombatSettings, UnitDeployButton 프리팹과 DefenseScene 연결을 반복 생성한다. 자동 생성 라벨이 없는 기존 에셋은 덮어쓰지 않는다.
+
+### 의도적으로 하지 않은 것
+- 키보드·게임패드의 배치 단축키, 유닛별 해금 UI, 부족 시 사운드/대사 연출은 아직 추가하지 않았다.
+- 오퍼레이터 2·3, 최종 밸런스, 정식 유닛 스프라이트는 이 임시 Cassia 수직 슬라이스에 포함하지 않았다.
+
+### 검증
+- 실행 중 Unity `6000.3.13f1`에서 컴파일 오류 없이 빌더를 실행했고, 생성 에셋·Cassia Roster·DefenseScene Controller/UI 참조 검증을 통과했다.
+- `OperatorAssetValidator`, `AllyUnitFoundationVerifier`, `AllyUnitCombatVerifier`를 다시 실행해 각각 필수 참조, 배치/지휘 포인트 계약, 전투 19개 시나리오 통과를 확인했다. 기존 `축적.asset` 미등록 경고와 TMP obsolete 경고는 동일하다.

@@ -16,6 +16,9 @@ namespace RCCom.Definitions.Unit
         public List<AllyUnitEffectBase> effects = new();
         public Sprite sprite;
 
+        [Tooltip("정식 스프라이트가 아직 없을 때 공용 사각형 마커에 적용할 색. 스프라이트가 있으면 기본 틴트로도 사용한다.")]
+        public Color tint = Color.white;
+
         [Tooltip("스프라이트가 기본적으로 바라보는 방향 보정각. 오른쪽 기준 0도.")]
         public float spriteForwardOffsetDegrees;
     }

@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b25f4a80fa1882148ad41da8c9491d35, type: 3}
+  m_Name: CassiaTestAllyUnitRoster
+  m_EditorClassIdentifier: Assembly-CSharp::RCCom.Definitions.Unit.AllyUnitRoster
+  units:
+  - {fileID: 11400000, guid: 78555fe50ff720549aa235b8bfa8fc37, type: 2}
+  - {fileID: 11400000, guid: 6b67e534549993e4a9e08952a523731e, type: 2}

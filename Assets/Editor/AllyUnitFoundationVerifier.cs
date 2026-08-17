@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using RCCom.Data;
 using RCCom.Definitions.Card;
 using RCCom.Definitions.Enemy;
@@ -31,6 +32,7 @@ namespace RCCom.EditorTools
             CardRoster cardRoster = ScriptableObject.CreateInstance<CardRoster>();
             OperatorDialogueSet dialogueSet = ScriptableObject.CreateInstance<OperatorDialogueSet>();
             GameObject deployUiObject = null;
+            GameObject waveObject = null;
 
             try
             {
@@ -230,7 +232,45 @@ namespace RCCom.EditorTools
                     throw new InvalidOperationException("지휘 포인트 부족 시 소비 거부 계약이 올바르지 않습니다.");
                 }
 
-                Debug.Log("[AllyUnitFoundationVerifier] 역주행 스폰·상태·피해·Roster·Loadout·배치 가용성·Definition 선택·지휘 포인트 계약 검증 통과");
+                waveObject = new GameObject("AllyUnitCommandPointRecoveryVerification");
+                waveObject.SetActive(false);
+                var waveManager = waveObject.AddComponent<RCCom.Managers.WaveManager>();
+                controllerSerializedObject.FindProperty("waveManager").objectReferenceValue = waveManager;
+                controllerSerializedObject.ApplyModifiedPropertiesWithoutUndo();
+                deployController.AddCommandPoints(93);
+
+                MethodInfo tickBeforeEnemies = typeof(UnitDeployController).GetMethod(
+                    "HandleBeforeEnemiesTick",
+                    BindingFlags.Instance | BindingFlags.NonPublic);
+                if (tickBeforeEnemies == null)
+                {
+                    throw new InvalidOperationException("지휘 포인트 회복 Tick 진입점을 찾지 못했습니다.");
+                }
+
+                tickBeforeEnemies.Invoke(deployController, new object[] { 0.5f });
+                tickBeforeEnemies.Invoke(deployController, new object[] { 0.25f });
+                if (deployController.CommandPoints != 98)
+                {
+                    throw new InvalidOperationException("전투 중 지휘 포인트 회복 계약이 올바르지 않습니다.");
+                }
+
+                var waveSerializedObject = new SerializedObject(waveManager);
+                waveSerializedObject.FindProperty("isWaitingForNextWave").boolValue = true;
+                waveSerializedObject.ApplyModifiedPropertiesWithoutUndo();
+                tickBeforeEnemies.Invoke(deployController, new object[] { 1f });
+                if (deployController.CommandPoints != 98)
+                {
+                    throw new InvalidOperationException("빌드 페이즈 지휘 포인트 회복 차단 계약이 올바르지 않습니다.");
+                }
+
+                deployController.AddCommandPoints(99);
+                if (deployController.CommandPoints != deployController.MaxCommandPoints ||
+                    deployController.MaxCommandPoints != 100)
+                {
+                    throw new InvalidOperationException("지휘 포인트 상한 계약이 올바르지 않습니다.");
+                }
+
+                Debug.Log("[AllyUnitFoundationVerifier] 역주행 스폰·상태·피해·Roster·Loadout·배치 가용성·Definition 선택·지휘 포인트 소비·회복·상한 계약 검증 통과");
             }
             finally
             {
@@ -246,6 +286,11 @@ namespace RCCom.EditorTools
                 if (deployUiObject != null)
                 {
                     UnityEngine.Object.DestroyImmediate(deployUiObject);
+                }
+
+                if (waveObject != null)
+                {
+                    UnityEngine.Object.DestroyImmediate(waveObject);
                 }
             }
         }
