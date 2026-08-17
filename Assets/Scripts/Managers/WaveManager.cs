@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using RCCom.Definitions.Enemy;
 using RCCom.Runtime;
@@ -75,6 +76,12 @@ namespace RCCom.Managers
         private readonly Queue<EnemyDefinition> _spawnQueue = new();
         private System.Random _rng;
 
+        /// <summary>
+        /// 적 Tick 직전에 아군처럼 별도 소유자가 관리하는 전투 후보가 최신 위치를 제시할 기회다.
+        /// WaveManager가 아군 목록을 직접 참조하지 않으면서도 신규 적 생성 프레임의 실행 순서를 보장한다.
+        /// </summary>
+        public event Action<float> BeforeEnemiesTick;
+
         private int _waveNumber;
         private bool _isWaiting;
         private float _stateTimer;
@@ -99,6 +106,7 @@ namespace RCCom.Managers
                 TickSpawning(deltaTime);
             }
 
+            BeforeEnemiesTick?.Invoke(deltaTime);
             TickEnemies(deltaTime);
             SyncDebugStatus();
         }

@@ -464,3 +464,140 @@ Phase 0 자동화 경로를 실제로 열고, 이후 오퍼레이터별 원격 �
 
 ### 통합 시 남은 순서 계약
 - `WaveManager`는 이번 작업에서 수정하지 않았다. `UnitDeployController` 통합 시 같은 프레임의 모든 아군 `Tick(deltaTime, activeEnemies, activeAllies)`을 먼저 완료하고, 그 뒤 기존 `WaveManager.Update`가 `EnemyInstance.Tick(deltaTime)`을 실행하도록 명시적인 실행 순서를 부여해야 한다. 아군 Tick이 최신 위치 후보 제시까지 소유하므로 별도의 `OfferAttackCandidates` 선행 호출은 하지 않는다.
+
+## 2026-08-14 — Manager가 아닌 UnitDeployController 배치 경계
+
+### 맥락
+- 아군 유닛은 순수 C# `AllyUnitInstance`라서 MonoBehaviour `Update`를 스스로 가질 수 없지만, 개체 타입별 `AllyUnitManager`를 추가하면 기존 매니저 원칙을 위반한다.
+- 타워 건설과 대칭으로, 플레이어의 "유닛 배치"라는 한 입력 흐름과 그 흐름이 만든 인스턴스만 소유하는 일반 Controller가 필요했다.
+
+### 결정
+- `Runtime/UnitDeployController.cs`를 MonoBehaviour로 추가했다. 별도 Manager나 싱글톤은 만들지 않았다.
+- 선택된 오퍼레이터의 선택적 `AllyUnitRoster`를 `OperatorLoadoutSession`에서 해석한다. 타워형 오퍼레이터처럼 로스터가 없으면 오류나 암묵적 기본 로스터 없이 안전하게 동작을 멈춘다.
+- UI가 호출할 `SelectUnit`, `ClearSelection`, `TryDeploySelected`, `TryDeploy` API를 제공한다.
+- 배치 시 `AllyUnitInstance.Spawn` 후 공용 `AllyUnitView` 프리팹 하나를 생성해 `Bind`한다. 유닛 종류별 프리팹이나 C# 타입은 추가하지 않는다.
+- Controller가 자신이 배치한 `List<AllyUnitInstance>`만 소유하고 역순으로 Tick한다. 적 후보는 `WaveManager.ActiveEnemies`를 읽기 전용으로 전달하며 적 목록의 소유권을 가져오지 않는다.
+- 사망 이벤트로 목록을 제거하고, UI가 단방향으로 상태를 관찰할 수 있도록 선택·배치·제거 이벤트를 노출한다.
+
+### 판단 근거
+- Manager와 Controller의 차이는 이름이 아니라 책임 범위다. 전자는 유닛 타입 전체의 전역 시스템이 되지만, 후자는 TowerBuildController와 마찬가지로 한 플레이어 행동 흐름만 조율한다.
+- 인스턴스 목록 수정 권한을 Controller 하나에 모으면 향후 적과의 상호 전투가 추가되어도 WaveManager와 서로 상대 목록을 직접 수정하지 않는다.
+- 로스터 선택과 View 주입을 공개 배치 API 안에서 닫아 후속 UI가 런타임 인스턴스 생성 순서를 중복 구현하지 않게 했다.
+
+### 의도적으로 하지 않은 것
+- 지휘 포인트 최대치·시작치·회복량과 유닛 비용 차감은 기획 수치가 미확정이라 임의 구현하지 않았다.
+- 키보드·게임패드의 구체 배치 키도 정하지 않았다. 후속 선택 UI가 공개 API를 호출하도록 경계만 만들었다.
+- DefenseScene 배치, 공용 View 프리팹 생성, 인스펙터 연결은 이번 Controller 코드 범위에 포함하지 않았다.
+- `AllyUnitManager`, 전역 static 목록, 종류별 유닛 프리팹을 만들지 않았다.
+
+### 검증
+- 실행 중인 Unity `6000.3.13f1` Pipeline에서 재컴파일 완료, 컴파일 오류 없음.
+- 기존 `AllyUnitFoundationVerifier`를 다시 실행해 역주행 스폰·상태·피해·Roster·Loadout 계약 통과를 확인했다.
+- Unity가 `UnitDeployController.cs.meta`를 자동 생성한 것을 확인했다.
+- 콘솔에는 이번 변경과 무관한 기존 TMP obsolete 경고 1건과 Pipeline 자동화 모드 주의만 남아 있다.
+
+## 2026-08-14 — 유닛 로스터 가용성에 따른 배치 입력·UI 차단
+
+### 결정
+- `UnitDeployController.IsDeployInputEnabled`를 유닛 배치 입력의 단일 게이트로 두고, 일시정지 중이거나 선택된 오퍼레이터의 `AllyUnitRoster`가 null·빈 목록이면 선택과 배치 요청을 거부한다.
+- `UnitDeployMenuUI`는 `UnitDeployController.IsAvailable`을 읽어 유닛 패널의 `CanvasGroup`을 표시·숨김 처리한다. 로스터가 없는 타워형 오퍼레이터는 오류가 아니라 정상 비활성 상태로 취급한다.
+- 패널은 `GameObject.SetActive`로 끄지 않고 `alpha`, `interactable`, `blocksRaycasts`를 함께 변경한다.
+
+### 판단 근거
+- UI를 숨기는 것만으로는 단축키나 다른 호출 경로가 배치 API를 직접 실행할 수 있으므로 실제 생성 책임자인 Controller에서도 입력을 거부해야 한다.
+- 게임플레이가 UI를 직접 찾아 끄지 않고 UI가 공개 가용성 상태를 읽게 해 UI→게임플레이 단방향 참조 원칙을 유지한다.
+- `GameObject.SetActive(false)`로 UI 자신을 끄면 후속 이벤트 구독이나 갱신 경로까지 사라졌던 기존 `CardSelectionUI` 사례가 있어 같은 `CanvasGroup` 계약을 재사용한다.
+
+### 의도적으로 하지 않은 것
+- 키보드·게임패드의 구체 배치 키는 아직 기획이 확정되지 않아 추가하지 않았다.
+- 실제 유닛 패널과 `UnitDeployController`가 DefenseScene에 아직 없으므로 기존 씬이나 임시 UI 에셋을 만들지 않았다. 신규 오퍼레이터·유닛 UI가 준비되면 `UnitDeployMenuUI`의 Controller와 CanvasGroup만 연결한다.
+
+### 검증
+- Unity `6000.3.13f1` Pipeline 재컴파일을 완료했고 컴파일 오류가 없음을 확인했다.
+- `AllyUnitFoundationVerifier`에서 null 로스터일 때 선택 요청 거부와 패널 비표시·비상호작용, 유효 로스터일 때 입력 허용과 패널 표시·상호작용 계약을 모두 검증했다.
+
+## 2026-08-14 — AllyUnitRoster 기반 동적 Definition 선택 UI
+
+### 구현
+- `UnitDeployMenuUI`가 선택된 오퍼레이터의 `AllyUnitRoster.units`를 순회해 공용 `UnitDeployButton` 프리팹을 동적으로 생성한다.
+- 각 버튼은 `AllyUnitDefinition`의 스프라이트, 표시 이름, 배치 비용을 표시하고 로스터 인덱스를 캡처해 `UnitDeployController.SelectUnit`을 호출한다.
+- `UnitDeployButton`은 자신이 표시하는 Definition만 보유하며 로스터나 Controller를 직접 참조하지 않는다. 선택 인덱스와 생성 책임은 메뉴에 남겼다.
+- 메뉴는 `SelectionChanged` 이벤트를 구독해 현재 Definition과 일치하는 버튼에만 선택 표시를 켠다. `ClearSelection`이 호출되면 모든 표시가 꺼진다.
+
+### 판단 근거
+- 버튼 개수를 고정하면 오퍼레이터마다 유닛 수가 달라질 때 씬이나 코드를 다시 수정해야 한다. Roster 기반 동적 생성은 신규 오퍼레이터를 에셋 조립만으로 추가한다는 확장 목표를 유지한다.
+- 버튼이 로스터 인덱스를 직접 계산하거나 Controller를 소유하게 하지 않고 콜백만 받게 해 기존 `TowerBuildButton`/`TowerBuildMenuUI`의 책임 분리를 따른다.
+- 자동 기본 선택은 기획으로 확정되지 않았으므로 넣지 않았다. 플레이어가 버튼을 누른 Definition만 선택 상태가 된다.
+
+### 의도적으로 하지 않은 것
+- 실제 버튼 프리팹과 DefenseScene의 스크롤 Content 배치는 유닛 아트와 UI 레이아웃이 아직 없어 생성하지 않았다.
+- 배치 비용은 표시만 하며 지휘 포인트 차감은 별도 자원 작업에서 구현한다.
+
+### 검증
+- Unity `6000.3.13f1`에서 전체 스크립트 재컴파일을 완료했고 오류가 없었다.
+- `AllyUnitFoundationVerifier`가 메모리 임시 버튼 템플릿으로 로스터 수만큼 생성, Definition 연결, 이름·비용 표시, 클릭 콜백 선택, 선택 표시와 해제를 검증했다.
+
+## 2026-08-15 — 유닛 배치 지휘 포인트 비용 확인·소비
+
+### 구현
+- `UnitDeployController`에 시작 지휘 포인트와 세션 중 현재 잔액을 추가하고 `CommandPoints`, `CanSpendCommandPoints`, `CanAfford`, `TrySpendCommandPoints`, `AddCommandPoints`를 공개했다.
+- 모든 배치 호출 경로가 합류하는 `TryDeploy`에서 `AllyUnitData.deployCost`를 검사한다. 잔액이 부족하면 생성 없이 실패하고 `DeployFailedInsufficientCommandPoints`를 알린다.
+- 순수 인스턴스 스폰과 공용 View 바인딩까지 성공한 뒤 비용을 소비하고, 잔액 변경은 `CommandPointsChanged`로 알린다.
+- 음수 비용은 잘못된 Definition으로 보고 배치를 거부하며, 비용 0은 정상적인 무료 배치로 처리한다.
+
+### 판단 근거
+- UI에서만 비용을 확인하면 단축키나 후속 자동 배치 경로가 검증을 우회할 수 있으므로 실제 생성 책임자인 Controller를 단일 소비 경계로 삼았다.
+- 스폰 효과 중 즉시 사망하거나 View 생성 준비가 실패한 배치에서는 지휘 포인트가 빠지지 않아야 하므로, 성공 조건을 확인한 뒤 소비한다.
+- 지휘 포인트는 유닛 배치 흐름 전용 상태라 별도 Manager나 `GameManager` 확장 없이 `UnitDeployController`가 소유한다.
+
+### 의도적으로 하지 않은 것
+- 최대 지휘 포인트, 자동 회복 속도, 오퍼레이터별 시작값은 `EXPANSION_PLAN.md` §5 미확정 수치이므로 정하지 않았다. 시작 잔액만 인스펙터 입력으로 두고 현재 구현에는 상한을 넣지 않았다.
+- HUD 표시와 부족 피드백 연출은 공개 값과 이벤트만 준비하고 이번 범위에는 포함하지 않았다.
+
+### 검증
+- Unity `6000.3.13f1` Pipeline에서 전체 스크립트 재컴파일을 완료했고 오류가 없었다.
+- `AllyUnitFoundationVerifier`에서 5포인트 지급, 비용 3의 구매 가능 판정과 소비 후 잔액 2, 다시 비용 3을 소비하려 할 때 거부되고 잔액과 변경 이벤트 값이 유지되는 계약을 검증했다.
+
+## 2026-08-15 — 공용 AllyUnitView 프리팹 생성
+
+### 구현
+- `AllyUnitViewPrefabBuilder`를 추가해 `Assets/Data/Prefabs/AllyUnitView.prefab`을 Unity Editor API로 반복 생성할 수 있게 했다.
+- 공용 프리팹은 루트 하나에 `SpriteRenderer`와 `AllyUnitView`만 둔다. 스프라이트는 비워 두며 `UnitDeployController`가 생성 직후 호출하는 `Bind`에서 `AllyUnitDefinition.sprite`를 주입한다.
+- 기존 EnemyView와 같은 기본 Sorting Layer와 Order 2를 사용하고, `AllyUnitView.targetVisualSize` 기본값 0.9를 유지한다.
+- 빌더가 저장 직후 프리팹 존재 여부, 필수 컴포넌트, 빈 기본 스프라이트, 단일 `AllyUnitView` 계약을 검증한다.
+
+### 판단 근거
+- 유닛별 프리팹에 스프라이트를 고정하면 신규 오퍼레이터마다 프리팹 복제가 필요해져 Definition 주입 원칙과 데이터 드랍 목표가 깨진다.
+- 현재 아군 교전은 순수 C# Instance가 담당하고 `AllyUnitView`에는 물리 충돌이나 체력바 계약이 없으므로 Collider·Rigidbody2D·체력바를 선제 추가하지 않았다.
+- 같은 에셋을 다시 만들 일이 생겨도 YAML을 직접 편집하지 않도록 커밋 가능한 에디터 빌더를 생성 경로로 남겼다.
+
+### 의도적으로 하지 않은 것
+- `UnitDeployController`와 공용 프리팹의 DefenseScene 배선은 Controller 오브젝트와 유닛 로스터가 아직 씬에 없어 이번 범위에서 수정하지 않았다.
+- 유닛별 스프라이트는 신규 오퍼레이터 아트가 준비된 뒤 각 `AllyUnitDefinition`에 연결한다.
+
+### 검증
+- Unity `6000.3.13f1` Pipeline에서 빌더 컴파일을 완료했고 오류가 없었다.
+- 빌더를 실제 실행해 프리팹과 Unity 생성 `.meta`가 디스크에 저장됐으며, 생성 직후 구조 검증을 통과했다.
+
+## 2026-08-17 — 유닛 배치와 전열 교전 실행 순서 통합
+
+### 맥락
+- KIM의 배치 Controller는 아군 목록을 직접 Tick하도록 만들어졌고, CLIENT-1의 전열 교전은 모든 아군이 최신 위치에서 후보를 제시한 뒤 적이 Tick해야 한다는 순서 계약을 추가했다.
+- 두 브랜치를 단순히 함께 두면 MonoBehaviour `Update` 순서가 보장되지 않으며, 특히 같은 프레임에 생성된 적이 아군 후보를 받기 전에 이동할 수 있다.
+
+### 결정
+- `WaveManager`가 스폰·빌드 단계 처리 후, 적 Tick 직전에 `BeforeEnemiesTick` 이벤트를 발생시킨다.
+- `UnitDeployController`는 이 이벤트를 구독해 자신이 소유한 모든 아군을 Tick한다. `WaveManager`는 아군 목록이나 Controller를 참조하지 않고 기존 적 목록 소유권을 유지한다.
+- 일시정지 게이트는 이벤트 핸들러 첫 단계에 유지해 `Time.timeScale == 0`일 때 아군 상태가 진행되지 않게 했다.
+- 배치 시 CLIENT-1이 추가한 `UnitCombatSettings`를 `AllyUnitInstance.Spawn`에 주입해 접촉 거리와 최종 대기점 설정이 실제 플레이 경로에서도 적용되게 했다. 설정이 비어 있으면 인스턴스의 안전 기본값을 사용한다.
+
+### 의도적으로 하지 않은 것
+- `WaveManager`에 아군 목록이나 `UnitDeployController` 참조를 추가하지 않았다.
+- 별도 `AllyUnitManager`나 전역 실행 순서 설정을 만들지 않았다.
+
+### 검증 결과
+- Unity `6000.3.13f1` 배치 모드에서 전체 스크립트 컴파일을 통과했다. 기존 `OperatorSelectionSetup`의 TMP obsolete 경고 1건만 동일하게 남았다.
+- `AllyUnitFoundationVerifier`의 역주행 기반·배치 가용성·Definition 선택·지휘 포인트 계약을 통과했다.
+- `AllyUnitCombatVerifier`의 이동·접촉 경계·공격·타깃 해제·전열 집중 19개 시나리오를 통과했다.
+- `AllyUnitViewPrefabBuilder.Validate`로 공용 View 프리팹 구조와 Definition 스프라이트 주입 전제를 확인했다.
+- `OperatorAssetValidator`의 필수 참조 검증을 통과했다. 기존 `축적.asset` 미등록 경고 1건은 동일하다.

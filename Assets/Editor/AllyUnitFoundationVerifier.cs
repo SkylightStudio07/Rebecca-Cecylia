@@ -10,6 +10,7 @@ using RCCom.Runtime;
 using RCCom.UI;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace RCCom.EditorTools
 {
@@ -29,6 +30,7 @@ namespace RCCom.EditorTools
             TowerRoster towerRoster = ScriptableObject.CreateInstance<TowerRoster>();
             CardRoster cardRoster = ScriptableObject.CreateInstance<CardRoster>();
             OperatorDialogueSet dialogueSet = ScriptableObject.CreateInstance<OperatorDialogueSet>();
+            GameObject deployUiObject = null;
 
             try
             {
@@ -36,6 +38,7 @@ namespace RCCom.EditorTools
                 {
                     unitId = "verification-unit",
                     displayName = "검증 유닛",
+                    deployCost = 3,
                     maxHealth = 10f,
                     moveSpeed = 2f,
                     attackInterval = 1f,
@@ -111,7 +114,123 @@ namespace RCCom.EditorTools
                     throw new InvalidOperationException("오퍼레이터 유닛 로스터 해석 계약이 올바르지 않습니다.");
                 }
 
-                Debug.Log("[AllyUnitFoundationVerifier] 역주행 스폰·상태·피해·Roster·Loadout 계약 검증 통과");
+                deployUiObject = new GameObject("AllyUnitDeployAvailabilityVerification");
+                deployUiObject.SetActive(false);
+                CanvasGroup panelGroup = deployUiObject.AddComponent<CanvasGroup>();
+                UnitDeployController deployController = deployUiObject.AddComponent<UnitDeployController>();
+                UnitDeployMenuUI deployMenuUI = deployUiObject.AddComponent<UnitDeployMenuUI>();
+                var contentObject = new GameObject("Content", typeof(RectTransform));
+                contentObject.transform.SetParent(deployUiObject.transform);
+
+                var buttonTemplateObject = new GameObject("UnitDeployButtonTemplate", typeof(RectTransform));
+                buttonTemplateObject.transform.SetParent(deployUiObject.transform);
+                Image buttonIcon = buttonTemplateObject.AddComponent<Image>();
+                Button buttonComponent = buttonTemplateObject.AddComponent<Button>();
+                UnitDeployButton buttonTemplate = buttonTemplateObject.AddComponent<UnitDeployButton>();
+
+                var nameObject = new GameObject("Name", typeof(RectTransform));
+                nameObject.transform.SetParent(buttonTemplateObject.transform);
+                var nameText = nameObject.AddComponent<TMPro.TextMeshProUGUI>();
+
+                var costObject = new GameObject("Cost", typeof(RectTransform));
+                costObject.transform.SetParent(buttonTemplateObject.transform);
+                var costText = costObject.AddComponent<TMPro.TextMeshProUGUI>();
+
+                var selectionIndicator = new GameObject("SelectionIndicator", typeof(RectTransform));
+                selectionIndicator.transform.SetParent(buttonTemplateObject.transform);
+                selectionIndicator.SetActive(false);
+
+                var buttonSerializedObject = new SerializedObject(buttonTemplate);
+                buttonSerializedObject.FindProperty("icon").objectReferenceValue = buttonIcon;
+                buttonSerializedObject.FindProperty("nameText").objectReferenceValue = nameText;
+                buttonSerializedObject.FindProperty("costText").objectReferenceValue = costText;
+                buttonSerializedObject.FindProperty("button").objectReferenceValue = buttonComponent;
+                buttonSerializedObject.FindProperty("selectionIndicator").objectReferenceValue = selectionIndicator;
+                buttonSerializedObject.ApplyModifiedPropertiesWithoutUndo();
+
+                var menuSerializedObject = new SerializedObject(deployMenuUI);
+                menuSerializedObject.FindProperty("deployController").objectReferenceValue = deployController;
+                menuSerializedObject.FindProperty("panelGroup").objectReferenceValue = panelGroup;
+                menuSerializedObject.FindProperty("contentParent").objectReferenceValue = contentObject.transform;
+                menuSerializedObject.FindProperty("buttonPrefab").objectReferenceValue = buttonTemplate;
+                menuSerializedObject.ApplyModifiedPropertiesWithoutUndo();
+
+                deployMenuUI.RefreshAvailability();
+                if (deployController.IsDeployInputEnabled || deployController.SelectUnit(0) ||
+                    deployMenuUI.IsVisible || panelGroup.interactable || panelGroup.blocksRaycasts ||
+                    panelGroup.alpha != 0f)
+                {
+                    throw new InvalidOperationException("null 로스터의 배치 입력 또는 UI 비활성 계약이 올바르지 않습니다.");
+                }
+
+                var controllerSerializedObject = new SerializedObject(deployController);
+                controllerSerializedObject.FindProperty("allyUnitRoster").objectReferenceValue = unitRoster;
+                controllerSerializedObject.ApplyModifiedPropertiesWithoutUndo();
+                deployMenuUI.RefreshAvailability();
+
+                if (!deployController.IsDeployInputEnabled || !deployMenuUI.IsVisible ||
+                    !panelGroup.interactable || !panelGroup.blocksRaycasts || panelGroup.alpha != 1f)
+                {
+                    throw new InvalidOperationException("유효한 로스터의 배치 입력 또는 UI 활성 계약이 올바르지 않습니다.");
+                }
+
+                AllyUnitDefinition selectedDefinition = null;
+                deployController.SelectionChanged += definition => selectedDefinition = definition;
+                deployMenuUI.Rebuild();
+                UnitDeployButton generatedButton = contentObject.GetComponentInChildren<UnitDeployButton>(true);
+                if (deployMenuUI.ButtonCount != 1 || generatedButton == null ||
+                    generatedButton.Definition != unitDefinition)
+                {
+                    throw new InvalidOperationException("AllyUnitRoster 기반 동적 버튼 생성 계약이 올바르지 않습니다.");
+                }
+
+                string generatedName = generatedButton.transform.Find("Name").GetComponent<TMPro.TextMeshProUGUI>().text;
+                string generatedCost = generatedButton.transform.Find("Cost").GetComponent<TMPro.TextMeshProUGUI>().text;
+                if (generatedName != unitDefinition.data.displayName || generatedCost != "3")
+                {
+                    throw new InvalidOperationException("유닛 Definition의 이름 또는 배치 비용 표시 계약이 올바르지 않습니다.");
+                }
+
+                generatedButton.GetComponent<Button>().onClick.Invoke();
+                if (deployController.SelectedDefinition != unitDefinition || selectedDefinition != unitDefinition)
+                {
+                    throw new InvalidOperationException("동적 유닛 버튼의 Definition 선택 계약이 올바르지 않습니다.");
+                }
+
+                generatedButton.SetSelected(true);
+                if (!generatedButton.transform.Find("SelectionIndicator").gameObject.activeSelf)
+                {
+                    throw new InvalidOperationException("유닛 버튼의 선택 표시 계약이 올바르지 않습니다.");
+                }
+
+                deployController.ClearSelection();
+                if (deployController.SelectedDefinition != null || selectedDefinition != null)
+                {
+                    throw new InvalidOperationException("유닛 Definition 선택 해제 계약이 올바르지 않습니다.");
+                }
+
+                int changedCommandPoints = -1;
+                deployController.CommandPointsChanged += points => changedCommandPoints = points;
+                deployController.AddCommandPoints(5);
+                if (deployController.CommandPoints != 5 || changedCommandPoints != 5 ||
+                    !deployController.CanAfford(unitDefinition))
+                {
+                    throw new InvalidOperationException("지휘 포인트 지급 또는 비용 확인 계약이 올바르지 않습니다.");
+                }
+
+                if (!deployController.TrySpendCommandPoints(unitDefinition.data.deployCost) ||
+                    deployController.CommandPoints != 2 || changedCommandPoints != 2)
+                {
+                    throw new InvalidOperationException("지휘 포인트 소비 계약이 올바르지 않습니다.");
+                }
+
+                if (deployController.TrySpendCommandPoints(unitDefinition.data.deployCost) ||
+                    deployController.CommandPoints != 2 || changedCommandPoints != 2)
+                {
+                    throw new InvalidOperationException("지휘 포인트 부족 시 소비 거부 계약이 올바르지 않습니다.");
+                }
+
+                Debug.Log("[AllyUnitFoundationVerifier] 역주행 스폰·상태·피해·Roster·Loadout·배치 가용성·Definition 선택·지휘 포인트 계약 검증 통과");
             }
             finally
             {
@@ -123,6 +242,11 @@ namespace RCCom.EditorTools
                 UnityEngine.Object.DestroyImmediate(towerRoster);
                 UnityEngine.Object.DestroyImmediate(cardRoster);
                 UnityEngine.Object.DestroyImmediate(dialogueSet);
+
+                if (deployUiObject != null)
+                {
+                    UnityEngine.Object.DestroyImmediate(deployUiObject);
+                }
             }
         }
     }
