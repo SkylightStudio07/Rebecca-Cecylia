@@ -24,7 +24,12 @@ namespace RCCom.Runtime
         private IReadOnlyList<Vector2> _path;
         private IDamageable _goal;
         private int _pathIndex;
+        private bool _isSpawned;
         private bool _isDead;
+        private bool _hasReachedGoal;
+        private AllyUnitInstance _currentTarget;
+        private AllyUnitInstance _currentMovementTarget;
+        private float _attackCooldownRemaining;
 
         /// <summary>
         /// 빙결 오라 타워(SlowAuraEffect) 등이 적용하는 이동속도 배율. 지속시간 기반으로
@@ -53,6 +58,19 @@ namespace RCCom.Runtime
         public event Action ReachedGoal;
 
         public EnemyData Data => definition.data;
+        public bool IsSpawned => _isSpawned;
+        public bool IsDead => _isDead;
+        public bool HasReachedGoal => _hasReachedGoal;
+        public bool IsAlive => _isSpawned && !_isDead && !_hasReachedGoal;
+        public AllyUnitInstance CurrentTarget => _currentTarget;
+        public float AttackCooldownRemaining => _attackCooldownRemaining;
+
+        /// <summary>경로 시작점 0, 끝점 1인 연속 진행도. 현재 선분 안의 이동량도 포함한다.</summary>
+        public float PathProgress => AllyUnitTargeting.CalculatePathProgress(
+            _path,
+            _pathIndex,
+            position,
+            true);
 
         /// <summary>
         /// 지금 향하고 있는 다음 웨이포인트 — EnemyView가 실제 이동 여부(프레임 간 위치 변화량)
@@ -73,6 +91,12 @@ namespace RCCom.Runtime
             _path = path;
             _goal = goal;
             _pathIndex = 0;
+            _isDead = false;
+            _hasReachedGoal = false;
+            _currentTarget = null;
+            _currentMovementTarget = null;
+            _attackCooldownRemaining = 0f;
+            _isSpawned = true;
 
             EnemyContext ctx = MakeContext(0f);
             foreach (IEnemyEffect effect in definition.effects)
@@ -81,18 +105,136 @@ namespace RCCom.Runtime
             }
         }
 
+        /// <summary>
+        /// 같은 프레임의 아군 후보 제시 단계가 끝난 뒤 호출한다. 적은 전체 아군 목록을 알 수 없으므로
+        /// 통합 컨트롤러가 모든 아군의 OfferAttackCandidates를 먼저 실행해야 첫 조우 이동도 접촉선에서 제한된다.
+        /// </summary>
         public void Tick(float deltaTime)
         {
+            if (!IsAlive)
+            {
+                return;
+            }
+
             TickSpeedMultiplier(deltaTime);
             TickPoison(deltaTime);
+            if (!IsAlive)
+            {
+                return;
+            }
+
             TickVulnerable(deltaTime);
-            MoveAlongPath(deltaTime);
+            if (!IsAlive)
+            {
+                return;
+            }
+
+            RefreshCurrentTarget();
+            RefreshMovementTarget(Mathf.Max(0f, deltaTime));
+            TickAttack(Mathf.Max(0f, deltaTime));
+            if (!IsAlive)
+            {
+                return;
+            }
+
+            bool isInContactRange = _currentMovementTarget != null &&
+                                    AllyUnitTargeting.IsWithinRange(
+                                        position,
+                                        _currentMovementTarget.Position,
+                                        _currentMovementTarget.ContactRange);
+            if (!isInContactRange)
+            {
+                MoveAlongPath(Mathf.Max(0f, deltaTime));
+            }
+
+            if (!IsAlive)
+            {
+                return;
+            }
 
             EnemyContext ctx = MakeContext(deltaTime);
             foreach (IEnemyEffect effect in definition.effects)
             {
                 effect.OnTick(ctx);
             }
+        }
+
+        /// <summary>
+        /// 아군이 자신을 공격 후보로 제시하는 진입점. 적은 전체 아군 목록을 저장하지
+        /// 않고, 유효 범위 안의 후보 중 적 생성점 방향 전열만 교체해 집중포화를 만든다.
+        /// </summary>
+        public bool TryOfferAttackTarget(AllyUnitInstance candidate)
+        {
+            if (!IsAlive || candidate == null || !candidate.IsSpawned || candidate.IsDead)
+            {
+                return false;
+            }
+
+            RefreshCurrentTarget();
+
+            float attackRange = GetEffectiveAttackRange(candidate);
+            if (!AllyUnitTargeting.IsWithinRange(position, candidate.Position, attackRange))
+            {
+                if (_currentTarget == candidate)
+                {
+                    _currentTarget = null;
+                }
+
+                return false;
+            }
+
+            if (_currentTarget == null ||
+                AllyUnitTargeting.IsPreferredAlly(candidate, _currentTarget, position))
+            {
+                _currentTarget = candidate;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// 공격 사거리와 무관하게, 현재 프레임의 이동 선분에서 접촉 경계를 넘는 아군을 기록한다.
+        /// 공격 타깃과 분리해 보관하므로 첫 조우 프레임에도 긴 이동량으로 전열을 관통하지 않는다.
+        /// </summary>
+        public bool TryOfferMovementTarget(AllyUnitInstance candidate, float deltaTime)
+        {
+            if (!IsAlive || candidate == null || !candidate.IsSpawned || candidate.IsDead)
+            {
+                return false;
+            }
+
+            if (!TryGetMovementSweep(deltaTime, out Vector2 pathTarget, out float movementDistance))
+            {
+                if (_currentMovementTarget == candidate)
+                {
+                    _currentMovementTarget = null;
+                }
+
+                return false;
+            }
+
+            float candidateContactDistance = AllyUnitTargeting.DistanceBeforeContact(
+                position,
+                pathTarget,
+                candidate.Position,
+                candidate.ContactRange);
+            if (candidateContactDistance > movementDistance + 0.0001f)
+            {
+                if (_currentMovementTarget == candidate)
+                {
+                    _currentMovementTarget = null;
+                }
+
+                return false;
+            }
+
+            if (_currentMovementTarget == null ||
+                IsPreferredMovementTarget(candidate, _currentMovementTarget, pathTarget))
+            {
+                _currentMovementTarget = candidate;
+            }
+
+            return true;
         }
 
         /// <summary>사거리 내에 있는 동안 SlowAuraEffect가 매 틱 갱신 호출한다.</summary>
@@ -157,34 +299,73 @@ namespace RCCom.Runtime
 
         private void MoveAlongPath(float deltaTime)
         {
-            if (_path == null || _pathIndex >= _path.Count)
+            if (!IsAlive || _path == null || _pathIndex >= _path.Count)
             {
                 return;
             }
 
             Vector2 target = _path[_pathIndex];
             Vector2 toTarget = target - position;
+            float distance = toTarget.magnitude;
             float step = Data.moveSpeed * _speedMultiplier * deltaTime;
 
-            if (toTarget.sqrMagnitude <= step * step)
+            if (distance <= 0.0001f)
             {
                 position = target;
                 _pathIndex++;
 
                 if (_pathIndex >= _path.Count)
                 {
+                    _hasReachedGoal = true;
+                    _currentTarget = null;
+                    _currentMovementTarget = null;
                     DealContactDamageTo(_goal);
                     ReachedGoal?.Invoke();
                 }
+                return;
             }
-            else
+
+            float movementDistance = Mathf.Min(step, distance);
+            if (_currentMovementTarget != null && _currentMovementTarget.IsAlive)
             {
-                position += toTarget.normalized * step;
+                float contactDistance = AllyUnitTargeting.DistanceBeforeContact(
+                    position,
+                    target,
+                    _currentMovementTarget.Position,
+                    _currentMovementTarget.ContactRange);
+                movementDistance = Mathf.Min(movementDistance, contactDistance);
+            }
+
+            if (movementDistance < distance - 0.0001f)
+            {
+                if (movementDistance > 0.0001f)
+                {
+                    position += toTarget / distance * movementDistance;
+                }
+
+                return;
+            }
+
+            position = target;
+            _pathIndex++;
+
+            if (_pathIndex >= _path.Count)
+            {
+                _hasReachedGoal = true;
+                _currentTarget = null;
+                _currentMovementTarget = null;
+                DealContactDamageTo(_goal);
+                ReachedGoal?.Invoke();
             }
         }
 
         public void DealContactDamageTo(IDamageable target)
         {
+            if (target == null || definition == null)
+            {
+                return;
+            }
+
             EnemyContext ctx = MakeContext(0f);
             foreach (IEnemyEffect effect in definition.effects)
             {
@@ -194,7 +375,7 @@ namespace RCCom.Runtime
 
         public void TakeDamage(float amount)
         {
-            if (_isDead)
+            if (!IsAlive)
             {
                 return;
             }
@@ -207,6 +388,8 @@ namespace RCCom.Runtime
             if (currentHealth <= 0f)
             {
                 _isDead = true;
+                _currentTarget = null;
+                _currentMovementTarget = null;
 
                 EnemyContext ctx = MakeContext(0f);
                 foreach (IEnemyEffect effect in definition.effects)
@@ -216,6 +399,131 @@ namespace RCCom.Runtime
 
                 Died?.Invoke();
             }
+        }
+
+        private void RefreshCurrentTarget()
+        {
+            if (_currentTarget == null || !_currentTarget.IsAlive ||
+                !AllyUnitTargeting.IsWithinRange(
+                    position,
+                    _currentTarget.Position,
+                    GetEffectiveAttackRange(_currentTarget)))
+            {
+                _currentTarget = null;
+            }
+        }
+
+        private void RefreshMovementTarget(float deltaTime)
+        {
+            if (_currentMovementTarget == null)
+            {
+                return;
+            }
+
+            if (!_currentMovementTarget.IsAlive ||
+                !TryGetMovementSweep(deltaTime, out Vector2 pathTarget, out float movementDistance))
+            {
+                _currentMovementTarget = null;
+                return;
+            }
+
+            float contactDistance = AllyUnitTargeting.DistanceBeforeContact(
+                position,
+                pathTarget,
+                _currentMovementTarget.Position,
+                _currentMovementTarget.ContactRange);
+            if (contactDistance > movementDistance + 0.0001f)
+            {
+                _currentMovementTarget = null;
+            }
+        }
+
+        private bool TryGetMovementSweep(
+            float deltaTime,
+            out Vector2 pathTarget,
+            out float movementDistance)
+        {
+            pathTarget = default;
+            movementDistance = 0f;
+
+            if (!IsAlive || _path == null || _pathIndex < 0 || _pathIndex >= _path.Count ||
+                Data == null || Data.moveSpeed <= 0f || _speedMultiplier <= 0f || deltaTime <= 0f)
+            {
+                return false;
+            }
+
+            pathTarget = _path[_pathIndex];
+            float distance = Vector2.Distance(position, pathTarget);
+            if (distance <= 0.0001f)
+            {
+                return false;
+            }
+
+            float step = deltaTime == float.PositiveInfinity
+                ? distance
+                : Data.moveSpeed * _speedMultiplier * deltaTime;
+            movementDistance = Mathf.Min(step, distance);
+            return movementDistance > 0.0001f;
+        }
+
+        private bool IsPreferredMovementTarget(
+            AllyUnitInstance candidate,
+            AllyUnitInstance current,
+            Vector2 pathTarget)
+        {
+            float candidateDistance = AllyUnitTargeting.DistanceBeforeContact(
+                position,
+                pathTarget,
+                candidate.Position,
+                candidate.ContactRange);
+            float currentDistance = AllyUnitTargeting.DistanceBeforeContact(
+                position,
+                pathTarget,
+                current.Position,
+                current.ContactRange);
+            if (candidateDistance < currentDistance - 0.0001f)
+            {
+                return true;
+            }
+
+            if (Mathf.Abs(candidateDistance - currentDistance) > 0.0001f)
+            {
+                return false;
+            }
+
+            return AllyUnitTargeting.IsPreferredAlly(candidate, current, position);
+        }
+
+        private void TickAttack(float deltaTime)
+        {
+            if (_currentTarget == null)
+            {
+                return;
+            }
+
+            _attackCooldownRemaining -= deltaTime;
+            if (_attackCooldownRemaining > 0f)
+            {
+                return;
+            }
+
+            AllyUnitInstance target = _currentTarget;
+            DealContactDamageTo(target);
+            _attackCooldownRemaining = Data.attackInterval > 0f ? Data.attackInterval : 1f;
+
+            if (!target.IsAlive || !AllyUnitTargeting.IsWithinRange(
+                    position,
+                    target.Position,
+                    GetEffectiveAttackRange(target)))
+            {
+                _currentTarget = null;
+            }
+        }
+
+        private float GetEffectiveAttackRange(AllyUnitInstance target)
+        {
+            float configuredRange = Data.attackRange > 0f ? Data.attackRange : target.ContactRange;
+            return Mathf.Max(configuredRange, target.ContactRange);
         }
 
         private EnemyContext MakeContext(float deltaTime) => new()

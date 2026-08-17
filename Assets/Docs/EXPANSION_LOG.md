@@ -411,3 +411,56 @@ Phase 0 자동화 경로를 실제로 열고, 이후 오퍼레이터별 원격 �
 - 기존 전 스크립트가 asmdef 없는 `Assembly-CSharp` 구조이므로 테스트 어셈블리는 도입하지 않고, Unity 메뉴와 배치 `-executeMethod RCCom.EditorTools.AllyUnitFoundationVerifier.Verify` 양쪽에서 같은 검증을 재사용한다.
 - Unity `6000.3.13f1` 배치 모드에서 전체 스크립트 컴파일과 기반 계약 검증을 통과했다.
 - 기존 카시아의 유닛 로스터가 비어 있는 상태에서도 전체 OperatorAssetValidator를 통과했다. 기존 `축적.asset` 미등록 경고 1건은 동일하다.
+
+## 2026-08-14 — 아군 유닛 이동·전열 교전 코어
+
+**맥락**
+아군 유닛의 공통 계약은 앞선 작업에서 고정됐지만 실제 진격·교전·적의 역교전은 비어 있었다. 이번 수직 슬라이스는 `UnitDeployController`와 씬 배선에 의존하지 않고, 순수 C# 인스턴스가 기존 `MapManager.Waypoints`를 공유해 이동과 전투를 완결하는 것을 목표로 했다.
+
+**결정**
+- `UnitCombatSettings` SO에 `contactRange`와 `separationMargin`만 두고, `AllyUnitInstance.Spawn(definition, path, settings)`에서 유효한 값만 해석해 인스턴스에 보관한다. 기존 `Spawn(definition, path)`는 0.75/0.05 안전 기본값으로 유지했다.
+- `attackRange`와 `contactRange`를 분리했다. `attackRange`는 공격 가능 거리이고 `contactRange`는 양 진영이 이동을 멈추는 거리이므로, 원거리 유닛이 공격을 시작했다고 바로 멈추지 않고 실제 접촉 전까지 진격할 수 있다. 적의 잘못된 `attackRange`는 상대의 `contactRange` 이상으로 보정하고, `attackInterval`의 잘못된 값은 1초로 보정한다.
+- 아군은 경로 끝점에서 시작해 웨이포인트 인덱스를 감소시키며 이동한다. 적 생성점부터 누적 경로 거리로 `contactRange + separationMargin`을 계산해 최종 대기점을 만들고, 첫 선분이 짧아도 전체 폴리라인을 따라 대기점을 찾는다.
+- `AllyUnitTargeting`은 월드 거리 필터 후 연속 경로 진행도를 비교한다. 적은 0→1, 아군은 1→0인 같은 좌표계를 사용해, 단순 웨이포인트 인덱스가 아니라 현재 선분 내부 이동량까지 전열 판단에 포함했다.
+- 아군이 매 Tick 각 적에게 자신을 후보로 제시하게 했다. 적이 전체 아군 목록을 저장하거나 `WaveManager`가 목록을 전달하면 오브젝트 타입별 매니저와 흐름 매니저의 결합이 생기므로, 적은 제시된 후보 중 생성점 방향으로 가장 전진한 아군만 교체·유지한다. 같은 진행도에서는 거리, 완전 동률에서는 먼저 제시된 대상을 유지해 여러 아군/적이 같은 전열을 집중 공격한다.
+- `EnemyInstance`에는 별도의 `EnemyState` 전체 상태 머신을 도입하지 않았다. 기존 웨이포인트 이동·둔화·독·취약·효과 훅을 유지한 채 현재 아군 타깃, 공격 쿨다운, 거점 도달 여부, 생존 상태만 추가하고, 접촉 거리 안일 때만 기존 이동 호출을 건너뛰도록 최소 변경했다.
+- `BasicAttackEffect`는 `AllyUnitEffectBase`를 상속하고 `OnAttack`에서 살아 있는 대상에게 `ctx.self.Data.attackDamage`만 적용한다. 쿨다운·타깃·목록은 여러 인스턴스가 공유하는 SO가 아니라 `AllyUnitInstance`가 소유한다. 따라서 근접/원거리 유닛 모두 같은 효과 SO를 조립할 수 있다.
+- `AllyUnitView`는 `Damaged`/`Died`를 구독해 코루틴 없는 잔여 타이머 틴트를 적용하고, 공격 가능한 타깃 또는 다음 웨이포인트 방향을 표현한다.
+
+**근거**
+- 공격 사거리와 정지 사거리를 하나로 합치면 원거리 공격 시작 순간에 이동이 멈춰 전열이 지나치게 앞에서 고정된다. 두 거리를 분리해야 공격 중 진격과 접촉 시 정지가 동시에 성립한다.
+- 연속 진행도를 사용한 이유는 긴 웨이포인트 선분 안에서 조금 더 전진한 적/아군을 인덱스만으로 구분할 수 없기 때문이다. 진행도 비교는 적·아군 모두 같은 경로 의미를 공유하면서도 방향별 우선순위를 대칭적으로 표현한다.
+- 아군 후보 제시 방식은 `WaveManager`에 아군 목록을 추가하지 않기 위한 선택이다. 유닛 순회 주체가 나중에 바뀌어도 적은 공개 후보 메서드 계약만 소비한다.
+- 적에 전체 상태 머신을 넣지 않은 이유는 기존 이동과 효과 훅의 회귀 범위를 키우지 않기 위해서다. 교전 여부는 현재 타깃의 유효성·공격 범위·접촉 범위로 충분히 표현되며, 사망/거점 도달 뒤에는 Tick 자체를 중지한다.
+- SO에 설정만 두고 런타임 상태를 두지 않은 이유는 동일한 Definition/Effect를 여러 유닛이 공유하기 때문이다. 타깃과 쿨다운을 SO에 넣으면 한 유닛의 공격이 다른 유닛의 상태를 오염시키므로, 인스턴스별 상태를 순수 C# 런타임 객체에 한정했다.
+
+**의도적으로 하지 않은 것**
+- `UnitDeployController`, `WaveManager`, 지휘 포인트, UI/HUD, 씬, 프리팹, 기존 `.asset`은 수정하지 않았다. 실제 `UnitCombatSettings`/`BasicAttackEffect` 에셋 생성과 컨트롤러 주입은 통합 작업으로 남겼다.
+- 투사체·비행 로직·체력바·사운드는 이 코어의 범위에서 제외했다.
+- 신규 매니저, asmdef, 테스트 어셈블리를 추가하지 않았다. 검증은 기존 프로젝트 구조에 맞춰 Editor 메뉴와 메모리 임시 SO로 수행했다.
+
+**검증**
+- Unity `6000.3.13f1`에서 단계별 `recompile`/`recompile_status`를 반복 실행했고 최종 `failed=false`를 확인했다. 최종 컴파일 이후 신규 콘솔 오류는 0건이었다. 기존 `OperatorSelectionSetup.cs`의 obsolete 경고와 Pipeline 자동화 모드 경고는 기존 경고다.
+- `AllyUnitFoundationVerifier`와 신규 `AllyUnitCombatVerifier`를 Unity Pipeline `eval`로 실행했다. 신규 검증기는 끝점 스폰, 연속 진행도 감소, 짧은 첫 선분을 포함한 최종 대기점 0.8, 이동 중 공격, 양측 contactRange 정지, 즉시 첫 공격/쿨다운, 양측 사망 후 진격 재개, 양측 전열 집중포화, 죽은 대상 재공격 방지, 범위 이탈 해제, 교전 없는 기존 적 이동, 거점 피해/`ReachedGoal` 1회, 기본 공격 피해, 기존 `ContactDamageEffect` 경로 등 18개 시나리오를 모두 통과했다.
+- 검증기는 종료 시 생성한 임시 SO를 모두 `DestroyImmediate`로 정리했으며 프로젝트 `.asset`/프리팹/씬에는 변경이 없다.
+
+**사람 액션**
+- 없음. 통합 단계에서 실제 `UnitCombatSettings` 에셋을 만들고 `UnitDeployController`가 새 Spawn 오버로드에 전달하면 된다. 이번 작업에서는 해당 파일이 없는 브랜치 계약을 보존하기 위해 컨트롤러를 건드리지 않았다.
+
+## 2026-08-14 전투 코어 검토 보완
+
+### 보완 내용
+- 큰 프레임에서도 아군과 적이 접촉선을 관통하지 않도록, 각 이동 선분과 `contactRange` 원의 첫 교차점까지만 이동을 허용했다. 범위 밖에서 접촉 범위로 진입하는 프레임에 양쪽이 즉시 `Engaging`이 되는 이유는 실제 프레임 순서에서 한 번도 접촉 상태를 놓치지 않게 하기 위해서다.
+- 진행도는 위치에서 가장 가까운 선분을 추측하지 않고 각 인스턴스가 가진 현재 웨이포인트 인덱스와 해당 선분의 보간값으로 계산한다. 교차·되감기 경로에서도 전열이 다른 구간으로 순간 이동하지 않으며, 최종 대기점도 같은 누적 경로 길이 계산을 사용한다.
+- `SetEngagementTarget`은 유효하게 스폰된 대상이 `contactRange` 안에 있을 때만 `Engaging`으로 전환한다. 공격 범위 안이지만 접촉 범위 밖인 원거리 유닛은 계속 `Advancing`할 수 있다.
+- 적 전열 집중 공격 검증은 서로 다른 진행도를 가진 전방·후방 아군을 함께 배치하고 두 적이 전방 아군을 선택하는지 확인하도록 보강했다.
+- 적 최초 조우의 이동 순서는 모든 `AllyUnitInstance.Tick`을 먼저 끝낸 뒤 `EnemyInstance.Tick`을 호출하는 단계 계약으로 명시했다. 각 아군은 이동을 마친 최신 위치에서 Tick 마지막에 후보를 제시하므로, 적이 전체 아군 목록을 보유하지 않으면서도 같은 프레임 위치 변화로 접촉 경계 제한이 빠지지 않는다.
+- `attackRange` 밖의 아군은 공격 타깃으로는 계속 거부하되, 현재 프레임 이동 선분이 그 아군의 `contactRange`와 만날 경우 별도의 이동 차단 타깃으로 기록한다. 따라서 최초 후보 제시 시점에 공격 사거리를 벗어나 있어도 긴 프레임 이동으로 접촉선을 관통하지 않는다.
+- `OfferAttackCandidates`는 아군 이동과 효과 Tick이 끝난 뒤 한 번만 실행한다. 통합 컨트롤러가 별도 후보 선행 순회를 하지 않아 아군×적 후보 비교가 중복되지 않는다.
+
+### 검증 결과
+- `AllyUnitFoundationVerifier`와 `AllyUnitCombatVerifier`를 Unity Pipeline `eval`로 다시 실행했다. 컴파일 `failed=false`, 신규 콘솔 오류 없음, 전투 검증기 19개 시나리오 통과를 확인했다.
+- 큰 프레임 양방향 진입, 초기 거리 11에서 아군이 먼저 2만큼 이동한 뒤 `attackRange` 3인 적이 10만큼 이동하는 최초 조우, 최신 위치 후보 제시 후 적 이동 순서, 접촉 범위 정지, 교차·되감기 경로의 실제 구간 진행도, `SetEngagementTarget`의 원거리 이동 의미, 전·후방 아군을 둔 적 집중 공격을 추가로 검증했다.
+
+### 통합 시 남은 순서 계약
+- `WaveManager`는 이번 작업에서 수정하지 않았다. `UnitDeployController` 통합 시 같은 프레임의 모든 아군 `Tick(deltaTime, activeEnemies, activeAllies)`을 먼저 완료하고, 그 뒤 기존 `WaveManager.Update`가 `EnemyInstance.Tick(deltaTime)`을 실행하도록 명시적인 실행 순서를 부여해야 한다. 아군 Tick이 최신 위치 후보 제시까지 소유하므로 별도의 `OfferAttackCandidates` 선행 호출은 하지 않는다.
