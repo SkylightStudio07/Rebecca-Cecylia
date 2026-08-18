@@ -58,6 +58,7 @@ namespace RCCom.EditorTools
                     address = address,
                     remoteContent = recipe.remoteContent,
                     requiredBestWave = recipe.requiredBestWave,
+                    unitPreviews = BuildUnitPreviews(definition, recipe.remoteContent),
                 });
             }
 
@@ -71,6 +72,37 @@ namespace RCCom.EditorTools
             AssetDatabase.Refresh();
 
             Debug.Log($"[OperatorCatalogBuilder] 카탈로그 {entries.Count}명 및 Addressables 그룹 갱신 완료");
+        }
+
+        private static List<OperatorUnitPreview> BuildUnitPreviews(
+            OperatorDefinition definition,
+            bool remoteContent)
+        {
+            var previews = new List<OperatorUnitPreview>();
+            if (definition.allyUnitRoster == null || definition.allyUnitRoster.units == null)
+            {
+                return previews;
+            }
+
+            foreach (var unit in definition.allyUnitRoster.units)
+            {
+                if (unit == null || unit.data == null)
+                {
+                    continue;
+                }
+
+                previews.Add(new OperatorUnitPreview
+                {
+                    displayName = unit.data.displayName,
+                    deployCost = unit.data.deployCost,
+                    // 원격 전용 Definition의 실제 스프라이트를 카탈로그가 참조하면 메인 빌드에
+                    // 의존성이 새어 들어간다. 원격 유닛은 색상 미리보기만 로컬에 남긴다.
+                    previewIcon = remoteContent ? null : unit.sprite,
+                    fallbackColor = unit.tint,
+                });
+            }
+
+            return previews;
         }
 
         private static void ConfigureAddressable(

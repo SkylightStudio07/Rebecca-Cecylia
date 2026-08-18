@@ -1,0 +1,494 @@
+fileFormatVersion: 2
+guid: 075091e8996f9fd43b86d7884623744b
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 7154647435391392552
+    second: Operator-Selection-Overlay-v2_0
+  - first:
+      213: 8055547617544921193
+    second: Operator-Selection-Overlay-v2_1
+  - first:
+      213: -6437259005160525542
+    second: Operator-Selection-Overlay-v2_2
+  - first:
+      213: -148030174357634480
+    second: Operator-Selection-Overlay-v2_3
+  - first:
+      213: 2932207181250741722
+    second: Operator-Selection-Overlay-v2_4
+  - first:
+      213: -212397950533379800
+    second: Operator-Selection-Overlay-v2_5
+  - first:
+      213: -2545361575894362753
+    second: Operator-Selection-Overlay-v2_6
+  - first:
+      213: 2235375706258725497
+    second: Operator-Selection-Overlay-v2_7
+  - first:
+      213: -3351993658825141256
+    second: Operator-Selection-Overlay-v2_8
+  - first:
+      213: 6424152903637670398
+    second: Operator-Selection-Overlay-v2_9
+  - first:
+      213: -1838935284173779041
+    second: Operator-Selection-Overlay-v2_10
+  - first:
+      213: -715990652553963418
+    second: Operator-Selection-Overlay-v2_11
+  - first:
+      213: -3587633165226497488
+    second: Operator-Selection-Overlay-v2_12
+  - first:
+      213: -5976198958823773014
+    second: Operator-Selection-Overlay-v2_13
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 1
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Operator-Selection-Overlay-v2_0
+      rect:
+        serializedVersion: 2
+        x: 584
+        y: 825
+        width: 500
+        height: 87
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 82bd9af7fe96a4360800000000000000
+      internalID: 7154647435391392552
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Operator-Selection-Overlay-v2_1
+      rect:
+        serializedVersion: 2
+        x: 550
+        y: 770
+        width: 235
+        height: 48
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9606207c0ed0bcf60800000000000000
+      internalID: 8055547617544921193
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Operator-Selection-Overlay-v2_2
+      rect:
+        serializedVersion: 2
+        x: 799
+        y: 770
+        width: 211
+        height: 48
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a11f8367a034aa6a0800000000000000
+      internalID: -6437259005160525542
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Operator-Selection-Overlay-v2_3
+      rect:
+        serializedVersion: 2
+        x: 1005
+        y: 770
+        width: 129
+        height: 48
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 052cf59375712fdf0800000000000000
+      internalID: -148030174357634480
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Operator-Selection-Overlay-v2_4
+      rect:
+        serializedVersion: 2
+        x: 449
+        y: 466
+        width: 775
+        height: 281
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ad5cc4655ea41b820800000000000000
+      internalID: 2932207181250741722
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Operator-Selection-Overlay-v2_5
+      rect:
+        serializedVersion: 2
+        x: 1224
+        y: 177
+        width: 399
+        height: 290
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 829df6770396d0df0800000000000000
+      internalID: -212397950533379800
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Operator-Selection-Overlay-v2_6
+      rect:
+        serializedVersion: 2
+        x: 382
+        y: 201
+        width: 801
+        height: 239
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f7553e3f12f0dacd0800000000000000
+      internalID: -2545361575894362753
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Operator-Selection-Overlay-v2_7
+      rect:
+        serializedVersion: 2
+        x: 360
+        y: 75
+        width: 214
+        height: 86
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 97ad61f7c56a50f10800000000000000
+      internalID: 2235375706258725497
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Operator-Selection-Overlay-v2_8
+      rect:
+        serializedVersion: 2
+        x: 587
+        y: 75
+        width: 214
+        height: 86
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8f39d54e6835b71d0800000000000000
+      internalID: -3351993658825141256
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Operator-Selection-Overlay-v2_9
+      rect:
+        serializedVersion: 2
+        x: 813
+        y: 72
+        width: 248
+        height: 92
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ef91e1c770d272950800000000000000
+      internalID: 6424152903637670398
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Operator-Selection-Overlay-v2_10
+      rect:
+        serializedVersion: 2
+        x: 1073
+        y: 75
+        width: 212
+        height: 86
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f9fc3e52a1aca76e0800000000000000
+      internalID: -1838935284173779041
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Operator-Selection-Overlay-v2_11
+      rect:
+        serializedVersion: 2
+        x: 829
+        y: 62
+        width: 76
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 66855048b4a4016f0800000000000000
+      internalID: -715990652553963418
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Operator-Selection-Overlay-v2_12
+      rect:
+        serializedVersion: 2
+        x: 904
+        y: 62
+        width: 67
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 03aa342f4aa263ec0800000000000000
+      internalID: -3587633165226497488
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Operator-Selection-Overlay-v2_13
+      rect:
+        serializedVersion: 2
+        x: 971
+        y: 62
+        width: 75
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: aacef30d5b6401da0800000000000000
+      internalID: -5976198958823773014
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      Operator-Selection-Overlay-v2_0: 7154647435391392552
+      Operator-Selection-Overlay-v2_1: 8055547617544921193
+      Operator-Selection-Overlay-v2_10: -1838935284173779041
+      Operator-Selection-Overlay-v2_11: -715990652553963418
+      Operator-Selection-Overlay-v2_12: -3587633165226497488
+      Operator-Selection-Overlay-v2_13: -5976198958823773014
+      Operator-Selection-Overlay-v2_2: -6437259005160525542
+      Operator-Selection-Overlay-v2_3: -148030174357634480
+      Operator-Selection-Overlay-v2_4: 2932207181250741722
+      Operator-Selection-Overlay-v2_5: -212397950533379800
+      Operator-Selection-Overlay-v2_6: -2545361575894362753
+      Operator-Selection-Overlay-v2_7: 2235375706258725497
+      Operator-Selection-Overlay-v2_8: -3351993658825141256
+      Operator-Selection-Overlay-v2_9: 6424152903637670398
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

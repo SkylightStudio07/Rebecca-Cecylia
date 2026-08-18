@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace RCCom.Definitions.Operator
@@ -28,6 +29,9 @@ namespace RCCom.Definitions.Operator
 
         [Min(0)]
         public int requiredBestWave;
+
+        [Tooltip("Definition을 내려받기 전 로스터 패널에 표시할 경량 유닛 정보")]
+        public List<OperatorUnitPreview> unitPreviews = new();
 
         public bool IsUnlocked(int bestWave) => bestWave >= requiredBestWave;
     }

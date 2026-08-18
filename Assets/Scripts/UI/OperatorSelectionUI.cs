@@ -26,6 +26,8 @@ namespace RCCom.UI
         [SerializeField] private CanvasGroup mainMenuGroup;
         [SerializeField] private Transform cardContent;
         [SerializeField] private OperatorSelectionCard cardPrefab;
+        [SerializeField] private Transform rosterContent;
+        [SerializeField] private OperatorRosterPreviewItem rosterItemPrefab;
         [SerializeField] private Image portraitImage;
         [SerializeField] private TextMeshProUGUI nameText;
         [SerializeField] private TextMeshProUGUI descriptionText;
@@ -43,6 +45,7 @@ namespace RCCom.UI
         private int _selectedIndex;
         private bool _isLoading;
         private readonly List<OperatorSelectionCard> _cards = new();
+        private readonly List<OperatorRosterPreviewItem> _rosterItems = new();
 
         private void Awake()
         {
@@ -63,7 +66,6 @@ namespace RCCom.UI
             _profile = _profileStorage.Load();
             SelectSavedOrFirstUnlocked();
             SetPanelVisible(true);
-            RebuildCards();
             RenderSelection();
             FocusDefaultButton();
         }
@@ -265,37 +267,14 @@ namespace RCCom.UI
         {
             ClearCards();
 
-            if (cardContent == null || cardPrefab == null || catalog == null || catalog.entries == null)
+            if (cardContent == null || cardPrefab == null || !TryGetSelectedEntry(out OperatorCatalogEntry entry))
             {
                 return;
             }
 
-            for (int i = 0; i < catalog.entries.Count; i++)
-            {
-                OperatorCatalogEntry entry = catalog.entries[i];
-                if (entry == null)
-                {
-                    continue;
-                }
-
-                int index = i;
-                OperatorSelectionCard card = Instantiate(cardPrefab, cardContent);
-                card.Setup(entry, entry.IsUnlocked(_profile?.bestWave ?? 0), index == _selectedIndex,
-                    () => SelectCard(index));
-                _cards.Add(card);
-            }
-        }
-
-        private void SelectCard(int index)
-        {
-            if (_isLoading || catalog == null || catalog.entries == null ||
-                index < 0 || index >= catalog.entries.Count || catalog.entries[index] == null)
-            {
-                return;
-            }
-
-            _selectedIndex = index;
-            RenderSelection();
+            OperatorSelectionCard card = Instantiate(cardPrefab, cardContent);
+            card.Setup(entry, entry.IsUnlocked(_profile?.bestWave ?? 0), true, FocusDefaultButton);
+            _cards.Add(card);
         }
 
         private void ClearCards()
@@ -309,6 +288,40 @@ namespace RCCom.UI
             }
 
             _cards.Clear();
+        }
+
+        private void RebuildRosterPreview(OperatorCatalogEntry entry)
+        {
+            ClearRosterPreview();
+            if (entry == null || rosterContent == null || rosterItemPrefab == null || entry.unitPreviews == null)
+            {
+                return;
+            }
+
+            foreach (OperatorUnitPreview preview in entry.unitPreviews)
+            {
+                if (preview == null)
+                {
+                    continue;
+                }
+
+                OperatorRosterPreviewItem item = Instantiate(rosterItemPrefab, rosterContent);
+                item.Setup(preview);
+                _rosterItems.Add(item);
+            }
+        }
+
+        private void ClearRosterPreview()
+        {
+            foreach (OperatorRosterPreviewItem item in _rosterItems)
+            {
+                if (item != null)
+                {
+                    Destroy(item.gameObject);
+                }
+            }
+
+            _rosterItems.Clear();
         }
 
         private void SelectSavedOrFirstUnlocked()
@@ -354,6 +367,8 @@ namespace RCCom.UI
 
             if (statusText != null) { statusText.text = unlocked ? "선택하면 필요한 콘텐츠를 확인합니다." : "잠긴 오퍼레이터입니다."; }
             if (downloadProgress != null) { downloadProgress.value = 0f; }
+            RebuildCards();
+            RebuildRosterPreview(entry);
             RefreshCardSelection();
             UpdateButtons();
         }
@@ -364,7 +379,7 @@ namespace RCCom.UI
             {
                 if (_cards[i] != null)
                 {
-                    _cards[i].SetSelected(i == _selectedIndex);
+                    _cards[i].SetSelected(true);
                 }
             }
         }

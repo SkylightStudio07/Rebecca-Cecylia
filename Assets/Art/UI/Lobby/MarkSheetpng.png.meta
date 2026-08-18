@@ -1,0 +1,494 @@
+fileFormatVersion: 2
+guid: ac10354fd243c4040a7d50780f69d231
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -1897787527928332681
+    second: MarkSheetpng_0
+  - first:
+      213: 6319844291414164962
+    second: MarkSheetpng_1
+  - first:
+      213: -8256590072195729993
+    second: MarkSheetpng_2
+  - first:
+      213: -8452599651499883534
+    second: MarkSheetpng_3
+  - first:
+      213: 4859220243890130467
+    second: MarkSheetpng_4
+  - first:
+      213: 1448633692887238149
+    second: MarkSheetpng_5
+  - first:
+      213: 6492160325045991401
+    second: MarkSheetpng_6
+  - first:
+      213: 2051351630058866748
+    second: MarkSheetpng_7
+  - first:
+      213: 4085142685701986758
+    second: MarkSheetpng_8
+  - first:
+      213: -2355963066690764100
+    second: MarkSheetpng_9
+  - first:
+      213: 4137975774691957008
+    second: MarkSheetpng_10
+  - first:
+      213: 7217675958081938475
+    second: MarkSheetpng_11
+  - first:
+      213: 2777669680401878638
+    second: MarkSheetpng_12
+  - first:
+      213: 181145764536370916
+    second: MarkSheetpng_13
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: MarkSheetpng_0
+      rect:
+        serializedVersion: 2
+        x: 61
+        y: 547
+        width: 229
+        height: 254
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 77e3aaa5c44b9a5e0800000000000000
+      internalID: -1897787527928332681
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MarkSheetpng_1
+      rect:
+        serializedVersion: 2
+        x: 349
+        y: 587
+        width: 247
+        height: 208
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2e5858926e894b750800000000000000
+      internalID: 6319844291414164962
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MarkSheetpng_2
+      rect:
+        serializedVersion: 2
+        x: 616
+        y: 529
+        width: 306
+        height: 328
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7b5b1ca1313ba6d80800000000000000
+      internalID: -8256590072195729993
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MarkSheetpng_3
+      rect:
+        serializedVersion: 2
+        x: 966
+        y: 511
+        width: 200
+        height: 296
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2f342c7966552ba80800000000000000
+      internalID: -8452599651499883534
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MarkSheetpng_4
+      rect:
+        serializedVersion: 2
+        x: 1236
+        y: 536
+        width: 249
+        height: 277
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 32e457a011b6f6340800000000000000
+      internalID: 4859220243890130467
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MarkSheetpng_5
+      rect:
+        serializedVersion: 2
+        x: 328
+        y: 72
+        width: 607
+        height: 436
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 506c4322ba49a1410800000000000000
+      internalID: 1448633692887238149
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MarkSheetpng_6
+      rect:
+        serializedVersion: 2
+        x: 1047
+        y: 479
+        width: 10
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9e7304f2b69c81a50800000000000000
+      internalID: 6492160325045991401
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MarkSheetpng_7
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 0
+        width: 307
+        height: 457
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c38c313607dd77c10800000000000000
+      internalID: 2051351630058866748
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MarkSheetpng_8
+      rect:
+        serializedVersion: 2
+        x: 936
+        y: 103
+        width: 569
+        height: 363
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6c95d0ee0a751b830800000000000000
+      internalID: 4085142685701986758
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MarkSheetpng_9
+      rect:
+        serializedVersion: 2
+        x: 943
+        y: 405
+        width: 10
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cb205f1c210fd4fd0800000000000000
+      internalID: -2355963066690764100
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MarkSheetpng_10
+      rect:
+        serializedVersion: 2
+        x: 928
+        y: 295
+        width: 11
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0199fab0b0b0d6930800000000000000
+      internalID: 4137975774691957008
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MarkSheetpng_11
+      rect:
+        serializedVersion: 2
+        x: 172
+        y: 191
+        width: 13
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b24e9510b065a2460800000000000000
+      internalID: 7217675958081938475
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MarkSheetpng_12
+      rect:
+        serializedVersion: 2
+        x: 464
+        y: 16
+        width: 19
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e6e0abb8bd34c8620800000000000000
+      internalID: 2777669680401878638
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MarkSheetpng_13
+      rect:
+        serializedVersion: 2
+        x: 482
+        y: 18
+        width: 43
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4e6c1c3fc1f838200800000000000000
+      internalID: 181145764536370916
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      MarkSheetpng_0: -1897787527928332681
+      MarkSheetpng_1: 6319844291414164962
+      MarkSheetpng_10: 4137975774691957008
+      MarkSheetpng_11: 7217675958081938475
+      MarkSheetpng_12: 2777669680401878638
+      MarkSheetpng_13: 181145764536370916
+      MarkSheetpng_2: -8256590072195729993
+      MarkSheetpng_3: -8452599651499883534
+      MarkSheetpng_4: 4859220243890130467
+      MarkSheetpng_5: 1448633692887238149
+      MarkSheetpng_6: 6492160325045991401
+      MarkSheetpng_7: 2051351630058866748
+      MarkSheetpng_8: 4085142685701986758
+      MarkSheetpng_9: -2355963066690764100
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

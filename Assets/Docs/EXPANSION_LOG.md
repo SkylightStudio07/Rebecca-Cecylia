@@ -687,3 +687,43 @@ Phase 0 자동화 경로를 실제로 열고, 이후 오퍼레이터별 원격 �
 - Unity `6000.3.13f1`에서 런타임·에디터 스크립트 재컴파일을 통과했다.
 - `CommandLobbyMenuSetup.Validate`로 패널 5종, Button, Normal/Hover 시각 컴포넌트, TMP 자식과 `TitleSceneController` 참조를 검증했다.
 - 저장된 TitleScene 계층에서 새 `MainMenuBackground/CommandMenuPanels`와 비활성 보존된 `LegacyMainMenuBackground`, 이동된 `LobbyOperatorDialogueSystem`을 확인했다.
+
+## 2026-08-18 — 오퍼레이터 선택 오버레이와 전술 로스터 배선
+
+### 맥락
+- 기존 카드 행 중심 회색상자는 새 2.5D 커맨드 로비 아트와 시각적으로 분리됐고, 선택한 오퍼레이터가 해금하는 아군 유닛을 출격 전에 확인할 수 없었다.
+- 원격 오퍼레이터의 실제 `OperatorDefinition`은 다운로드 전에는 로드할 수 있으리라 가정하면 안 되므로, 선택 화면이 Definition이나 원격 스프라이트를 직접 요구하지 않는 경량 데이터 경로가 필요했다.
+
+### 결정
+- `Operator-Selection-Overlay-v2.png`를 전체 화면 고정 아트로 사용하고, 오퍼레이터 초상화·이름·설명·상태·다운로드 진행률과 유닛 로스터만 별도 uGUI/TMP로 올린다. 고정 제목과 버튼 문자는 래스터 아트에 남기고 실제 클릭은 투명 Button 영역이 담당한다.
+- 여러 오퍼레이터 카드를 한 행에 동시에 표시하는 대신 현재 선택 항목 하나만 큰 카드로 렌더링하고 `PREV`/`NEXT`가 카탈로그 인덱스를 바꾸도록 유지했다. 배경 프레임과 동적 정보가 겹치지 않으면서 기존 키보드·게임패드 순환 계약도 보존한다.
+- `OperatorCatalogEntry`에 `OperatorUnitPreview` 목록을 추가했다. 이름·배치 CP·임시 색상은 카탈로그 생성 때 Definition에서 복사하지만, 원격 콘텐츠의 유닛 스프라이트는 기본 빌드 참조에서 제외한다. 실제 전투 수치와 동작은 계속 `AllyUnitDefinition`만 소유한다.
+- 선택 패널 아래에 타원형 방사 그라데이션 `CenterDimmer`를 두어 중앙 정보 영역으로 갈수록 로비가 어두워지게 했다. 단색 전체 덮개가 아니므로 화면 가장자리의 로비와 오퍼레이터 실루엣은 유지된다.
+- 카드와 로스터 아이템은 각각 공용 프리팹 하나를 동적 생성하며, `OperatorSelectionSetup`이 오버레이·딤 스프라이트·투명 버튼·모든 Inspector 참조를 반복 배선한다.
+
+### 의도적으로 하지 않은 것
+- 카탈로그에 전투 스탯 전체를 복제하거나 원격 Definition을 선택 화면에서 선로딩하지 않았다. 선택 전 미리보기와 다운로드 후 실제 플레이 데이터의 책임을 분리하기 위해서다.
+- 오퍼레이터별 선택 패널 프리팹, 유닛별 UI 프리팹, 새 UI 매니저를 만들지 않았다. 신규 콘텐츠는 카탈로그와 Definition 조립만으로 같은 화면을 사용한다.
+- 화면 전체를 균일하게 검게 만드는 모달 딤은 사용하지 않았다. 사용자가 요청한 중앙 집중형 어두워짐과 2.5D 로비의 공간감을 보존했다.
+
+### 검증
+- Unity `6000.3.13f1` Pipeline 재컴파일에서 `failed=false`를 확인했다.
+- `OperatorSelectionSetup.ValidateTitleSelectionUI`로 오버레이·중앙 딤·카드/로스터 프리팹·투명 버튼·TitleScene Inspector 참조를 검증했다.
+- Play Mode에서 선택 패널 활성화, 현재 오퍼레이터 카드 1개(`880×280`), Cassia 유닛 로스터 2개(각 `390×82`) 생성을 확인했다.
+
+## 2026-08-18 — DefenseScene 유닛 배치 버튼 참조 복구
+
+### 맥락
+- Cassia의 `AllyUnitRoster`에는 임시 유닛 2종이 정상 등록돼 있었지만, DefenseScene의 실제 배치 메뉴에는 출격 가능한 유닛이 하나도 표시되지 않았다.
+- `UnitDeployMenuUI`는 로스터가 있어도 공용 `UnitDeployButton` 프리팹 참조가 비어 있으면 버튼을 생성할 수 없다.
+
+### 원인과 결정
+- `AllyUnitVerticalSliceBuilder.BuildButtonPrefab`이 `SaveAsPrefabAsset` 직후 프리팹 컴포넌트를 반환하고 `finally`에서 임시 루트를 파괴했다. 이 순서에서 반환 참조가 무효화되어, 씬에 저장된 `buttonPrefab`이 `None`이 됐다.
+- 임시 루트를 먼저 파괴한 뒤 `AssetDatabase.LoadAssetAtPath`로 영속 프리팹을 다시 로드하고, `EditorUtility.IsPersistent`까지 확인한 컴포넌트만 DefenseScene에 연결하도록 순서를 변경했다.
+- 검증기는 Controller와 메뉴가 각각 정확히 하나인지 확인하고, 직렬화된 버튼 프리팹이 null이 아닌지 명시적으로 검사하도록 강화했다. 첫 번째 검색 결과만 검사해 중복 또는 빈 참조를 놓치는 경로를 제거했다.
+- `Tools/eval/InspectDefenseUnitDeploy.cs`를 추가해 Controller 로스터, View 프리팹, 메뉴 참조, 런타임 가시성과 버튼 수를 한 번에 확인할 수 있게 했다.
+
+### 검증
+- Unity `6000.3.13f1` 재컴파일에서 `failed=false`를 확인했다.
+- 수정된 빌더를 다시 실행한 뒤 DefenseScene의 `buttonPrefab`이 영속 프리팹과 같은 객체이고, Cassia 로스터가 2종이며 씬이 저장된 상태임을 확인했다.
+- Play Mode에서 배치 메뉴 `visible=True`, 버튼 2개, 시작 CP 40을 확인했다. `전진 사수` 선택·출격에 성공해 활성 유닛 1개, 잔여 CP 15가 됐고 신규 콘솔 오류는 없었다.

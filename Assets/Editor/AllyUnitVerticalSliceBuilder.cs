@@ -122,12 +122,17 @@ namespace RCCom.EditorTools
             }
 
             Scene scene = EditorSceneManager.OpenScene(DefenseScenePath, OpenSceneMode.Single);
-            UnitDeployController controller = FindFirstInScene<UnitDeployController>();
-            UnitDeployMenuUI menu = FindFirstInScene<UnitDeployMenuUI>();
-            if (controller == null || menu == null)
+            UnitDeployController[] controllers = FindAllInScene<UnitDeployController>();
+            UnitDeployMenuUI[] menus = FindAllInScene<UnitDeployMenuUI>();
+            if (controllers.Length != 1 || menus.Length != 1)
             {
-                throw new InvalidOperationException("DefenseScene의 유닛 배치 Controller 또는 메뉴가 없습니다.");
+                throw new InvalidOperationException(
+                    $"DefenseScene의 유닛 배치 Controller와 메뉴는 각각 하나여야 합니다. " +
+                    $"Controller={controllers.Length}, Menu={menus.Length}");
             }
+
+            UnitDeployController controller = controllers[0];
+            UnitDeployMenuUI menu = menus[0];
 
             var controllerSerialized = new SerializedObject(controller);
             if (controllerSerialized.FindProperty("mapManager").objectReferenceValue == null ||
@@ -143,10 +148,12 @@ namespace RCCom.EditorTools
             }
 
             var menuSerialized = new SerializedObject(menu);
+            UnityEngine.Object serializedButtonPrefab =
+                menuSerialized.FindProperty("buttonPrefab").objectReferenceValue;
             if (menuSerialized.FindProperty("deployController").objectReferenceValue != controller ||
                 menuSerialized.FindProperty("panelGroup").objectReferenceValue == null ||
                 menuSerialized.FindProperty("contentParent").objectReferenceValue == null ||
-                menuSerialized.FindProperty("buttonPrefab").objectReferenceValue != buttonPrefab ||
+                serializedButtonPrefab == null || serializedButtonPrefab != buttonPrefab ||
                 menuSerialized.FindProperty("deployButton").objectReferenceValue == null ||
                 menuSerialized.FindProperty("commandPointsText").objectReferenceValue == null)
             {
@@ -270,12 +277,24 @@ namespace RCCom.EditorTools
 
                 AssetDatabase.SetLabels(prefab, new[] { GeneratedLabel });
                 EditorUtility.SetDirty(prefab);
-                return prefab.GetComponent<UnitDeployButton>();
             }
             finally
             {
                 UnityEngine.Object.DestroyImmediate(root);
             }
+
+            // SaveAsPrefabAsset 직후 읽은 컴포넌트는 임시 루트를 파괴하는 과정에서 무효화될
+            // 수 있다. 임시 객체를 먼저 정리한 다음 영속 프리팹을 새로 로드해야 씬 직렬화가
+            // 안정적인 GUID/local file ID를 기록한다.
+            GameObject persistedPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(ButtonPrefabPath);
+            UnitDeployButton persistedButton =
+                persistedPrefab != null ? persistedPrefab.GetComponent<UnitDeployButton>() : null;
+            if (persistedButton == null || !EditorUtility.IsPersistent(persistedButton))
+            {
+                throw new InvalidOperationException("저장된 유닛 배치 버튼 프리팹을 다시 로드하지 못했습니다.");
+            }
+
+            return persistedButton;
         }
 
         private static void WireDefenseScene(
@@ -450,6 +469,13 @@ namespace RCCom.EditorTools
         private static T FindFirstInScene<T>() where T : Component
         {
             return UnityEngine.Object.FindFirstObjectByType<T>(FindObjectsInactive.Include);
+        }
+
+        private static T[] FindAllInScene<T>() where T : Component
+        {
+            return UnityEngine.Object.FindObjectsByType<T>(
+                FindObjectsInactive.Include,
+                FindObjectsSortMode.None);
         }
 
         private static GameObject FindOrCreateRootObject(string objectName)
