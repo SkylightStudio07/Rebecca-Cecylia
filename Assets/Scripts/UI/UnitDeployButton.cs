@@ -55,5 +55,13 @@ namespace RCCom.UI
                 selectionIndicator.SetActive(selected);
             }
         }
+
+        public void SetAffordable(bool affordable)
+        {
+            if (button != null)
+            {
+                button.interactable = affordable;
+            }
+        }
     }
 }

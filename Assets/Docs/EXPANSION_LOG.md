@@ -874,6 +874,107 @@ Phase 0 자동화 경로를 실제로 열고, 이후 오퍼레이터별 원격 �
 - 버튼 문구가 아트에 포함되어 있으므로 생성 당시의 TMP Label은 비활성화했다. 생성 도구와 검증기에 같은 스프라이트 이름 계약을 넣어 UI를 재생성해도 수동 배선이 사라지지 않게 했다.
 - 최초 배선은 EventSystem 기본 포커스에도 Hover 조각을 사용해 Stage가 상시 호버처럼 보였고, 글로우 여백이 더 큰 Hover 조각이 같은 Rect 안에 맞춰지며 본체가 작아 보였다. Selected는 Normal 조각으로 분리하고, 기존 `UIHoverScale`을 각 조각의 최대 크기 비율만큼 설정해 실제 포인터 호버에서만 외곽 효과가 자연스럽게 확장되도록 보정했다.
 
+## 2026-08-21 — 지휘 포인트 검증기의 UI 표시 계약 동기화
+
+### 맥락
+- 지휘 포인트의 보유·소비·부족 거부·자동 회복·상한 로직은 이미 구현되어 있었지만, `UnitDeployButton`이 비용을 `3 CP`로 표시하도록 바뀐 뒤 기반 검증기는 과거 표시인 `3`을 계속 기대해 지휘 포인트 검증 단계 전에 실패했다.
+
+### 결정
+- 런타임 또는 UI 표시를 되돌리지 않고 `AllyUnitFoundationVerifier`의 기대값을 현재 비용 표시 계약과 맞췄다. 단위가 없는 숫자보다 `CP`가 붙은 표시가 별도 자원이라는 의미를 명확히 전달하기 때문이다.
+
+### 의도적으로 하지 않은 것
+- 지휘 포인트 수치, 회복 속도, 소비 순서와 DefenseScene 배선은 변경하지 않았다.
+
+### 검증
+- Unity `6000.3.13f1` 재컴파일에서 `failed=false`를 확인했다.
+- `AllyUnitFoundationVerifier`로 지급, 비용 확인, 소비, 부족 시 거부, 전투 중 회복, 빌드 페이즈 회복 차단과 최대 100 상한 계약을 통과했다.
+
+## 2026-08-21 — 유닛 배치 일시정지 게이트 검증 보강
+
+### 맥락
+- `UnitDeployController`는 `Time.timeScale` 기반 게이트로 배치 선택·소환과 지휘 포인트 회복을 이미 차단했지만, 기반 검증기는 빌드 페이즈 차단만 확인하고 일시정지 경로를 직접 검증하지 않았다.
+
+### 결정
+- 런타임 분기를 중복 추가하지 않고 `AllyUnitFoundationVerifier`에서 `Time.timeScale = 0`일 때 배치 입력이 거부되고 같은 Tick 시간만큼 지휘 포인트가 증가하지 않는지 함께 검사한다.
+- 검증 종료 시 성공·실패와 무관하게 기존 `Time.timeScale`을 복원해 에디터 세션 상태를 남기지 않는다.
+
+### 의도적으로 하지 않은 것
+- UI 패널을 숨기거나 게임의 전역 일시정지 소유자를 추가하지 않았다. 입력의 최종 경계인 Controller가 요청을 거부하므로 기존 UI→게임플레이 단방향 구조를 유지했다.
+
+### 검증
+- Unity `6000.3.13f1` 재컴파일에서 `failed=false`를 확인했다.
+- `AllyUnitFoundationVerifier`에서 일시정지 중 `IsDeployInputEnabled == false`, 유닛 선택 거부와 1초 Tick 후에도 CP 98 유지, 검증 종료 후 기존 시간 배율 복원을 확인했다.
+
+## 2026-08-21 — 유닛별 비용 부족 버튼 비활성
+
+### 맥락
+- 별도의 소환 버튼은 선택한 유닛의 비용이 부족하면 비활성화됐지만, 로스터의 유닛 선택 버튼은 잔액과 관계없이 계속 눌려 실제 배치 가능 여부를 즉시 알기 어려웠다.
+
+### 결정
+- `UnitDeployButton`은 외부에서 전달받은 비용 충족 여부만 `Button.interactable`에 반영하고, 비용 계산은 소유하지 않는다.
+- `UnitDeployMenuUI`가 버튼 생성 직후와 `CommandPointsChanged` 이벤트마다 각 Definition을 `UnitDeployController.CanAfford`로 판정한다. 이로써 UI와 실제 소비 조건이 같은 경계를 사용하며, 소비와 회복 모두 즉시 버튼 상태에 반영된다.
+
+### 의도적으로 하지 않은 것
+- 비용 부족 유닛의 Definition을 로스터에서 숨기거나 현재 선택을 강제로 해제하지 않았다. 잔액이 회복되면 같은 버튼이 다시 활성화되고, 실제 소환은 기존 Controller 검사를 계속 통과해야 한다.
+
+### 검증
+- `AllyUnitFoundationVerifier`에 0 CP에서 비용 3 CP 버튼 비활성, 5 CP 지급 후 활성, 3 CP 소비 후 잔액 2에서 재비활성 계약을 추가했다.
+
+## 2026-08-21 — 타워 설치·아군 배치 입력 모드 분리
+
+### 맥락
+- 타워를 선택한 뒤 유닛 배치 UI를 조작해도 기존 타워 선택이 남아 있어, 같은 포인터 입력이 타워 설치와 유닛 배치 양쪽에 해석될 수 있었다.
+- 특히 UI 버튼의 선택 콜백은 포인터를 놓을 때 실행되지만 `TowerBuildController`는 누르는 프레임에 월드 클릭을 처리하므로, 모드 전환만으로는 UI 뒤 슬롯에 타워가 먼저 설치되는 경합을 막을 수 없다.
+
+### 결정
+- 씬 범위의 일반 `DeploymentInputModeController`와 `DeploymentInputMode`를 추가해 `TowerBuild`와 `AllyUnitDeploy`를 상호 배타 상태로 조율한다. 새 Manager나 static 전역 상태는 만들지 않았다.
+- 타워를 선택하면 유닛 선택을 해제하고, 유닛을 선택하면 타워 선택과 프리뷰 사거리를 해제한다. 각 Controller는 모드 변경 이벤트를 구독할 뿐 서로를 직접 참조하지 않는다.
+- `TowerBuildController`는 `EventSystem.IsPointerOverGameObject()`인 포인터를 월드 설치·철거·조회 입력으로 처리하지 않는다. 모드 전환보다 먼저 발생하는 UI 클릭 프레임까지 차단하기 위한 별도 경계다.
+- `AllyUnitVerticalSliceBuilder`가 공용 입력 모드 Controller를 DefenseScene에 하나만 만들고 기존 타워·유닛 Controller 양쪽에 연결하도록 자동 배선을 확장했다.
+- 현재 DefenseScene을 저장하면 사용 중인 Unity가 입력 모드 외의 씬·프로젝트 설정까지 대량 재직렬화하므로, 런타임에서는 두 Controller의 `Awake`가 기존 입력 모드 Controller를 찾고 없으면 하나만 생성하는 안전한 폴백을 사용한다. 참조는 static으로 보관하지 않아 Retry 씬마다 새 상태가 만들어진다.
+
+### 의도적으로 하지 않은 것
+- 타워와 유닛 UI를 서로 직접 참조시키거나 어느 한 Controller가 다른 Controller를 소유하게 하지 않았다.
+- 플레이어 이동·공격, 타워 철거 규칙, 유닛 생성 규칙은 입력 모드의 대상이 아니므로 변경하지 않았다.
+- 입력 모드 한 필드 때문에 DefenseScene 전체 재직렬화 결과를 커밋하지 않았다. 명시적 씬 배치가 필요할 때는 전용 에디터 메뉴로 같은 참조만 재현할 수 있다.
+
+### 검증
+- `AllyUnitFoundationVerifier`에 유닛 선택 → 타워 선택 시 유닛 해제, 타워 선택 → 유닛 선택 시 타워 해제, 선택 해제 시 `None` 복귀 계약을 추가했다.
+- 수직 슬라이스 검증기가 DefenseScene의 입력 모드 Controller 단일 인스턴스와 타워·유닛 양쪽의 직렬화 참조를 검사하도록 확장했다.
+- Unity `6000.3.13f1` 재컴파일에서 `failed=false`를 확인했다.
+- 실제 DefenseScene Play Mode에서 입력 모드 Controller가 정확히 1개 생성되고 두 Controller가 같은 인스턴스를 공유하며, 타워 → 유닛 → 타워 전환 때 반대쪽 선택이 해제되는 것을 `Tools/eval/VerifyDeploymentInputMode.cs`로 확인했다.
+
+## 2026-08-21 — 아군 유닛 에셋 등록·참조 검증 보강
+
+### 맥락
+- `OperatorAssetValidator`는 연결된 `AllyUnitRoster` 내부의 null Definition, 빈 Data/ID와 중복 ID를 이미 오류로 검사했지만, 프로젝트에 존재하면서 어느 Roster에도 들어가지 않은 `AllyUnitDefinition`은 찾지 않았다.
+- `AllyUnitInstance`는 Definition의 효과 목록을 직접 순회하므로 목록 또는 항목이 null이면 스폰·전투 Tick에서 예외가 발생하지만 에디터 검증 단계에서 이를 차단하지 못했다.
+
+### 결정
+- 모든 `AllyUnitDefinition`과 모든 `AllyUnitRoster.units`를 대조해 미등록 Definition을 경고한다. 기존 Tower/Enemy 검증과 마찬가지로 실험·삭제 예정 에셋 가능성을 보존하기 위해 오류로 빌드를 막지는 않는다.
+- 프로젝트의 모든 AllyUnitRoster를 오퍼레이터 연결 여부와 무관하게 한 번씩 검사한다. null 항목, 빈 Data/unitId, 한 Roster 안의 중복 unitId는 오류로 유지하고, 효과 목록 자체 또는 효과 항목의 null도 오류에 포함한다.
+
+### 의도적으로 하지 않은 것
+- 서로 다른 오퍼레이터 Roster에서 같은 Definition을 공유하는 것은 유효한 데이터 조립이므로 중복 등록으로 취급하지 않았다.
+- 미등록 Definition을 자동 삭제하거나 임의의 Roster에 자동 편입하지 않았다.
+
+### 검증
+- `RCCom/Operators/Validate Operator Assets` 단일 메뉴에서 오퍼레이터 필수 참조와 Tower/Enemy/AllyUnit 등록 상태를 함께 검사하도록 통합했다.
+- Unity `6000.3.13f1` 재컴파일에서 `failed=false`를 확인했고, 실제 프로젝트 전체 에셋 검증도 오류 없이 통과했다.
+- 기존 `Assets/Data/Definition/Tower/축적.asset` 미등록 경고 1건은 그대로이며, AllyUnit 미등록·null·중복 ID 오류는 발견되지 않았다.
+
+## 2026-08-21 — 사망 아군 활성 목록 제거 회귀 검증
+
+### 맥락
+- `UnitDeployController.RegisterInstance`는 소환한 Instance의 `Died` 이벤트에서 `_activeUnits`와 사망 핸들러를 제거하고 `UnitRemoved`를 알리고 있었지만, 기반 검증기는 개별 Instance의 사망 이벤트만 확인했다.
+
+### 결정
+- 런타임 제거 경로를 중복 구현하지 않고 `AllyUnitFoundationVerifier`가 메모리 Instance를 Controller에 등록한 뒤 사망시켜 `ActiveUnits`가 즉시 비워지고 정확한 Instance로 `UnitRemoved`가 한 번 발생하는지 검사한다.
+- 다음 Tick까지 죽은 참조를 남기지 않는 것을 계약으로 삼아 다른 아군의 타깃 후보 목록에 사망 유닛이 섞이는 것을 방지한다.
+
+### 검증
+- Unity `6000.3.13f1` 재컴파일에서 `failed=false`를 확인했고, `AllyUnitFoundationVerifier` 실행으로 소환 등록 1건, 사망 후 활성 목록 0건, 제거 이벤트 1건 계약을 확인했다.
+
 ## 2026-08-22 — Stage Studio와 StageDefinition 제작 원본화
 
 ### 맥락

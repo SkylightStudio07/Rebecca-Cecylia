@@ -19,6 +19,8 @@ namespace RCCom.EditorTools
     /// 오퍼레이터 패키지의 필수 참조와 Definition/Roster 누락을 한 번에 검사한다.
     /// 타워는 해금 카드에만 연결되어 초기 Roster에 없는 것이 정상일 수 있으므로,
     /// 어느 TowerRoster에도 없고 UnlockTowerCard에도 연결되지 않은 경우만 누락으로 본다.
+    /// 아군 유닛은 어느 AllyUnitRoster에도 없는 Definition을 경고해 실험 에셋은 보존하되
+    /// 출격 목록 연결 누락을 제출 전에 발견할 수 있게 한다.
     /// </summary>
     public static class OperatorAssetValidator
     {
@@ -39,6 +41,7 @@ namespace RCCom.EditorTools
             ValidateCatalog(errors);
             ValidateTowerRegistration(errors, warnings);
             ValidateEnemyRegistration(warnings);
+            ValidateAllyUnitAssets(errors, warnings);
 
             foreach (string error in errors)
             {
@@ -254,13 +257,6 @@ namespace RCCom.EditorTools
                     ValidateCardRoster(definition.cardRoster, errors);
                 }
 
-                // 타워 전용 오퍼레이터는 유닛 로스터가 없는 것이 정상이다. 연결했다면
-                // 빈 목록·중복 ID·잘못된 전투 수치를 배포 전에 차단한다.
-                if (definition.allyUnitRoster != null)
-                {
-                    ValidateAllyUnitRoster(definition.allyUnitRoster, errors);
-                }
-
                 if (definition.dialogueSet == null || definition.dialogueSet.idleSprite == null)
                 {
                     errors.Add($"DialogueSet 또는 기본 초상화가 연결되지 않았습니다: {path}");
@@ -367,6 +363,24 @@ namespace RCCom.EditorTools
                     definition.data.deployCost < 0)
                 {
                     errors.Add($"아군 유닛 필수 수치가 유효하지 않습니다: {definitionPath}");
+                }
+
+                if (definition.effects == null)
+                {
+                    errors.Add($"아군 유닛 효과 목록이 null입니다: {definitionPath}");
+                }
+                else
+                {
+                    foreach (UnityEngine.Object effect in definition.effects)
+                    {
+                        if (effect == null)
+                        {
+                            // AllyUnitInstance는 효과 훅을 직접 순회하므로 null 하나도 실제
+                            // 스폰·공격 Tick의 NullReferenceException으로 이어진다.
+                            errors.Add($"아군 유닛 효과 목록에 null 항목이 있습니다: {definitionPath}");
+                            break;
+                        }
+                    }
                 }
             }
         }
@@ -510,6 +524,45 @@ namespace RCCom.EditorTools
                 if (!registered.Contains(definition))
                 {
                     warnings.Add($"어느 EnemyRoster에도 등록되지 않은 EnemyDefinition: {AssetDatabase.GetAssetPath(definition)}");
+                }
+            }
+        }
+
+        private static void ValidateAllyUnitAssets(List<string> errors, List<string> warnings)
+        {
+            List<AllyUnitDefinition> definitions = FindAssets<AllyUnitDefinition>();
+            List<AllyUnitRoster> rosters = FindAssets<AllyUnitRoster>();
+            var registered = new HashSet<AllyUnitDefinition>();
+
+            foreach (AllyUnitRoster roster in rosters)
+            {
+                // 오퍼레이터 연결 전의 제작 중 Roster도 검사해야 에셋 조립 단계에서 null과
+                // 중복 ID를 발견할 수 있다. OperatorDefinition 경유 검사에만 의존하지 않는다.
+                ValidateAllyUnitRoster(roster, errors);
+
+                if (roster.units == null)
+                {
+                    continue;
+                }
+
+                foreach (AllyUnitDefinition definition in roster.units)
+                {
+                    if (definition != null)
+                    {
+                        registered.Add(definition);
+                    }
+                }
+            }
+
+            foreach (AllyUnitDefinition definition in definitions)
+            {
+                if (!registered.Contains(definition))
+                {
+                    // 삭제 예정 실험 에셋일 수 있으므로 전체 빌드를 막지는 않되, 데이터 드랍
+                    // 과정에서 Roster 연결을 빠뜨린 경우를 사람이 명확히 확인할 수 있게 한다.
+                    warnings.Add(
+                        $"어느 AllyUnitRoster에도 등록되지 않은 AllyUnitDefinition: " +
+                        AssetDatabase.GetAssetPath(definition));
                 }
             }
         }
