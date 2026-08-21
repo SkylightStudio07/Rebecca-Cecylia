@@ -797,3 +797,22 @@ Phase 0 자동화 경로를 실제로 열고, 이후 오퍼레이터별 원격 �
 - 수직 슬라이스 검증기가 DefenseScene의 입력 모드 Controller 단일 인스턴스와 타워·유닛 양쪽의 직렬화 참조를 검사하도록 확장했다.
 - Unity `6000.3.13f1` 재컴파일에서 `failed=false`를 확인했다.
 - 실제 DefenseScene Play Mode에서 입력 모드 Controller가 정확히 1개 생성되고 두 Controller가 같은 인스턴스를 공유하며, 타워 → 유닛 → 타워 전환 때 반대쪽 선택이 해제되는 것을 `Tools/eval/VerifyDeploymentInputMode.cs`로 확인했다.
+
+## 2026-08-21 — 아군 유닛 에셋 등록·참조 검증 보강
+
+### 맥락
+- `OperatorAssetValidator`는 연결된 `AllyUnitRoster` 내부의 null Definition, 빈 Data/ID와 중복 ID를 이미 오류로 검사했지만, 프로젝트에 존재하면서 어느 Roster에도 들어가지 않은 `AllyUnitDefinition`은 찾지 않았다.
+- `AllyUnitInstance`는 Definition의 효과 목록을 직접 순회하므로 목록 또는 항목이 null이면 스폰·전투 Tick에서 예외가 발생하지만 에디터 검증 단계에서 이를 차단하지 못했다.
+
+### 결정
+- 모든 `AllyUnitDefinition`과 모든 `AllyUnitRoster.units`를 대조해 미등록 Definition을 경고한다. 기존 Tower/Enemy 검증과 마찬가지로 실험·삭제 예정 에셋 가능성을 보존하기 위해 오류로 빌드를 막지는 않는다.
+- 프로젝트의 모든 AllyUnitRoster를 오퍼레이터 연결 여부와 무관하게 한 번씩 검사한다. null 항목, 빈 Data/unitId, 한 Roster 안의 중복 unitId는 오류로 유지하고, 효과 목록 자체 또는 효과 항목의 null도 오류에 포함한다.
+
+### 의도적으로 하지 않은 것
+- 서로 다른 오퍼레이터 Roster에서 같은 Definition을 공유하는 것은 유효한 데이터 조립이므로 중복 등록으로 취급하지 않았다.
+- 미등록 Definition을 자동 삭제하거나 임의의 Roster에 자동 편입하지 않았다.
+
+### 검증
+- `RCCom/Operators/Validate Operator Assets` 단일 메뉴에서 오퍼레이터 필수 참조와 Tower/Enemy/AllyUnit 등록 상태를 함께 검사하도록 통합했다.
+- Unity `6000.3.13f1` 재컴파일에서 `failed=false`를 확인했고, 실제 프로젝트 전체 에셋 검증도 오류 없이 통과했다.
+- 기존 `Assets/Data/Definition/Tower/축적.asset` 미등록 경고 1건은 그대로이며, AllyUnit 미등록·null·중복 ID 오류는 발견되지 않았다.
