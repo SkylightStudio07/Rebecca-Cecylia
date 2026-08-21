@@ -118,6 +118,8 @@ namespace RCCom.EditorTools
                     throw new InvalidOperationException("오퍼레이터 유닛 로스터 해석 계약이 올바르지 않습니다.");
                 }
 
+                OperatorLoadoutSession.ClearSelection();
+
                 deployUiObject = new GameObject("AllyUnitDeployAvailabilityVerification");
                 deployUiObject.SetActive(false);
                 CanvasGroup panelGroup = deployUiObject.AddComponent<CanvasGroup>();
@@ -159,6 +161,17 @@ namespace RCCom.EditorTools
                 menuSerializedObject.FindProperty("buttonPrefab").objectReferenceValue = buttonTemplate;
                 menuSerializedObject.ApplyModifiedPropertiesWithoutUndo();
 
+                // Edit Mode의 비활성 임시 오브젝트는 생명주기 콜백이 자동 실행되지 않으므로,
+                // 실제 UI와 같은 OnEnable 구독 경로를 명시적으로 통과시킨다.
+                MethodInfo menuOnEnable = typeof(UnitDeployMenuUI).GetMethod(
+                    "OnEnable",
+                    BindingFlags.Instance | BindingFlags.NonPublic);
+                if (menuOnEnable == null)
+                {
+                    throw new InvalidOperationException("유닛 배치 UI의 이벤트 구독 진입점을 찾지 못했습니다.");
+                }
+
+                menuOnEnable.Invoke(deployMenuUI, null);
                 deployMenuUI.RefreshAvailability();
                 if (deployController.IsDeployInputEnabled || deployController.SelectUnit(0) ||
                     deployMenuUI.IsVisible || panelGroup.interactable || panelGroup.blocksRaycasts ||
@@ -195,7 +208,26 @@ namespace RCCom.EditorTools
                     throw new InvalidOperationException("유닛 Definition의 이름 또는 배치 비용 표시 계약이 올바르지 않습니다.");
                 }
 
-                generatedButton.GetComponent<Button>().onClick.Invoke();
+                Button generatedButtonComponent = generatedButton.GetComponent<Button>();
+                if (generatedButtonComponent.interactable)
+                {
+                    throw new InvalidOperationException("지휘 포인트 부족 시 유닛 버튼 비활성 계약이 올바르지 않습니다.");
+                }
+
+                int changedCommandPoints = -1;
+                deployController.CommandPointsChanged += points => changedCommandPoints = points;
+                deployController.AddCommandPoints(5);
+                if (deployController.CommandPoints != 5 || changedCommandPoints != 5 ||
+                    !deployController.CanAfford(unitDefinition) || !generatedButtonComponent.interactable)
+                {
+                    throw new InvalidOperationException(
+                        $"지휘 포인트 충족 시 유닛 버튼 활성 계약이 올바르지 않습니다. " +
+                        $"CP={deployController.CommandPoints}, Event={changedCommandPoints}, " +
+                        $"CanAfford={deployController.CanAfford(unitDefinition)}, " +
+                        $"Interactable={generatedButtonComponent.interactable}");
+                }
+
+                generatedButtonComponent.onClick.Invoke();
                 if (deployController.SelectedDefinition != unitDefinition || selectedDefinition != unitDefinition)
                 {
                     throw new InvalidOperationException("동적 유닛 버튼의 Definition 선택 계약이 올바르지 않습니다.");
@@ -213,19 +245,11 @@ namespace RCCom.EditorTools
                     throw new InvalidOperationException("유닛 Definition 선택 해제 계약이 올바르지 않습니다.");
                 }
 
-                int changedCommandPoints = -1;
-                deployController.CommandPointsChanged += points => changedCommandPoints = points;
-                deployController.AddCommandPoints(5);
-                if (deployController.CommandPoints != 5 || changedCommandPoints != 5 ||
-                    !deployController.CanAfford(unitDefinition))
-                {
-                    throw new InvalidOperationException("지휘 포인트 지급 또는 비용 확인 계약이 올바르지 않습니다.");
-                }
-
                 if (!deployController.TrySpendCommandPoints(unitDefinition.data.deployCost) ||
-                    deployController.CommandPoints != 2 || changedCommandPoints != 2)
+                    deployController.CommandPoints != 2 || changedCommandPoints != 2 ||
+                    generatedButtonComponent.interactable)
                 {
-                    throw new InvalidOperationException("지휘 포인트 소비 계약이 올바르지 않습니다.");
+                    throw new InvalidOperationException("지휘 포인트 소비 또는 부족 전환 계약이 올바르지 않습니다.");
                 }
 
                 if (deployController.TrySpendCommandPoints(unitDefinition.data.deployCost) ||
@@ -282,7 +306,7 @@ namespace RCCom.EditorTools
                     throw new InvalidOperationException("지휘 포인트 상한 계약이 올바르지 않습니다.");
                 }
 
-                Debug.Log("[AllyUnitFoundationVerifier] 역주행 스폰·상태·피해·Roster·Loadout·배치 가용성·Definition 선택·지휘 포인트 소비·회복·일시정지·상한 계약 검증 통과");
+                Debug.Log("[AllyUnitFoundationVerifier] 역주행 스폰·상태·피해·Roster·Loadout·배치 가용성·Definition 선택·비용별 버튼 상태·지휘 포인트 소비·회복·일시정지·상한 계약 검증 통과");
             }
             finally
             {

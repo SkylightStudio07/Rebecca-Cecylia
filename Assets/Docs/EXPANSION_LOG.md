@@ -758,3 +758,18 @@ Phase 0 자동화 경로를 실제로 열고, 이후 오퍼레이터별 원격 �
 ### 검증
 - Unity `6000.3.13f1` 재컴파일에서 `failed=false`를 확인했다.
 - `AllyUnitFoundationVerifier`에서 일시정지 중 `IsDeployInputEnabled == false`, 유닛 선택 거부와 1초 Tick 후에도 CP 98 유지, 검증 종료 후 기존 시간 배율 복원을 확인했다.
+
+## 2026-08-21 — 유닛별 비용 부족 버튼 비활성
+
+### 맥락
+- 별도의 소환 버튼은 선택한 유닛의 비용이 부족하면 비활성화됐지만, 로스터의 유닛 선택 버튼은 잔액과 관계없이 계속 눌려 실제 배치 가능 여부를 즉시 알기 어려웠다.
+
+### 결정
+- `UnitDeployButton`은 외부에서 전달받은 비용 충족 여부만 `Button.interactable`에 반영하고, 비용 계산은 소유하지 않는다.
+- `UnitDeployMenuUI`가 버튼 생성 직후와 `CommandPointsChanged` 이벤트마다 각 Definition을 `UnitDeployController.CanAfford`로 판정한다. 이로써 UI와 실제 소비 조건이 같은 경계를 사용하며, 소비와 회복 모두 즉시 버튼 상태에 반영된다.
+
+### 의도적으로 하지 않은 것
+- 비용 부족 유닛의 Definition을 로스터에서 숨기거나 현재 선택을 강제로 해제하지 않았다. 잔액이 회복되면 같은 버튼이 다시 활성화되고, 실제 소환은 기존 Controller 검사를 계속 통과해야 한다.
+
+### 검증
+- `AllyUnitFoundationVerifier`에 0 CP에서 비용 3 CP 버튼 비활성, 5 CP 지급 후 활성, 3 CP 소비 후 잔액 2에서 재비활성 계약을 추가했다.
