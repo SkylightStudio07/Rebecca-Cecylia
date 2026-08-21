@@ -423,7 +423,43 @@ namespace RCCom.Runtime
                         ContactRange));
             }
 
+            AllyUnitInstance precedingAlly = FindPrecedingAlly();
+            if (precedingAlly != null)
+            {
+                minimumDistance = Mathf.Min(
+                    minimumDistance,
+                    AllyUnitTargeting.DistanceBeforeContact(
+                        Position,
+                        end,
+                        precedingAlly.Position,
+                        ContactRange));
+            }
+
             return minimumDistance;
+        }
+
+        /// <summary>
+        /// 활성 목록의 등록 순서를 스폰 순서로 사용해 바로 앞의 살아 있는 아군만 찾는다.
+        /// 모든 앞 유닛을 장애물로 취급하면 굽거나 교차하는 경로에서 다른 선분의 유닛이
+        /// 후속 대열을 막을 수 있으므로, 추월만 막으면 되는 직전 선행 유닛으로 한정한다.
+        /// </summary>
+        private AllyUnitInstance FindPrecedingAlly()
+        {
+            AllyUnitInstance precedingAlly = null;
+            foreach (AllyUnitInstance ally in _lastAllies)
+            {
+                if (ReferenceEquals(ally, this))
+                {
+                    return precedingAlly;
+                }
+
+                if (ally != null && ally.IsAlive)
+                {
+                    precedingAlly = ally;
+                }
+            }
+
+            return null;
         }
 
         private void UpdateContactState()

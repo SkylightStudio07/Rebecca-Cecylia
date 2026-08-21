@@ -33,6 +33,8 @@ namespace RCCom.EditorTools
                 VerifyContactRangeStopsBothSides(temporaryObjects);
                 VerifyContactBoundaryOnLargeStep(temporaryObjects);
                 VerifySetEngagementTargetUsesContactRange(temporaryObjects);
+                VerifyAlliesFormSpawnOrderedLine(temporaryObjects);
+                VerifyBaseEndpointOverlapAndOrderedResume(temporaryObjects);
                 VerifyImmediateAttackAndCooldown(temporaryObjects);
                 VerifyAllyAdvancesAfterEnemyDeath(temporaryObjects);
                 VerifyEnemyAdvancesAfterAllyDeath(temporaryObjects);
@@ -45,7 +47,7 @@ namespace RCCom.EditorTools
                 VerifyBasicAttackDamage(temporaryObjects);
                 VerifyEnemyContactDamageEffectPath(temporaryObjects);
 
-                Debug.Log("[AllyUnitCombatVerifier] 아군 유닛 전투 코어 19개 시나리오 검증 통과");
+                Debug.Log("[AllyUnitCombatVerifier] 아군 유닛 전투 코어 21개 시나리오 검증 통과");
             }
             finally
             {
@@ -243,6 +245,76 @@ namespace RCCom.EditorTools
             ally.SetEngagementTarget(null);
             Assert(ally.CurrentTarget == null && ally.State == AllyUnitState.Advancing,
                 "SetEngagementTarget(null)이 Advancing으로 돌아가지 않았습니다.");
+        }
+
+        private static void VerifyAlliesFormSpawnOrderedLine(List<UnityEngine.Object> temporaryObjects)
+        {
+            AllyUnitDefinition allyDefinition = CreateAlly(temporaryObjects, 100f, 10f, 0f, 1f, false);
+            EnemyDefinition enemyDefinition = CreateEnemy(temporaryObjects, 100f, 0f, 0f, 1f, 1f, false);
+            var path = new List<Vector2> { new(0f, 0f), new(20f, 0f) };
+            var first = new AllyUnitInstance();
+            var second = new AllyUnitInstance();
+            var third = new AllyUnitInstance();
+            first.Spawn(allyDefinition, path);
+            second.Spawn(allyDefinition, path);
+            third.Spawn(allyDefinition, path);
+            EnemyInstance enemy = SpawnEnemy(enemyDefinition, path, new Vector2(14.25f, 0f));
+            var allies = new[] { first, second, third };
+
+            first.Tick(1f, new[] { enemy }, allies);
+            second.Tick(1f, new[] { enemy }, allies);
+            third.Tick(1f, new[] { enemy }, allies);
+
+            AssertNear(first.Position.x, 15f,
+                "선두 아군이 적 contactRange 경계에 정지하지 않았습니다.");
+            AssertNear(second.Position.x - first.Position.x, first.ContactRange,
+                "두 번째 아군이 선두와 contactRange 간격을 만들지 않았습니다.");
+            AssertNear(third.Position.x - second.Position.x, second.ContactRange,
+                "세 번째 아군이 생성 순서 대열을 만들지 않았습니다.");
+        }
+
+        private static void VerifyBaseEndpointOverlapAndOrderedResume(List<UnityEngine.Object> temporaryObjects)
+        {
+            AllyUnitDefinition allyDefinition = CreateAlly(temporaryObjects, 100f, 1f, 0f, 1f, false);
+            EnemyDefinition enemyDefinition = CreateEnemy(temporaryObjects, 100f, 0f, 0f, 1f, 1f, false);
+            var path = new List<Vector2> { new(0f, 0f), new(20f, 0f) };
+            var first = new AllyUnitInstance();
+            var second = new AllyUnitInstance();
+            var third = new AllyUnitInstance();
+            first.Spawn(allyDefinition, path);
+            second.Spawn(allyDefinition, path);
+            third.Spawn(allyDefinition, path);
+            EnemyInstance enemy = SpawnEnemy(enemyDefinition, path, new Vector2(19.25f, 0f));
+            var enemies = new[] { enemy };
+            var allies = new[] { first, second, third };
+
+            first.Tick(1f, enemies, allies);
+            second.Tick(1f, enemies, allies);
+            third.Tick(1f, enemies, allies);
+
+            Assert(first.Position == path[1] && second.Position == path[1] && third.Position == path[1],
+                "기지 말단에서 공간이 없는데 아군 중첩이 강제로 해소되었습니다.");
+
+            enemy.TakeDamage(enemy.currentHealth);
+            first.Tick(1f, enemies, allies);
+            second.Tick(1f, enemies, allies);
+            third.Tick(1f, enemies, allies);
+
+            AssertNear(first.Position.x, 19f,
+                "적 사망 후 먼저 스폰된 아군이 진격을 재개하지 않았습니다.");
+            AssertNear(second.Position.x, 19.75f,
+                "두 번째 아군이 열린 공간을 생성 순서대로 채우지 않았습니다.");
+            AssertNear(third.Position.x, 20f,
+                "공간이 부족한 후속 아군이 기지 말단 중첩 예외를 벗어났습니다.");
+
+            first.Tick(1f, enemies, allies);
+            second.Tick(1f, enemies, allies);
+            third.Tick(1f, enemies, allies);
+
+            AssertNear(second.Position.x - first.Position.x, first.ContactRange,
+                "진격 재개 뒤 두 번째 아군의 대열 간격이 잘못되었습니다.");
+            AssertNear(third.Position.x - second.Position.x, second.ContactRange,
+                "기지에 겹쳤던 세 번째 아군이 영구 정지했습니다.");
         }
 
         private static void VerifyImmediateAttackAndCooldown(List<UnityEngine.Object> temporaryObjects)

@@ -276,11 +276,18 @@ namespace RCCom.Runtime
 
         private void TickActiveUnits(float deltaTime)
         {
-            // Tick 또는 상대 전투 중 Died 이벤트로 목록에서 빠질 수 있어 기존 WaveManager와
-            // 동일하게 역순 순회한다. 실제 목록 수정 권한은 이 Controller에만 둔다.
-            for (int i = _activeUnits.Count - 1; i >= 0; i--)
+            // 등록 순서는 곧 스폰 순서다. 먼저 스폰된 전열부터 이동해야 후속 유닛이 그 프레임에
+            // 새로 열린 공간을 보고 contactRange 간격을 채울 수 있으므로 정방향으로 순회한다.
+            // Tick 중 현재 유닛이 사망해 목록에서 제거되면 당겨진 다음 유닛을 같은 인덱스에서 처리한다.
+            for (int i = 0; i < _activeUnits.Count;)
             {
-                _activeUnits[i].Tick(deltaTime, waveManager.ActiveEnemies, _activeUnits);
+                AllyUnitInstance unit = _activeUnits[i];
+                unit.Tick(deltaTime, waveManager.ActiveEnemies, _activeUnits);
+
+                if (i < _activeUnits.Count && ReferenceEquals(_activeUnits[i], unit))
+                {
+                    i++;
+                }
             }
         }
 
