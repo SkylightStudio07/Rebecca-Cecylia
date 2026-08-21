@@ -188,7 +188,7 @@ namespace RCCom.EditorTools
 
                 string generatedName = generatedButton.transform.Find("Name").GetComponent<TMPro.TextMeshProUGUI>().text;
                 string generatedCost = generatedButton.transform.Find("Cost").GetComponent<TMPro.TextMeshProUGUI>().text;
-                if (generatedName != unitDefinition.data.displayName || generatedCost != "3")
+                if (generatedName != unitDefinition.data.displayName || generatedCost != "3 CP")
                 {
                     throw new InvalidOperationException("유닛 Definition의 이름 또는 배치 비용 표시 계약이 올바르지 않습니다.");
                 }
