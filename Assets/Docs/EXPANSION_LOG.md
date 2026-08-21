@@ -773,3 +773,27 @@ Phase 0 자동화 경로를 실제로 열고, 이후 오퍼레이터별 원격 �
 
 ### 검증
 - `AllyUnitFoundationVerifier`에 0 CP에서 비용 3 CP 버튼 비활성, 5 CP 지급 후 활성, 3 CP 소비 후 잔액 2에서 재비활성 계약을 추가했다.
+
+## 2026-08-21 — 타워 설치·아군 배치 입력 모드 분리
+
+### 맥락
+- 타워를 선택한 뒤 유닛 배치 UI를 조작해도 기존 타워 선택이 남아 있어, 같은 포인터 입력이 타워 설치와 유닛 배치 양쪽에 해석될 수 있었다.
+- 특히 UI 버튼의 선택 콜백은 포인터를 놓을 때 실행되지만 `TowerBuildController`는 누르는 프레임에 월드 클릭을 처리하므로, 모드 전환만으로는 UI 뒤 슬롯에 타워가 먼저 설치되는 경합을 막을 수 없다.
+
+### 결정
+- 씬 범위의 일반 `DeploymentInputModeController`와 `DeploymentInputMode`를 추가해 `TowerBuild`와 `AllyUnitDeploy`를 상호 배타 상태로 조율한다. 새 Manager나 static 전역 상태는 만들지 않았다.
+- 타워를 선택하면 유닛 선택을 해제하고, 유닛을 선택하면 타워 선택과 프리뷰 사거리를 해제한다. 각 Controller는 모드 변경 이벤트를 구독할 뿐 서로를 직접 참조하지 않는다.
+- `TowerBuildController`는 `EventSystem.IsPointerOverGameObject()`인 포인터를 월드 설치·철거·조회 입력으로 처리하지 않는다. 모드 전환보다 먼저 발생하는 UI 클릭 프레임까지 차단하기 위한 별도 경계다.
+- `AllyUnitVerticalSliceBuilder`가 공용 입력 모드 Controller를 DefenseScene에 하나만 만들고 기존 타워·유닛 Controller 양쪽에 연결하도록 자동 배선을 확장했다.
+- 현재 DefenseScene을 저장하면 사용 중인 Unity가 입력 모드 외의 씬·프로젝트 설정까지 대량 재직렬화하므로, 런타임에서는 두 Controller의 `Awake`가 기존 입력 모드 Controller를 찾고 없으면 하나만 생성하는 안전한 폴백을 사용한다. 참조는 static으로 보관하지 않아 Retry 씬마다 새 상태가 만들어진다.
+
+### 의도적으로 하지 않은 것
+- 타워와 유닛 UI를 서로 직접 참조시키거나 어느 한 Controller가 다른 Controller를 소유하게 하지 않았다.
+- 플레이어 이동·공격, 타워 철거 규칙, 유닛 생성 규칙은 입력 모드의 대상이 아니므로 변경하지 않았다.
+- 입력 모드 한 필드 때문에 DefenseScene 전체 재직렬화 결과를 커밋하지 않았다. 명시적 씬 배치가 필요할 때는 전용 에디터 메뉴로 같은 참조만 재현할 수 있다.
+
+### 검증
+- `AllyUnitFoundationVerifier`에 유닛 선택 → 타워 선택 시 유닛 해제, 타워 선택 → 유닛 선택 시 타워 해제, 선택 해제 시 `None` 복귀 계약을 추가했다.
+- 수직 슬라이스 검증기가 DefenseScene의 입력 모드 Controller 단일 인스턴스와 타워·유닛 양쪽의 직렬화 참조를 검사하도록 확장했다.
+- Unity `6000.3.13f1` 재컴파일에서 `failed=false`를 확인했다.
+- 실제 DefenseScene Play Mode에서 입력 모드 Controller가 정확히 1개 생성되고 두 Controller가 같은 인스턴스를 공유하며, 타워 → 유닛 → 타워 전환 때 반대쪽 선택이 해제되는 것을 `Tools/eval/VerifyDeploymentInputMode.cs`로 확인했다.

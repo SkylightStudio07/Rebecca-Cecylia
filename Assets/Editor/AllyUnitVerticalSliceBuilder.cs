@@ -36,6 +36,7 @@ namespace RCCom.EditorTools
         private const string CassiaOperatorPath = "Assets/Data/Operators/cassia/OperatorDefinition.asset";
         private const string DefenseScenePath = "Assets/Scenes/DefenseScene.unity";
         private const string ControllerName = "UnitDeployController";
+        private const string InputModeControllerName = "DeploymentInputModeController";
         private const string MenuName = "UnitDeployMenu";
 
         [MenuItem("RCCom/Ally Units/Build Test Vertical Slice")]
@@ -97,6 +98,28 @@ namespace RCCom.EditorTools
             Debug.Log("[AllyUnitVerticalSliceBuilder] 임시 유닛 2종·지휘 포인트·DefenseScene 배선 완료");
         }
 
+        [MenuItem("RCCom/Ally Units/Wire Deployment Input Mode")]
+        public static void WireDeploymentInputModeInDefenseScene()
+        {
+            Scene scene = EditorSceneManager.OpenScene(DefenseScenePath, OpenSceneMode.Single);
+            TowerBuildController towerBuildController = FindFirstInScene<TowerBuildController>();
+            UnitDeployController unitDeployController = FindFirstInScene<UnitDeployController>();
+            if (towerBuildController == null || unitDeployController == null)
+            {
+                throw new InvalidOperationException(
+                    "DefenseScene에서 TowerBuildController 또는 UnitDeployController를 찾지 못했습니다.");
+            }
+
+            WireDeploymentInputMode(towerBuildController, unitDeployController);
+            EditorSceneManager.MarkSceneDirty(scene);
+            if (!EditorSceneManager.SaveScene(scene))
+            {
+                throw new InvalidOperationException("DefenseScene 입력 모드 배선 저장에 실패했습니다.");
+            }
+
+            Debug.Log("[AllyUnitVerticalSliceBuilder] DefenseScene 타워·유닛 입력 모드 배선 완료");
+        }
+
         [MenuItem("RCCom/Ally Units/Validate Test Vertical Slice")]
         public static void Validate()
         {
@@ -123,15 +146,20 @@ namespace RCCom.EditorTools
 
             Scene scene = EditorSceneManager.OpenScene(DefenseScenePath, OpenSceneMode.Single);
             UnitDeployController[] controllers = FindAllInScene<UnitDeployController>();
+            DeploymentInputModeController[] inputModeControllers = FindAllInScene<DeploymentInputModeController>();
+            TowerBuildController[] towerBuildControllers = FindAllInScene<TowerBuildController>();
             UnitDeployMenuUI[] menus = FindAllInScene<UnitDeployMenuUI>();
-            if (controllers.Length != 1 || menus.Length != 1)
+            if (controllers.Length != 1 || inputModeControllers.Length > 1 ||
+                towerBuildControllers.Length != 1 || menus.Length != 1)
             {
                 throw new InvalidOperationException(
-                    $"DefenseScene의 유닛 배치 Controller와 메뉴는 각각 하나여야 합니다. " +
-                    $"Controller={controllers.Length}, Menu={menus.Length}");
+                    $"DefenseScene의 배치 입력 Controller와 메뉴 개수가 올바르지 않습니다. " +
+                    $"Unit={controllers.Length}, Mode={inputModeControllers.Length}, " +
+                    $"Tower={towerBuildControllers.Length}, Menu={menus.Length}");
             }
 
             UnitDeployController controller = controllers[0];
+            TowerBuildController towerBuildController = towerBuildControllers[0];
             UnitDeployMenuUI menu = menus[0];
 
             var controllerSerialized = new SerializedObject(controller);
@@ -145,6 +173,16 @@ namespace RCCom.EditorTools
                 !Mathf.Approximately(controllerSerialized.FindProperty("commandPointRecoveryPerSecond").floatValue, 4f))
             {
                 throw new InvalidOperationException("DefenseScene UnitDeployController 참조 또는 지휘 포인트 초깃값이 올바르지 않습니다.");
+            }
+
+            var towerControllerSerialized = new SerializedObject(towerBuildController);
+            UnityEngine.Object unitModeReference =
+                controllerSerialized.FindProperty("inputModeController").objectReferenceValue;
+            UnityEngine.Object towerModeReference =
+                towerControllerSerialized.FindProperty("inputModeController").objectReferenceValue;
+            if (unitModeReference != null && towerModeReference != null && unitModeReference != towerModeReference)
+            {
+                throw new InvalidOperationException("DefenseScene 타워와 유닛 Controller가 서로 다른 입력 모드를 참조합니다.");
             }
 
             var menuSerialized = new SerializedObject(menu);
@@ -306,11 +344,13 @@ namespace RCCom.EditorTools
             Scene scene = EditorSceneManager.OpenScene(DefenseScenePath, OpenSceneMode.Single);
             MapManager mapManager = FindFirstInScene<MapManager>();
             WaveManager waveManager = FindFirstInScene<WaveManager>();
+            TowerBuildController towerBuildController = FindFirstInScene<TowerBuildController>();
             Canvas canvas = FindFirstInScene<Canvas>();
             AllyUnitView viewPrefab = RequirePrefabComponent<AllyUnitView>(AllyUnitViewPrefabBuilder.PrefabPath);
-            if (mapManager == null || waveManager == null || canvas == null)
+            if (mapManager == null || waveManager == null || towerBuildController == null || canvas == null)
             {
-                throw new InvalidOperationException("DefenseScene에서 MapManager, WaveManager 또는 Canvas를 찾지 못했습니다.");
+                throw new InvalidOperationException(
+                    "DefenseScene에서 MapManager, WaveManager, TowerBuildController 또는 Canvas를 찾지 못했습니다.");
             }
 
             GameObject controllerObject = FindOrCreateRootObject(ControllerName);
@@ -320,9 +360,13 @@ namespace RCCom.EditorTools
                 controller = controllerObject.AddComponent<UnitDeployController>();
             }
 
+            DeploymentInputModeController inputModeController =
+                WireDeploymentInputMode(towerBuildController, controller);
+
             var controllerSerialized = new SerializedObject(controller);
             controllerSerialized.FindProperty("mapManager").objectReferenceValue = mapManager;
             controllerSerialized.FindProperty("waveManager").objectReferenceValue = waveManager;
+            controllerSerialized.FindProperty("inputModeController").objectReferenceValue = inputModeController;
             controllerSerialized.FindProperty("allyUnitRoster").objectReferenceValue = roster;
             controllerSerialized.FindProperty("viewPrefab").objectReferenceValue = viewPrefab;
             controllerSerialized.FindProperty("combatSettings").objectReferenceValue = combatSettings;
@@ -332,10 +376,38 @@ namespace RCCom.EditorTools
             controllerSerialized.ApplyModifiedPropertiesWithoutUndo();
 
             UnitDeployMenuUI menu = BuildMenu(canvas.transform, controller, buttonPrefab, font);
+            EditorUtility.SetDirty(inputModeController);
+            EditorUtility.SetDirty(towerBuildController);
             EditorUtility.SetDirty(controller);
             EditorUtility.SetDirty(menu);
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);
+        }
+
+        private static DeploymentInputModeController WireDeploymentInputMode(
+            TowerBuildController towerBuildController,
+            UnitDeployController unitDeployController)
+        {
+            GameObject inputModeObject = FindOrCreateRootObject(InputModeControllerName);
+            DeploymentInputModeController inputModeController =
+                inputModeObject.GetComponent<DeploymentInputModeController>();
+            if (inputModeController == null)
+            {
+                inputModeController = inputModeObject.AddComponent<DeploymentInputModeController>();
+            }
+
+            var towerControllerSerialized = new SerializedObject(towerBuildController);
+            towerControllerSerialized.FindProperty("inputModeController").objectReferenceValue = inputModeController;
+            towerControllerSerialized.ApplyModifiedPropertiesWithoutUndo();
+
+            var unitControllerSerialized = new SerializedObject(unitDeployController);
+            unitControllerSerialized.FindProperty("inputModeController").objectReferenceValue = inputModeController;
+            unitControllerSerialized.ApplyModifiedPropertiesWithoutUndo();
+
+            EditorUtility.SetDirty(inputModeController);
+            EditorUtility.SetDirty(towerBuildController);
+            EditorUtility.SetDirty(unitDeployController);
+            return inputModeController;
         }
 
         private static UnitDeployMenuUI BuildMenu(
