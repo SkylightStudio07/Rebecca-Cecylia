@@ -816,3 +816,15 @@ Phase 0 자동화 경로를 실제로 열고, 이후 오퍼레이터별 원격 �
 - `RCCom/Operators/Validate Operator Assets` 단일 메뉴에서 오퍼레이터 필수 참조와 Tower/Enemy/AllyUnit 등록 상태를 함께 검사하도록 통합했다.
 - Unity `6000.3.13f1` 재컴파일에서 `failed=false`를 확인했고, 실제 프로젝트 전체 에셋 검증도 오류 없이 통과했다.
 - 기존 `Assets/Data/Definition/Tower/축적.asset` 미등록 경고 1건은 그대로이며, AllyUnit 미등록·null·중복 ID 오류는 발견되지 않았다.
+
+## 2026-08-21 — 사망 아군 활성 목록 제거 회귀 검증
+
+### 맥락
+- `UnitDeployController.RegisterInstance`는 소환한 Instance의 `Died` 이벤트에서 `_activeUnits`와 사망 핸들러를 제거하고 `UnitRemoved`를 알리고 있었지만, 기반 검증기는 개별 Instance의 사망 이벤트만 확인했다.
+
+### 결정
+- 런타임 제거 경로를 중복 구현하지 않고 `AllyUnitFoundationVerifier`가 메모리 Instance를 Controller에 등록한 뒤 사망시켜 `ActiveUnits`가 즉시 비워지고 정확한 Instance로 `UnitRemoved`가 한 번 발생하는지 검사한다.
+- 다음 Tick까지 죽은 참조를 남기지 않는 것을 계약으로 삼아 다른 아군의 타깃 후보 목록에 사망 유닛이 섞이는 것을 방지한다.
+
+### 검증
+- Unity `6000.3.13f1` 재컴파일에서 `failed=false`를 확인했고, `AllyUnitFoundationVerifier` 실행으로 소환 등록 1건, 사망 후 활성 목록 0건, 제거 이벤트 1건 계약을 확인했다.

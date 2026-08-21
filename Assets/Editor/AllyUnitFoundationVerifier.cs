@@ -182,6 +182,39 @@ namespace RCCom.EditorTools
                 controllerSerializedObject.FindProperty("inputModeController").objectReferenceValue = inputModeController;
                 controllerSerializedObject.ApplyModifiedPropertiesWithoutUndo();
 
+                MethodInfo registerInstance = typeof(UnitDeployController).GetMethod(
+                    "RegisterInstance",
+                    BindingFlags.Instance | BindingFlags.NonPublic);
+                if (registerInstance == null)
+                {
+                    throw new InvalidOperationException("아군 유닛 활성 목록 등록 진입점을 찾지 못했습니다.");
+                }
+
+                var trackedInstance = new AllyUnitInstance();
+                trackedInstance.Spawn(unitDefinition, path);
+                int removedEventCount = 0;
+                AllyUnitInstance removedInstance = null;
+                deployController.UnitRemoved += removed =>
+                {
+                    removedEventCount++;
+                    removedInstance = removed;
+                };
+
+                registerInstance.Invoke(deployController, new object[] { trackedInstance });
+                if (deployController.ActiveUnits.Count != 1 || deployController.ActiveUnits[0] != trackedInstance)
+                {
+                    throw new InvalidOperationException("소환 유닛의 활성 목록 등록 계약이 올바르지 않습니다.");
+                }
+
+                // Tick 도중 사망해도 다음 프레임까지 죽은 참조가 남지 않아야 타깃 후보와
+                // 아군 목록을 받는 다른 Instance가 이미 죽은 유닛을 다시 선택하지 않는다.
+                trackedInstance.TakeDamage(trackedInstance.CurrentHealth);
+                if (deployController.ActiveUnits.Count != 0 || removedEventCount != 1 ||
+                    removedInstance != trackedInstance)
+                {
+                    throw new InvalidOperationException("사망 유닛의 활성 목록 제거 계약이 올바르지 않습니다.");
+                }
+
                 // Edit Mode의 비활성 임시 오브젝트는 생명주기 콜백이 자동 실행되지 않으므로,
                 // 실제 UI와 같은 OnEnable 구독 경로를 명시적으로 통과시킨다.
                 MethodInfo menuOnEnable = typeof(UnitDeployMenuUI).GetMethod(
@@ -346,7 +379,7 @@ namespace RCCom.EditorTools
                     throw new InvalidOperationException("지휘 포인트 상한 계약이 올바르지 않습니다.");
                 }
 
-                Debug.Log("[AllyUnitFoundationVerifier] 역주행 스폰·상태·피해·Roster·Loadout·상호 배타 배치 입력 모드·Definition 선택·비용별 버튼 상태·지휘 포인트 소비·회복·일시정지·상한 계약 검증 통과");
+                Debug.Log("[AllyUnitFoundationVerifier] 역주행 스폰·상태·피해·사망 활성 목록 정리·Roster·Loadout·상호 배타 배치 입력 모드·Definition 선택·비용별 버튼 상태·지휘 포인트 소비·회복·일시정지·상한 계약 검증 통과");
             }
             finally
             {
