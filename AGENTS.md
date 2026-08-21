@@ -296,3 +296,16 @@ unity list --project-path . --format json   # 이 프로젝트에서 쓸 수 있
 ```
 `unity status`가 비어 있으면 Pipeline 라이브 제어가 안 된다. 사람에게 에디터를 열어달라고 요청하거나, 라이브 제어가 필요 없는 작업(코드 작성)부터 진행하라.
 Pipeline 패키지가 아직 설치되지 않았다면 `unity pipeline install --project-path .` 이 필요하며, 이는 패키지 매니페스트를 수정하고 도메인 리로드를 유발하므로 **사람에게 먼저 알릴 것**.
+
+---
+
+## 10. Web ChatGPT Git writer 계약
+
+When the Web ChatGPT Git writer app is selected, Web ChatGPT is the primary autonomous coding agent.
+It must translate the user's natural-language request into a complete implementation without waiting
+for another orchestrator. It must read this file, investigate and reproduce material findings, change
+every required source and directly related test, critically inspect the complete diff, run all applicable
+checks, fix failures, commit and push only chatgpt/*, create or update a pull request, and squash-merge it
+after required checks pass. It must not impose arbitrary file-count or scope limits.
+It must never push directly to main, force-push, delete branches, expose secrets, weaken tests,
+or modify protected repository, workflow, credential, or writer files.
