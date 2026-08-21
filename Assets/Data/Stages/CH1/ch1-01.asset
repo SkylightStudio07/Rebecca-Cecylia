@@ -1,0 +1,59 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e7a6450cc7b31154896bf3f88cba6b7d, type: 3}
+  m_Name: ch1-01
+  m_EditorClassIdentifier: Assembly-CSharp::RCCom.Definitions.Stage.StageDefinition
+  schemaVersion: 1
+  stageId: ch1-01
+  chapterId: ch1
+  displayName: 1-1
+  subtitle: "\uB73B\uBC16\uC758 \uC870\uC6B0"
+  recommendedLevel: 1
+  order: 0
+  requiredBestWave: 0
+  description: "\uD6C8\uB828 \uC911 \uCC28\uC6D0\uC218 \uC815\uCC30\uB300\uB97C \uBC1C\uACAC\uD588\uC2B5\uB2C8\uB2E4.\n\uC2E4\uC804\uC774
+    \uCD5C\uACE0\uC758 \uD6C8\uB828. "
+  descriptionBackground: {fileID: 0}
+  rewards: []
+  waves:
+  - displayName: WAVE 01
+    buildPhaseDuration: 2
+    healthMultiplier: 1
+    spawns:
+    - enemy: {fileID: 11400000, guid: 8085fad79c4b0f8418ad673230725a51, type: 2}
+      count: 3
+      interval: 0.65
+      initialDelay: 0
+  - displayName: WAVE 02
+    buildPhaseDuration: 1.5
+    healthMultiplier: 1.08
+    spawns:
+    - enemy: {fileID: 11400000, guid: 8085fad79c4b0f8418ad673230725a51, type: 2}
+      count: 4
+      interval: 0.65
+      initialDelay: 0.5
+    - enemy: {fileID: 11400000, guid: 078774e9c4f231144a02bdc863dc9cdf, type: 2}
+      count: 1
+      interval: 0.9
+      initialDelay: 1.2
+  - displayName: WAVE 03
+    buildPhaseDuration: 1.5
+    healthMultiplier: 1.16
+    spawns:
+    - enemy: {fileID: 11400000, guid: 8085fad79c4b0f8418ad673230725a51, type: 2}
+      count: 5
+      interval: 0.65
+      initialDelay: 0.5
+    - enemy: {fileID: 11400000, guid: 078774e9c4f231144a02bdc863dc9cdf, type: 2}
+      count: 1
+      interval: 0.9
+      initialDelay: 1.2

@@ -22,12 +22,4 @@ MonoBehaviour:
     address: operator/cassia
     remoteContent: 0
     requiredBestWave: 0
-    unitPreviews:
-    - displayName: "\uC804\uC9C4 \uC0AC\uC218"
-      deployCost: 25
-      previewIcon: {fileID: 0}
-      fallbackColor: {r: 0.25, g: 0.75, b: 1, a: 1}
-    - displayName: "\uBC29\uD638 \uC694\uC6D0"
-      deployCost: 55
-      previewIcon: {fileID: 0}
-      fallbackColor: {r: 1, g: 0.58, b: 0.18, a: 1}
+    unitPreviews: []

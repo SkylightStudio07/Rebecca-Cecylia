@@ -37,11 +37,28 @@ namespace RCCom.EditorTools
                 throw new InvalidOperationException("TitleScene에서 MainMenuBackground를 찾지 못했습니다.");
             }
 
+            Transform operatorImageTransform = mainMenu.Find("OperatorImage");
+            Image lobbyOperatorImage = operatorImageTransform != null
+                ? operatorImageTransform.GetComponent<Image>()
+                : null;
+            if (lobbyOperatorImage == null)
+            {
+                throw new InvalidOperationException("TitleScene에서 로비 OperatorImage를 찾지 못했습니다.");
+            }
+
             OperatorDialogueSet dialogueSet = AssetDatabase.LoadAssetAtPath<OperatorDialogueSet>(DialogueSetPath);
             TMP_FontAsset koreanFont = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(KoreanFontPath);
             if (dialogueSet == null || koreanFont == null)
             {
                 throw new InvalidOperationException("로비 대사 데이터 또는 TMP 글꼴을 찾지 못했습니다.");
+            }
+
+            if (dialogueSet.lobbyIdleSprite == null && lobbyOperatorImage.sprite != null)
+            {
+                // 기존 TitleScene에 이미 배치된 Cassia 전신을 제작 데이터의 기본값으로
+                // 승격해, 이후 Addressables 패키징에서도 같은 로비 아트를 추적하게 한다.
+                dialogueSet.lobbyIdleSprite = lobbyOperatorImage.sprite;
+                EditorUtility.SetDirty(dialogueSet);
             }
 
             Transform existing = mainMenu.Find(SystemName);
@@ -76,15 +93,17 @@ namespace RCCom.EditorTools
             operatorRect.offsetMin = Vector2.zero;
             operatorRect.offsetMax = Vector2.zero;
 
-            Button dialogueButton = CreateDialogueBubble(systemObject.transform, koreanFont, out TextMeshProUGUI dialogueText,
-                out CanvasGroup dialogueGroup);
+            Button dialogueButton = CreateDialogueBubble(systemObject.transform, koreanFont,
+                out TextMeshProUGUI dialogueText, out CanvasGroup dialogueGroup);
 
             var serialized = new SerializedObject(controller);
             serialized.FindProperty("dialogueSet").objectReferenceValue = dialogueSet;
             serialized.FindProperty("operatorButton").objectReferenceValue = operatorButton;
             serialized.FindProperty("dialogueButton").objectReferenceValue = dialogueButton;
+            serialized.FindProperty("lobbyOperatorImage").objectReferenceValue = lobbyOperatorImage;
             serialized.FindProperty("dialogueText").objectReferenceValue = dialogueText;
             serialized.FindProperty("dialogueGroup").objectReferenceValue = dialogueGroup;
+            serialized.FindProperty("fallbackOperatorId").stringValue = "cassia";
             serialized.ApplyModifiedPropertiesWithoutUndo();
 
             EditorUtility.SetDirty(controller);
@@ -111,6 +130,7 @@ namespace RCCom.EditorTools
             if (serialized.FindProperty("dialogueSet").objectReferenceValue == null ||
                 serialized.FindProperty("operatorButton").objectReferenceValue == null ||
                 serialized.FindProperty("dialogueButton").objectReferenceValue == null ||
+                serialized.FindProperty("lobbyOperatorImage").objectReferenceValue == null ||
                 serialized.FindProperty("dialogueText").objectReferenceValue == null ||
                 serialized.FindProperty("dialogueGroup").objectReferenceValue == null)
             {
@@ -180,7 +200,7 @@ namespace RCCom.EditorTools
             GameObject textObject = CreateRectObject("DialogueText", bubble.transform);
             RectTransform textRect = (RectTransform)textObject.transform;
             Stretch(textRect);
-            textRect.offsetMin = new Vector2(34f, 20f);
+            textRect.offsetMin = new Vector2(28f, 20f);
             textRect.offsetMax = new Vector2(-28f, -20f);
             dialogueText = textObject.AddComponent<TextMeshProUGUI>();
             dialogueText.font = font;

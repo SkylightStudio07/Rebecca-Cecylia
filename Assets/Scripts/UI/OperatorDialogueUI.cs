@@ -127,16 +127,16 @@ namespace RCCom.UI
 
         private void ShowRandom(OperatorLineSet lineSet)
         {
-            if (lineSet == null || lineSet.lines == null || lineSet.lines.Length == 0)
+            if (lineSet == null || !lineSet.TryGetRandomCombat(out string text, out Sprite portrait))
             {
                 return;
             }
 
-            dialogueText.text = lineSet.lines[Random.Range(0, lineSet.lines.Length)];
+            dialogueText.text = text;
 
-            if (lineSet.portraitSprite != null)
+            if (portrait != null)
             {
-                portraitImage.sprite = lineSet.portraitSprite;
+                portraitImage.sprite = portrait;
             }
 
             canvasGroup.alpha = 1f;

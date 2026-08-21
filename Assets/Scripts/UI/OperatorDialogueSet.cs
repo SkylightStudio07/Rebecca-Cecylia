@@ -1,21 +1,7 @@
-using System;
 using UnityEngine;
 
 namespace RCCom.UI
 {
-    /// <summary>
-    /// 상황 1개에 대응하는 대사 후보 + 그때 보여줄 초상화. ScriptableObject가 아니라 그냥
-    /// 직렬화되는 데이터 묶음 — OperatorDialogueSet 하나가 이 묶음을 상황별로 여러 개 가진다.
-    /// </summary>
-    [Serializable]
-    public class OperatorLineSet
-    {
-        public Sprite portraitSprite;
-
-        [TextArea(2, 4)]
-        public string[] lines;
-    }
-
     /// <summary>
     /// 오퍼레이터(카시아) 대사 전체를 모아두는 프로젝트 창 에셋. CardRoster/TowerRoster와 같은
     /// 이유로 SO화 — 텍스트뿐 아니라 상황별 초상화 스프라이트(Unity 에셋 참조)도 같이 담아야
@@ -25,12 +11,32 @@ namespace RCCom.UI
     [CreateAssetMenu(menuName = "RCCom/UI/Operator Dialogue Set")]
     public class OperatorDialogueSet : ScriptableObject
     {
-        [Tooltip("대사가 없을 때(평소) 보여줄 기본 초상화")]
+        [Header("로비 전신 스프라이트")]
+        [Tooltip("로비에서 대사가 없을 때 Canvas/OperatorImage에 보여줄 기본 전신 스프라이트")]
+        public Sprite lobbyIdleSprite;
+
+        [Header("전투 포트레잇")]
+        [Tooltip("전투 대사가 없을 때 왼쪽 상단에 보여줄 기본 포트레잇")]
         public Sprite idleSprite;
 
         [Header("0. 로비에서 오퍼레이터 클릭")]
         [Tooltip("비어 있으면 기존 게임 개시 대사를 임시로 사용한다.")]
         public OperatorLineSet lobbyInteraction;
+
+        [Tooltip("전투에 참전한 오퍼레이터가 귀환 후 처음 클릭될 때 출력한다.")]
+        public OperatorLineSet lobbyReturnTogether;
+
+        [Tooltip("참전하지 않은 오퍼레이터가 귀환 후 처음 클릭될 때 출력한다.")]
+        public OperatorLineSet lobbyReturn;
+
+        [Header("0-1. 로비 터치 — 호감도 단계별")]
+        public OperatorLineSet lobbyTouchUnfamiliar;
+        public OperatorLineSet lobbyTouchFavorable;
+        public OperatorLineSet lobbyTouchJoy;
+        public OperatorLineSet lobbyTouchLove;
+
+        [Tooltip("호감도 100에서만 사용하는 터치 대사")]
+        public OperatorLineSet lobbyTouchEx;
 
         [Header("1. 게임 개시")]
         public OperatorLineSet gameStart;
@@ -58,5 +64,26 @@ namespace RCCom.UI
 
         [Header("8. 거점 파괴")]
         public OperatorLineSet baseDestroyed;
+
+        public void EnsureLineSets()
+        {
+            if (lobbyInteraction == null) { lobbyInteraction = new OperatorLineSet(); }
+            if (lobbyReturnTogether == null) { lobbyReturnTogether = new OperatorLineSet(); }
+            if (lobbyReturn == null) { lobbyReturn = new OperatorLineSet(); }
+            if (lobbyTouchUnfamiliar == null) { lobbyTouchUnfamiliar = new OperatorLineSet(); }
+            if (lobbyTouchFavorable == null) { lobbyTouchFavorable = new OperatorLineSet(); }
+            if (lobbyTouchJoy == null) { lobbyTouchJoy = new OperatorLineSet(); }
+            if (lobbyTouchLove == null) { lobbyTouchLove = new OperatorLineSet(); }
+            if (lobbyTouchEx == null) { lobbyTouchEx = new OperatorLineSet(); }
+            if (gameStart == null) { gameStart = new OperatorLineSet(); }
+            if (skillUsed == null) { skillUsed = new OperatorLineSet(); }
+            if (baseAttacked == null) { baseAttacked = new OperatorLineSet(); }
+            if (playerHit == null) { playerHit = new OperatorLineSet(); }
+            if (playerHitCritical == null) { playerHitCritical = new OperatorLineSet(); }
+            if (insufficientGold == null) { insufficientGold = new OperatorLineSet(); }
+            if (slotUnavailable == null) { slotUnavailable = new OperatorLineSet(); }
+            if (playerDied == null) { playerDied = new OperatorLineSet(); }
+            if (baseDestroyed == null) { baseDestroyed = new OperatorLineSet(); }
+        }
     }
 }
