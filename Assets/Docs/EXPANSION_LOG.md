@@ -742,3 +742,19 @@ Phase 0 자동화 경로를 실제로 열고, 이후 오퍼레이터별 원격 �
 ### 검증
 - Unity `6000.3.13f1` 재컴파일에서 `failed=false`를 확인했다.
 - `AllyUnitFoundationVerifier`로 지급, 비용 확인, 소비, 부족 시 거부, 전투 중 회복, 빌드 페이즈 회복 차단과 최대 100 상한 계약을 통과했다.
+
+## 2026-08-21 — 유닛 배치 일시정지 게이트 검증 보강
+
+### 맥락
+- `UnitDeployController`는 `Time.timeScale` 기반 게이트로 배치 선택·소환과 지휘 포인트 회복을 이미 차단했지만, 기반 검증기는 빌드 페이즈 차단만 확인하고 일시정지 경로를 직접 검증하지 않았다.
+
+### 결정
+- 런타임 분기를 중복 추가하지 않고 `AllyUnitFoundationVerifier`에서 `Time.timeScale = 0`일 때 배치 입력이 거부되고 같은 Tick 시간만큼 지휘 포인트가 증가하지 않는지 함께 검사한다.
+- 검증 종료 시 성공·실패와 무관하게 기존 `Time.timeScale`을 복원해 에디터 세션 상태를 남기지 않는다.
+
+### 의도적으로 하지 않은 것
+- UI 패널을 숨기거나 게임의 전역 일시정지 소유자를 추가하지 않았다. 입력의 최종 경계인 Controller가 요청을 거부하므로 기존 UI→게임플레이 단방향 구조를 유지했다.
+
+### 검증
+- Unity `6000.3.13f1` 재컴파일에서 `failed=false`를 확인했다.
+- `AllyUnitFoundationVerifier`에서 일시정지 중 `IsDeployInputEnabled == false`, 유닛 선택 거부와 1초 Tick 후에도 CP 98 유지, 검증 종료 후 기존 시간 배율 복원을 확인했다.

@@ -33,9 +33,11 @@ namespace RCCom.EditorTools
             OperatorDialogueSet dialogueSet = ScriptableObject.CreateInstance<OperatorDialogueSet>();
             GameObject deployUiObject = null;
             GameObject waveObject = null;
+            float originalTimeScale = Time.timeScale;
 
             try
             {
+                Time.timeScale = 1f;
                 unitDefinition.data = new AllyUnitData
                 {
                     unitId = "verification-unit",
@@ -254,6 +256,16 @@ namespace RCCom.EditorTools
                     throw new InvalidOperationException("전투 중 지휘 포인트 회복 계약이 올바르지 않습니다.");
                 }
 
+                Time.timeScale = 0f;
+                tickBeforeEnemies.Invoke(deployController, new object[] { 1f });
+                if (deployController.IsDeployInputEnabled || deployController.SelectUnit(0) ||
+                    deployController.CommandPoints != 98)
+                {
+                    throw new InvalidOperationException("일시정지 중 배치 입력 또는 지휘 포인트 회복 차단 계약이 올바르지 않습니다.");
+                }
+
+                Time.timeScale = 1f;
+
                 var waveSerializedObject = new SerializedObject(waveManager);
                 waveSerializedObject.FindProperty("isWaitingForNextWave").boolValue = true;
                 waveSerializedObject.ApplyModifiedPropertiesWithoutUndo();
@@ -270,10 +282,11 @@ namespace RCCom.EditorTools
                     throw new InvalidOperationException("지휘 포인트 상한 계약이 올바르지 않습니다.");
                 }
 
-                Debug.Log("[AllyUnitFoundationVerifier] 역주행 스폰·상태·피해·Roster·Loadout·배치 가용성·Definition 선택·지휘 포인트 소비·회복·상한 계약 검증 통과");
+                Debug.Log("[AllyUnitFoundationVerifier] 역주행 스폰·상태·피해·Roster·Loadout·배치 가용성·Definition 선택·지휘 포인트 소비·회복·일시정지·상한 계약 검증 통과");
             }
             finally
             {
+                Time.timeScale = originalTimeScale;
                 OperatorLoadoutSession.ClearSelection();
                 UnityEngine.Object.DestroyImmediate(unitDefinition);
                 UnityEngine.Object.DestroyImmediate(enemyDefinition);
