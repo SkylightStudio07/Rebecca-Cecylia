@@ -1,0 +1,422 @@
+fileFormatVersion: 2
+guid: f43eba3200f10ed42b779d9deeb3061c
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 1162948653396738497
+    second: StageSelectionUISpriteSheet_0
+  - first:
+      213: 6012625980774092
+    second: StageSelectionUISpriteSheet_1
+  - first:
+      213: -6801435638478971585
+    second: StageSelectionUISpriteSheet_2
+  - first:
+      213: 8642624499894090154
+    second: StageSelectionUISpriteSheet_3
+  - first:
+      213: 73243052732011234
+    second: StageSelectionUISpriteSheet_4
+  - first:
+      213: -1093038221311997048
+    second: StageSelectionUISpriteSheet_5
+  - first:
+      213: 5980635093642618721
+    second: StageSelectionUISpriteSheet_6
+  - first:
+      213: 8809886384958306418
+    second: StageSelectionUISpriteSheet_7
+  - first:
+      213: -1244945385822558699
+    second: StageSelectionUISpriteSheet_8
+  - first:
+      213: 7178578687923976468
+    second: StageSelectionUISpriteSheet_9
+  - first:
+      213: 8632527491541898950
+    second: StageSelectionUISpriteSheet_10
+  - first:
+      213: 2344230282080530876
+    second: StageSelectionUISpriteSheet_11
+  - first:
+      213: 6733123621658898193
+    second: StageSelectionUISpriteSheet_12
+  - first:
+      213: 4848818600031138409
+    second: StageSelectionUISpriteSheet_13
+  - first:
+      213: -2813526495213653869
+    second: StageSelectionUISpriteSheet_14
+  - first:
+      213: 5500223337230960246
+    second: StageSelectionUISpriteSheet_15
+  - first:
+      213: -2109283022318862759
+    second: StageSelectionUISpriteSheet_16
+  - first:
+      213: 7858278101533701650
+    second: StageSelectionUISpriteSheet_17
+  - first:
+      213: 1279588748852552129
+    second: StageSelectionUISpriteSheet_18
+  - first:
+      213: -9141625810005257790
+    second: StageSelectionUISpriteSheet_19
+  - first:
+      213: 2710480069371380979
+    second: StageSelectionUISpriteSheet_20
+  - first:
+      213: -4129435293127828569
+    second: StageSelectionUISpriteSheet_21
+  - first:
+      213: 4400831138490793858
+    second: StageSelectionUISpriteSheet_22
+  - first:
+      213: -767770867387102234
+    second: StageSelectionUISpriteSheet_23
+  - first:
+      213: 1285974585851406317
+    second: StageSelectionUISpriteSheet_24
+  - first:
+      213: -1671273935870450475
+    second: StageSelectionUISpriteSheet_25
+  - first:
+      213: 1492485506176736658
+    second: StageSelectionUISpriteSheet_26
+  - first:
+      213: 3224877195607806455
+    second: StageSelectionUISpriteSheet_27
+  - first:
+      213: 946877708781289316
+    second: StageSelectionUISpriteSheet_28
+  - first:
+      213: 1147773282494618382
+    second: StageSelectionUISpriteSheet_29
+  - first:
+      213: 4034753412249980594
+    second: StageSelectionUISpriteSheet_30
+  - first:
+      213: 3000410112273592609
+    second: StageSelectionUISpriteSheet_31
+  - first:
+      213: 281313650375477317
+    second: StageSelectionUISpriteSheet_32
+  - first:
+      213: -5880213241423786000
+    second: StageSelectionUISpriteSheet_33
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: StageSelectionUISpriteSheet_0
+      rect:
+        serializedVersion: 2
+        x: 402
+        y: 51
+        width: 349
+        height: 131
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1c14bb183af932010800000000000000
+      internalID: 1162948653396738497
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: StageSelectionUISpriteSheet_1
+      rect:
+        serializedVersion: 2
+        x: 1173
+        y: 909
+        width: 7
+        height: 9
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cc650c3937c551000800000000000000
+      internalID: 6012625980774092
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: StageSelectionUISpriteSheet_2
+      rect:
+        serializedVersion: 2
+        x: 919
+        y: 53
+        width: 353
+        height: 139
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f3d57c582527c91a0800000000000000
+      internalID: -6801435638478971585
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: StageSelectionUISpriteSheet_3
+      rect:
+        serializedVersion: 2
+        x: 838
+        y: 204
+        width: 812
+        height: 343
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: aa9764b2135c0f770800000000000000
+      internalID: 8642624499894090154
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: StageSelectionUISpriteSheet_4
+      rect:
+        serializedVersion: 2
+        x: 811
+        y: 559
+        width: 857
+        height: 360
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2e25b5c1b26340100800000000000000
+      internalID: 73243052732011234
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: StageSelectionUISpriteSheet_5
+      rect:
+        serializedVersion: 2
+        x: 7
+        y: 561
+        width: 799
+        height: 354
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 88b06c4678fb4d0f0800000000000000
+      internalID: -1093038221311997048
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: StageSelectionUISpriteSheet_6
+      rect:
+        serializedVersion: 2
+        x: 15
+        y: 210
+        width: 798
+        height: 325
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 167adcf4eeb7ff250800000000000000
+      internalID: 5980635093642618721
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 3298a62fb7af30a4ba65c7ebb8570b47
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries:
+      - key: SpriteEditor.SliceSettings
+        value: '{"sliceOnImport":false,"gridCellCount":{"x":1.0,"y":1.0},"gridSpriteSize":{"x":64.0,"y":64.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.5},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"pivotUnitMode":0,"slicingType":0,"keepEmptyRects":false,"isAlternate":false}'
+    nameFileIdTable:
+      StageSelectionUISpriteSheet_0: 1162948653396738497
+      StageSelectionUISpriteSheet_1: 6012625980774092
+      StageSelectionUISpriteSheet_10: 8632527491541898950
+      StageSelectionUISpriteSheet_11: 2344230282080530876
+      StageSelectionUISpriteSheet_12: 6733123621658898193
+      StageSelectionUISpriteSheet_13: 4848818600031138409
+      StageSelectionUISpriteSheet_14: -2813526495213653869
+      StageSelectionUISpriteSheet_15: 5500223337230960246
+      StageSelectionUISpriteSheet_16: -2109283022318862759
+      StageSelectionUISpriteSheet_17: 7858278101533701650
+      StageSelectionUISpriteSheet_18: 1279588748852552129
+      StageSelectionUISpriteSheet_19: -9141625810005257790
+      StageSelectionUISpriteSheet_2: -6801435638478971585
+      StageSelectionUISpriteSheet_20: 2710480069371380979
+      StageSelectionUISpriteSheet_21: -4129435293127828569
+      StageSelectionUISpriteSheet_22: 4400831138490793858
+      StageSelectionUISpriteSheet_23: -767770867387102234
+      StageSelectionUISpriteSheet_24: 1285974585851406317
+      StageSelectionUISpriteSheet_25: -1671273935870450475
+      StageSelectionUISpriteSheet_26: 1492485506176736658
+      StageSelectionUISpriteSheet_27: 3224877195607806455
+      StageSelectionUISpriteSheet_28: 946877708781289316
+      StageSelectionUISpriteSheet_29: 1147773282494618382
+      StageSelectionUISpriteSheet_3: 8642624499894090154
+      StageSelectionUISpriteSheet_30: 4034753412249980594
+      StageSelectionUISpriteSheet_31: 3000410112273592609
+      StageSelectionUISpriteSheet_32: 281313650375477317
+      StageSelectionUISpriteSheet_33: -5880213241423786000
+      StageSelectionUISpriteSheet_4: 73243052732011234
+      StageSelectionUISpriteSheet_5: -1093038221311997048
+      StageSelectionUISpriteSheet_6: 5980635093642618721
+      StageSelectionUISpriteSheet_7: 8809886384958306418
+      StageSelectionUISpriteSheet_8: -1244945385822558699
+      StageSelectionUISpriteSheet_9: 7178578687923976468
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

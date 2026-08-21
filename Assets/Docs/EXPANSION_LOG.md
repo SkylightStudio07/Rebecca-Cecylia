@@ -728,6 +728,152 @@ Phase 0 자동화 경로를 실제로 열고, 이후 오퍼레이터별 원격 �
 - 수정된 빌더를 다시 실행한 뒤 DefenseScene의 `buttonPrefab`이 영속 프리팹과 같은 객체이고, Cassia 로스터가 2종이며 씬이 저장된 상태임을 확인했다.
 - Play Mode에서 배치 메뉴 `visible=True`, 버튼 2개, 시작 CP 40을 확인했다. `전진 사수` 선택·출격에 성공해 활성 유닛 1개, 잔여 CP 15가 됐고 신규 콘솔 오류는 없었다.
 
+## 2026-08-19 — 오퍼레이터 호감도와 귀환 대사 기반
+
+### 맥락
+- 로비 오퍼레이터 클릭을 단순 랜덤 대사가 아니라 전투 귀환과 연결된 상호작용으로 확장할 필요가 있었다.
+- 호감도는 오퍼레이터 콘텐츠의 일부처럼 보이지만 플레이어마다 달라지는 영속 상태이므로 Definition/Dialogue SO에 수치를 저장하면 안 된다.
+
+### 결정
+- `PlayerProfile`에 `operatorId`별 호감도 목록을 추가하고 저장 스키마를 2로 올렸다. 호감도 구간은 0~24 낯섦, 25~49 호감, 50~74 기쁨, 75~100 사랑으로 판정하며 100에서는 EX 터치 대사 풀을 우선한다.
+- 결과 화면은 현재 참전 오퍼레이터 ID와 미수령 귀환 횟수를 프로필에 예약한다. 로비 클릭 시 참전 오퍼레이터면 회당 +5, 다른 오퍼레이터면 회당 +2를 적용하고 예약을 비운다. 현재 로비는 좌측 상단 전투 오퍼레이터를 그대로 표시하므로 기본 경로는 +5다.
+- `OperatorDialogueSet`에 귀환(참전/비참전)과 호감도별 터치 슬롯을 추가했다. 로비 슬롯의 문장별 `lobbySprite`는 대사 출력 시 `Canvas/MainMenuBackground/OperatorImage`의 전신 스프라이트를 교체하며, 비어 있으면 로비 기본 전신을 유지한다.
+- 결과 화면과 로비 UI가 각각 같은 `PlayerPrefsProfileStorage`를 사용하도록 유지했다. 새 오브젝트 타입 매니저나 프로필 매니저는 만들지 않았다.
+- `OperatorAffinityDebugWindow`에서 ID별 호감도 경계 설정, 귀환 보상 예약, 예약 초기화를 제공한다.
+
+### 의도적으로 하지 않은 것
+- 클릭할 때마다 호감도를 올리지 않았다. 클릭 연타로 EX가 즉시 해금되는 것을 막고, 전투 귀환이라는 플레이 흐름을 보상 트리거로 보존하기 위해서다.
+- 호감도 수치/등급 표시용 Operators 프로필 화면은 이번 작업에서 건드리지 않았다. 로비는 대사와 귀환 연출에만 집중하고 상세 수치는 기존 오퍼레이터 화면에서 표시할 예정이다.
+- 로그인·터치·임무 완료 등 모든 대사 카테고리를 한 번에 추가하지 않았다. 현재는 로비 귀환과 터치 슬롯만 만들고, 같은 `OperatorLineSet` 계약으로 후속 카테고리를 확장할 수 있게 했다.
+
+### 검증
+- 실행 중인 Unity `6000.3.13f1`이 스크립트 변경을 감지해 재컴파일했고, Editor 로그에서 새 코드 관련 C# 오류가 발생하지 않은 것을 확인했다.
+- Unity Pipeline 서버는 실행 중인 에디터에서 401로 응답해 CLI 명령 연결이 되지 않았다. 따라서 `LobbyOperatorDialogueSetup.Build/Validate`의 실제 씬 저장 및 Play Mode 검증은 에디터 연결 복구 후 남은 작업이다.
+
+## 2026-08-19 — Operator Studio 제작 창과 로비 문장별 전신 스프라이트
+
+### 맥락
+- 신규 오퍼레이터를 추가할 때 레시피 JSON, DialogueSet SO, 로스터 원본, 생성 Definition, 카탈로그와 Addressables 그룹을 여러 창에서 따로 배선해야 했다.
+- 로비 상호작용은 문장마다 메인 전신 스프라이트가 달라질 수 있지만, 기존 `OperatorLineSet`은 전투 상황 포트레잇 하나와 `string[]`만 보유했다.
+
+### 결정
+- `OperatorStudioWindow`를 `RCCom/Operators/Open Operator Studio`에 추가했다. Identity, Loadout, Dialogue, Package 탭에서 레시피와 대화 SO를 한 화면에서 편집하고, 기존 `OperatorAssetBuilder`를 통해 생성물과 Addressables를 갱신한다.
+- `OperatorDialogueEntry`를 도입해 로비 대사 한 줄과 로비 전신 Sprite를 한 단위로 저장한다. 로비 슬롯에는 기본 전신을 둘 수 있고, 문장 Sprite가 없으면 슬롯 기본 전신과 `lobbyIdleSprite` 순서로 폴백한다.
+- 기존 `OperatorLineSet.portraitSprite`는 피격·스킬 사용·거점 피격·자금 부족 등 전투 상황의 포트레잇으로 유지한다. `OperatorDialogueUI`는 상황 단위 포트레잇만 사용하고, `LobbyOperatorDialogueUI`는 메인 `OperatorImage`만 변경한다.
+- 기존 `lines`는 Studio의 `Migrate All Legacy Lines`로 문장 엔트리에 보존·변환하되 전투 포트레잇을 문장 데이터로 복제하지 않는다. 이로써 기존 Cassia 전투 연출의 책임과 로비 전신 연출의 책임을 섞지 않는다.
+- 원격 오퍼레이터의 선택 초상화를 로컬 카탈로그가 참조하지 않도록 수정했다. 원격은 ID·설명·경량 유닛 미리보기만 로컬에 남기고 실제 초상화와 대사는 Definition 다운로드 후 Addressables 의존성으로 받는다.
+
+### 의도적으로 하지 않은 것
+- Studio가 런타임 `OperatorDefinition`을 직접 편집하지 않는다. 레시피/DialogueSet은 원본, Definition/Roster/Catalog는 생성물로 분리해 사람이 생성물을 덮어쓰는 사고를 막았다.
+- 오퍼레이터별 C# 클래스나 오퍼레이터 전용 프리팹을 만들지 않았다. 새 콘텐츠는 기존 SO와 아트 참조를 조립한다.
+- 대사 음성, 다국어 테이블, Live2D 표정 컨트롤은 현재 문장+Sprite 계약 밖의 기능이므로 후속 단계로 남겼다.
+
+### 구현 중 정정
+- 최초 배선에서는 "대사마다 스프라이트 변경"을 전투 포트레잇까지 일반화해 로비 말풍선 내부의 별도 `DialoguePortrait`를 변경했다. 이는 `ARCHITECTURE.md`에 기록된 전투 상황별 포트레잇 계약과 사용자가 의도한 로비 전신 변경을 혼동한 것이었다.
+- 커밋 전에 해당 배선을 제거하고 `MainMenuBackground/OperatorImage`를 직접 연결했다. Studio도 로비 슬롯에는 `Lobby Sprite`, 전투 슬롯에는 `Situation Portrait`만 노출하도록 분리했다.
+
+### 검증
+- Unity `6000.3.13f1` 재컴파일에서 `failed=false`를 확인했다.
+- 기존 Cassia 대사 22개를 문장별 엔트리로 마이그레이션하고, Operator Builder를 실행해 Definition·Catalog·Addressables 그룹을 갱신했다.
+- TitleScene의 기존 Cassia 전신을 `lobbyIdleSprite`로 승격하고, 로비 컨트롤러가 `MainMenuBackground/OperatorImage`를 참조하는지 확인했다. 말풍선 내부의 잘못 생성된 `DialoguePortrait`는 제거했다.
+- Operator Studio 메뉴를 실제 실행했고, Validator가 필수 참조를 통과했다. 현재 경고는 비어 있는 호감도 슬롯과 기존 미등록 타워 등 미작성 콘텐츠에 관한 것이며 새 오류는 없다.
+
+## 2026-08-19 — 에디터 전용 호감도 디버그 오버레이
+
+### 맥락
+- 호감도는 0~100 경계와 귀환 보상(+2/+5)을 함께 확인해야 하므로, PlayerPrefs를 직접 지우거나 에디터 창과 로비를 번갈아 조작하는 방식은 대사·전신 스프라이트까지 검증하기에 느렸다.
+
+### 결정
+- TitleScene 우측 상단에 반투명 `OperatorAffinityDebugOverlay`를 추가했다. 오퍼레이터 ID, 현재 호감도·등급·귀환 예약을 표시하고, 슬라이더·경계값 버튼·±1 조절·예약/초기화·대사 출력을 제공한다.
+- 패널은 `PlayerPrefsProfileStorage`와 `LobbyOperatorDialogueUI.ShowInteraction()`을 그대로 사용한다. 따라서 디버그 버튼이 별도 보상 규칙을 만들지 않고 실제 프로필 저장·귀환 소비·호감도별 대사 폴백을 검증한다.
+- `귀환 +5`는 현재 ID를 예약하고, `비참전 +2`는 별도 디버그 ID를 예약해 다음 현재 오퍼레이터 클릭에서 비참여 보상을 재현한다. 예약 버튼을 누르는 즉시 호감도를 올리지 않는다.
+- 패널 동작은 `UNITY_EDITOR`로 감싸고 플레이어에서는 `Awake`에서 루트를 비활성화한다. 에디터 전용 검증 UI가 WebGL/Standalone 실행 화면에 노출되지 않게 하면서, 씬 배선은 에디터 메뉴로 재현 가능하게 유지한다.
+
+### 검증
+- `OperatorAffinityDebugPanelSetup.Build/Validate`를 실행해 TitleScene의 UI와 모든 Inspector 참조를 저장·검증했다.
+- Unity `6000.3.13f1` 재컴파일에서 `failed=false`를 확인했다.
+
+## 2026-08-19 — 로비 오퍼레이터 관리 화면과 공용 카드 View
+
+### 맥락
+- 기존 `OperatorSelectionUI`는 Operation을 누른 뒤 콘텐츠를 내려받고 곧바로 DefenseScene에 진입하는 출격 전 선택 화면이다. 로비의 Operators 메뉴에서 활성 오퍼레이터만 바꾸는 관리 흐름과 책임이 달랐다.
+- 사용자가 `OperatorManagingSystem`에 배경·환경 장식·좌우 버튼·Deploy 버튼을 먼저 배치했으므로, 자동화가 이 기존 아트를 지우거나 다시 만드는 방식은 피해야 했다.
+
+### 결정
+- `OperatorManagementUI`를 별도 화면으로 추가하고 Operation의 `OperatorSelectionUI`는 유지했다. 관리 화면의 Deploy는 전투 씬으로 이동하지 않고 `PlayerProfile.selectedOperatorId`와 `OperatorLoadoutSession`만 갱신한다.
+- `OperatorManagementCardView` 공용 프리팹 하나가 `OperatorPanels_Managing_0/1/2`를 해금 일반·호버/포커스·잠금 상태로 전환한다. 현재 탐색 항목과 실제 활성 오퍼레이터는 별도 상태로 두어, ACTIVE 배지가 호버 표현에 종속되지 않게 했다.
+- 잠긴 카드도 클릭과 정보 확인은 허용하고 Deploy만 막는다. 해금 조건을 확인하려면 카드 자체를 비활성화해서는 안 되기 때문이다.
+- 관리 화면과 출격 화면의 Addressables 초기화·다운로드·ID 검증·핸들 이전을 `OperatorContentLoader` 한 경로로 통합했다. 어느 화면에서 선택해도 동일한 세션 소유권 규칙을 거친다.
+- `LobbyOperatorDialogueUI.RefreshOperator()`를 추가해 TitleScene 재로드 없이도 활성 오퍼레이터의 대사 세트와 로비 전신 폴백을 즉시 다시 해석한다.
+- `OperatorManagementSetup`은 기존 `OperatorManagingSystem`을 보존하고 `RuntimeContent`와 공용 카드 프리팹만 반복 생성한다. 향후 로비 메뉴를 다시 생성해도 Operators 연결이 사라지지 않도록 `CommandLobbyMenuSetup`에도 `ManageOperators` 배선을 반영했다.
+
+### 의도적으로 하지 않은 것
+- 오퍼레이터별 관리 카드 프리팹이나 관리 전용 매니저를 만들지 않았다. 카탈로그 항목이 늘면 같은 View가 자동 생성된다.
+- 원격 오퍼레이터의 실제 초상화를 로컬 카탈로그에 추가하지 않았다. 다운로드 전에는 기존 경량 미리보기 또는 빈 초상화가 표시되어 원격 콘텐츠가 기본 빌드에 새지 않는다.
+- 실제 시스템이 없는 Details·Upgrade·오퍼레이터 레벨을 임시 구현하지 않았다. 현재 정보 패널에는 이미 영속 데이터가 있는 호감도와 해금 조건만 표시한다.
+
+### 검증
+- Unity `6000.3.13f1` 재컴파일에서 `failed=false`를 확인했다.
+- `OperatorManagementSetup.Validate`로 카드 프리팹, TitleScene Controller 참조, 로비 Operators 메뉴 연결을 검증했다.
+- Play Mode에서 관리 화면을 직접 열어 Cassia 카드, 호버 프레임, PREV/NEXT, 정보 패널, Back, Deploy 배치를 시각 검증했다. 생성 이후 신규 런타임/컴파일 오류는 없었다.
+
+### 후속 보정
+- 카탈로그 오퍼레이터 수와 무관하게 화면용 예약 슬롯을 항상 6개 추가했다. 현재 Cassia 1명에서는 `01/07`로 표시되며, 나머지 6장은 `OperatorPanels_Managing_2` 잠금 상태다. 예약 슬롯은 실제 Catalog/Definition을 만들지 않는다.
+- 카드 원본 프레임의 장식 영역과 TMP가 겹쳐 상단 번호와 하단 이름이 잘리던 문제를 확인했다. 카드 텍스트를 프레임 안쪽 안전 영역으로 이동하고 이름 TMP 자동 축소·오버플로 설정을 적용했다.
+- Play Mode에서 Cassia 1장 + 잠금 6장, `01/07 REGISTERED`, 카드 번호·상태·UNASSIGNED 텍스트가 모두 잘리지 않는 것을 재확인했다.
+- `_0/_1/_2` 원본 스프라이트의 캔버스 비율이 달라 `preserveAspect`만 사용하면 상태별 카드 높이가 달라지는 문제를 확인했다. 배경 Image는 고정 카드 영역에 채우고, 해금 오퍼레이터의 호버·포커스 상태만 View Transform을 1.08배 확대하도록 분리했다.
+- Play Mode에서 선택 카드만 크게 강조되고 잠금 카드 6장의 높이·하단선은 동일하게 정렬되는 것을 재확인했다.
+
+## 2026-08-19 — Operation Addressables 초기화 멈춤 수정
+
+### 원인과 결정
+- `OperatorContentLoader`가 인자 없는 `Addressables.InitializeAsync()`를 호출한 뒤 완료 핸들의 `Status`를 읽고 있었다. Addressables가 완료 시 핸들을 자동 해제해 `Attempting to use an invalid operation handle` 예외가 발생했고, 성공·실패 콜백이 모두 실행되지 않아 선택 UI가 `콘텐츠 확인 중…`에 고정됐다.
+- 초기화 호출을 `InitializeAsync(false)`로 바꿔 로더가 완료 확인까지 핸들을 소유하고, 상태를 저장한 직후 명시적으로 해제하도록 했다. 관리 화면과 출격 화면이 같은 로더를 사용하므로 두 경로에 동일하게 적용된다.
+
+### 검증
+- Unity `6000.3.13f1` 재컴파일에서 `failed=false`를 확인했다.
+- TitleScene Play Mode에서 Operation → Cassia 확정을 실행해 `DefenseScene` 전환과 `OperatorLoadoutSession.SelectedDefinition.operatorId == "cassia"`를 확인했다.
+
+## 2026-08-19 — 모드 선택·CH1 스테이지 맵 UGUI 프로토타입
+
+### 결정
+- 오퍼레이터 콘텐츠 로딩이 끝난 뒤 바로 DefenseScene으로 이동하던 경로를 모드 선택으로 한 단계 분리했다. `ENDLESS MODE`는 기존 절차적 웨이브 레거시 진입을 유지하고, `STAGE MODE`는 챕터 맵 UGUI로 이동한다.
+- `StageCatalog`와 `StageCatalogEntry`는 실제 웨이브 Definition과 분리된 가벼운 메타데이터로 두었다. CH1의 1-1~1-5 노드, 제목·설명·잠금 기준만 먼저 표시해 스테이지 아트와 전투 데이터가 없어도 UI 작업을 진행할 수 있게 했다.
+- `StageSelectionUI`는 노드 선택·잠금·상세 패널까지 제공한다. 실제 StageDefinition과 유한 웨이브 공급자가 아직 없으므로 출격 버튼은 비활성화해 스테이지 선택이 현행 엔드리스로 잘못 시작되지 않게 했다.
+- TitleScene에 배치된 사용자 아트는 수정하지 않고 `ModeSelectionSystem`·`StageSelectionSystem`과 생성 프리팹만 Editor API로 추가했다.
+
+### 의도적으로 하지 않은 것
+- 이번 단계에서는 `WaveManager`와 `GameResultUI`를 수정하지 않았다. 다음 단계에서 스테이지 세션·유한 웨이브·승리 결과를 연결한다.
+- `PlayerProfile`에 스테이지 클리어 기록을 추가하지 않았다. 현재 잠금은 UI 프로토타입용 `requiredBestWave` 기준이며, 전투 연결 시 `clearedStageIds` 기반으로 교체한다.
+
+### 검증
+- Unity `6000.3.13f1` 재컴파일에서 `failed=false`를 확인했다.
+- `RCCom/Stages/Build Mode and Chapter UI` 실행 후 `Validate Mode and Chapter UI`가 통과했다.
+- Play Mode에서 `Operation → Cassia → 모드 선택 → CH1 맵` 흐름과 1-1 선택·잠금 노드를 확인했다.
+- `ENDLESS MODE` 선택 시 기존 `DefenseScene`으로 진입하는 회귀 경로를 확인했다.
+
+## 2026-08-19 — CH1 유한 웨이브 런타임 연결
+
+### 결정
+- `StageDefinition`을 `StageCatalogEntry`가 직접 참조하도록 연결했다. 이번 제출 범위에서는 로컬 에셋으로 즉시 실행하고, 이후 원격 스테이지 콘텐츠가 필요해지면 이 참조를 Addressables 키 메타데이터로 바꿀 수 있게 카탈로그 메타와 웨이브 데이터를 분리했다.
+- `StageWaveDefinition`/`StageEnemySpawn`은 기존 `EnemyDefinition`을 재사용하는 편성 데이터만 소유한다. `WaveManager`는 스테이지 모드에서 이 편성을 순서대로 큐에 넣고, 엔드리스 모드에서는 기존 예산 기반 `BuildSpawnQueue`를 그대로 사용한다.
+- 별도 `StageManager`를 만들지 않았다. 스테이지 웨이브의 실행 순서와 적 리스트는 기존 게임 흐름 매니저인 `WaveManager`가 맡고, 모드 전달만 `BattleSession`이 담당한다. 오브젝트 타입별 매니저를 늘리지 않는 아키텍처 규칙을 유지하기 위한 선택이다.
+- `GameManager`에는 기존 패배 전용 `GameOver` 이벤트를 호환용으로 남기고, 승리·패배를 함께 전달하는 `BattleEnded(BattleOutcome)`를 추가했다. 결과 화면은 통합 이벤트를 구독하므로 스테이지 승리도 기존 Mission Result 패널에서 처리된다.
+- 기존 결과 카드에 `StageOutcomeTitle` TMP를 추가하고 `GameResultUI.resultTitleText`에 연결했다. 기존 통계·Retry·Title 배치는 건드리지 않고 `MISSION CLEAR`/`MISSION FAILED`만 런타임 결과에 따라 교체한다.
+- CH1 샘플 5개는 각각 3개 유한 웨이브를 가지며, 현재 잠금은 기존 `requiredBestWave` 기준을 유지한다. 첫 스테이지 승리 후 도달 웨이브가 기록되어 다음 노드가 열리는 구조이며, 명시적 `clearedStageIds` 저장은 실제 분기형 해금 규칙이 필요해질 때 도입한다.
+
+### 검증
+- Unity `6000.3.13f1` 재컴파일에서 `failed=false`를 확인했다.
+- `RCCom/Stages/Build Mode and Chapter UI`를 다시 실행해 `Assets/Data/Stages/CH1/ch1-01~05.asset`과 카탈로그 참조를 Editor API로 생성·저장했고, UI Validator가 통과했다.
+- Play Mode에서 CH1-01을 `BattleSession`으로 선택해 `DefenseScene`에 진입한 뒤, `WaveManager.CurrentWave`가 1→3으로 진행되고 마지막에 `GameManager.Outcome == Victory`, `IsGameOver == true`가 되는 것을 확인했다. 종료 로그가 반복되던 문제는 `_stageCompleted` 가드와 전투 종료 시 `WaveManager.Update` 조기 반환으로 수정했다.
+- `BattleSession.SelectEndless()`로 별도 실행해 엔드리스 경로에서 `WaveManager.IsStageMode == false`, `DefenseScene` 진입이 유지되는 것을 확인했다.
+- `BuildStageResultOutcomeTitle` eval을 실행해 DefenseScene 결과 카드의 제목 참조가 저장된 것을 확인했다.
+
+### 모드 선택 버튼 아트 배선 보정
+- 가져온 `StageSelectionUISpriteSheet`의 Normal/Hover 조각을 모드 선택 화면의 Back·Stage·Endless 버튼에 `SpriteSwap`으로 연결했다.
+- 버튼 문구가 아트에 포함되어 있으므로 생성 당시의 TMP Label은 비활성화했다. 생성 도구와 검증기에 같은 스프라이트 이름 계약을 넣어 UI를 재생성해도 수동 배선이 사라지지 않게 했다.
+- 최초 배선은 EventSystem 기본 포커스에도 Hover 조각을 사용해 Stage가 상시 호버처럼 보였고, 글로우 여백이 더 큰 Hover 조각이 같은 Rect 안에 맞춰지며 본체가 작아 보였다. Selected는 Normal 조각으로 분리하고, 기존 `UIHoverScale`을 각 조각의 최대 크기 비율만큼 설정해 실제 포인터 호버에서만 외곽 효과가 자연스럽게 확장되도록 보정했다.
+
 ## 2026-08-21 — 지휘 포인트 검증기의 UI 표시 계약 동기화
 
 ### 맥락
@@ -828,3 +974,39 @@ Phase 0 자동화 경로를 실제로 열고, 이후 오퍼레이터별 원격 �
 
 ### 검증
 - Unity `6000.3.13f1` 재컴파일에서 `failed=false`를 확인했고, `AllyUnitFoundationVerifier` 실행으로 소환 등록 1건, 사망 후 활성 목록 0건, 제거 이벤트 1건 계약을 확인했다.
+
+## 2026-08-22 — Stage Studio와 StageDefinition 제작 원본화
+
+### 맥락
+- CH1 샘플 웨이브는 에디터 생성 코드의 고정값이어서 적 종류·웨이브 수·설명·보상을 사람이 안전하게 반복 편집할 경로가 없었다.
+- 기존 UI 생성 메뉴를 다시 실행하면 샘플 StageDefinition을 초기값으로 덮어써 이후 콘텐츠 작업이 유실될 위험이 있었다.
+
+### 결정
+- `StageDefinition` SO를 스테이지 제작 원본으로 확정했다. 챕터·표시명·부제·추천 레벨·순서·해금 조건·설명 배경·보상 매니페스트·웨이브 편성을 한 에셋이 소유한다.
+- `StageStudioWindow`를 `RCCom/Stages/Open Stage Studio`에 추가하고 Identity/Waves/Rewards/Publish 탭에서 위 데이터를 편집하도록 했다. 스테이지는 Sprite와 EnemyDefinition 참조가 중심이므로 Operator Studio의 JSON 레시피를 복제하지 않고 SO를 직접 편집한다.
+- `StageCatalogBuilder`가 Definition 전체를 정렬해 선택 화면용 `StageCatalog`를 생성한다. 카탈로그는 생성물이며 직접 편집하지 않는다.
+- `StageAssetValidator`가 ID 중복, 웨이브·적 누락, 잘못된 수량·시간·체력 배율, 보상 ID·수량을 오류로 검사하고 설명 배경·보상 미작성은 경고로 남긴다.
+- 선택 화면의 Description 영역에 스테이지별 배경 Sprite와 추천 레벨을 표시하도록 연결했다.
+- 기존 UI 생성 도구는 StageDefinition이 이미 있으면 즉시 재사용해 Studio에서 편집한 원본을 덮어쓰지 않는다.
+
+### 의도적으로 하지 않은 것
+- 보상 지급 로직은 추가하지 않았다. 현재 PlayerProfile에는 계정 재화·인벤토리 계약이 없으므로 임의 저장 구조를 만들지 않고 `rewardId + 표시명 + 아이콘 + 수량` 매니페스트까지만 정의했다.
+- 스테이지별 C# 클래스나 별도 StageManager를 만들지 않았다. 실행은 기존 WaveManager와 StageDefinition 데이터 조립을 그대로 사용한다.
+
+### 검증
+- 기존 CH1 5개를 새 스키마로 마이그레이션했으며 웨이브 편성과 카탈로그 참조가 유지됐다.
+- Stage Validator 결과 오류 0개를 확인했다. 설명 배경·보상이 아직 비어 있는 5개 스테이지에는 의도된 경고 10개가 남는다.
+
+## 2026-08-22 — 스테이지 노드 아트 배선
+
+- `StageSelectionsSmallPanel`의 분리 스프라이트를 공용 `StageNode` 프리팹에 연결했다. `_0`은 해금된 일반 상태, `_1`은 현재 선택 상태, `_2`는 잠금 상태로 사용한다.
+- 선택 스프라이트는 발광 외곽 때문에 원본 크기가 더 크다. 가로 레이아웃이 선택할 때마다 흔들리지 않도록 버튼의 레이아웃 크기는 고정하고, 자식 `PanelVisual`을 교체한 뒤 선택 노드 전체를 1.15배 확대해 외곽과 TMP가 함께 칸 밖으로 확장되게 했다.
+- 체크 배지와 선택 화살표는 각 카드 본체 스프라이트에 이미 포함되어 있으므로 `_3`·`_4`를 중복 배치하지 않았다. 스테이지 번호·부제만 TMP로 유지해 동일 프리팹을 모든 스테이지 데이터에 재사용한다.
+- 화면을 열 때 첫 해금 노드가 아니라 가장 뒤의 해금 노드를 기본 선택한다. 선형 CH1에서 이전 노드는 체크 카드, 다음 진행 지점은 `CURRENT` 카드로 보이게 하려는 결정이다.
+
+## 2026-08-22 — 5개 초과 스테이지 가로 탐색
+
+- 스테이지 노드 영역을 가로 `ScrollRect`와 5개 표시 viewport로 바꾸고 좌·우 버튼을 추가했다. Stage Studio에서 Definition을 추가하고 카탈로그를 재생성하면 여섯 번째 이후 노드도 별도 화면 코드 없이 같은 Content에 붙는다.
+- 좌·우 버튼은 노드 한 칸 단위로 이동하며, 노드가 5개 이하면 숨긴다. 현재 선택 노드가 여섯 번째 이후라면 화면을 열 때 해당 노드가 보이는 위치로 자동 이동한다.
+- 스크롤 검증용으로 `ch1-06`과 `ch1-07` StageDefinition을 생성 대상으로 추가했다. 기존 1-1~1-5와 마찬가지로 최초 생성 뒤에는 Stage Studio 편집 내용을 자동 빌더가 덮어쓰지 않는다.
+- TitleScene UI 재생성 및 Inspector 배선 검증을 통과했다.

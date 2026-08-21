@@ -11,6 +11,7 @@ namespace RCCom.UI
         public enum MenuAction
         {
             NewGame,
+            ManageOperators,
             Preference,
             ReturnToTitle
         }
@@ -19,6 +20,7 @@ namespace RCCom.UI
         [SerializeField] private TitleSceneController titleSceneController;
         [SerializeField] private TitleConfigurationController configurationController;
         [SerializeField] private OperatorSelectionUI operatorSelectionUI;
+        [SerializeField] private OperatorManagementUI operatorManagementUI;
         [SerializeField] private string defenseSceneName = "DefenseScene";
         [SerializeField] private float hoverScale = 1.12f;
         [SerializeField] private float scaleSpeed = 12f;
@@ -116,6 +118,12 @@ namespace RCCom.UI
                     break;
                 case MenuAction.Preference:
                     configurationController?.Open();
+                    break;
+                case MenuAction.ManageOperators:
+                    if (operatorManagementUI != null)
+                    {
+                        operatorManagementUI.Open();
+                    }
                     break;
                 case MenuAction.ReturnToTitle:
                     titleSceneController?.ReturnToTitle();

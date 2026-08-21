@@ -10,7 +10,7 @@ using UnityEngine.UI;
 namespace RCCom.UI
 {
     /// <summary>
-    /// "MISSION RESULT" 결과 화면. GameManager.GameOver(플레이어 사망 또는 거점 파괴)를 구독해
+    /// "MISSION RESULT" 결과 화면. GameManager.BattleEnded를 구독해 승리·패배에 관계없이
     /// 도달 웨이브/처치 수/획득 골드/생존 시간을 채워 표시한다. Retry는 현재 씬을 다시 로드,
     /// Title은 지정한 씬으로 이동 — 둘 다 Time.timeScale을 1로 되돌린 뒤 씬을 전환한다
     /// (GameManager.HandleGameOver가 0으로 낮춰둔 채로 다음 씬에 넘어가면 그 씬도 멈춰버림).
@@ -29,6 +29,9 @@ namespace RCCom.UI
         [SerializeField] private TextMeshProUGUI defeatedEnemiesText;
         [SerializeField] private TextMeshProUGUI earnedGoldText;
         [SerializeField] private TextMeshProUGUI survivalTimeText;
+        [SerializeField] private TextMeshProUGUI resultTitleText;
+        [SerializeField] private string victoryTitle = "MISSION CLEAR";
+        [SerializeField] private string defeatTitle = "MISSION FAILED";
 
         [SerializeField] private Button retryButton;
         [SerializeField] private Button titleButton;
@@ -65,21 +68,47 @@ namespace RCCom.UI
 
         private void OnEnable()
         {
-            gameManager.GameOver += HandleGameOver;
+            gameManager.BattleEnded += HandleBattleEnded;
         }
 
         private void OnDisable()
         {
-            gameManager.GameOver -= HandleGameOver;
+            gameManager.BattleEnded -= HandleBattleEnded;
         }
 
-        private void HandleGameOver()
+        private void HandleBattleEnded(BattleOutcome outcome)
         {
             PlayerProfile profile = _profileStorage.Load();
+            bool shouldSaveProfile = false;
             if (profile.TryRecordBestWave(waveManager.CurrentWave))
             {
                 // 결과 화면이 세션 통계를 확정하는 체크포인트이므로 최고 기록도 여기서 한 번만 저장한다.
                 // 매 웨이브마다 PlayerPrefs.Save를 호출하지 않아 WebGL 저장 비용과 중간 상태 기록을 피한다.
+                shouldSaveProfile = true;
+            }
+
+            string participatingOperatorId = string.Empty;
+            if (OperatorLoadoutSession.SelectedDefinition != null)
+            {
+                participatingOperatorId = OperatorLoadoutSession.SelectedDefinition.operatorId;
+            }
+
+            if (string.IsNullOrWhiteSpace(participatingOperatorId))
+            {
+                participatingOperatorId = profile.selectedOperatorId;
+            }
+
+            if (!string.IsNullOrWhiteSpace(participatingOperatorId))
+            {
+                // 호감도는 전투 종료 즉시 올리지 않고, 귀환 후 해당 오퍼레이터를
+                // 클릭하는 순간 정산한다. 전투가 다시 시작돼도 보상이 소실되지 않게
+                // PlayerProfile에 예약 상태를 함께 저장한다.
+                profile.QueueBattleReturn(participatingOperatorId);
+                shouldSaveProfile = true;
+            }
+
+            if (shouldSaveProfile)
+            {
                 _profileStorage.Save(profile);
             }
 
@@ -87,6 +116,10 @@ namespace RCCom.UI
             defeatedEnemiesText.text = $"{gameManager.EnemiesDefeated}";
             earnedGoldText.text = $"{gameManager.TotalGoldEarned}";
             survivalTimeText.text = FormatTime(gameManager.SurvivalTime);
+            if (resultTitleText != null)
+            {
+                resultTitleText.text = outcome == BattleOutcome.Victory ? victoryTitle : defeatTitle;
+            }
 
             Show();
         }

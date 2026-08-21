@@ -6,6 +6,7 @@ using RCCom.Definitions.Operator;
 using RCCom.Definitions.Tower;
 using RCCom.Definitions.Unit;
 using RCCom.Effects.Card.Concrete;
+using RCCom.UI;
 using UnityEditor;
 using UnityEditor.AddressableAssets;
 using UnityEditor.AddressableAssets.Settings;
@@ -119,6 +120,11 @@ namespace RCCom.EditorTools
                     definition.requiredBestWave != catalogEntry.requiredBestWave)
                 {
                     errors.Add($"카탈로그 메타데이터가 Definition과 일치하지 않습니다: {definitionPath}");
+                }
+
+                if (catalogEntry.remoteContent && catalogEntry.previewPortrait != null)
+                {
+                    errors.Add($"원격 오퍼레이터의 선택 초상화가 로컬 카탈로그에 참조됩니다: {catalogEntry.operatorId}");
                 }
 
                 AddressableAssetEntry addressableEntry = settings.FindAssetEntry(AssetDatabase.AssetPathToGUID(definitionPath));
@@ -255,6 +261,10 @@ namespace RCCom.EditorTools
                 {
                     errors.Add($"DialogueSet 또는 기본 초상화가 연결되지 않았습니다: {path}");
                 }
+                else
+                {
+                    ValidateDialogueSet(definition.dialogueSet, errors, warnings);
+                }
 
                 if (definition.requiredBestWave < 0)
                 {
@@ -370,6 +380,72 @@ namespace RCCom.EditorTools
                             errors.Add($"아군 유닛 효과 목록에 null 항목이 있습니다: {definitionPath}");
                             break;
                         }
+                    }
+                }
+            }
+        }
+
+        private static void ValidateDialogueSet(
+            OperatorDialogueSet dialogueSet,
+            List<string> errors,
+            List<string> warnings)
+        {
+            string path = AssetDatabase.GetAssetPath(dialogueSet);
+            if (dialogueSet.lobbyIdleSprite == null)
+            {
+                warnings.Add($"로비 기본 전신 스프라이트가 비어 있습니다: {path}");
+            }
+
+            string[] names =
+            {
+                "lobbyInteraction", "lobbyReturnTogether", "lobbyReturn",
+                "lobbyTouchUnfamiliar", "lobbyTouchFavorable", "lobbyTouchJoy",
+                "lobbyTouchLove", "lobbyTouchEx", "gameStart", "skillUsed",
+                "baseAttacked", "playerHit", "playerHitCritical", "insufficientGold",
+                "slotUnavailable", "playerDied", "baseDestroyed",
+            };
+            OperatorLineSet[] lineSets =
+            {
+                dialogueSet.lobbyInteraction, dialogueSet.lobbyReturnTogether, dialogueSet.lobbyReturn,
+                dialogueSet.lobbyTouchUnfamiliar, dialogueSet.lobbyTouchFavorable, dialogueSet.lobbyTouchJoy,
+                dialogueSet.lobbyTouchLove, dialogueSet.lobbyTouchEx, dialogueSet.gameStart, dialogueSet.skillUsed,
+                dialogueSet.baseAttacked, dialogueSet.playerHit, dialogueSet.playerHitCritical,
+                dialogueSet.insufficientGold, dialogueSet.slotUnavailable, dialogueSet.playerDied,
+                dialogueSet.baseDestroyed,
+            };
+
+            for (int slotIndex = 0; slotIndex < lineSets.Length; slotIndex++)
+            {
+                OperatorLineSet lineSet = lineSets[slotIndex];
+                if (lineSet == null || !lineSet.HasContent)
+                {
+                    warnings.Add($"대사 슬롯이 비어 있습니다: {names[slotIndex]} ({path})");
+                    continue;
+                }
+
+                if (lineSet.entries == null || lineSet.entries.Count == 0)
+                {
+                    warnings.Add($"레거시 배열 대사를 사용 중입니다. Operator Studio에서 마이그레이션하세요: {names[slotIndex]} ({path})");
+                    continue;
+                }
+
+                bool isLobbySlot = slotIndex <= 7;
+                if (!isLobbySlot && lineSet.ResolveCombatPortrait() == null)
+                {
+                    warnings.Add($"전투 상황 포트레잇이 비어 있습니다: {names[slotIndex]} ({path})");
+                }
+
+                for (int i = 0; i < lineSet.entries.Count; i++)
+                {
+                    OperatorDialogueEntry entry = lineSet.entries[i];
+                    if (entry == null || string.IsNullOrWhiteSpace(entry.text))
+                    {
+                        errors.Add($"비어 있는 대사 엔트리: {names[slotIndex]}[{i}] ({path})");
+                    }
+                    else if (isLobbySlot && entry.lobbySprite == null &&
+                             lineSet.defaultLobbySprite == null && dialogueSet.lobbyIdleSprite == null)
+                    {
+                        warnings.Add($"로비 대사에 적용할 전신 스프라이트가 없습니다: {names[slotIndex]}[{i}] ({path})");
                     }
                 }
             }

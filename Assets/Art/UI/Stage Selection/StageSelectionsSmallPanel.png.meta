@@ -1,0 +1,368 @@
+fileFormatVersion: 2
+guid: 323f124c01b57ab49bd95d9cf7dc7b47
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 6636329477069120905
+    second: StageSelectionsSmallPanel_0
+  - first:
+      213: -2077195388505787455
+    second: StageSelectionsSmallPanel_1
+  - first:
+      213: -1812282213546084697
+    second: StageSelectionsSmallPanel_2
+  - first:
+      213: 1869054292435986054
+    second: StageSelectionsSmallPanel_3
+  - first:
+      213: -218474831478784464
+    second: StageSelectionsSmallPanel_4
+  - first:
+      213: 1499829676759035463
+    second: StageSelectionsSmallPanel_5
+  - first:
+      213: 8467054049754610454
+    second: StageSelectionsSmallPanel_6
+  - first:
+      213: -4327925228358488766
+    second: StageSelectionsSmallPanel_7
+  - first:
+      213: 5275165960825452370
+    second: StageSelectionsSmallPanel_8
+  - first:
+      213: 5471707540974292591
+    second: StageSelectionsSmallPanel_9
+  - first:
+      213: -5090835054672179578
+    second: StageSelectionsSmallPanel_10
+  - first:
+      213: -2260248034736330140
+    second: StageSelectionsSmallPanel_11
+  - first:
+      213: -2781819370244796841
+    second: StageSelectionsSmallPanel_12
+  - first:
+      213: -836611486517630929
+    second: StageSelectionsSmallPanel_13
+  - first:
+      213: -7025286708761032429
+    second: StageSelectionsSmallPanel_14
+  - first:
+      213: 6370571422024036452
+    second: StageSelectionsSmallPanel_15
+  - first:
+      213: 2292348083180551727
+    second: StageSelectionsSmallPanel_16
+  - first:
+      213: -2279061418281396069
+    second: StageSelectionsSmallPanel_17
+  - first:
+      213: -5627743822580185997
+    second: StageSelectionsSmallPanel_18
+  - first:
+      213: -2421515108657584198
+    second: StageSelectionsSmallPanel_19
+  - first:
+      213: -5021471983511953786
+    second: StageSelectionsSmallPanel_20
+  - first:
+      213: -8575275037235906780
+    second: StageSelectionsSmallPanel_21
+  - first:
+      213: -754349189677468778
+    second: StageSelectionsSmallPanel_22
+  - first:
+      213: 3114917923020413941
+    second: StageSelectionsSmallPanel_23
+  - first:
+      213: 2814868312061538954
+    second: StageSelectionsSmallPanel_24
+  - first:
+      213: 2475431329271891569
+    second: StageSelectionsSmallPanel_25
+  - first:
+      213: -307330353822856864
+    second: StageSelectionsSmallPanel_26
+  - first:
+      213: 185590673576938548
+    second: StageSelectionsSmallPanel_27
+  - first:
+      213: -3027534221726329745
+    second: StageSelectionsSmallPanel_28
+  - first:
+      213: -7344843576023866296
+    second: StageSelectionsSmallPanel_29
+  - first:
+      213: 3720335271498459541
+    second: StageSelectionsSmallPanel_30
+  - first:
+      213: -2994905031518751676
+    second: StageSelectionsSmallPanel_31
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: StageSelectionsSmallPanel_0
+      rect:
+        serializedVersion: 2
+        x: 16
+        y: 318
+        width: 435
+        height: 585
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 985a825af7af81c50800000000000000
+      internalID: 6636329477069120905
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: StageSelectionsSmallPanel_1
+      rect:
+        serializedVersion: 2
+        x: 463
+        y: 294
+        width: 529
+        height: 695
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1c37803bcc15c23e0800000000000000
+      internalID: -2077195388505787455
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: StageSelectionsSmallPanel_2
+      rect:
+        serializedVersion: 2
+        x: 1005
+        y: 303
+        width: 414
+        height: 642
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7a6b3dcbdea79d6e0800000000000000
+      internalID: -1812282213546084697
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: StageSelectionsSmallPanel_3
+      rect:
+        serializedVersion: 2
+        x: 420
+        y: 70
+        width: 266
+        height: 220
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 686e09ee9f630f910800000000000000
+      internalID: 1869054292435986054
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: StageSelectionsSmallPanel_4
+      rect:
+        serializedVersion: 2
+        x: 734
+        y: 48
+        width: 277
+        height: 232
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 03ef75d5c42d7fcf0800000000000000
+      internalID: -218474831478784464
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: f913b938089afc1479ff374c48ee3b55
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      StageSelectionsSmallPanel_0: 6636329477069120905
+      StageSelectionsSmallPanel_1: -2077195388505787455
+      StageSelectionsSmallPanel_10: -5090835054672179578
+      StageSelectionsSmallPanel_11: -2260248034736330140
+      StageSelectionsSmallPanel_12: -2781819370244796841
+      StageSelectionsSmallPanel_13: -836611486517630929
+      StageSelectionsSmallPanel_14: -7025286708761032429
+      StageSelectionsSmallPanel_15: 6370571422024036452
+      StageSelectionsSmallPanel_16: 2292348083180551727
+      StageSelectionsSmallPanel_17: -2279061418281396069
+      StageSelectionsSmallPanel_18: -5627743822580185997
+      StageSelectionsSmallPanel_19: -2421515108657584198
+      StageSelectionsSmallPanel_2: -1812282213546084697
+      StageSelectionsSmallPanel_20: -5021471983511953786
+      StageSelectionsSmallPanel_21: -8575275037235906780
+      StageSelectionsSmallPanel_22: -754349189677468778
+      StageSelectionsSmallPanel_23: 3114917923020413941
+      StageSelectionsSmallPanel_24: 2814868312061538954
+      StageSelectionsSmallPanel_25: 2475431329271891569
+      StageSelectionsSmallPanel_26: -307330353822856864
+      StageSelectionsSmallPanel_27: 185590673576938548
+      StageSelectionsSmallPanel_28: -3027534221726329745
+      StageSelectionsSmallPanel_29: -7344843576023866296
+      StageSelectionsSmallPanel_3: 1869054292435986054
+      StageSelectionsSmallPanel_30: 3720335271498459541
+      StageSelectionsSmallPanel_31: -2994905031518751676
+      StageSelectionsSmallPanel_4: -218474831478784464
+      StageSelectionsSmallPanel_5: 1499829676759035463
+      StageSelectionsSmallPanel_6: 8467054049754610454
+      StageSelectionsSmallPanel_7: -4327925228358488766
+      StageSelectionsSmallPanel_8: 5275165960825452370
+      StageSelectionsSmallPanel_9: 5471707540974292591
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

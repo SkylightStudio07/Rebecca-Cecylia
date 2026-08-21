@@ -1,0 +1,129 @@
+using System;
+using RCCom.Definitions.Operator;
+using TMPro;
+using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
+
+namespace RCCom.UI
+{
+    /// <summary>
+    /// 오퍼레이터 관리 화면의 카드 한 장을 표현한다. 잠금·활성·포커스 상태만 받아 그리며
+    /// 프로필 저장과 Addressables 로드는 상위 화면에 남겨 View를 데이터와 분리한다.
+    /// </summary>
+    public sealed class OperatorManagementCardView : MonoBehaviour,
+        IPointerEnterHandler, IPointerExitHandler, ISelectHandler, IDeselectHandler
+    {
+        [SerializeField] private Button button;
+        [SerializeField] private Image stateImage;
+        [SerializeField] private Image portraitImage;
+        [SerializeField] private Sprite unlockedSprite;
+        [SerializeField] private Sprite hoverSprite;
+        [SerializeField] private Sprite lockedSprite;
+        [SerializeField] private TextMeshProUGUI indexText;
+        [SerializeField] private TextMeshProUGUI nameText;
+        [SerializeField] private TextMeshProUGUI stateText;
+        [SerializeField] private TextMeshProUGUI affinityText;
+        [SerializeField] private GameObject activeBadge;
+        [SerializeField] private float highlightedScale = 1.08f;
+
+        private bool _unlocked;
+        private bool _browsing;
+        private bool _pointerInside;
+        private bool _uiSelected;
+        private Action _onClick;
+
+        public Button Button => button;
+
+        public void Setup(OperatorCatalogEntry entry, int displayIndex, bool unlocked, bool active,
+            bool browsing, int affinity, Action onClick)
+        {
+            _unlocked = unlocked;
+            _browsing = browsing;
+            _onClick = onClick;
+
+            if (indexText != null) { indexText.text = (displayIndex + 1).ToString("00"); }
+            if (nameText != null) { nameText.text = entry != null ? entry.displayName : "UNASSIGNED"; }
+            if (stateText != null)
+            {
+                stateText.text = unlocked ? (active ? "ACTIVE" : "AVAILABLE") : "LOCKED";
+                stateText.color = unlocked
+                    ? new Color(0.12f, 0.7f, 1f, 1f)
+                    : new Color(0.58f, 0.61f, 0.65f, 1f);
+            }
+            if (affinityText != null) { affinityText.text = unlocked ? $"AFFINITY {affinity:000}" : string.Empty; }
+            if (activeBadge != null) { activeBadge.SetActive(active); }
+
+            if (portraitImage != null)
+            {
+                portraitImage.sprite = entry != null ? entry.previewPortrait : null;
+                portraitImage.enabled = portraitImage.sprite != null;
+            }
+
+            if (button != null)
+            {
+                // 잠긴 카드도 해금 조건을 살펴볼 수 있어야 하므로 클릭 자체는 막지 않는다.
+                button.interactable = true;
+                button.onClick.RemoveAllListeners();
+                button.onClick.AddListener(InvokeClick);
+            }
+
+            ApplyVisual();
+        }
+
+        public void SetBrowsing(bool browsing)
+        {
+            _browsing = browsing;
+            ApplyVisual();
+        }
+
+        public void SetActive(bool active)
+        {
+            if (activeBadge != null) { activeBadge.SetActive(active); }
+            if (stateText != null && _unlocked) { stateText.text = active ? "ACTIVE" : "AVAILABLE"; }
+        }
+
+        public void OnPointerEnter(PointerEventData eventData)
+        {
+            _pointerInside = true;
+            ApplyVisual();
+        }
+
+        public void OnPointerExit(PointerEventData eventData)
+        {
+            _pointerInside = false;
+            ApplyVisual();
+        }
+
+        public void OnSelect(BaseEventData eventData)
+        {
+            _uiSelected = true;
+            ApplyVisual();
+        }
+
+        public void OnDeselect(BaseEventData eventData)
+        {
+            _uiSelected = false;
+            ApplyVisual();
+        }
+
+        private void InvokeClick()
+        {
+            _onClick?.Invoke();
+        }
+
+        private void ApplyVisual()
+        {
+            if (stateImage == null)
+            {
+                return;
+            }
+
+            bool highlighted = _unlocked && (_browsing || _pointerInside || _uiSelected);
+            stateImage.sprite = _unlocked ? (highlighted ? hoverSprite : unlockedSprite) : lockedSprite;
+            // 원본 세 상태의 캔버스 비율이 달라 배경 자체는 고정 영역에 채우고, 강조 크기는 Transform으로 통일한다.
+            stateImage.preserveAspect = false;
+            transform.localScale = highlighted ? Vector3.one * highlightedScale : Vector3.one;
+        }
+    }
+}

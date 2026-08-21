@@ -1,3 +1,5 @@
+using RCCom.Core;
+using RCCom.Data;
 using RCCom.Managers;
 using RCCom.Runtime;
 using TMPro;
@@ -15,18 +17,37 @@ namespace RCCom.UI
         [SerializeField] private OperatorDialogueSet dialogueSet;
         [SerializeField] private Button operatorButton;
         [SerializeField] private Button dialogueButton;
+        [SerializeField] private Image lobbyOperatorImage;
         [SerializeField] private TextMeshProUGUI dialogueText;
         [SerializeField] private CanvasGroup dialogueGroup;
+        [SerializeField] private string fallbackOperatorId = "cassia";
         [SerializeField] private float displayDuration = 4f;
         [SerializeField] private float fadeDuration = 0.35f;
 
         private float _remainingDisplay;
         private float _remainingFade;
         private bool _isFading;
+        private IProfileStorage _profileStorage;
+        private Sprite _sceneLobbyIdleSprite;
+        private OperatorDialogueSet _sceneDialogueSet;
 
         private void Awake()
         {
+            _sceneDialogueSet = dialogueSet;
             dialogueSet = OperatorLoadoutSession.ResolveDialogueSet(dialogueSet);
+            _profileStorage = new PlayerPrefsProfileStorage();
+            if (lobbyOperatorImage != null)
+            {
+                _sceneLobbyIdleSprite = lobbyOperatorImage.sprite;
+            }
+            Hide();
+        }
+
+        public void RefreshOperator()
+        {
+            // 관리 화면에서 활성 오퍼레이터를 바꿔도 TitleScene은 재로드되지 않으므로
+            // Awake에만 의존하지 않고 현재 세션의 대사·로비 전신을 즉시 다시 해석한다.
+            dialogueSet = OperatorLoadoutSession.ResolveDialogueSet(_sceneDialogueSet);
             Hide();
         }
 
@@ -88,7 +109,19 @@ namespace RCCom.UI
 
         public void ShowInteraction()
         {
-            OperatorLineSet lineSet = ResolveLobbyLineSet();
+            PlayerProfile profile = _profileStorage.Load();
+            string operatorId = ResolveOperatorId(profile);
+            bool claimedReturn = profile.TryClaimBattleReturn(operatorId, out _, out bool participated);
+            if (claimedReturn)
+            {
+                // 결과 화면에서 예약한 보상은 이 클릭에서만 소비한다. 로비 재진입이나
+                // WebGL 새로고침 뒤에도 중복 수령되지 않도록 정산 직후 저장한다.
+                _profileStorage.Save(profile);
+            }
+
+            OperatorLineSet lineSet = claimedReturn
+                ? ResolveReturnLineSet(participated, profile, operatorId)
+                : ResolveTouchLineSet(profile, operatorId);
             if (!HasLines(lineSet) || dialogueText == null || dialogueGroup == null)
             {
                 return;
@@ -99,7 +132,18 @@ namespace RCCom.UI
                 SoundManager.Instance.PlayMainMenuClick();
             }
 
-            dialogueText.text = lineSet.lines[Random.Range(0, lineSet.lines.Length)];
+            if (!lineSet.TryGetRandomLobby(out string text, out Sprite lobbySprite))
+            {
+                return;
+            }
+
+            dialogueText.text = text;
+            if (lobbyOperatorImage != null)
+            {
+                // 로비 터치 표정은 전투 포트레잇과 별개다. 문장별 전신 스프라이트가
+                // 비어 있으면 오퍼레이터의 로비 기본 전신으로 되돌린다.
+                lobbyOperatorImage.sprite = lobbySprite != null ? lobbySprite : ResolveLobbyIdleSprite();
+            }
             dialogueGroup.alpha = 1f;
             dialogueGroup.interactable = true;
             dialogueGroup.blocksRaycasts = true;
@@ -120,6 +164,11 @@ namespace RCCom.UI
             _remainingDisplay = 0f;
             _remainingFade = 0f;
             _isFading = false;
+
+            if (lobbyOperatorImage != null)
+            {
+                lobbyOperatorImage.sprite = ResolveLobbyIdleSprite();
+            }
         }
 
         private void TickFade()
@@ -133,22 +182,96 @@ namespace RCCom.UI
             }
         }
 
-        private OperatorLineSet ResolveLobbyLineSet()
+        private OperatorLineSet ResolveReturnLineSet(bool participated, PlayerProfile profile,
+            string operatorId)
         {
-            if (dialogueSet == null)
+            OperatorLineSet preferred = participated
+                ? dialogueSet.lobbyReturnTogether
+                : dialogueSet.lobbyReturn;
+            return HasLines(preferred) ? preferred : ResolveTouchLineSet(profile, operatorId);
+        }
+
+        private OperatorLineSet ResolveTouchLineSet(PlayerProfile profile, string operatorId)
+        {
+            if (dialogueSet == null || profile == null)
             {
                 return null;
             }
 
-            // 기존 에셋을 즉시 사용할 수 있게 하고, 최종 로비 대사는 데이터만 채워 교체한다.
-            return HasLines(dialogueSet.lobbyInteraction)
-                ? dialogueSet.lobbyInteraction
-                : dialogueSet.gameStart;
+            int affinity = profile.GetOperatorAffinity(operatorId);
+            if (affinity >= PlayerProfile.MaxOperatorAffinity && HasLines(dialogueSet.lobbyTouchEx))
+            {
+                return dialogueSet.lobbyTouchEx;
+            }
+
+            OperatorAffinityTier tier = profile.GetOperatorAffinityTier(operatorId);
+            OperatorLineSet[] fallbackOrder;
+            switch (tier)
+            {
+                case OperatorAffinityTier.Love:
+                    fallbackOrder = new[]
+                    {
+                        dialogueSet.lobbyTouchLove, dialogueSet.lobbyTouchJoy,
+                        dialogueSet.lobbyTouchFavorable, dialogueSet.lobbyTouchUnfamiliar,
+                    };
+                    break;
+                case OperatorAffinityTier.Joy:
+                    fallbackOrder = new[]
+                    {
+                        dialogueSet.lobbyTouchJoy, dialogueSet.lobbyTouchFavorable,
+                        dialogueSet.lobbyTouchUnfamiliar,
+                    };
+                    break;
+                case OperatorAffinityTier.Favorable:
+                    fallbackOrder = new[]
+                    {
+                        dialogueSet.lobbyTouchFavorable, dialogueSet.lobbyTouchUnfamiliar,
+                    };
+                    break;
+                default:
+                    fallbackOrder = new[] { dialogueSet.lobbyTouchUnfamiliar };
+                    break;
+            }
+
+            for (int i = 0; i < fallbackOrder.Length; i++)
+            {
+                if (HasLines(fallbackOrder[i]))
+                {
+                    return fallbackOrder[i];
+                }
+            }
+
+            // 기존 Cassia 에셋이 새 호감도 슬롯을 채우기 전에도 로비가 동작해야 하므로
+            // 기존 lobbyInteraction → gameStart 순서의 폴백을 마지막에 유지한다.
+            return HasLines(dialogueSet.lobbyInteraction) ? dialogueSet.lobbyInteraction : dialogueSet.gameStart;
+        }
+
+        private string ResolveOperatorId(PlayerProfile profile)
+        {
+            if (OperatorLoadoutSession.SelectedDefinition != null &&
+                !string.IsNullOrWhiteSpace(OperatorLoadoutSession.SelectedDefinition.operatorId))
+            {
+                return OperatorLoadoutSession.SelectedDefinition.operatorId;
+            }
+
+            if (profile != null && !string.IsNullOrWhiteSpace(profile.selectedOperatorId))
+            {
+                return profile.selectedOperatorId;
+            }
+
+            return fallbackOperatorId;
         }
 
         private static bool HasLines(OperatorLineSet lineSet)
         {
-            return lineSet != null && lineSet.lines != null && lineSet.lines.Length > 0;
+            return lineSet != null && lineSet.HasContent;
+        }
+
+        private Sprite ResolveLobbyIdleSprite()
+        {
+            return dialogueSet != null && dialogueSet.lobbyIdleSprite != null
+                ? dialogueSet.lobbyIdleSprite
+                : _sceneLobbyIdleSprite;
         }
     }
 }

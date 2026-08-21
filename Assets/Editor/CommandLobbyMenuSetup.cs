@@ -49,29 +49,33 @@ namespace RCCom.EditorTools
                 UnityEngine.Object.FindFirstObjectByType<TitleConfigurationController>(FindObjectsInactive.Include);
             OperatorSelectionUI selectionUI = UnityEngine.Object.FindFirstObjectByType<OperatorSelectionUI>(
                 FindObjectsInactive.Include);
+            OperatorManagementUI managementUI = UnityEngine.Object.FindFirstObjectByType<OperatorManagementUI>(
+                FindObjectsInactive.Include);
 
-            if (titleController == null || configurationController == null || selectionUI == null)
+            if (titleController == null || configurationController == null || selectionUI == null || managementUI == null)
             {
                 throw new InvalidOperationException("기존 타이틀·설정·오퍼레이터 선택 Controller를 찾지 못했습니다.");
             }
 
             CreatePanel(menuRoot, font, "LiveContent", "LIVE CONTENT", "REMOTE CONTENT ACCESS",
                 new Vector2(430f, 300f), new Vector2(430f, 110f), -1.5f, 34f, 13f, 62f,
-                null, titleController, configurationController, selectionUI);
+                null, titleController, configurationController, selectionUI, managementUI);
             CreatePanel(menuRoot, font, "Operators", "OPERATORS", "MANAGE YOUR TEAM",
                 new Vector2(420f, 165f), new Vector2(560f, 140f), -2f, 43f, 15f, 78f,
-                null, titleController, configurationController, selectionUI);
+                TitleMenuTextButton.MenuAction.ManageOperators, titleController, configurationController, selectionUI,
+                managementUI);
             CreatePanel(menuRoot, font, "Operation", "OPERATION", "DEPLOY TO BATTLEFIELD",
                 new Vector2(315f, -15f), new Vector2(760f, 220f), -4.5f, 58f, 18f, 135f,
-                TitleMenuTextButton.MenuAction.NewGame, titleController, configurationController, selectionUI);
+                TitleMenuTextButton.MenuAction.NewGame, titleController, configurationController, selectionUI, managementUI);
             CreatePanel(menuRoot, font, "Records", "RECORDS", "BATTLE DATA ARCHIVE",
                 new Vector2(365f, -220f), new Vector2(500f, 125f), -3f, 38f, 14f, 76f,
-                null, titleController, configurationController, selectionUI);
+                null, titleController, configurationController, selectionUI, managementUI);
             CreatePanel(menuRoot, font, "Configuration", "CONFIGURATION", "SYSTEM SETTINGS",
                 new Vector2(430f, -350f), new Vector2(560f, 110f), -2.5f, 35f, 13f, 84f,
-                TitleMenuTextButton.MenuAction.Preference, titleController, configurationController, selectionUI);
+                TitleMenuTextButton.MenuAction.Preference, titleController, configurationController, selectionUI,
+                managementUI);
 
-            RewireControllers(lobby.gameObject, titleController, configurationController, selectionUI);
+            RewireControllers(lobby.gameObject, titleController, configurationController, selectionUI, managementUI);
 
             // 편집 중에는 배치를 바로 확인하고, 플레이 시에는 TitleSceneController.Awake가 다시 숨긴다.
             lobby.gameObject.SetActive(true);
@@ -230,7 +234,8 @@ namespace RCCom.EditorTools
         private static void CreatePanel(Transform parent, TMP_FontAsset font, string name, string title,
             string subtitle, Vector2 position, Vector2 size, float rotation, float titleSize, float subtitleSize,
             float leftPadding, TitleMenuTextButton.MenuAction? action, TitleSceneController titleController,
-            TitleConfigurationController configurationController, OperatorSelectionUI selectionUI)
+            TitleConfigurationController configurationController, OperatorSelectionUI selectionUI,
+            OperatorManagementUI managementUI)
         {
             Sprite normal = LoadSprite(name, "Normal");
             Sprite hover = LoadSprite(name, "Hover");
@@ -283,6 +288,7 @@ namespace RCCom.EditorTools
             var actionSerialized = new SerializedObject(actionButton);
             actionSerialized.FindProperty("configurationController").objectReferenceValue = configurationController;
             actionSerialized.FindProperty("operatorSelectionUI").objectReferenceValue = selectionUI;
+            actionSerialized.FindProperty("operatorManagementUI").objectReferenceValue = managementUI;
             actionSerialized.FindProperty("hoverScale").floatValue = 1.025f;
             actionSerialized.FindProperty("shakeAmount").floatValue = 0f;
             actionSerialized.ApplyModifiedPropertiesWithoutUndo();
@@ -324,7 +330,8 @@ namespace RCCom.EditorTools
         }
 
         private static void RewireControllers(GameObject lobby, TitleSceneController titleController,
-            TitleConfigurationController configurationController, OperatorSelectionUI selectionUI)
+            TitleConfigurationController configurationController, OperatorSelectionUI selectionUI,
+            OperatorManagementUI managementUI)
         {
             CanvasGroup lobbyGroup = lobby.GetComponent<CanvasGroup>();
 
@@ -340,9 +347,14 @@ namespace RCCom.EditorTools
             selectionSerialized.FindProperty("mainMenuGroup").objectReferenceValue = lobbyGroup;
             selectionSerialized.ApplyModifiedPropertiesWithoutUndo();
 
+            var managementSerialized = new SerializedObject(managementUI);
+            managementSerialized.FindProperty("mainMenuGroup").objectReferenceValue = lobbyGroup;
+            managementSerialized.ApplyModifiedPropertiesWithoutUndo();
+
             EditorUtility.SetDirty(titleController);
             EditorUtility.SetDirty(configurationController);
             EditorUtility.SetDirty(selectionUI);
+            EditorUtility.SetDirty(managementUI);
         }
 
         private static Scene OpenTitleSceneSafely()
