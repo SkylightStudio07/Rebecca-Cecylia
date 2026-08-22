@@ -16,6 +16,7 @@ MonoBehaviour:
   displayName: "\uC2E4\uBE44\uC544"
   playStyleDescription: "\uB808\uC774\uC2F1\uAC78 \uCEE8\uC149\uC758 \uCE90\uB9AD\uD130"
   selectionPortrait: {fileID: 5771864889448805728, guid: 5b49084e49d23c9439bdffe7e3b23f8f, type: 3}
+  managementPortrait: {fileID: 0}
   playerData:
     maxHealth: 30
     moveSpeed: 5

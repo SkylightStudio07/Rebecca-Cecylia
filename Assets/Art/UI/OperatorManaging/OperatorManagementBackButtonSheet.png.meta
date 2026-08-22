@@ -1,0 +1,222 @@
+fileFormatVersion: 2
+guid: 11e4f76740e0bab4ebacd33e54a3d89f
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 7352101871737646864
+    second: OperatorManagementBackButtonSheet_0
+  - first:
+      213: -8230580197951560738
+    second: OperatorManagementBackButtonSheet_1
+  - first:
+      213: -2833174402530436339
+    second: OperatorManagementBackButtonSheet_2
+  - first:
+      213: 1076516196672565957
+    second: OperatorManagementBackButtonSheet_3
+  - first:
+      213: -7568916310117048820
+    second: OperatorManagementBackButtonSheet_4
+  - first:
+      213: 2549995171775544956
+    second: OperatorManagementBackButtonSheet_5
+  - first:
+      213: -5012371843681631859
+    second: OperatorManagementBackButtonSheet_6
+  - first:
+      213: 1985886200970217630
+    second: OperatorManagementBackButtonSheet_7
+  - first:
+      213: -5014605879916442689
+    second: OperatorManagementBackButtonSheet_8
+  - first:
+      213: 1866630618609311085
+    second: OperatorManagementBackButtonSheet_9
+  - first:
+      213: -8075628773208982776
+    second: OperatorManagementBackButtonSheet_10
+  - first:
+      213: -5680561166069051649
+    second: OperatorManagementBackButtonSheet_11
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: OperatorManagementBackButtonSheet_0
+      rect:
+        serializedVersion: 2
+        x: 154
+        y: 550
+        width: 1259
+        height: 357
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 01f286103b9e70660800000000000000
+      internalID: 7352101871737646864
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OperatorManagementBackButtonSheet_1
+      rect:
+        serializedVersion: 2
+        x: 142
+        y: 115
+        width: 1269
+        height: 410
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e980e256af84f8b10800000000000000
+      internalID: 1985886200970217630
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 80ac6c6a2d2be3c429226f9b955096bd
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      OperatorManagementBackButtonSheet_0: 7352101871737646864
+      OperatorManagementBackButtonSheet_1: -8230580197951560738
+      OperatorManagementBackButtonSheet_10: -8075628773208982776
+      OperatorManagementBackButtonSheet_11: -5680561166069051649
+      OperatorManagementBackButtonSheet_2: -2833174402530436339
+      OperatorManagementBackButtonSheet_3: 1076516196672565957
+      OperatorManagementBackButtonSheet_4: -7568916310117048820
+      OperatorManagementBackButtonSheet_5: 2549995171775544956
+      OperatorManagementBackButtonSheet_6: -5012371843681631859
+      OperatorManagementBackButtonSheet_7: 1985886200970217630
+      OperatorManagementBackButtonSheet_8: -5014605879916442689
+      OperatorManagementBackButtonSheet_9: 1866630618609311085
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

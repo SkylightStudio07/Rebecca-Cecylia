@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Operator-racing-Local
   m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
   m_GroupName: Operator-racing-Local
-  m_GUID: 525f47cf3e4371c4796c2843d9dd9dc5
+  m_GUID: 1b4db9b1a1258604b8288d195cf3ae4a
   m_SerializeEntries:
   - m_GUID: eb37d44559f5362469b151eee503324a
     m_Address: operator/racing
