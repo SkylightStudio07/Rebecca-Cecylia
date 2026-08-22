@@ -26,7 +26,14 @@ namespace RCCom.UI
         [SerializeField] private TextMeshProUGUI affinityText;
         [SerializeField] private GameObject activeBadge;
         [SerializeField] private float highlightedScale = 1.08f;
+        [SerializeField] private OperatorManagementCardVisual normalVisual;
+        [SerializeField] private OperatorManagementCardVisual hoverVisual;
+        [SerializeField] private OperatorManagementCardVisual lockedVisual;
 
+        private OperatorCatalogEntry _entry;
+        private int _displayIndex;
+        private int _affinity;
+        private bool _active;
         private bool _unlocked;
         private bool _browsing;
         private bool _pointerInside;
@@ -38,6 +45,10 @@ namespace RCCom.UI
         public void Setup(OperatorCatalogEntry entry, int displayIndex, bool unlocked, bool active,
             bool browsing, int affinity, Action onClick)
         {
+            _entry = entry;
+            _displayIndex = displayIndex;
+            _affinity = affinity;
+            _active = active;
             _unlocked = unlocked;
             _browsing = browsing;
             _onClick = onClick;
@@ -68,6 +79,9 @@ namespace RCCom.UI
                 button.onClick.AddListener(InvokeClick);
             }
 
+            if (normalVisual != null) { normalVisual.Apply(_entry, _displayIndex, _unlocked, _active, _affinity); }
+            if (hoverVisual != null) { hoverVisual.Apply(_entry, _displayIndex, _unlocked, _active, _affinity); }
+            if (lockedVisual != null) { lockedVisual.Apply(_entry, _displayIndex, _unlocked, _active, _affinity); }
             ApplyVisual();
         }
 
@@ -79,6 +93,10 @@ namespace RCCom.UI
 
         public void SetActive(bool active)
         {
+            _active = active;
+            if (normalVisual != null) { normalVisual.Apply(_entry, _displayIndex, _unlocked, _active, _affinity); }
+            if (hoverVisual != null) { hoverVisual.Apply(_entry, _displayIndex, _unlocked, _active, _affinity); }
+            if (lockedVisual != null) { lockedVisual.Apply(_entry, _displayIndex, _unlocked, _active, _affinity); }
             if (activeBadge != null) { activeBadge.SetActive(active); }
             if (stateText != null && _unlocked) { stateText.text = active ? "ACTIVE" : "AVAILABLE"; }
         }
@@ -114,6 +132,16 @@ namespace RCCom.UI
 
         private void ApplyVisual()
         {
+            if (normalVisual != null && hoverVisual != null && lockedVisual != null)
+            {
+                bool useHover = _unlocked && (_browsing || _pointerInside || _uiSelected);
+                normalVisual.gameObject.SetActive(_unlocked && !useHover);
+                hoverVisual.gameObject.SetActive(_unlocked && useHover);
+                lockedVisual.gameObject.SetActive(!_unlocked);
+                transform.localScale = Vector3.one;
+                return;
+            }
+
             if (stateImage == null)
             {
                 return;
