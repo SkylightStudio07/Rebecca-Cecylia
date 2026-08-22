@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fd578546f204cbc469b575f5e2be9761, type: 3}
+  m_Name: OperatorDefinition
+  m_EditorClassIdentifier: Assembly-CSharp::RCCom.Definitions.Operator.OperatorDefinition
+  operatorId: calliste
+  displayName: "\uCE7C\uB9AC\uC2A4\uD14C"
+  playStyleDescription: 
+  selectionPortrait: {fileID: 8573740378125166142, guid: 93979212c860bc740a289e3b210e4fdf, type: 3}
+  managementPortrait: {fileID: 5667498768502238285, guid: cd384616f9666b341bc8163e96db5136, type: 3}
+  playerData:
+    maxHealth: 30
+    moveSpeed: 5
+    hitInvulnerabilityDuration: 0
+    attackDamage: 5
+    attackRange: 4
+    attackInterval: 1
+    projectileSpeed: 1
+    skillCooldown: 12
+    skillRange: 5
+    skillDamage: 5
+  towerRoster: {fileID: 11400000, guid: b971b9f547ee6264b9af2dd636033c66, type: 2}
+  cardRoster: {fileID: 11400000, guid: 999a75556a8afb941a1bd7805605c1b5, type: 2}
+  allyUnitRoster: {fileID: 11400000, guid: ab2309218941da0429f235d979637d0d, type: 2}
+  dialogueSet: {fileID: 11400000, guid: a65cb253d031a6440a5ffcbc8e33aa35, type: 2}
+  requiredBestWave: 0

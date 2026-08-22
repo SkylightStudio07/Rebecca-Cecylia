@@ -68,7 +68,6 @@ namespace RCCom.EditorTools
 
             RemoveStaleGeneratedGroups(settings, expectedGroupNames);
 
-            entries.Sort((left, right) => string.CompareOrdinal(left.operatorId, right.operatorId));
             catalog.entries = entries;
             EditorUtility.SetDirty(catalog);
             EditorUtility.SetDirty(settings);
@@ -247,6 +246,12 @@ namespace RCCom.EditorTools
             {
                 throw new InvalidOperationException($"오퍼레이터 레시피가 없습니다: {RecipeFolder}");
             }
+
+            recipes.Sort((left, right) =>
+            {
+                int order = left.catalogOrder.CompareTo(right.catalogOrder);
+                return order != 0 ? order : string.CompareOrdinal(left.operatorId, right.operatorId);
+            });
 
             return recipes;
         }

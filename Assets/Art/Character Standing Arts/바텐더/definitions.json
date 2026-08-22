@@ -1,0 +1,27 @@
+{
+  "schema_version": 2,
+  "folder_project_separator": ".",
+  "scene_number_separator": "-",
+  "tag_groups": [
+    {
+      "id": "emotion",
+      "label": "감정 태그",
+      "tags": []
+    },
+    {
+      "id": "nsfw",
+      "label": "NSFW 태그",
+      "tags": []
+    }
+  ],
+  "dict_list": [
+    "dict_1",
+    "dict_2"
+  ],
+  "dict_1_id": "nsfw_tags",
+  "dict_1_title": "NSFW 태그",
+  "dict_1_tags": [],
+  "dict_2_id": "emotion_tags",
+  "dict_2_title": "감정 태그",
+  "dict_2_tags": []
+}

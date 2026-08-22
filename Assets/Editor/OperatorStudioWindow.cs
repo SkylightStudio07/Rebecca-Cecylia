@@ -201,6 +201,7 @@ namespace RCCom.EditorTools
             EditorGUILayout.HelpBox(
                 "ID는 세이브와 Addressables 주소에 사용되는 영구 식별자입니다. 생성된 Definition이 있는 뒤에는 변경하지 않는 것을 권장합니다.",
                 MessageType.None);
+            _recipe.catalogOrder = Mathf.Max(0, EditorGUILayout.IntField("Catalog Slot", _recipe.catalogOrder));
             _recipe.displayName = EditorGUILayout.TextField("Display Name", _recipe.displayName);
             _recipe.playStyleDescription = EditorGUILayout.TextArea(
                 _recipe.playStyleDescription ?? string.Empty,
@@ -559,6 +560,7 @@ namespace RCCom.EditorTools
             var recipe = new OperatorAssetRecipe
             {
                 operatorId = operatorId,
+                catalogOrder = _recipePaths.Count,
                 displayName = operatorId,
                 playStyleDescription = string.Empty,
                 dialogueSetPath = dialoguePath,

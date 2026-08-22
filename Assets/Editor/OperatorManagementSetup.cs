@@ -22,6 +22,7 @@ namespace RCCom.EditorTools
         private const string CardPrefabPath = "Assets/Data/Prefabs/OperatorManagementCard.prefab";
         private const string CardSheetPath = "Assets/Art/UI/OperatorManaging/OperatorPanels_Managing.png";
         private const string DeploySheetPath = "Assets/Art/UI/OperatorManaging/OperatorManagementDeployButtonSheet.png";
+        private const string BackSheetPath = "Assets/Art/UI/OperatorManaging/OperatorManagementBackButtonSheet.png";
         private const string FontPath = "Assets/Resource/Font/Pretendard-Bold SDF.asset";
         private const string CatalogPath = "Assets/Data/Operators/OperatorCatalog.asset";
 
@@ -46,6 +47,7 @@ namespace RCCom.EditorTools
             OperatorManagementCardView cardPrefab = OperatorManagementCardSplitSetup.LoadOrCreateCardPrefab(font);
             Transform generated = RebuildGeneratedRoot(root);
             ConfigureRoot(root);
+            DisableBackgroundRaycast(canvas.transform);
 
             Transform cardContent = CreateContainer("Cards", generated, new Vector2(0.04f, 0.18f),
                 new Vector2(0.96f, 0.88f), Vector2.zero, Vector2.zero);
@@ -85,6 +87,7 @@ namespace RCCom.EditorTools
 
             Button back = CreateButton("BackButton", generated, font, "BACK", new Vector2(0.61f, 0.055f),
                 new Vector2(0.70f, 0.12f), new Color(0.02f, 0.04f, 0.065f, 0.94f));
+            ConfigureBackSprites(back);
 
             TextMeshProUGUI status = CreateText("Status", generated, font,
                 "오퍼레이터를 선택하십시오.", 16f, new Vector2(0.41f, 0.09f), new Vector2(0.59f, 0.14f),
@@ -119,7 +122,9 @@ namespace RCCom.EditorTools
 
             WireOperatorsMenu(canvas.transform, controller);
             root.SetAsLastSibling();
-            root.gameObject.SetActive(true);
+            // 런타임 Open 호출 전에는 비활성으로 저장한다. 비활성 오브젝트는 Awake가 늦게 실행될 수 있으므로
+            // 표시 상태를 Awake에서 다시 끄는 방식에 의존하지 않는다.
+            root.gameObject.SetActive(false);
             EditorUtility.SetDirty(root.gameObject);
             EditorUtility.SetDirty(controller);
             EditorSceneManager.MarkSceneDirty(scene);
@@ -142,6 +147,9 @@ namespace RCCom.EditorTools
             {
                 throw new InvalidOperationException("오퍼레이터 관리 화면의 필수 배선이 누락되었습니다.");
             }
+            var serialized = new SerializedObject(controller);
+            Button back = serialized.FindProperty("backButton").objectReferenceValue as Button;
+            ValidateBackSprites(back);
             if (scene.path != TitleScenePath) { throw new InvalidOperationException("TitleScene 검증에 실패했습니다."); }
             Debug.Log("[OperatorManagementSetup] 관리 화면 프리팹·씬·메뉴 연결 검증 통과");
         }
@@ -275,8 +283,68 @@ namespace RCCom.EditorTools
             }
             SpriteState state = deploy.spriteState;
             state.highlightedSprite = hover;
-            state.selectedSprite = hover;
+            state.pressedSprite = hover;
+            // 키보드 포커스와 포인터 호버를 분리해 선택만으로 발광이 고정되지 않게 한다.
+            state.selectedSprite = normal;
+            state.disabledSprite = normal;
             deploy.spriteState = state;
+        }
+
+        private static void ConfigureBackSprites(Button back)
+        {
+            Sprite normal = LoadSprite(BackSheetPath, "OperatorManagementBackButtonSheet_0");
+            Sprite hover = LoadSprite(BackSheetPath, "OperatorManagementBackButtonSheet_1");
+            Image image = back.GetComponent<Image>();
+            if (image == null) { throw new InvalidOperationException("Back 버튼에 Image가 없습니다."); }
+
+            image.sprite = normal;
+            image.color = Color.white;
+            image.preserveAspect = true;
+            image.raycastTarget = true;
+            back.transition = Selectable.Transition.SpriteSwap;
+            SpriteState state = back.spriteState;
+            state.highlightedSprite = hover;
+            state.pressedSprite = hover;
+            // 키보드 선택만으로 호버처럼 보이지 않도록 선택 상태는 노말을 유지한다.
+            state.selectedSprite = normal;
+            state.disabledSprite = normal;
+            back.spriteState = state;
+
+            // 버튼 시트 자체에 BACK 문구가 포함되어 중복 TMP는 표시하지 않는다.
+            Transform label = back.transform.Find("Text");
+            if (label != null) { label.gameObject.SetActive(false); }
+        }
+
+        private static void ValidateBackSprites(Button back)
+        {
+            if (back == null || back.transition != Selectable.Transition.SpriteSwap)
+            {
+                throw new InvalidOperationException("Back 버튼 또는 SpriteSwap 배선이 누락되었습니다.");
+            }
+
+            Image image = back.GetComponent<Image>();
+            SpriteState state = back.spriteState;
+            Transform label = back.transform.Find("Text");
+            if (image == null || image.sprite == null || !image.raycastTarget ||
+                image.sprite.name != "OperatorManagementBackButtonSheet_0" ||
+                state.highlightedSprite == null ||
+                state.highlightedSprite.name != "OperatorManagementBackButtonSheet_1" ||
+                state.selectedSprite == null ||
+                state.selectedSprite.name != "OperatorManagementBackButtonSheet_0" ||
+                (label != null && label.gameObject.activeSelf))
+            {
+                throw new InvalidOperationException("Back 버튼의 Normal/Hover 스프라이트 배선이 올바르지 않습니다.");
+            }
+        }
+
+        private static void DisableBackgroundRaycast(Transform canvas)
+        {
+            RawImage titleBackground = canvas.Find("RawImage")?.GetComponent<RawImage>();
+            if (titleBackground == null) { return; }
+
+            // RenderTexture 표시 전용 배경이므로 입력을 받으면 메뉴와 팝업 버튼을 가로막는다.
+            titleBackground.raycastTarget = false;
+            EditorUtility.SetDirty(titleBackground);
         }
 
         private static void WireOperatorsMenu(Transform canvas, OperatorManagementUI controller)

@@ -44,8 +44,7 @@ namespace RCCom.UI
 
         private void Awake()
         {
-            _profileStorage = new PlayerPrefsProfileStorage();
-            SetPanelVisible(false);
+            InitializeIfNeeded();
         }
 
         private void OnEnable()
@@ -72,6 +71,8 @@ namespace RCCom.UI
                 return;
             }
 
+            // 비활성 오브젝트는 Awake가 아직 호출되지 않을 수 있으므로 진입점에서도 초기화를 보장한다.
+            InitializeIfNeeded();
             _profile = _profileStorage.Load();
             SelectSavedOrFirst();
             SetPanelVisible(true);
@@ -290,14 +291,18 @@ namespace RCCom.UI
 
         private void UpdateButtons()
         {
-            bool hasEntry = TryGetBrowsingEntry(out OperatorCatalogEntry entry);
-            bool unlocked = hasEntry && entry.IsUnlocked(_profile?.bestWave ?? 0);
             bool canNavigate = !_isLoading && catalog != null && GetSlotCount() > 1;
-            bool alreadyActive = hasEntry && entry.operatorId == _profile?.selectedOperatorId;
             if (previousButton != null) { previousButton.interactable = canNavigate; }
             if (nextButton != null) { nextButton.interactable = canNavigate; }
-            if (deployButton != null) { deployButton.interactable = !_isLoading && unlocked && !alreadyActive; }
+            // 해금 여부는 Deploy()가 판정한다. Disabled 상태로 고정하면 잠금 슬롯에서도 Hover가 사라진다.
+            // 현재 오퍼레이터의 재Deploy는 허용해 단일 오퍼레이터 상태에서도 클릭 피드백을 유지한다.
+            if (deployButton != null) { deployButton.interactable = !_isLoading; }
             if (backButton != null) { backButton.interactable = !_isLoading; }
+        }
+
+        private void InitializeIfNeeded()
+        {
+            if (_profileStorage == null) { _profileStorage = new PlayerPrefsProfileStorage(); }
         }
 
         private bool TryGetBrowsingEntry(out OperatorCatalogEntry entry)

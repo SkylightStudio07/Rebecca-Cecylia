@@ -10,10 +10,11 @@ namespace RCCom.UI
     {
         public enum MenuAction
         {
-            NewGame,
-            ManageOperators,
-            Preference,
-            ReturnToTitle
+            // 씬에 정수로 직렬화되므로 기존 값은 바꾸지 않는다. 신규 액션은 항상 마지막 번호로 추가한다.
+            NewGame = 0,
+            Preference = 1,
+            ReturnToTitle = 2,
+            ManageOperators = 3
         }
 
         [SerializeField] private MenuAction action;

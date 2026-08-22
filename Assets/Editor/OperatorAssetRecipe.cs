@@ -12,6 +12,7 @@ namespace RCCom.EditorTools
     public sealed class OperatorAssetRecipe
     {
         public string operatorId;
+        public int catalogOrder;
         public string displayName;
         public string playStyleDescription;
         public string selectionPortraitPath;
