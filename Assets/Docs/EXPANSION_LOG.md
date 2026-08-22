@@ -1135,3 +1135,29 @@ Phase 0 자동화 경로를 실제로 열고, 이후 오퍼레이터별 원격 �
 - `Racing.json`이 UTF-8 JSON으로 파싱되고, 선택 초상화·대화·로스터 원본 경로가 실제 파일로 존재하는지 확인했다.
 - 실비아 생성 Definition의 타워·카드·아군 유닛·대화 참조와 카탈로그/Addressables 그룹 참조가 모두 유효한지 확인했다.
 - Unity `6000.3.13f1` Pipeline에서 `recompile` 결과 `up_to_date`, `recompile_status` 결과 `failed=false`, `errors=[]`를 확인했다. Validator도 실비아 대사 엔트리 오류 없이 완료됐으며, 기존 공용 Cassia 대사 빈 슬롯 경고만 남았다.
+## 2026-08-22 — 오퍼레이터 관리 카드 상태별 프리팹 분리
+
+### 맥락
+- Normal/Hover 프레임의 원본 캔버스 비율과 실제 인물 창 위치가 달라, 하나의 RectTransform을 공유한 채 Sprite만 교체하면 포트레잇과 TMP를 상태별로 눈대중 보정하기 어려웠다.
+
+### 결정
+- 논리 카드 `OperatorManagementCard.prefab`은 클릭·포커스·데이터만 소유하고, 시각 표현을 `OperatorManagementCard_Normal.prefab`, `_Hover.prefab`, `_Locked.prefab` 3개로 분리한다.
+- 각 Visual 프리팹은 PortraitViewport/Portrait와 번호·상태·이름·호감도·ACTIVE 배지를 독립적으로 소유한다. 따라서 Normal과 Hover에서 포트레잇 X/Y/Scale 및 텍스트 위치를 서로 다르게 수동 조정할 수 있다.
+- 관리 화면 생성기는 Visual 프리팹이 이미 존재하면 검증만 하고 덮어쓰지 않는다. 기존 단일 카드 프리팹은 새 Visual 참조가 없을 때 한 번만 분리형 호스트로 재생성한다.
+- 런타임은 호버 시 프리팹을 새로 Instantiate하지 않고 카드 안에 중첩된 세 Visual 인스턴스의 활성 상태만 전환한다.
+
+### 의도적으로 하지 않은 것
+- Normal/Hover 카드 전체를 별도 인터랙션 프리팹으로 교체하지 않았다. Button/EventSystem 상태와 카탈로그 데이터는 논리 카드 하나가 계속 소유해 포커스와 클릭 상태가 끊기지 않게 했다.
+- 상태별 수동 오프셋을 코드 상수로 고정하지 않았다. 이후 아트 교체 시 Unity 프리팹에서 직접 조정하고 생성기가 그 값을 보존하는 흐름을 사용한다.
+
+## 2026-08-23 — 오퍼레이터 관리 카드 전용 포트레잇 분리
+
+### 맥락
+- 선택 화면의 `selectionPortrait`는 작은 머리 크롭 이미지라 세로형 관리 카드의 넓은 인물 영역에 사용하면 구도가 맞지 않았다.
+- Normal/Hover/Locked 시각 프리팹은 이미 각각 독립된 Portrait Image를 가지지만, 데이터는 모두 카탈로그의 선택 화면 미리보기만 읽고 있었다.
+
+### 결정
+- `OperatorDefinition`과 제작 레시피에 `managementPortrait` 전용 참조를 추가하고 Operator Studio Identity 탭에서 선택 화면 초상화와 나란히 편집한다.
+- 로컬 오퍼레이터는 생성된 Catalog에도 관리 카드 포트레잇을 복사해 세 Visual 프리팹이 Definition을 별도로 로드하지 않고 즉시 표시한다. 원격 오퍼레이터는 기존 CDN 경계를 유지하기 위해 다운로드 전 Catalog 참조를 비운다.
+- 관리 카드 Visual은 전용 포트레잇을 우선 사용하고, 미작성 오퍼레이터는 기존 선택 초상화로 폴백한다. 아트 제작 중에도 카드가 완전히 비지 않게 하기 위한 호환 경로다.
+- 카시아 레시피에는 `오퍼레이터관리_카시아.png`를 연결했다. 세 상태 프리팹의 수동 RectTransform 조정값은 생성기가 덮어쓰지 않는다.

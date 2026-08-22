@@ -3,6 +3,7 @@
   "displayName": "카시아",
   "playStyleDescription": "타워 건설과 카드 강화를 중심으로 방어선을 확장하는 기본 오퍼레이터",
   "selectionPortraitPath": "Assets/Art/Operator Sprite/Chibby_smile_idle.png",
+  "managementPortraitPath": "Assets/Art/Character Standing Arts/레베카/레베카/오퍼레이터관리_카시아.png",
   "sourceTowerRosterPath": "Assets/Data/Prefabs/TowerRoaster.asset",
   "sourceCardRosterPath": "Assets/Data/Cards/Unlock/플레이어 카드 로스터.asset",
   "dialogueSetPath": "Assets/Data/Prefabs/UI/New Operator Dialogue Set.asset",

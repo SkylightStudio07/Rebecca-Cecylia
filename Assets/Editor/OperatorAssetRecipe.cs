@@ -15,6 +15,7 @@ namespace RCCom.EditorTools
         public string displayName;
         public string playStyleDescription;
         public string selectionPortraitPath;
+        public string managementPortraitPath;
         public string sourceTowerRosterPath;
         public string sourceCardRosterPath;
         public string sourceAllyUnitRosterPath;

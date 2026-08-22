@@ -75,6 +75,7 @@ namespace RCCom.EditorTools
             AllyUnitRoster sourceAllyUnitRoster = LoadOptional<AllyUnitRoster>(recipe.sourceAllyUnitRosterPath);
             OperatorDialogueSet dialogueSet = LoadRequired<OperatorDialogueSet>(recipe.dialogueSetPath, recipe.operatorId);
             Sprite selectionPortrait = LoadOptional<Sprite>(recipe.selectionPortraitPath);
+            Sprite managementPortrait = LoadOptional<Sprite>(recipe.managementPortraitPath);
 
             string operatorFolder = $"{OutputRoot}/{recipe.operatorId}";
             EnsureFolder(operatorFolder);
@@ -100,6 +101,7 @@ namespace RCCom.EditorTools
             definition.displayName = recipe.displayName;
             definition.playStyleDescription = recipe.playStyleDescription;
             definition.selectionPortrait = selectionPortrait;
+            definition.managementPortrait = managementPortrait;
             definition.playerData = ClonePlayerData(recipe.playerData);
             definition.towerRoster = towerRoster;
             definition.cardRoster = cardRoster;

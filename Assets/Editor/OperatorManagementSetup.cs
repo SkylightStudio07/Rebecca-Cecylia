@@ -43,7 +43,7 @@ namespace RCCom.EditorTools
             OperatorCatalog catalog = AssetDatabase.LoadAssetAtPath<OperatorCatalog>(CatalogPath);
             if (font == null || catalog == null) { throw new InvalidOperationException("관리 화면용 글꼴 또는 카탈로그가 없습니다."); }
 
-            OperatorManagementCardView cardPrefab = BuildCardPrefab(font);
+            OperatorManagementCardView cardPrefab = OperatorManagementCardSplitSetup.LoadOrCreateCardPrefab(font);
             Transform generated = RebuildGeneratedRoot(root);
             ConfigureRoot(root);
 

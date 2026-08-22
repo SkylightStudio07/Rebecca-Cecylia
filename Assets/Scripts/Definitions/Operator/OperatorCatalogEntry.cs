@@ -21,6 +21,9 @@ namespace RCCom.Definitions.Operator
         [Tooltip("다운로드 전 선택 화면에 표시할 작은 초상화. 미완성 콘텐츠는 비워도 된다.")]
         public Sprite previewPortrait;
 
+        [Tooltip("오퍼레이터 관리 카드에 표시할 전신·반신 초상화. 원격 콘텐츠는 다운로드 전 비워둔다.")]
+        public Sprite managementPortrait;
+
         [Tooltip("OperatorDefinition의 Addressables 주소")]
         public string address;
 

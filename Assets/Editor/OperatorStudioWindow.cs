@@ -207,6 +207,11 @@ namespace RCCom.EditorTools
                 GUILayout.MinHeight(48));
             _recipe.selectionPortraitPath = DrawAssetPathField<Sprite>(
                 "Selection Portrait", _recipe.selectionPortraitPath);
+            _recipe.managementPortraitPath = DrawAssetPathField<Sprite>(
+                "Management Card Portrait", _recipe.managementPortraitPath);
+            EditorGUILayout.HelpBox(
+                "Selection Portrait는 선택 화면용 머리 크롭, Management Card Portrait는 Operators 관리 카드용 전신·반신 이미지입니다.",
+                MessageType.None);
             _recipe.remoteContent = EditorGUILayout.ToggleLeft("Remote Content", _recipe.remoteContent);
             _recipe.requiredBestWave = Mathf.Max(
                 0,

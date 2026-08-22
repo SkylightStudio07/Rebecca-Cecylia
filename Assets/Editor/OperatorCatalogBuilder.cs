@@ -58,6 +58,7 @@ namespace RCCom.EditorTools
                     // CDN 콘텐츠가 본체 빌드로 새어 나온다. 원격은 Definition을 받은 뒤
                     // 실제 초상화를 사용하고, 카탈로그에는 ID/설명만 남긴다.
                     previewPortrait = recipe.remoteContent ? null : definition.selectionPortrait,
+                    managementPortrait = recipe.remoteContent ? null : definition.managementPortrait,
                     address = address,
                     remoteContent = recipe.remoteContent,
                     requiredBestWave = recipe.requiredBestWave,
