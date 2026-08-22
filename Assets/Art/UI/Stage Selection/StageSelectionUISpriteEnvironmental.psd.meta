@@ -1,0 +1,442 @@
+fileFormatVersion: 2
+guid: 7a6cfdc09342afa418761ef6b5450001
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -3393072751840282775
+    second: StageSelectionUISpriteEnvironmental_0
+  - first:
+      213: 4608622186214366009
+    second: StageSelectionUISpriteEnvironmental_1
+  - first:
+      213: 852353153559637079
+    second: StageSelectionUISpriteEnvironmental_2
+  - first:
+      213: 8240340585371800466
+    second: StageSelectionUISpriteEnvironmental_3
+  - first:
+      213: -9072188394613962734
+    second: StageSelectionUISpriteEnvironmental_4
+  - first:
+      213: -7545546788995205585
+    second: StageSelectionUISpriteEnvironmental_5
+  - first:
+      213: 6068250739205393257
+    second: StageSelectionUISpriteEnvironmental_6
+  - first:
+      213: 8787339405167469984
+    second: StageSelectionUISpriteEnvironmental_7
+  - first:
+      213: 6574623142569172315
+    second: StageSelectionUISpriteEnvironmental_8
+  - first:
+      213: -1736728605270940194
+    second: StageSelectionUISpriteEnvironmental_9
+  - first:
+      213: -3991162459884892886
+    second: StageSelectionUISpriteEnvironmental_10
+  - first:
+      213: -3636001943119066010
+    second: StageSelectionUISpriteEnvironmental_11
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: StageSelectionUISpriteEnvironmental_0
+      rect:
+        serializedVersion: 2
+        x: 24
+        y: 12
+        width: 93
+        height: 1653
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 967b0893f4269e0d0800000000000000
+      internalID: -3393072751840282775
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: StageSelectionUISpriteEnvironmental_1
+      rect:
+        serializedVersion: 2
+        x: 121
+        y: 964
+        width: 1519
+        height: 679
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 93b9a49f57d15ff30800000000000000
+      internalID: 4608622186214366009
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: StageSelectionUISpriteEnvironmental_2
+      rect:
+        serializedVersion: 2
+        x: 1478
+        y: 1587
+        width: 82
+        height: 70
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 75c2b1d5daa24db00800000000000000
+      internalID: 852353153559637079
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: StageSelectionUISpriteEnvironmental_3
+      rect:
+        serializedVersion: 2
+        x: 1649
+        y: 1010
+        width: 490
+        height: 619
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 293125b6a129b5270800000000000000
+      internalID: 8240340585371800466
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: StageSelectionUISpriteEnvironmental_4
+      rect:
+        serializedVersion: 2
+        x: 1550
+        y: 1213
+        width: 6
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2180d9bb8bc191280800000000000000
+      internalID: -9072188394613962734
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: StageSelectionUISpriteEnvironmental_5
+      rect:
+        serializedVersion: 2
+        x: 1323
+        y: 1197
+        width: 11
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f26f9d56c25d84790800000000000000
+      internalID: -7545546788995205585
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: StageSelectionUISpriteEnvironmental_6
+      rect:
+        serializedVersion: 2
+        x: 1343
+        y: 1197
+        width: 6
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 96bc65675e1c63450800000000000000
+      internalID: 6068250739205393257
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: StageSelectionUISpriteEnvironmental_7
+      rect:
+        serializedVersion: 2
+        x: 1784
+        y: 1185
+        width: 11
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0a5acc5b1a6e2f970800000000000000
+      internalID: 8787339405167469984
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: StageSelectionUISpriteEnvironmental_8
+      rect:
+        serializedVersion: 2
+        x: 1794
+        y: 1189
+        width: 7
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b5dd5e01ae0cd3b50800000000000000
+      internalID: 6574623142569172315
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: StageSelectionUISpriteEnvironmental_9
+      rect:
+        serializedVersion: 2
+        x: 1711
+        y: 1187
+        width: 8
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ed5e09bf886e5e7e0800000000000000
+      internalID: -1736728605270940194
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: StageSelectionUISpriteEnvironmental_10
+      rect:
+        serializedVersion: 2
+        x: 1665
+        y: 1165
+        width: 6
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a2dcfa983ea8c98c0800000000000000
+      internalID: -3991162459884892886
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: StageSelectionUISpriteEnvironmental_11
+      rect:
+        serializedVersion: 2
+        x: 121
+        y: 990
+        width: 7
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 66c02c14f735a8dc0800000000000000
+      internalID: -3636001943119066010
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      StageSelectionUISpriteEnvironmental_0: -3393072751840282775
+      StageSelectionUISpriteEnvironmental_1: 4608622186214366009
+      StageSelectionUISpriteEnvironmental_10: -3991162459884892886
+      StageSelectionUISpriteEnvironmental_11: -3636001943119066010
+      StageSelectionUISpriteEnvironmental_2: 852353153559637079
+      StageSelectionUISpriteEnvironmental_3: 8240340585371800466
+      StageSelectionUISpriteEnvironmental_4: -9072188394613962734
+      StageSelectionUISpriteEnvironmental_5: -7545546788995205585
+      StageSelectionUISpriteEnvironmental_6: 6068250739205393257
+      StageSelectionUISpriteEnvironmental_7: 8787339405167469984
+      StageSelectionUISpriteEnvironmental_8: 6574623142569172315
+      StageSelectionUISpriteEnvironmental_9: -1736728605270940194
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

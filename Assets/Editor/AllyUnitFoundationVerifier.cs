@@ -25,6 +25,7 @@ namespace RCCom.EditorTools
         public static void Verify()
         {
             AllyUnitDefinition unitDefinition = ScriptableObject.CreateInstance<AllyUnitDefinition>();
+            AttackTowerDefinition towerDefinition = ScriptableObject.CreateInstance<AttackTowerDefinition>();
             EnemyDefinition enemyDefinition = ScriptableObject.CreateInstance<EnemyDefinition>();
             AllyUnitRoster unitRoster = ScriptableObject.CreateInstance<AllyUnitRoster>();
             OperatorDefinition operatorDefinition = ScriptableObject.CreateInstance<OperatorDefinition>();
@@ -32,10 +33,14 @@ namespace RCCom.EditorTools
             CardRoster cardRoster = ScriptableObject.CreateInstance<CardRoster>();
             OperatorDialogueSet dialogueSet = ScriptableObject.CreateInstance<OperatorDialogueSet>();
             GameObject deployUiObject = null;
+            GameObject inputModeObject = null;
+            GameObject towerControllerObject = null;
             GameObject waveObject = null;
+            float originalTimeScale = Time.timeScale;
 
             try
             {
+                Time.timeScale = 1f;
                 unitDefinition.data = new AllyUnitData
                 {
                     unitId = "verification-unit",
@@ -57,6 +62,8 @@ namespace RCCom.EditorTools
                     attackInterval = 1f,
                 };
                 unitRoster.units.Add(unitDefinition);
+                towerDefinition.data.displayName = "검증 타워";
+                towerRoster.towers.Add(towerDefinition);
 
                 var path = new List<Vector2>
                 {
@@ -116,6 +123,20 @@ namespace RCCom.EditorTools
                     throw new InvalidOperationException("오퍼레이터 유닛 로스터 해석 계약이 올바르지 않습니다.");
                 }
 
+                OperatorLoadoutSession.ClearSelection();
+
+                inputModeObject = new GameObject("DeploymentInputModeVerification");
+                DeploymentInputModeController inputModeController =
+                    inputModeObject.AddComponent<DeploymentInputModeController>();
+
+                towerControllerObject = new GameObject("TowerBuildInputModeVerification");
+                towerControllerObject.SetActive(false);
+                TowerBuildController towerBuildController = towerControllerObject.AddComponent<TowerBuildController>();
+                var towerControllerSerializedObject = new SerializedObject(towerBuildController);
+                towerControllerSerializedObject.FindProperty("towerRoster").objectReferenceValue = towerRoster;
+                towerControllerSerializedObject.FindProperty("inputModeController").objectReferenceValue = inputModeController;
+                towerControllerSerializedObject.ApplyModifiedPropertiesWithoutUndo();
+
                 deployUiObject = new GameObject("AllyUnitDeployAvailabilityVerification");
                 deployUiObject.SetActive(false);
                 CanvasGroup panelGroup = deployUiObject.AddComponent<CanvasGroup>();
@@ -157,6 +178,56 @@ namespace RCCom.EditorTools
                 menuSerializedObject.FindProperty("buttonPrefab").objectReferenceValue = buttonTemplate;
                 menuSerializedObject.ApplyModifiedPropertiesWithoutUndo();
 
+                var controllerSerializedObject = new SerializedObject(deployController);
+                controllerSerializedObject.FindProperty("inputModeController").objectReferenceValue = inputModeController;
+                controllerSerializedObject.ApplyModifiedPropertiesWithoutUndo();
+
+                MethodInfo registerInstance = typeof(UnitDeployController).GetMethod(
+                    "RegisterInstance",
+                    BindingFlags.Instance | BindingFlags.NonPublic);
+                if (registerInstance == null)
+                {
+                    throw new InvalidOperationException("아군 유닛 활성 목록 등록 진입점을 찾지 못했습니다.");
+                }
+
+                var trackedInstance = new AllyUnitInstance();
+                trackedInstance.Spawn(unitDefinition, path);
+                int removedEventCount = 0;
+                AllyUnitInstance removedInstance = null;
+                deployController.UnitRemoved += removed =>
+                {
+                    removedEventCount++;
+                    removedInstance = removed;
+                };
+
+                registerInstance.Invoke(deployController, new object[] { trackedInstance });
+                if (deployController.ActiveUnits.Count != 1 || deployController.ActiveUnits[0] != trackedInstance)
+                {
+                    throw new InvalidOperationException("소환 유닛의 활성 목록 등록 계약이 올바르지 않습니다.");
+                }
+
+                // Tick 도중 사망해도 다음 프레임까지 죽은 참조가 남지 않아야 타깃 후보와
+                // 아군 목록을 받는 다른 Instance가 이미 죽은 유닛을 다시 선택하지 않는다.
+                trackedInstance.TakeDamage(trackedInstance.CurrentHealth);
+                if (deployController.ActiveUnits.Count != 0 || removedEventCount != 1 ||
+                    removedInstance != trackedInstance)
+                {
+                    throw new InvalidOperationException("사망 유닛의 활성 목록 제거 계약이 올바르지 않습니다.");
+                }
+
+                // Edit Mode의 비활성 임시 오브젝트는 생명주기 콜백이 자동 실행되지 않으므로,
+                // 실제 UI와 같은 OnEnable 구독 경로를 명시적으로 통과시킨다.
+                MethodInfo menuOnEnable = typeof(UnitDeployMenuUI).GetMethod(
+                    "OnEnable",
+                    BindingFlags.Instance | BindingFlags.NonPublic);
+                if (menuOnEnable == null)
+                {
+                    throw new InvalidOperationException("유닛 배치 UI의 이벤트 구독 진입점을 찾지 못했습니다.");
+                }
+
+                menuOnEnable.Invoke(deployMenuUI, null);
+                InvokeLifecycleMethod(deployController, "OnEnable");
+                InvokeLifecycleMethod(towerBuildController, "OnEnable");
                 deployMenuUI.RefreshAvailability();
                 if (deployController.IsDeployInputEnabled || deployController.SelectUnit(0) ||
                     deployMenuUI.IsVisible || panelGroup.interactable || panelGroup.blocksRaycasts ||
@@ -165,7 +236,6 @@ namespace RCCom.EditorTools
                     throw new InvalidOperationException("null 로스터의 배치 입력 또는 UI 비활성 계약이 올바르지 않습니다.");
                 }
 
-                var controllerSerializedObject = new SerializedObject(deployController);
                 controllerSerializedObject.FindProperty("allyUnitRoster").objectReferenceValue = unitRoster;
                 controllerSerializedObject.ApplyModifiedPropertiesWithoutUndo();
                 deployMenuUI.RefreshAvailability();
@@ -193,10 +263,46 @@ namespace RCCom.EditorTools
                     throw new InvalidOperationException("유닛 Definition의 이름 또는 배치 비용 표시 계약이 올바르지 않습니다.");
                 }
 
-                generatedButton.GetComponent<Button>().onClick.Invoke();
-                if (deployController.SelectedDefinition != unitDefinition || selectedDefinition != unitDefinition)
+                Button generatedButtonComponent = generatedButton.GetComponent<Button>();
+                if (generatedButtonComponent.interactable)
+                {
+                    throw new InvalidOperationException("지휘 포인트 부족 시 유닛 버튼 비활성 계약이 올바르지 않습니다.");
+                }
+
+                int changedCommandPoints = -1;
+                deployController.CommandPointsChanged += points => changedCommandPoints = points;
+                deployController.AddCommandPoints(5);
+                if (deployController.CommandPoints != 5 || changedCommandPoints != 5 ||
+                    !deployController.CanAfford(unitDefinition) || !generatedButtonComponent.interactable)
+                {
+                    throw new InvalidOperationException(
+                        $"지휘 포인트 충족 시 유닛 버튼 활성 계약이 올바르지 않습니다. " +
+                        $"CP={deployController.CommandPoints}, Event={changedCommandPoints}, " +
+                        $"CanAfford={deployController.CanAfford(unitDefinition)}, " +
+                        $"Interactable={generatedButtonComponent.interactable}");
+                }
+
+                generatedButtonComponent.onClick.Invoke();
+                if (deployController.SelectedDefinition != unitDefinition || selectedDefinition != unitDefinition ||
+                    inputModeController.CurrentMode != DeploymentInputMode.AllyUnitDeploy)
                 {
                     throw new InvalidOperationException("동적 유닛 버튼의 Definition 선택 계약이 올바르지 않습니다.");
+                }
+
+                towerBuildController.SelectTower(0);
+                if (inputModeController.CurrentMode != DeploymentInputMode.TowerBuild ||
+                    towerBuildController.SelectedDefinition != towerDefinition ||
+                    deployController.SelectedDefinition != null || selectedDefinition != null)
+                {
+                    throw new InvalidOperationException("타워 설치 모드 전환 시 유닛 선택 해제 계약이 올바르지 않습니다.");
+                }
+
+                generatedButtonComponent.onClick.Invoke();
+                if (inputModeController.CurrentMode != DeploymentInputMode.AllyUnitDeploy ||
+                    deployController.SelectedDefinition != unitDefinition ||
+                    towerBuildController.SelectedDefinition != null)
+                {
+                    throw new InvalidOperationException("유닛 배치 모드 전환 시 타워 선택 해제 계약이 올바르지 않습니다.");
                 }
 
                 generatedButton.SetSelected(true);
@@ -206,24 +312,17 @@ namespace RCCom.EditorTools
                 }
 
                 deployController.ClearSelection();
-                if (deployController.SelectedDefinition != null || selectedDefinition != null)
+                if (deployController.SelectedDefinition != null || selectedDefinition != null ||
+                    inputModeController.CurrentMode != DeploymentInputMode.None)
                 {
                     throw new InvalidOperationException("유닛 Definition 선택 해제 계약이 올바르지 않습니다.");
                 }
 
-                int changedCommandPoints = -1;
-                deployController.CommandPointsChanged += points => changedCommandPoints = points;
-                deployController.AddCommandPoints(5);
-                if (deployController.CommandPoints != 5 || changedCommandPoints != 5 ||
-                    !deployController.CanAfford(unitDefinition))
-                {
-                    throw new InvalidOperationException("지휘 포인트 지급 또는 비용 확인 계약이 올바르지 않습니다.");
-                }
-
                 if (!deployController.TrySpendCommandPoints(unitDefinition.data.deployCost) ||
-                    deployController.CommandPoints != 2 || changedCommandPoints != 2)
+                    deployController.CommandPoints != 2 || changedCommandPoints != 2 ||
+                    generatedButtonComponent.interactable)
                 {
-                    throw new InvalidOperationException("지휘 포인트 소비 계약이 올바르지 않습니다.");
+                    throw new InvalidOperationException("지휘 포인트 소비 또는 부족 전환 계약이 올바르지 않습니다.");
                 }
 
                 if (deployController.TrySpendCommandPoints(unitDefinition.data.deployCost) ||
@@ -254,6 +353,16 @@ namespace RCCom.EditorTools
                     throw new InvalidOperationException("전투 중 지휘 포인트 회복 계약이 올바르지 않습니다.");
                 }
 
+                Time.timeScale = 0f;
+                tickBeforeEnemies.Invoke(deployController, new object[] { 1f });
+                if (deployController.IsDeployInputEnabled || deployController.SelectUnit(0) ||
+                    deployController.CommandPoints != 98)
+                {
+                    throw new InvalidOperationException("일시정지 중 배치 입력 또는 지휘 포인트 회복 차단 계약이 올바르지 않습니다.");
+                }
+
+                Time.timeScale = 1f;
+
                 var waveSerializedObject = new SerializedObject(waveManager);
                 waveSerializedObject.FindProperty("isWaitingForNextWave").boolValue = true;
                 waveSerializedObject.ApplyModifiedPropertiesWithoutUndo();
@@ -270,12 +379,14 @@ namespace RCCom.EditorTools
                     throw new InvalidOperationException("지휘 포인트 상한 계약이 올바르지 않습니다.");
                 }
 
-                Debug.Log("[AllyUnitFoundationVerifier] 역주행 스폰·상태·피해·Roster·Loadout·배치 가용성·Definition 선택·지휘 포인트 소비·회복·상한 계약 검증 통과");
+                Debug.Log("[AllyUnitFoundationVerifier] 역주행 스폰·상태·피해·사망 활성 목록 정리·Roster·Loadout·상호 배타 배치 입력 모드·Definition 선택·비용별 버튼 상태·지휘 포인트 소비·회복·일시정지·상한 계약 검증 통과");
             }
             finally
             {
+                Time.timeScale = originalTimeScale;
                 OperatorLoadoutSession.ClearSelection();
                 UnityEngine.Object.DestroyImmediate(unitDefinition);
+                UnityEngine.Object.DestroyImmediate(towerDefinition);
                 UnityEngine.Object.DestroyImmediate(enemyDefinition);
                 UnityEngine.Object.DestroyImmediate(unitRoster);
                 UnityEngine.Object.DestroyImmediate(operatorDefinition);
@@ -288,11 +399,34 @@ namespace RCCom.EditorTools
                     UnityEngine.Object.DestroyImmediate(deployUiObject);
                 }
 
+                if (towerControllerObject != null)
+                {
+                    UnityEngine.Object.DestroyImmediate(towerControllerObject);
+                }
+
+                if (inputModeObject != null)
+                {
+                    UnityEngine.Object.DestroyImmediate(inputModeObject);
+                }
+
                 if (waveObject != null)
                 {
                     UnityEngine.Object.DestroyImmediate(waveObject);
                 }
             }
+        }
+
+        private static void InvokeLifecycleMethod(MonoBehaviour target, string methodName)
+        {
+            MethodInfo method = target.GetType().GetMethod(
+                methodName,
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            if (method == null)
+            {
+                throw new InvalidOperationException($"{target.GetType().Name}.{methodName} 진입점을 찾지 못했습니다.");
+            }
+
+            method.Invoke(target, null);
         }
     }
 }

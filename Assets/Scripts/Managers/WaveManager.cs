@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using RCCom.Data;
 using RCCom.Definitions.Enemy;
+using RCCom.Definitions.Stage;
 using RCCom.Runtime;
 using UnityEngine;
 
@@ -74,6 +76,7 @@ namespace RCCom.Managers
         public IReadOnlyList<EnemyInstance> ActiveEnemies => _aliveEnemies;
 
         private readonly Queue<EnemyDefinition> _spawnQueue = new();
+        private readonly Queue<float> _stageSpawnDelays = new();
         private System.Random _rng;
 
         /// <summary>
@@ -85,16 +88,36 @@ namespace RCCom.Managers
         private int _waveNumber;
         private bool _isWaiting;
         private float _stateTimer;
+        private StageDefinition _stageDefinition;
+        private bool _isStageMode;
+        private int _stageWaveIndex = -1;
+        private float _stageHealthMultiplier = 1f;
+        private bool _stageCompleted;
+
+        /// <summary>현재 전투가 고정 스테이지 편성인지 HUD/결과 화면이 확인할 수 있다.</summary>
+        public bool IsStageMode => _isStageMode;
 
         private void Awake()
         {
             _rng = new System.Random(randomSeed);
+            _stageDefinition = BattleSession.IsStageMode ? BattleSession.SelectedStage : null;
+            _isStageMode = _stageDefinition != null && _stageDefinition.IsPlayable;
+            if (BattleSession.Mode == BattleMode.Stage && !_isStageMode)
+            {
+                Debug.LogError("[Wave] 스테이지 모드로 진입했지만 실행 가능한 StageDefinition이 없습니다.");
+            }
+
             _isWaiting = true;
-            _stateTimer = buildPhaseDuration;
+            _stateTimer = _isStageMode ? GetStageBuildPhaseDuration(0) : buildPhaseDuration;
         }
 
         private void Update()
         {
+            if (gameManager != null && gameManager.IsGameOver)
+            {
+                return;
+            }
+
             float deltaTime = Time.deltaTime;
 
             if (_isWaiting)
@@ -143,6 +166,12 @@ namespace RCCom.Managers
 
         private void StartNextWave()
         {
+            if (_isStageMode)
+            {
+                StartNextStageWave();
+                return;
+            }
+
             _waveNumber++;
             _spawnQueue.Clear();
 
@@ -157,15 +186,71 @@ namespace RCCom.Managers
             _stateTimer = 0f;
         }
 
+        private void StartNextStageWave()
+        {
+            _stageWaveIndex++;
+            if (_stageDefinition == null || _stageDefinition.waves == null ||
+                _stageWaveIndex >= _stageDefinition.waves.Count)
+            {
+                _stageCompleted = true;
+                gameManager.CompleteBattle();
+                return;
+            }
+
+            StageWaveDefinition wave = _stageDefinition.waves[_stageWaveIndex];
+            _waveNumber = _stageWaveIndex + 1;
+            _stageHealthMultiplier = Mathf.Max(0.01f, wave != null ? wave.healthMultiplier : 1f);
+            _spawnQueue.Clear();
+            _stageSpawnDelays.Clear();
+
+            if (wave != null && wave.spawns != null)
+            {
+                foreach (StageEnemySpawn spawn in wave.spawns)
+                {
+                    if (spawn == null || spawn.enemy == null || spawn.count <= 0)
+                    {
+                        continue;
+                    }
+
+                    int count = Mathf.Max(0, spawn.count);
+                    for (int i = 0; i < count; i++)
+                    {
+                        _spawnQueue.Enqueue(spawn.enemy);
+                        float delay = i == 0 ? spawn.initialDelay : spawn.interval;
+                        _stageSpawnDelays.Enqueue(Mathf.Max(0f, delay));
+                    }
+                }
+            }
+
+            Debug.Log($"[Wave] {_waveNumber} 스테이지 웨이브 시작 (적 {_spawnQueue.Count}마리)");
+            _isWaiting = false;
+            _stateTimer = _stageSpawnDelays.Count > 0 ? _stageSpawnDelays.Dequeue() : 0f;
+        }
+
         private void TickSpawning(float deltaTime)
         {
             if (_spawnQueue.Count == 0)
             {
                 if (_aliveEnemies.Count == 0)
                 {
+                    if (_isStageMode && _stageWaveIndex >= _stageDefinition.waves.Count - 1)
+                    {
+                        if (_stageCompleted)
+                        {
+                            return;
+                        }
+
+                        _stageCompleted = true;
+                        Debug.Log($"[Wave] {_waveNumber} 스테이지 클리어");
+                        gameManager.CompleteBattle();
+                        return;
+                    }
+
                     Debug.Log($"[Wave] {_waveNumber} 웨이브 클리어 — {buildPhaseDuration}초 후 다음 웨이브");
                     _isWaiting = true;
-                    _stateTimer = buildPhaseDuration;
+                    _stateTimer = _isStageMode
+                        ? GetStageBuildPhaseDuration(_stageWaveIndex + 1)
+                        : buildPhaseDuration;
                 }
 
                 return;
@@ -178,7 +263,9 @@ namespace RCCom.Managers
             }
 
             SpawnOne(_spawnQueue.Dequeue());
-            _stateTimer = CalculateSpawnInterval(_waveNumber);
+            _stateTimer = _isStageMode
+                ? (_stageSpawnDelays.Count > 0 ? _stageSpawnDelays.Dequeue() : 0f)
+                : CalculateSpawnInterval(_waveNumber);
         }
 
         private float CalculateSpawnInterval(int waveNumber)
@@ -198,7 +285,19 @@ namespace RCCom.Managers
         /// </summary>
         private float CalculateHealthMultiplier(int waveNumber)
         {
-            return 1f + healthGrowthPerWave * waveNumber;
+            return _isStageMode ? _stageHealthMultiplier : 1f + healthGrowthPerWave * waveNumber;
+        }
+
+        private float GetStageBuildPhaseDuration(int waveIndex)
+        {
+            if (_stageDefinition == null || _stageDefinition.waves == null ||
+                waveIndex < 0 || waveIndex >= _stageDefinition.waves.Count)
+            {
+                return 0f;
+            }
+
+            StageWaveDefinition wave = _stageDefinition.waves[waveIndex];
+            return Mathf.Max(0f, wave != null ? wave.buildPhaseDuration : 0f);
         }
 
         private List<EnemyDefinition> BuildSpawnQueue(int waveNumber)

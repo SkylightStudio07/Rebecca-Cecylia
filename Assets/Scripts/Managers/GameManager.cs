@@ -71,6 +71,7 @@ namespace RCCom.Managers
 
         /// <summary>플레이어 사망 또는 거점 파괴로 게임이 끝났는지 — 한 번 true가 되면 유지.</summary>
         public bool IsGameOver { get; private set; }
+        public BattleOutcome Outcome { get; private set; } = BattleOutcome.Defeat;
 
         public event Action<int> GoldChanged;
 
@@ -79,6 +80,9 @@ namespace RCCom.Managers
 
         /// <summary>플레이어 사망 또는 거점 파괴 시 1회 발생 — 결과 화면 UI가 구독.</summary>
         public event Action GameOver;
+
+        /// <summary>승리와 패배를 모두 한 번만 전달하는 결과 화면용 이벤트.</summary>
+        public event Action<BattleOutcome> BattleEnded;
 
         private void Awake()
         {
@@ -140,14 +144,34 @@ namespace RCCom.Managers
         /// <summary>플레이어 사망/거점 파괴 공용 핸들러 — 어느 쪽이 먼저 오든 1회만 처리.</summary>
         private void HandleGameOver()
         {
+            EndBattle(BattleOutcome.Defeat);
+        }
+
+        /// <summary>
+        /// 유한 스테이지의 마지막 웨이브가 끝났을 때 호출한다. 기존 GameOver 이벤트는
+        /// 패배 전용 호환 계약으로 남기고, 결과 화면은 BattleEnded를 사용한다.
+        /// </summary>
+        public void CompleteBattle()
+        {
+            EndBattle(BattleOutcome.Victory);
+        }
+
+        private void EndBattle(BattleOutcome outcome)
+        {
             if (IsGameOver)
             {
                 return;
             }
 
             IsGameOver = true;
+            Outcome = outcome;
             Time.timeScale = 0f;
-            GameOver?.Invoke();
+            if (outcome == BattleOutcome.Defeat)
+            {
+                GameOver?.Invoke();
+            }
+
+            BattleEnded?.Invoke(outcome);
         }
 
         /// <summary>WaveManager가 처치 보상 지급 시 호출.</summary>

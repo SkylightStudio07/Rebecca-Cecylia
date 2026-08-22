@@ -1,0 +1,239 @@
+fileFormatVersion: 2
+guid: 201ba0449c9b2444fae1dfc9e2d20299
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 5629303312661571997
+    second: OperatorManagementEnvironmental_0
+  - first:
+      213: -4341459070045913250
+    second: OperatorManagementEnvironmental_1
+  - first:
+      213: 3978416766458490281
+    second: OperatorManagementEnvironmental_2
+  - first:
+      213: -3263206102313478173
+    second: OperatorManagementEnvironmental_3
+  - first:
+      213: -7571673807184373393
+    second: OperatorManagementEnvironmental_4
+  - first:
+      213: -6759921763341089624
+    second: OperatorManagementEnvironmental_5
+  - first:
+      213: 3406893190550848443
+    second: OperatorManagementEnvironmental_6
+  - first:
+      213: 8396818452636717471
+    second: OperatorManagementEnvironmental_7
+  - first:
+      213: 7342245248340351126
+    second: OperatorManagementEnvironmental_8
+  - first:
+      213: 3853831175889742647
+    second: OperatorManagementEnvironmental_9
+  - first:
+      213: 7140648109546398626
+    second: OperatorManagementEnvironmental_10
+  - first:
+      213: -8663456316772633933
+    second: OperatorManagementEnvironmental_11
+  - first:
+      213: 4861180876957555030
+    second: OperatorManagementEnvironmental_12
+  - first:
+      213: 299738752251726274
+    second: OperatorManagementEnvironmental_13
+  - first:
+      213: 2408525052822687163
+    second: OperatorManagementEnvironmental_14
+  - first:
+      213: -928741079663834750
+    second: OperatorManagementEnvironmental_15
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: OperatorManagementEnvironmental_0
+      rect:
+        serializedVersion: 2
+        x: 29
+        y: 396
+        width: 2109
+        height: 277
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d996f1c998d4f1e40800000000000000
+      internalID: 5629303312661571997
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OperatorManagementEnvironmental_1
+      rect:
+        serializedVersion: 2
+        x: 84
+        y: 26
+        width: 1922
+        height: 341
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e5ff3035af900c3c0800000000000000
+      internalID: -4341459070045913250
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: c30e56914d9dc4b4f8efe0cea64ea83f
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      OperatorManagementEnvironmental_0: 5629303312661571997
+      OperatorManagementEnvironmental_1: -4341459070045913250
+      OperatorManagementEnvironmental_10: 7140648109546398626
+      OperatorManagementEnvironmental_11: -8663456316772633933
+      OperatorManagementEnvironmental_12: 4861180876957555030
+      OperatorManagementEnvironmental_13: 299738752251726274
+      OperatorManagementEnvironmental_14: 2408525052822687163
+      OperatorManagementEnvironmental_15: -928741079663834750
+      OperatorManagementEnvironmental_16: 453733518
+      OperatorManagementEnvironmental_2: 3978416766458490281
+      OperatorManagementEnvironmental_3: -3263206102313478173
+      OperatorManagementEnvironmental_4: -7571673807184373393
+      OperatorManagementEnvironmental_5: -6759921763341089624
+      OperatorManagementEnvironmental_6: 3406893190550848443
+      OperatorManagementEnvironmental_7: 8396818452636717471
+      OperatorManagementEnvironmental_8: 7342245248340351126
+      OperatorManagementEnvironmental_9: 3853831175889742647
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

@@ -16,6 +16,7 @@ namespace RCCom.Runtime
         [Header("배치 흐름 참조")]
         [SerializeField] private MapManager mapManager;
         [SerializeField] private WaveManager waveManager;
+        [SerializeField] private DeploymentInputModeController inputModeController;
 
         [Header("오퍼레이터 유닛 로드아웃")]
         [SerializeField] private AllyUnitRoster allyUnitRoster;
@@ -45,6 +46,8 @@ namespace RCCom.Runtime
         public int CommandPoints => _commandPoints;
         public int MaxCommandPoints => maxCommandPoints;
         public float CommandPointRecoveryPerSecond => commandPointRecoveryPerSecond;
+        public bool IsAllyUnitDeployModeActive =>
+            inputModeController == null || inputModeController.CurrentMode == DeploymentInputMode.AllyUnitDeploy;
 
         public AllyUnitDefinition SelectedDefinition =>
             _selectedIndex.HasValue && IsValidRosterIndex(_selectedIndex.Value)
@@ -60,6 +63,8 @@ namespace RCCom.Runtime
 
         private void Awake()
         {
+            inputModeController = DeploymentInputModeController.Resolve(inputModeController);
+
             // 타워형 오퍼레이터는 유닛 로스터가 없는 것이 정상이다. 이 경우 비어 있는 기본
             // 로스터를 섞지 않고 Controller를 안전한 비활성 상태로 유지해 로드아웃 경계를 지킨다.
             allyUnitRoster = OperatorLoadoutSession.ResolveAllyUnitRoster(allyUnitRoster);
@@ -74,6 +79,11 @@ namespace RCCom.Runtime
             {
                 waveManager.BeforeEnemiesTick += HandleBeforeEnemiesTick;
             }
+
+            if (inputModeController != null)
+            {
+                inputModeController.ModeChanged += HandleInputModeChanged;
+            }
         }
 
         private void OnDisable()
@@ -81,6 +91,11 @@ namespace RCCom.Runtime
             if (waveManager != null)
             {
                 waveManager.BeforeEnemiesTick -= HandleBeforeEnemiesTick;
+            }
+
+            if (inputModeController != null)
+            {
+                inputModeController.ModeChanged -= HandleInputModeChanged;
             }
         }
 
@@ -116,6 +131,11 @@ namespace RCCom.Runtime
                 return false;
             }
 
+            if (inputModeController != null)
+            {
+                inputModeController.EnterMode(DeploymentInputMode.AllyUnitDeploy);
+            }
+
             _selectedIndex = index;
             SelectionChanged?.Invoke(allyUnitRoster.units[index]);
             return true;
@@ -123,8 +143,12 @@ namespace RCCom.Runtime
 
         public void ClearSelection()
         {
-            _selectedIndex = null;
-            SelectionChanged?.Invoke(null);
+            ClearSelectionState();
+
+            if (inputModeController != null)
+            {
+                inputModeController.ClearMode(DeploymentInputMode.AllyUnitDeploy);
+            }
         }
 
         /// <summary>
@@ -133,7 +157,26 @@ namespace RCCom.Runtime
         /// </summary>
         public bool TryDeploySelected()
         {
-            return _selectedIndex.HasValue && TryDeploy(_selectedIndex.Value);
+            return IsAllyUnitDeployModeActive && _selectedIndex.HasValue && TryDeploy(_selectedIndex.Value);
+        }
+
+        private void HandleInputModeChanged(DeploymentInputMode mode)
+        {
+            if (mode != DeploymentInputMode.AllyUnitDeploy)
+            {
+                ClearSelectionState();
+            }
+        }
+
+        private void ClearSelectionState()
+        {
+            if (!_selectedIndex.HasValue)
+            {
+                return;
+            }
+
+            _selectedIndex = null;
+            SelectionChanged?.Invoke(null);
         }
 
         /// <summary>

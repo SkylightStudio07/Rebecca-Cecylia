@@ -49,10 +49,28 @@ namespace RCCom.Runtime
                 }
 
                 // 이전/손상 데이터의 기본값을 정규화해 이후 소비 코드가 음수나 null을
-                // 매번 방어하지 않게 한다. 미래 버전 마이그레이션은 스키마가 실제로 바뀔 때 추가한다.
+                // 매번 방어하지 않게 한다. 호감도 필드는 v1 저장 파일에 없으므로 빈
+                // 목록과 미수령 상태를 넣어 자연스럽게 v2로 승격한다.
                 profile.schemaVersion = Math.Max(1, profile.schemaVersion);
                 profile.bestWave = Math.Max(0, profile.bestWave);
                 profile.selectedOperatorId ??= string.Empty;
+                profile.operatorAffinities ??= new System.Collections.Generic.List<OperatorAffinityRecord>();
+                for (int i = profile.operatorAffinities.Count - 1; i >= 0; i--)
+                {
+                    OperatorAffinityRecord record = profile.operatorAffinities[i];
+                    if (record == null || string.IsNullOrWhiteSpace(record.operatorId))
+                    {
+                        profile.operatorAffinities.RemoveAt(i);
+                        continue;
+                    }
+
+                    record.affinity = Math.Max(0, Math.Min(PlayerProfile.MaxOperatorAffinity,
+                        record.affinity));
+                }
+
+                profile.pendingReturnOperatorId ??= string.Empty;
+                profile.pendingReturnCount = Math.Max(0, profile.pendingReturnCount);
+                profile.schemaVersion = PlayerProfile.CurrentSchemaVersion;
                 return profile;
             }
             catch (ArgumentException exception)

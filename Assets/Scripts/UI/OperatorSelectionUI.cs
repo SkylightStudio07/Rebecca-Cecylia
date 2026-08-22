@@ -6,10 +6,8 @@ using RCCom.Definitions.Operator;
 using RCCom.Runtime;
 using TMPro;
 using UnityEngine;
-using UnityEngine.AddressableAssets;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
-using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
@@ -38,6 +36,7 @@ namespace RCCom.UI
         [SerializeField] private Button nextButton;
         [SerializeField] private Button confirmButton;
         [SerializeField] private Button backButton;
+        [SerializeField] private ModeSelectionUI modeSelectionUI;
         [SerializeField] private string defenseSceneName = "DefenseScene";
 
         private IProfileStorage _profileStorage;
@@ -156,88 +155,28 @@ namespace RCCom.UI
 
         private IEnumerator LoadAndStart(OperatorCatalogEntry entry)
         {
-            SetLoading(true, "콘텐츠 확인 중…", 0f);
-
-            if (OperatorLoadoutSession.SelectedDefinition != null &&
-                OperatorLoadoutSession.SelectedDefinition.operatorId == entry.operatorId)
-            {
-                SaveSelectionAndStart(entry.operatorId);
-                yield break;
-            }
-
-            AsyncOperationHandle initialization = Addressables.InitializeAsync();
-            yield return initialization;
-            if (initialization.Status != AsyncOperationStatus.Succeeded)
-            {
-                FailLoading("Addressables 초기화에 실패했습니다.");
-                yield break;
-            }
-
-            AsyncOperationHandle<long> sizeHandle = Addressables.GetDownloadSizeAsync(entry.address);
-            yield return sizeHandle;
-            if (sizeHandle.Status != AsyncOperationStatus.Succeeded)
-            {
-                Addressables.Release(sizeHandle);
-                FailLoading("다운로드 크기를 확인하지 못했습니다. 네트워크 연결을 확인하세요.");
-                yield break;
-            }
-
-            long downloadBytes = sizeHandle.Result;
-            Addressables.Release(sizeHandle);
-
-            if (downloadBytes > 0L)
-            {
-                AsyncOperationHandle downloadHandle = Addressables.DownloadDependenciesAsync(entry.address, false);
-                while (!downloadHandle.IsDone)
-                {
-                    float progress = downloadHandle.GetDownloadStatus().Percent;
-                    SetLoading(true, $"콘텐츠 다운로드 중… {progress:P0}", progress * 0.85f);
-                    yield return null;
-                }
-
-                if (downloadHandle.Status != AsyncOperationStatus.Succeeded)
-                {
-                    Addressables.Release(downloadHandle);
-                    FailLoading("콘텐츠 다운로드에 실패했습니다. 다시 시도하세요.");
-                    yield break;
-                }
-
-                Addressables.Release(downloadHandle);
-            }
-
-            SetLoading(true, "오퍼레이터 불러오는 중…", 0.9f);
-            AsyncOperationHandle<OperatorDefinition> definitionHandle =
-                Addressables.LoadAssetAsync<OperatorDefinition>(entry.address);
-            yield return definitionHandle;
-
-            if (definitionHandle.Status != AsyncOperationStatus.Succeeded || definitionHandle.Result == null)
-            {
-                if (definitionHandle.IsValid())
-                {
-                    Addressables.Release(definitionHandle);
-                }
-
-                FailLoading("오퍼레이터를 불러오지 못했습니다. 다시 시도하세요.");
-                yield break;
-            }
-
-            if (definitionHandle.Result.operatorId != entry.operatorId)
-            {
-                Addressables.Release(definitionHandle);
-                FailLoading("카탈로그와 오퍼레이터 ID가 일치하지 않습니다.");
-                yield break;
-            }
-
-            OperatorLoadoutSession.SelectAddressable(definitionHandle);
-            SetLoading(true, "준비 완료", 1f);
-            SaveSelectionAndStart(entry.operatorId);
+            _isLoading = true;
+            UpdateButtons();
+            yield return OperatorContentLoader.LoadAndSelect(entry,
+                (message, progress) => SetLoading(true, message, progress),
+                _ => SaveSelectionAndOpenModeSelection(entry.operatorId), FailLoading);
         }
 
-        private void SaveSelectionAndStart(string operatorId)
+        private void SaveSelectionAndOpenModeSelection(string operatorId)
         {
             _profile.selectedOperatorId = operatorId;
             _profileStorage.Save(_profile);
             Time.timeScale = 1f;
+
+            _isLoading = false;
+            SetPanelVisible(false);
+            if (modeSelectionUI != null)
+            {
+                modeSelectionUI.Open(operatorId);
+                return;
+            }
+
+            // 기존 배선이 남아 있는 씬에서도 선택 기능이 완전히 끊기지 않도록 레거시 폴백을 둔다.
             SceneManager.LoadScene(defenseSceneName);
         }
 

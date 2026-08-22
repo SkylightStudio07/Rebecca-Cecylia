@@ -99,6 +99,8 @@ namespace RCCom.UI
                 button.SetSelected(definition == deployController.SelectedDefinition);
                 _buttons.Add(button);
             }
+
+            RefreshUnitButtons();
         }
 
         private void HandleSelectionChanged(AllyUnitDefinition selectedDefinition)
@@ -130,7 +132,21 @@ namespace RCCom.UI
         private void HandleCommandPointsChanged(int _)
         {
             RefreshCommandPoints();
+            RefreshUnitButtons();
             RefreshDeployButton();
+        }
+
+        private void RefreshUnitButtons()
+        {
+            foreach (UnitDeployButton button in _buttons)
+            {
+                if (button != null)
+                {
+                    // 비용 판정은 Controller에 남겨 UI와 실제 소비 조건이 달라지지 않게 한다.
+                    button.SetAffordable(deployController != null &&
+                                         deployController.CanAfford(button.Definition));
+                }
+            }
         }
 
         private void RefreshCommandPoints()

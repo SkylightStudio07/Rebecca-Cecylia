@@ -2,6 +2,7 @@ using System;
 using RCCom.Definitions.Tower;
 using RCCom.Managers;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 
 namespace RCCom.Runtime
@@ -25,6 +26,7 @@ namespace RCCom.Runtime
         [SerializeField] private MapManager mapManager;
         [SerializeField] private GameManager gameManager;
         [SerializeField] private TowerRoster towerRoster;
+        [SerializeField] private DeploymentInputModeController inputModeController;
 
         [Tooltip("이미 지어진 타워를 클릭했을 때 사거리를 보여줄 공용 인디케이터 (TowerBuildPreview와 같은 오브젝트를 공유해도 됨)")]
         [SerializeField] private RangeIndicator rangeIndicator;
@@ -40,15 +42,36 @@ namespace RCCom.Runtime
 
         /// <summary>TowerBuildPreview가 현재 뭘 지으려는지 알아야 해서 공개. 건설 모드가 꺼져 있으면 null.</summary>
         public TowerDefinition SelectedDefinition =>
-            _selectedIndex.HasValue && _selectedIndex.Value < towerRoster.towers.Count
+            IsTowerBuildModeActive && _selectedIndex.HasValue && _selectedIndex.Value < towerRoster.towers.Count
                 ? towerRoster.towers[_selectedIndex.Value]
                 : null;
 
+        public bool IsTowerBuildModeActive =>
+            inputModeController == null || inputModeController.CurrentMode == DeploymentInputMode.TowerBuild;
+
         private void Awake()
         {
+            inputModeController = DeploymentInputModeController.Resolve(inputModeController);
+
             // 원본 에셋이 아니라 세션 전용 복제본을 참조하도록 교체 — 카드가 Data를 직접
             // 수정해도 원본 .asset이 오염되지 않게 함 (TowerRoster.GetRuntimeInstance 참고).
             towerRoster = OperatorLoadoutSession.ResolveTowerRoster(towerRoster).GetRuntimeInstance();
+        }
+
+        private void OnEnable()
+        {
+            if (inputModeController != null)
+            {
+                inputModeController.ModeChanged += HandleInputModeChanged;
+            }
+        }
+
+        private void OnDisable()
+        {
+            if (inputModeController != null)
+            {
+                inputModeController.ModeChanged -= HandleInputModeChanged;
+            }
         }
 
         private void Update()
@@ -59,6 +82,13 @@ namespace RCCom.Runtime
             // timeScale=0은 deltaTime 기반 로직만 멈추지 Update()/Input System 폴링은 계속 돌아서
             // 이 게이트가 없으면 패널/결과 화면/튜토리얼 뒤에서 건설이 그대로 동작해버린다.
             if (Time.timeScale <= 0f)
+            {
+                return;
+            }
+
+            // UI 버튼을 누른 같은 프레임의 포인터 입력이 뒤쪽 월드 셀까지 전달되면, 모드가
+            // 전환되기 전에 타워가 설치될 수 있다. 입력 모드와 별개로 UI 포인터는 여기서 차단한다.
+            if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
             {
                 return;
             }
@@ -125,28 +155,56 @@ namespace RCCom.Runtime
         {
             if (Mouse.current != null && Mouse.current.rightButton.wasPressedThisFrame)
             {
-                _selectedIndex = null;
+                ClearSelection();
                 Debug.Log("[Build] 건설 모드 취소");
-
-                // TowerBuildPreview는 건설 모드가 꺼지면(definition == null) rangeIndicator를 더 이상
-                // 건드리지 않으므로(클릭 조회 표시와의 충돌 방지), 취소 시점에 여기서 직접 꺼준다.
-                if (rangeIndicator != null)
-                {
-                    rangeIndicator.Hide();
-                }
             }
         }
 
         /// <summary>빌드 메뉴 UI 버튼(OnClick)이 호출 — 숫자키 선택은 제거됨(스크롤 빌드 메뉴로 대체됨).</summary>
         public void SelectTower(int index)
         {
-            if (index >= towerRoster.towers.Count)
+            if (index < 0 || index >= towerRoster.towers.Count)
             {
                 return;
             }
 
+            if (inputModeController != null)
+            {
+                inputModeController.EnterMode(DeploymentInputMode.TowerBuild);
+            }
+
             _selectedIndex = index;
             Debug.Log($"[Build] 선택: {towerRoster.towers[index].Data.displayName}");
+        }
+
+        public void ClearSelection()
+        {
+            ClearSelectionState();
+
+            if (inputModeController != null)
+            {
+                inputModeController.ClearMode(DeploymentInputMode.TowerBuild);
+            }
+        }
+
+        private void HandleInputModeChanged(DeploymentInputMode mode)
+        {
+            if (mode != DeploymentInputMode.TowerBuild)
+            {
+                ClearSelectionState();
+            }
+        }
+
+        private void ClearSelectionState()
+        {
+            _selectedIndex = null;
+
+            // TowerBuildPreview는 선택이 없으면 인디케이터를 건드리지 않으므로 모드가 바뀌는
+            // 그 시점에 이전 타워의 프리뷰 사거리를 함께 정리한다.
+            if (rangeIndicator != null)
+            {
+                rangeIndicator.Hide();
+            }
         }
 
         private void HandleBuildClick(Vector3Int cell)
