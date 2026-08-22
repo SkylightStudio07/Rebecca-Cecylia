@@ -23,3 +23,18 @@ MonoBehaviour:
     remoteContent: 0
     requiredBestWave: 0
     unitPreviews: []
+  - operatorId: racing
+    displayName: "\uC2E4\uBE44\uC544"
+    playStyleDescription: "\uB808\uC774\uC2F1\uAC78 \uCEE8\uC149\uC758 \uCE90\uB9AD\uD130"
+    previewPortrait: {fileID: 5771864889448805728, guid: 5b49084e49d23c9439bdffe7e3b23f8f, type: 3}
+    address: operator/racing
+    remoteContent: 0
+    requiredBestWave: 0
+    unitPreviews:
+    - displayName: "\uC804\uC9C4 \uC0AC\uC218"
+      deployCost: 25
+      previewIcon: {fileID: 0}
+      fallbackColor: {r: 0.25, g: 0.75, b: 1, a: 1}
+    - displayName: "\uBC29\uD638 \uC694\uC6D0"
+      deployCost: 55
+      previewIcon: {fileID: 0}

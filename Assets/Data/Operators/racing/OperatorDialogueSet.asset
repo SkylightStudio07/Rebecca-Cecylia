@@ -19,13 +19,17 @@ MonoBehaviour:
     portraitSprite: {fileID: 0}
     defaultLobbySprite: {fileID: -8842975215526782624, guid: 770f7d05d59fe974faf04c678dd83b08, type: 3}
     entries:
-    - text: "\uC5D4\uC9C4 \uC608\uC5F4\uC740 \uB05D\uB0AC\uC5B4, \uB4DC\uB77C\uC774\uBC84!
-        \uC5B8\uC81C \uC11C\uD0B7\uC73C\uB85C \uB098\uAC08 \uAC70\uC57C?"
+    - text: "\uC5D4\uC9C4 \uC608\uC5F4\uC740 \uB05D\uB0AC\uC5B4, \uC5B8\uC81C \uC11C\uD0B7\uC73C\uB85C
+        \uB098\uAC08 \uAC70\uC57C?"
       lobbySprite: {fileID: -8842975215526782624, guid: 770f7d05d59fe974faf04c678dd83b08, type: 3}
       portraitSprite: {fileID: 0}
     - text: "\uC5B4\uBA38, \uD0C0\uC774\uC5B4 \uACF5\uAE30\uC555\uC774\uB77C\uB3C4
         \uCCB4\uD06C\uD574 \uC8FC\uB824\uACE0? \uACE0\uB9C8\uC6CC\uB77C~"
       lobbySprite: {fileID: 9085980035291716299, guid: 9422c5807b3ab134ebfc2bec96cd9633, type: 3}
+      portraitSprite: {fileID: 0}
+    - text: "\uAE43\uBC1C \uB0B4\uB824\uAC00\uBA74 \uD480 \uC2A4\uB85C\uD2C0\uC778
+        \uAC70 \uC54C\uC9C0? \uBA4D\uB54C\uB9AC\uC9C0 \uB9C8~"
+      lobbySprite: {fileID: -8792083238146946346, guid: f9802b05559bc2d429eed70bf41b25f6, type: 3}
       portraitSprite: {fileID: 0}
     lines: []
   lobbyReturnTogether:
@@ -86,6 +90,14 @@ MonoBehaviour:
         \uAF64 \uB9C8\uC74C\uC5D0 \uB4DC\uB294 \uD398\uC774\uC2A4\uC57C."
       lobbySprite: {fileID: 5771864889448805728, guid: 5b49084e49d23c9439bdffe7e3b23f8f, type: 3}
       portraitSprite: {fileID: 0}
+    - text: "\uBB50\uC57C, \uAF64 \uD558\uC796\uC544? \uB2E4\uC2DC \uBD24\uC5B4~"
+      lobbySprite: {fileID: 3197500064403587243, guid: 2d81fcded81d9444887bc5b5a628abf5, type: 3}
+      portraitSprite: {fileID: 0}
+    - text: "\uB098\uB791 \uD638\uD761 \uB9DE\uCD94\uB294 \uBC95\uC744 \uC880 \uC54C\uAE30
+        \uC2DC\uC791\uD588\uB098 \uBD10? \uC88B\uC544, \uC774 \uD398\uC774\uC2A4
+        \uC720\uC9C0\uD574!"
+      lobbySprite: {fileID: 2930691584566479702, guid: cb192b563338282478d9b9f17a34a745, type: 3}
+      portraitSprite: {fileID: 0}
     lines: []
   lobbyTouchJoy:
     defaultPortraitSprite: {fileID: 0}
@@ -101,6 +113,10 @@ MonoBehaviour:
         \uC2E0\uD638\uB3C4 \uC5C6\uC774 \uB4E4\uC774\uB300\uBA74 \uBC18\uCE59\uC774\uAC70\uB4E0?
         \uD6C4\uD6D7~"
       lobbySprite: {fileID: 7689553402402167601, guid: f2b5d6b407e2f58428ab5fdbfac14aab, type: 3}
+      portraitSprite: {fileID: 0}
+    - text: "\uD53C\uD2B8\uB808\uC778\uC5D0\uC11C \uBD80\uB974\uBA74 \uC5B8\uC81C\uB4E0
+        \uB2EC\uB824\uC62C \uAC70\uC9C0? \uC6B0\uB9B0 \uCD5C\uACE0\uC758 \uD300\uC774\uB2C8\uAE4C!"
+      lobbySprite: {fileID: -4277495890944506689, guid: 93bf4c9ebc5328144ad38b56c3fa1f01, type: 3}
       portraitSprite: {fileID: 0}
     lines: []
   lobbyTouchLove:
@@ -138,6 +154,11 @@ MonoBehaviour:
         \uC545\uC140\uB85C \uB098\uC640 \uD568\uAED8 \uB2EC\uB824\uC918."
       lobbySprite: {fileID: -6014986634922982624, guid: 9d31303b53e18084c91a9067792d8bb2, type: 3}
       portraitSprite: {fileID: 0}
+    - text: "\uC11C\uD0B7\uC758 \uBAA8\uB4E0 \uC2A4\uD3EC\uD2B8\uB77C\uC774\uD2B8\uAC00
+        \uC6B0\uB9B4 \uBE44\uCD94\uACE0 \uC788\uC5B4. \uB0B4 \uC804\uB2F4 \uB4DC\uB77C\uC774\uBC84\uB294
+        \uB108 \uD558\uB098\uBFD0\uC774\uC57C."
+      lobbySprite: {fileID: 2937661386758285211, guid: 1fe4b5fa9838e394f88947596bc75034, type: 3}
+      portraitSprite: {fileID: 0}
     lines: []
   gameStart:
     defaultPortraitSprite: {fileID: 0}
@@ -146,6 +167,10 @@ MonoBehaviour:
     entries:
     - text: "\uC11C\uD0B7 \uC785\uC7A5 \uC644\uB8CC! \uAD00\uC911\uB4E4\uD55C\uD14C
         \uCD5C\uACE0\uC758 \uB808\uC774\uC2A4\uB97C \uBCF4\uC5EC\uC8FC\uC790\uACE0!"
+      lobbySprite: {fileID: 0}
+      portraitSprite: {fileID: 0}
+    - text: "\uC2B9\uB9AC\uC758 \uCCB4\uCEE4\uAE30\uB294 \uC6B0\uB9AC\uAC00 \uBA3C\uC800
+        \uBC1B\uB294\uB2E4. \uC804\uC6D0 \uC9C4\uACA9!"
       lobbySprite: {fileID: 0}
       portraitSprite: {fileID: 0}
     lines: []
@@ -180,6 +205,10 @@ MonoBehaviour:
         \uC815\uC2E0 \uCC28\uB824!"
       lobbySprite: {fileID: 0}
       portraitSprite: {fileID: 0}
+    - text: "\uC57C! \uD53C\uD2B8\uC874\uC5D0 \uCDA9\uB3CC \uC0AC\uACE0 \uB0AC\uC5B4!
+        \uB2F9\uC7A5 \uD6C4\uC9C4\uD574\uC11C \uCCD0\uB0B4!"
+      lobbySprite: {fileID: 0}
+      portraitSprite: {fileID: 0}
     lines: []
   playerHit:
     defaultPortraitSprite: {fileID: 0}
@@ -193,6 +222,10 @@ MonoBehaviour:
         \uC7A1\uC544!"
       lobbySprite: {fileID: 0}
       portraitSprite: {fileID: 0}
+    - text: "\uBC14\uB514\uC5D0 \uC2A4\uD06C\uB798\uCE58 \uB0AC\uC5B4! \uB77C\uC778
+        \uC720\uC9C0\uD574!"
+      lobbySprite: {fileID: 0}
+      portraitSprite: {fileID: 0}
     lines: []
   playerHitCritical:
     defaultPortraitSprite: {fileID: 0}
@@ -201,6 +234,14 @@ MonoBehaviour:
     entries:
     - text: "\uC5D4\uC9C4 \uACFC\uC5F4! \uB354 \uC774\uC0C1\uC740 \uC704\uD5D8\uD558\uACA0\uC5B4,
         \uB2F9\uC7A5 \uD68C\uD53C\uD574!"
+      lobbySprite: {fileID: 0}
+      portraitSprite: {fileID: 0}
+    - text: "\uC548\uB3FC! \uB354 \uC774\uC0C1\uC740 \uB108\uBB34 \uC704\uD5D8\uD574!
+        \uC815\uC2E0 \uCC28\uB824!"
+      lobbySprite: {fileID: 0}
+      portraitSprite: {fileID: 0}
+    - text: "\uC190\uC0C1\uC774 \uB108\uBB34 \uC2EC\uD574! \uC774\uB300\uB85C\uB294
+        \uBB34\uB9AC\uC57C!"
       lobbySprite: {fileID: 0}
       portraitSprite: {fileID: 0}
     lines: []
@@ -227,6 +268,10 @@ MonoBehaviour:
         \uC790\uB9AC\uAC00 \uC5C6\uC796\uC544!"
       lobbySprite: {fileID: 0}
       portraitSprite: {fileID: 0}
+    - text: "\uD2B8\uB799\uC774 \uAF49 \uCC3C\uC5B4! \uC624\uBC84\uD14C\uC774\uD06C\uD560
+        \uACF5\uAC04\uB3C4 \uC5C6\uB2E4\uACE0!"
+      lobbySprite: {fileID: 0}
+      portraitSprite: {fileID: 0}
     lines: []
   playerDied:
     defaultPortraitSprite: {fileID: 0}
@@ -238,7 +283,7 @@ MonoBehaviour:
       lobbySprite: {fileID: 0}
       portraitSprite: {fileID: 0}
     - text: "\uB9D0\uB3C4 \uC548\uB3FC... \uC774 \uB808\uC774\uC2A4\uB294 \uBB34\uD6A8\uC57C!
-        \uB208 \uC880 \uB5A0\uBD10 {\uD50C\uB808\uC774\uC5B4}!!"
+        \uB208 \uC880 \uB5A0\uBD10!"
       lobbySprite: {fileID: 0}
       portraitSprite: {fileID: 0}
     lines: []
