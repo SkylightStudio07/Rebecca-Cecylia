@@ -121,9 +121,11 @@ namespace RCCom.UI
 
             bool highlighted = _unlocked && (_browsing || _pointerInside || _uiSelected);
             stateImage.sprite = _unlocked ? (highlighted ? hoverSprite : unlockedSprite) : lockedSprite;
-            // 원본 세 상태의 캔버스 비율이 달라 배경 자체는 고정 영역에 채우고, 강조 크기는 Transform으로 통일한다.
+            // 카드 루트까지 확대하면 초상화와 TMP도 함께 움직여 호버 전후의 시각 중심이 흔들린다.
+            // 상태 Image만 확대하고 콘텐츠 좌표는 항상 같은 위치를 유지한다.
             stateImage.preserveAspect = false;
-            transform.localScale = highlighted ? Vector3.one * highlightedScale : Vector3.one;
+            transform.localScale = Vector3.one;
+            stateImage.rectTransform.localScale = highlighted ? Vector3.one * highlightedScale : Vector3.one;
         }
     }
 }
