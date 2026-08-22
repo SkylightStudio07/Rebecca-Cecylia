@@ -93,7 +93,8 @@ namespace RCCom.UI
         public void Deploy()
         {
             if (_isLoading || !TryGetBrowsingEntry(out OperatorCatalogEntry entry) ||
-                !entry.IsUnlocked(_profile.bestWave))
+                !entry.IsUnlocked(_profile.bestWave) ||
+                entry.operatorId == _profile?.selectedOperatorId)
             {
                 return;
             }
@@ -290,13 +291,12 @@ namespace RCCom.UI
 
         private void UpdateButtons()
         {
-            bool hasEntry = TryGetBrowsingEntry(out OperatorCatalogEntry entry);
-            bool unlocked = hasEntry && entry.IsUnlocked(_profile?.bestWave ?? 0);
             bool canNavigate = !_isLoading && catalog != null && GetSlotCount() > 1;
-            bool alreadyActive = hasEntry && entry.operatorId == _profile?.selectedOperatorId;
             if (previousButton != null) { previousButton.interactable = canNavigate; }
             if (nextButton != null) { nextButton.interactable = canNavigate; }
-            if (deployButton != null) { deployButton.interactable = !_isLoading && unlocked && !alreadyActive; }
+            // 실제 배치 가능 여부는 Deploy()에서 판정하고, 버튼은 로딩 중에만 입력을 막는다.
+            // Selectable을 비활성화하면 Disabled 상태에 고정되어 포인터 Hover가 발생하지 않는다.
+            if (deployButton != null) { deployButton.interactable = !_isLoading; }
             if (backButton != null) { backButton.interactable = !_isLoading; }
         }
 

@@ -275,7 +275,10 @@ namespace RCCom.EditorTools
             }
             SpriteState state = deploy.spriteState;
             state.highlightedSprite = hover;
-            state.selectedSprite = hover;
+            state.pressedSprite = hover;
+            // EventSystem의 Selected는 키보드 포커스 상태이므로 포인터 Hover와 분리한다.
+            state.selectedSprite = normal;
+            state.disabledSprite = normal;
             deploy.spriteState = state;
         }
 
