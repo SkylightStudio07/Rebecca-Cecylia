@@ -127,6 +127,11 @@ namespace RCCom.EditorTools
                     errors.Add($"원격 오퍼레이터의 선택 초상화가 로컬 카탈로그에 참조됩니다: {catalogEntry.operatorId}");
                 }
 
+                if (catalogEntry.remoteContent && catalogEntry.managementPortrait != null)
+                {
+                    errors.Add($"원격 오퍼레이터의 관리 카드 초상화가 로컬 카탈로그에 참조됩니다: {catalogEntry.operatorId}");
+                }
+
                 AddressableAssetEntry addressableEntry = settings.FindAssetEntry(AssetDatabase.AssetPathToGUID(definitionPath));
                 if (addressableEntry == null || addressableEntry.address != catalogEntry.address)
                 {
@@ -231,6 +236,11 @@ namespace RCCom.EditorTools
                     // 아트가 코드보다 늦게 들어오는 제작 순서를 허용한다. 런타임 UI는 이미지
                     // 영역만 숨기므로 플레이 자체는 가능하지만 최종 제출 전에는 확인해야 한다.
                     warnings.Add($"선택 화면 초상화가 아직 연결되지 않았습니다: {path}");
+                }
+
+                if (definition.managementPortrait == null)
+                {
+                    warnings.Add($"관리 카드 전용 초상화가 아직 연결되지 않았습니다: {path}");
                 }
 
                 if (definition.playerData == null || definition.playerData.maxHealth <= 0f ||

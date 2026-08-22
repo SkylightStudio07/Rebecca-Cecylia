@@ -31,6 +31,9 @@ namespace RCCom.Definitions.Operator
         [Tooltip("선택 화면용 초상화. 전투 중 상황별 초상화는 dialogueSet이 담당한다.")]
         public Sprite selectionPortrait;
 
+        [Tooltip("오퍼레이터 관리 카드 전용 전신·반신 초상화. 선택 화면의 머리 크롭 초상화와 분리한다.")]
+        public Sprite managementPortrait;
+
         [Header("플레이어 로드아웃")]
         [Tooltip("오퍼레이터 선택 시 적용할 플레이어 기본 수치. 런타임 적용 단계에서 반드시 복제해 카드 강화가 이 원본을 수정하지 않게 할 것.")]
         public PlayerData playerData = new();

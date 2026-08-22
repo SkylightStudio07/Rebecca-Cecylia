@@ -18,6 +18,7 @@ MonoBehaviour:
     \uC911\uC2EC\uC73C\uB85C \uBC29\uC5B4\uC120\uC744 \uD655\uC7A5\uD558\uB294 \uAE30\uBCF8
     \uC624\uD37C\uB808\uC774\uD130"
   selectionPortrait: {fileID: 8101380904372118242, guid: 7692c1b2ac922604a964bcd1026289c7, type: 3}
+  managementPortrait: {fileID: -9117580695321126117, guid: 5e950858e95008a4ca29ca70c69f3a01, type: 3}
   playerData:
     maxHealth: 30
     moveSpeed: 5
