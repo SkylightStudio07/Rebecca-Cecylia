@@ -67,7 +67,9 @@ namespace RCCom.UI
 
             if (portraitImage != null)
             {
-                portraitImage.sprite = entry != null ? entry.previewPortrait : null;
+                portraitImage.sprite = entry != null && entry.managementPortrait != null
+                    ? entry.managementPortrait
+                    : entry != null ? entry.previewPortrait : null;
                 portraitImage.enabled = portraitImage.sprite != null;
             }
 

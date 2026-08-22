@@ -19,7 +19,23 @@ MonoBehaviour:
       \uC911\uC2EC\uC73C\uB85C \uBC29\uC5B4\uC120\uC744 \uD655\uC7A5\uD558\uB294
       \uAE30\uBCF8 \uC624\uD37C\uB808\uC774\uD130"
     previewPortrait: {fileID: 8101380904372118242, guid: 7692c1b2ac922604a964bcd1026289c7, type: 3}
+    managementPortrait: {fileID: -9117580695321126117, guid: 5e950858e95008a4ca29ca70c69f3a01, type: 3}
     address: operator/cassia
     remoteContent: 0
     requiredBestWave: 0
     unitPreviews: []
+  - operatorId: racing
+    displayName: "\uC2E4\uBE44\uC544"
+    playStyleDescription: "\uB808\uC774\uC2F1\uAC78 \uCEE8\uC149\uC758 \uCE90\uB9AD\uD130"
+    previewPortrait: {fileID: 5771864889448805728, guid: 5b49084e49d23c9439bdffe7e3b23f8f, type: 3}
+    address: operator/racing
+    remoteContent: 0
+    requiredBestWave: 0
+    unitPreviews:
+    - displayName: "\uC804\uC9C4 \uC0AC\uC218"
+      deployCost: 25
+      previewIcon: {fileID: 0}
+      fallbackColor: {r: 0.25, g: 0.75, b: 1, a: 1}
+    - displayName: "\uBC29\uD638 \uC694\uC6D0"
+      deployCost: 55
+      previewIcon: {fileID: 0}

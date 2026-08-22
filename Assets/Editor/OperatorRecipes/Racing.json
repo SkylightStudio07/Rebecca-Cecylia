@@ -1,0 +1,24 @@
+{
+    "operatorId": "racing",
+    "displayName": "실비아",
+    "playStyleDescription": "레이싱걸 컨셉의 캐릭터",
+    "selectionPortraitPath": "Assets/Art/Character Standing Arts/실비아/실비아.default-1.png",
+    "sourceTowerRosterPath": "Assets/Data/Operators/cassia/TowerRoster.asset",
+    "sourceCardRosterPath": "Assets/Data/Cards/Unlock/플레이어 카드 로스터.asset",
+    "sourceAllyUnitRosterPath": "Assets/Data/Operators/cassia/AllyUnits/CassiaTestAllyUnitRoster.asset",
+    "dialogueSetPath": "Assets/Data/Operators/racing/OperatorDialogueSet.asset",
+    "remoteContent": false,
+    "playerData": {
+        "maxHealth": 30.0,
+        "moveSpeed": 5.0,
+        "hitInvulnerabilityDuration": 0.0,
+        "attackDamage": 5.0,
+        "attackRange": 4.0,
+        "attackInterval": 1.0,
+        "projectileSpeed": 1.0,
+        "skillCooldown": 12.0,
+        "skillRange": 5.0,
+        "skillDamage": 5.0
+    },
+    "requiredBestWave": 0
+}

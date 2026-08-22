@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fd578546f204cbc469b575f5e2be9761, type: 3}
+  m_Name: OperatorDefinition
+  m_EditorClassIdentifier: Assembly-CSharp::RCCom.Definitions.Operator.OperatorDefinition
+  operatorId: racing
+  displayName: "\uC2E4\uBE44\uC544"
+  playStyleDescription: "\uB808\uC774\uC2F1\uAC78 \uCEE8\uC149\uC758 \uCE90\uB9AD\uD130"
+  selectionPortrait: {fileID: 5771864889448805728, guid: 5b49084e49d23c9439bdffe7e3b23f8f, type: 3}
+  playerData:
+    maxHealth: 30
+    moveSpeed: 5
+    hitInvulnerabilityDuration: 0
+    attackDamage: 5
+    attackRange: 4
+    attackInterval: 1
+    projectileSpeed: 1
+    skillCooldown: 12
+    skillRange: 5
+    skillDamage: 5
+  towerRoster: {fileID: 11400000, guid: f5430818b56e73b4dbaa6fc2f612ee9c, type: 2}
+  cardRoster: {fileID: 11400000, guid: 86ebdae2e75527246bcb3c4f75de7c4a, type: 2}
+  allyUnitRoster: {fileID: 11400000, guid: f632cec3e4bae5e4c94879e71341c868, type: 2}
+  dialogueSet: {fileID: 11400000, guid: d74a91ffce3a8c64cbbbb348907d5cda, type: 2}
+  requiredBestWave: 0
