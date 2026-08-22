@@ -43,7 +43,7 @@ namespace RCCom.EditorTools
             OperatorCatalog catalog = AssetDatabase.LoadAssetAtPath<OperatorCatalog>(CatalogPath);
             if (font == null || catalog == null) { throw new InvalidOperationException("관리 화면용 글꼴 또는 카탈로그가 없습니다."); }
 
-            OperatorManagementCardView cardPrefab = BuildCardPrefab(font);
+            OperatorManagementCardView cardPrefab = LoadOrCreateCardPrefab(font);
             Transform generated = RebuildGeneratedRoot(root);
             ConfigureRoot(root);
 
@@ -142,11 +142,26 @@ namespace RCCom.EditorTools
             {
                 throw new InvalidOperationException("오퍼레이터 관리 화면의 필수 배선이 누락되었습니다.");
             }
+            ValidateCardPrefab(prefab);
             if (scene.path != TitleScenePath) { throw new InvalidOperationException("TitleScene 검증에 실패했습니다."); }
             Debug.Log("[OperatorManagementSetup] 관리 화면 프리팹·씬·메뉴 연결 검증 통과");
         }
 
-        private static OperatorManagementCardView BuildCardPrefab(TMP_FontAsset font)
+        private static OperatorManagementCardView LoadOrCreateCardPrefab(TMP_FontAsset font)
+        {
+            OperatorManagementCardView existing = AssetDatabase.LoadAssetAtPath<OperatorManagementCardView>(CardPrefabPath);
+            if (existing != null)
+            {
+                // 이 프리팹은 사람이 화면을 보며 초상화·TMP 위치를 미세 조정하는 UI 원본이다.
+                // 관리 화면 재생성은 씬의 런타임 배선만 갱신하고, 기존 프리팹의 수동 레이아웃은 절대 덮어쓰지 않는다.
+                ValidateCardPrefab(existing);
+                return existing;
+            }
+
+            return CreateDefaultCardPrefab(font);
+        }
+
+        private static OperatorManagementCardView CreateDefaultCardPrefab(TMP_FontAsset font)
         {
             Sprite normal = LoadSprite(CardSheetPath, "OperatorPanels_Managing_0");
             Sprite hover = LoadSprite(CardSheetPath, "OperatorPanels_Managing_1");
@@ -227,6 +242,27 @@ namespace RCCom.EditorTools
             UnityEngine.Object.DestroyImmediate(root);
             if (prefab == null) { throw new InvalidOperationException("관리 카드 프리팹을 저장하지 못했습니다."); }
             return prefab.GetComponent<OperatorManagementCardView>();
+        }
+
+        private static void ValidateCardPrefab(OperatorManagementCardView prefab)
+        {
+            if (prefab == null) { throw new InvalidOperationException("관리 카드 프리팹이 없습니다."); }
+
+            SerializedObject serialized = new(prefab);
+            string[] requiredReferences =
+            {
+                "button", "stateImage", "portraitImage", "unlockedSprite", "hoverSprite", "lockedSprite",
+                "indexText", "nameText", "stateText", "affinityText", "activeBadge"
+            };
+
+            for (int i = 0; i < requiredReferences.Length; i++)
+            {
+                SerializedProperty property = serialized.FindProperty(requiredReferences[i]);
+                if (property == null || property.objectReferenceValue == null)
+                {
+                    throw new InvalidOperationException($"관리 카드 프리팹의 필수 참조가 비어 있습니다: {requiredReferences[i]}");
+                }
+            }
         }
 
         private static Transform RebuildGeneratedRoot(Transform root)
