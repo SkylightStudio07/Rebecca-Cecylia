@@ -162,6 +162,14 @@ namespace RCCom.EditorTools
             Button button = root.GetComponent<Button>();
             button.targetGraphic = background;
             button.transition = Selectable.Transition.None;
+            // 호버 강조는 프레임에만 적용한다. 루트 전체를 키우면 초상화와 TMP의 중심도 함께 흔들린다.
+            Image frame = CreateImage("Frame", root.transform, normal, Color.white,
+                Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            frame.preserveAspect = false;
+            frame.raycastTarget = true;
+            background.color = Color.clear;
+            background.raycastTarget = false;
+            button.targetGraphic = frame;
             LayoutElement element = root.GetComponent<LayoutElement>();
             element.preferredWidth = 210f;
             element.preferredHeight = 560f;
@@ -175,17 +183,17 @@ namespace RCCom.EditorTools
             portrait.preserveAspect = true;
             portrait.raycastTarget = false;
 
-            TextMeshProUGUI index = CreateText("Index", root.transform, font, "01", 25f,
-                new Vector2(0.10f, 0.80f), new Vector2(0.40f, 0.88f), Vector2.zero, Vector2.zero,
+            TextMeshProUGUI index = CreateText("Index", root.transform, font, "01", 24f,
+                new Vector2(0.09f, 0.815f), new Vector2(0.34f, 0.875f), Vector2.zero, Vector2.zero,
                 TextAlignmentOptions.MidlineLeft, new Color(0.18f, 0.72f, 1f, 1f));
-            TextMeshProUGUI state = CreateText("State", root.transform, font, "AVAILABLE", 12f,
-                new Vector2(0.10f, 0.74f), new Vector2(0.70f, 0.80f), Vector2.zero, Vector2.zero,
+            TextMeshProUGUI state = CreateText("State", root.transform, font, "AVAILABLE", 11f,
+                new Vector2(0.09f, 0.755f), new Vector2(0.58f, 0.795f), Vector2.zero, Vector2.zero,
                 TextAlignmentOptions.MidlineLeft, new Color(0.18f, 0.72f, 1f, 1f));
-            TextMeshProUGUI name = CreateText("Name", root.transform, font, "OPERATOR", 20f,
-                new Vector2(0.25f, 0.20f), new Vector2(0.91f, 0.29f), Vector2.zero, Vector2.zero,
+            TextMeshProUGUI name = CreateText("Name", root.transform, font, "OPERATOR", 22f,
+                new Vector2(0.18f, 0.19f), new Vector2(0.90f, 0.255f), Vector2.zero, Vector2.zero,
                 TextAlignmentOptions.MidlineLeft, Color.white);
-            TextMeshProUGUI affinity = CreateText("Affinity", root.transform, font, "AFFINITY 000", 12f,
-                new Vector2(0.25f, 0.145f), new Vector2(0.91f, 0.20f), Vector2.zero, Vector2.zero,
+            TextMeshProUGUI affinity = CreateText("Affinity", root.transform, font, "AFFINITY 000", 11f,
+                new Vector2(0.18f, 0.145f), new Vector2(0.90f, 0.19f), Vector2.zero, Vector2.zero,
                 TextAlignmentOptions.MidlineLeft, new Color(0.18f, 0.72f, 1f, 1f));
             index.overflowMode = TextOverflowModes.Overflow;
             state.overflowMode = TextOverflowModes.Overflow;
@@ -203,7 +211,7 @@ namespace RCCom.EditorTools
             OperatorManagementCardView view = root.GetComponent<OperatorManagementCardView>();
             var serialized = new SerializedObject(view);
             SetReference(serialized, "button", button);
-            SetReference(serialized, "stateImage", background);
+            SetReference(serialized, "stateImage", frame);
             SetReference(serialized, "portraitImage", portrait);
             SetReference(serialized, "unlockedSprite", normal);
             SetReference(serialized, "hoverSprite", hover);
