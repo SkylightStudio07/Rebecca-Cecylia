@@ -1098,3 +1098,20 @@ Phase 0 자동화 경로를 실제로 열고, 이후 오퍼레이터별 원격 �
 ### 검증
 - 레시피의 선택 초상화와 대화 SO 경로가 실제 파일로 존재하고, 실비아 대화 SO의 Sprite GUID 23개가 누락 없이 해석되는 것을 확인했다.
 - Unity `6000.3.13f1` Pipeline에서 `recompile` 결과 `up_to_date`를 확인했다.
+
+## 2026-08-23 — 실비아 Chibby 포트릿 재임포트·참조 복구
+
+### 맥락
+- Chibby PNG를 440x440으로 수정한 뒤에도 기존 `.meta`의 단일 슬라이스 rect가 600x600(일부는 x=2, 598x600)으로 남아 있었다. Unity는 텍스처 자체는 읽었지만 rect가 실제 이미지 범위를 벗어나 `Sprite` 서브에셋을 생성하지 않았고, 그 결과 기존 GUID 참조가 인스펙터에서 끊긴 것처럼 보였다.
+
+### 결정
+- `.meta`를 직접 편집하지 않고 Unity `ISpriteEditorDataProvider`를 통해 Chibby 27개 파일의 기존 단일 슬라이스를 실제 텍스처 전체(440x440)로 재임포트했다. 사용자가 수정한 중앙 피벗은 유지하고, 재임포트 과정에서 생긴 불필요한 루트 Sprite ID는 기존 포트릿과 같은 빈 상태로 정리했다.
+- 기존 표정 매핑을 보존해 `giggling → gameStart`, `evil smile → skillUsed`, `angry-1 → baseAttacked`, `confused → playerHit`, `depressed → playerHitCritical`, `annoyed → insufficientGold`, `disgusted → slotUnavailable`, `crying with eyes open → playerDied`, `crying with eyes closed → baseDestroyed`를 다시 연결했다. 선택 화면 대표 포트릿은 `default-1`로 `OperatorDefinition`과 로컬 카탈로그 미리보기에 연결했다.
+
+### 의도적으로 하지 않은 것
+- 로비 대사 엔트리의 숨김 `portraitSprite` 필드는 런타임 전투 포트릿 계약과 무관하고 기존에도 비어 있었으므로 채우지 않았다.
+- 실비아 전투 코드, 씬, 공용 대화 시스템은 변경하지 않았다. 이번 문제는 아트 importer의 rect와 기존 데이터 참조 해석만으로 닫힌다.
+
+### 검증
+- Unity `6000.3.13f1` Pipeline에서 Chibby 27개 모두 `Sprite` 서브에셋 1개로 로드되고, 9개 전투 상황·선택 포트릿·카탈로그 미리보기 매핑 검증을 통과했다.
+- `recompile` 결과 `up_to_date`, `recompile_status` 결과 `failed=false`, `errors=[]`를 확인했다.
