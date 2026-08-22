@@ -1161,3 +1161,26 @@ Phase 0 자동화 경로를 실제로 열고, 이후 오퍼레이터별 원격 �
 - 로컬 오퍼레이터는 생성된 Catalog에도 관리 카드 포트레잇을 복사해 세 Visual 프리팹이 Definition을 별도로 로드하지 않고 즉시 표시한다. 원격 오퍼레이터는 기존 CDN 경계를 유지하기 위해 다운로드 전 Catalog 참조를 비운다.
 - 관리 카드 Visual은 전용 포트레잇을 우선 사용하고, 미작성 오퍼레이터는 기존 선택 초상화로 폴백한다. 아트 제작 중에도 카드가 완전히 비지 않게 하기 위한 호환 경로다.
 - 카시아 레시피에는 `오퍼레이터관리_카시아.png`를 연결했다. 세 상태 프리팹의 수동 RectTransform 조정값은 생성기가 덮어쓰지 않는다.
+
+## 2026-08-23 — 아군 유닛 데이터셋 제작 스튜디오
+
+### 맥락
+- `AllyUnitDefinition`의 수치·효과·표현과 `AllyUnitRoster`의 등록 순서를 개별 Inspector에서 오가며 편집해야 해, 유닛 추가 시 미등록 Definition이나 중복 ID를 놓치기 쉬웠다.
+- 테스트 수직 슬라이스 Roster와 `OperatorAssetBuilder`가 만든 오퍼레이터별 복제 Roster가 함께 존재하므로, 제작 원본과 다음 Build에서 덮어써질 생성물을 같은 방식으로 편집하면 변경이 유실될 수 있었다.
+
+### 결정
+- `RCCom/Ally Units/Open Ally Unit Studio` 메뉴에 `AllyUnitStudioWindow`를 추가하고 기존 Operator/Stage Studio와 같은 IMGUI 좌측 목록·탭 패턴을 사용한다.
+- `Units` 탭에서 ID·배치 비용·전투 수치·Sprite·Tint·효과 SO 목록을 한 번에 편집하고, 효과 순서 변경과 Definition 복제, 어느 Roster에서 사용하는지 역참조 확인을 제공한다.
+- `Rosters` 탭에서 공용 Definition 참조를 추가·제거·정렬하고, 실제 선택 화면과 전투 배치 메뉴가 사용하는 순서를 그대로 보여준다. 새 Roster 생성 시 선택 중인 Definition이 있으면 첫 항목으로 넣어 전체 검증을 막는 빈 제작물을 줄인다.
+- `Audit` 탭은 어느 Roster에도 없는 Definition, 어느 OperatorDefinition에도 직접 연결되지 않은 Roster, null·중복 ID·유효하지 않은 수치와 효과 참조를 읽기 전용으로 모아 보여준다. 최종 판정은 기존 `OperatorAssetValidator`를 재사용해 검증 규칙을 이중화하지 않는다.
+- `RCCom.GeneratedOperator` 라벨의 오퍼레이터별 복제 Roster는 읽기 전용으로 잠근다. 원본 풀은 Operator Studio 레시피에서 지정하고 복제본은 Build 결과로만 갱신한다. 테스트 수직 슬라이스 라벨은 현재 유닛 제작 원본이기도 하므로 편집을 허용하되 재실행 시 초기화될 수 있음을 경고한다.
+
+### 의도적으로 하지 않은 것
+- 별도의 AllyUnit JSON 포맷이나 새 런타임 데이터 타입을 만들지 않았다. Sprite·효과 SO 참조를 자연스럽게 보존하는 기존 Definition/Roster SO가 계속 단일 원본이다.
+- 에셋 삭제 기능은 넣지 않았다. Roster·Operator·Addressables 의존성을 확인하지 않은 삭제는 GUID 참조를 끊고 복구가 어려우므로 Project 창의 명시적 작업으로 남겼다.
+- 오퍼레이터 Roster 연결을 이 창에서 직접 변경하지 않았다. 로드아웃 조립 책임은 기존 Operator Studio의 `sourceAllyUnitRosterPath`에 유지한다.
+
+### 검증
+- Unity `6000.3.13f1` Pipeline 재컴파일에서 `failed=false`, `errors=[]`를 확인했다.
+- CLI에서 메뉴 진입점을 호출해 `AllyUnitStudioWindow` 인스턴스 1개가 열리고 Units/Rosters/Audit 세 탭 렌더링에 신규 콘솔 오류가 없는 것을 확인했다.
+- 기존 데이터 에셋을 수정하지 않고 `OperatorAssetValidator.ValidateAll(false)`가 `true`를 반환했다. 기존 카시아 대사 빈 슬롯 3건과 미등록 `축적.asset` 경고 1건만 동일하게 남았다.
