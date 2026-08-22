@@ -1,8 +1,8 @@
 {
     "operatorId": "racing",
     "displayName": "실비아",
-    "playStyleDescription": "",
-    "selectionPortraitPath": "",
+    "playStyleDescription": "레이싱걸 컨셉의 캐릭터",
+    "selectionPortraitPath": "Assets/Art/Character Standing Arts/실비아/portrait/실비아.Chibby.default-1.png",
     "sourceTowerRosterPath": "",
     "sourceCardRosterPath": "",
     "sourceAllyUnitRosterPath": "",
