@@ -39,8 +39,14 @@ namespace RCCom.EditorTools
         public static void Build()
         {
             Scene scene = OpenTitleSceneSafely();
-            Canvas canvas = UnityEngine.Object.FindFirstObjectByType<Canvas>(FindObjectsInactive.Include);
-            if (canvas == null) { throw new InvalidOperationException("TitleScene에 Canvas가 없습니다."); }
+            GameObject mainMenuBackgroundObject = GameObject.Find("MainMenuBackground");
+            Canvas canvas = mainMenuBackgroundObject != null
+                ? mainMenuBackgroundObject.GetComponentInParent<Canvas>()
+                : null;
+            if (canvas == null)
+            {
+                throw new InvalidOperationException("TitleScene의 MainMenuBackground 또는 부모 Canvas가 없습니다.");
+            }
 
             TMP_FontAsset koreanFont = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(KoreanFontPath);
             TMP_FontAsset titleFont = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(TitleFontPath);
@@ -50,13 +56,14 @@ namespace RCCom.EditorTools
             }
 
             StageCatalog catalog = BuildCatalog();
+            EnemyRoster enemyRoster = FindEnemyRoster();
             OperatorCatalog operatorCatalog = AssetDatabase.LoadAssetAtPath<OperatorCatalog>(OperatorCatalogPath);
             if (operatorCatalog == null)
             {
                 throw new InvalidOperationException("스테이지 보상 표시에 필요한 OperatorCatalog가 없습니다.");
             }
             StageNodeView nodePrefab = BuildNodePrefab(koreanFont);
-            CanvasGroup mainMenuGroup = GetOrAddCanvasGroup(canvas.transform.Find("MainMenuBackground")?.gameObject);
+            CanvasGroup mainMenuGroup = GetOrAddCanvasGroup(mainMenuBackgroundObject);
             OperatorSelectionUI operatorSelectionUI = UnityEngine.Object.FindFirstObjectByType<OperatorSelectionUI>(
                 FindObjectsInactive.Include);
             if (operatorSelectionUI == null)
@@ -89,6 +96,7 @@ namespace RCCom.EditorTools
             SetReference(modeSerialized, "stageButton", stageModeButton);
             SetReference(modeSerialized, "endlessButton", endlessButton);
             SetReference(modeSerialized, "backButton", modeBackButton);
+            SetReference(modeSerialized, "enemyRoster", enemyRoster);
             modeSerialized.ApplyModifiedPropertiesWithoutUndo();
 
             var stageSerialized = new SerializedObject(stageController);
@@ -177,7 +185,8 @@ namespace RCCom.EditorTools
             var modeSerialized = new SerializedObject(mode);
             if (modeSerialized.FindProperty("stageSelectionUI").objectReferenceValue != stage ||
                 modeSerialized.FindProperty("stageButton").objectReferenceValue == null ||
-                modeSerialized.FindProperty("endlessButton").objectReferenceValue == null)
+                modeSerialized.FindProperty("endlessButton").objectReferenceValue == null ||
+                modeSerialized.FindProperty("enemyRoster").objectReferenceValue == null)
             {
                 throw new InvalidOperationException("ModeSelectionUI 참조 배선이 올바르지 않습니다.");
             }

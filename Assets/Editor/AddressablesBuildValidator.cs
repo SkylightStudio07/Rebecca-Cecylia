@@ -1,6 +1,7 @@
 using System;
 using RCCom.Definitions.Enemy;
 using RCCom.Definitions.Operator;
+using RCCom.Definitions.Unit;
 using UnityEditor;
 using UnityEditor.AddressableAssets;
 using UnityEditor.AddressableAssets.Settings;
@@ -48,6 +49,11 @@ namespace RCCom.EditorTools
             EnemyCatalog enemyCatalog = AssetDatabase.LoadAssetAtPath<EnemyCatalog>(EnemyCatalogBuilder.CatalogPath);
             hasRemoteContent |= enemyCatalog != null && enemyCatalog.entries != null &&
                                 enemyCatalog.entries.Exists(entry => entry != null && entry.remoteContent);
+
+            AllyUnitCatalog allyUnitCatalog = AssetDatabase.LoadAssetAtPath<AllyUnitCatalog>(
+                AllyUnitCatalogBuilder.CatalogPath);
+            hasRemoteContent |= allyUnitCatalog != null && allyUnitCatalog.entries != null &&
+                                allyUnitCatalog.entries.Exists(entry => entry != null && entry.remoteContent);
 
             if (hasRemoteContent)
             {

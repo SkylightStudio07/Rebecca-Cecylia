@@ -99,6 +99,7 @@ namespace RCCom.Managers
 
         private void Awake()
         {
+            enemyRoster = BattleContentCache.CreateRuntimeEnemyRoster(enemyRoster);
             _rng = new System.Random(randomSeed);
             _stageDefinition = BattleSession.IsStageMode ? BattleSession.SelectedStage : null;
             _isStageMode = _stageDefinition != null && _stageDefinition.IsPlayable;
@@ -212,13 +213,14 @@ namespace RCCom.Managers
                         continue;
                     }
 
-                    // TODO(Phase 4 - BattleContentCache): enemyRoster.enemies는 아직 아무도
-                    // 채워 넣지 않는다 — Addressables 프리로드가 도입되기 전까지는 이 조회가
-                    // 항상 null을 돌려줘 스테이지 적 스폰이 실제로 동작하지 않는다. 캐시가
-                    // 생기면 이 줄을 BattleContentCache.ResolveEnemy(spawn.enemyId)로 교체한다.
-                    EnemyDefinition definition = enemyRoster.FindById(spawn.enemyId);
+                    EnemyDefinition definition = BattleContentCache.ResolveEnemy(spawn.enemyId);
+                    if (definition == null && enemyRoster != null)
+                    {
+                        definition = enemyRoster.FindById(spawn.enemyId);
+                    }
                     if (definition == null)
                     {
+                        Debug.LogError($"[Wave] 프리로드되지 않은 적 Definition입니다: {spawn.enemyId}");
                         continue;
                     }
 
@@ -325,6 +327,12 @@ namespace RCCom.Managers
             float budget = CalculateBudget(waveNumber) * (isBossWave ? bossBudgetMultiplier : 1f);
 
             var eligible = new List<EnemyDefinition>();
+            if (enemyRoster == null || enemyRoster.enemies == null)
+            {
+                Debug.LogError("[Wave] 전투용 EnemyRoster가 준비되지 않았습니다.");
+                return queue;
+            }
+
             foreach (EnemyDefinition definition in enemyRoster.enemies)
             {
                 if (waveNumber >= definition.data.minWave)

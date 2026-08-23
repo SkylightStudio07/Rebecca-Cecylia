@@ -1,3 +1,4 @@
+using RCCom.Definitions.Enemy;
 using RCCom.Runtime;
 using RCCom.UI;
 using TMPro;
@@ -24,6 +25,7 @@ namespace RCCom.UI
         [SerializeField] private Button endlessButton;
         [SerializeField] private Button backButton;
         [SerializeField] private string defenseSceneName = "DefenseScene";
+        [SerializeField] private EnemyRoster enemyRoster;
 
         private string _operatorId;
 
@@ -78,7 +80,9 @@ namespace RCCom.UI
         {
             BattleSession.SelectEndless();
             Time.timeScale = 1f;
-            UILoadingTransition.LoadScene(defenseSceneName);
+            UILoadingTransition.LoadSceneWithPreload(
+                defenseSceneName,
+                BattleContentCache.PreloadEnemies(enemyRoster, null, null));
         }
 
         public void Back()

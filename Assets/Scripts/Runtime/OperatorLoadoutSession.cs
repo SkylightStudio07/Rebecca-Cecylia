@@ -122,7 +122,10 @@ namespace RCCom.Runtime
         /// </summary>
         public static AllyUnitRoster ResolveAllyUnitRoster(AllyUnitRoster fallback = null)
         {
-            return SelectedDefinition != null ? SelectedDefinition.allyUnitRoster : fallback;
+            AllyUnitRoster resolved = SelectedDefinition != null
+                ? SelectedDefinition.allyUnitRoster
+                : fallback;
+            return BattleContentCache.CreateRuntimeAllyUnitRoster(resolved);
         }
 
         public static OperatorDialogueSet ResolveDialogueSet(OperatorDialogueSet fallback)

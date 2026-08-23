@@ -128,6 +128,23 @@ namespace RCCom.UI
             _instance.BeginTransition(_instance.LoadSceneRoutine(sceneName), null);
         }
 
+        /// <summary>
+        /// 씬을 덮은 뒤 전투 콘텐츠를 먼저 준비하고, 준비가 끝나면 씬을 비동기로 연다.
+        /// 프리로드 코루틴은 전환 객체가 소유하므로 호출 화면이 파괴되어도 중단되지 않는다.
+        /// </summary>
+        public static void LoadSceneWithPreload(string sceneName, IEnumerator preloadOperation)
+        {
+            if (_instance == null)
+            {
+                SceneManager.LoadScene(sceneName);
+                return;
+            }
+
+            _instance.BeginTransition(
+                _instance.LoadSceneWithPreloadRoutine(sceneName, preloadOperation),
+                null);
+        }
+
         private bool BeginTransition(IEnumerator loadingOperation, Action coveredAction)
         {
             if (_isTransitioning)
@@ -183,6 +200,18 @@ namespace RCCom.UI
                 UpdateLoadingVisual(Time.unscaledDeltaTime);
                 yield return null;
             }
+        }
+
+        private IEnumerator LoadSceneWithPreloadRoutine(
+            string sceneName,
+            IEnumerator preloadOperation)
+        {
+            if (preloadOperation != null)
+            {
+                yield return preloadOperation;
+            }
+
+            yield return LoadSceneRoutine(sceneName);
         }
 
         private IEnumerator MoveBackground(Vector2 start, Vector2 destination, float duration)

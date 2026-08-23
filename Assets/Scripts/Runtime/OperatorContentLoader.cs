@@ -27,6 +27,17 @@ namespace RCCom.Runtime
             if (OperatorLoadoutSession.SelectedDefinition != null &&
                 OperatorLoadoutSession.SelectedDefinition.operatorId == entry.operatorId)
             {
+                string cachedUnitError = null;
+                yield return BattleContentCache.PreloadAllyUnits(
+                    OperatorLoadoutSession.SelectedDefinition.allyUnitRoster,
+                    (message, progress) => onProgress?.Invoke(message, progress),
+                    error => cachedUnitError = error);
+                if (!string.IsNullOrWhiteSpace(cachedUnitError))
+                {
+                    onFailed?.Invoke(cachedUnitError);
+                    yield break;
+                }
+
                 onProgress?.Invoke("준비 완료", 1f);
                 onSucceeded?.Invoke(OperatorLoadoutSession.SelectedDefinition);
                 yield break;
@@ -96,6 +107,18 @@ namespace RCCom.Runtime
             {
                 Addressables.Release(definitionHandle);
                 onFailed?.Invoke("카탈로그와 오퍼레이터 ID가 일치하지 않습니다.");
+                yield break;
+            }
+
+            string allyUnitError = null;
+            yield return BattleContentCache.PreloadAllyUnits(
+                definitionHandle.Result.allyUnitRoster,
+                (message, progress) => onProgress?.Invoke(message, 0.9f + progress * 0.1f),
+                error => allyUnitError = error);
+            if (!string.IsNullOrWhiteSpace(allyUnitError))
+            {
+                Addressables.Release(definitionHandle);
+                onFailed?.Invoke(allyUnitError);
                 yield break;
             }
 
