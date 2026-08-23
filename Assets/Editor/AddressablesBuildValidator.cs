@@ -1,4 +1,5 @@
 using System;
+using RCCom.Definitions.Enemy;
 using RCCom.Definitions.Operator;
 using UnityEditor;
 using UnityEditor.AddressableAssets;
@@ -38,9 +39,16 @@ namespace RCCom.EditorTools
                 throw new InvalidOperationException("활성 Addressables 프로필이 없습니다.");
             }
 
-            OperatorCatalog catalog = AssetDatabase.LoadAssetAtPath<OperatorCatalog>(OperatorCatalogBuilder.CatalogPath);
-            bool hasRemoteContent = catalog != null && catalog.entries != null &&
-                                    catalog.entries.Exists(entry => entry != null && entry.remoteContent);
+            OperatorCatalog operatorCatalog = AssetDatabase.LoadAssetAtPath<OperatorCatalog>(OperatorCatalogBuilder.CatalogPath);
+            bool hasRemoteContent = operatorCatalog != null && operatorCatalog.entries != null &&
+                                    operatorCatalog.entries.Exists(entry => entry != null && entry.remoteContent);
+
+            // EnemyCatalog는 이 시점엔 아직 존재하지 않을 수 있다(마이그레이션 전 단계) —
+            // 없거나 비어 있는 것을 오류로 취급하면 이 커밋만으로 기존 빌드가 막힌다.
+            EnemyCatalog enemyCatalog = AssetDatabase.LoadAssetAtPath<EnemyCatalog>(EnemyCatalogBuilder.CatalogPath);
+            hasRemoteContent |= enemyCatalog != null && enemyCatalog.entries != null &&
+                                enemyCatalog.entries.Exists(entry => entry != null && entry.remoteContent);
+
             if (hasRemoteContent)
             {
                 string remoteLoadPath = settings.profileSettings.GetValueByName(

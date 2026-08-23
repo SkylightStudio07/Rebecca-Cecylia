@@ -207,7 +207,17 @@ namespace RCCom.Managers
             {
                 foreach (StageEnemySpawn spawn in wave.spawns)
                 {
-                    if (spawn == null || spawn.enemy == null || spawn.count <= 0)
+                    if (spawn == null || spawn.count <= 0)
+                    {
+                        continue;
+                    }
+
+                    // TODO(Phase 4 - BattleContentCache): enemyRoster.enemies는 아직 아무도
+                    // 채워 넣지 않는다 — Addressables 프리로드가 도입되기 전까지는 이 조회가
+                    // 항상 null을 돌려줘 스테이지 적 스폰이 실제로 동작하지 않는다. 캐시가
+                    // 생기면 이 줄을 BattleContentCache.ResolveEnemy(spawn.enemyId)로 교체한다.
+                    EnemyDefinition definition = enemyRoster.FindById(spawn.enemyId);
+                    if (definition == null)
                     {
                         continue;
                     }
@@ -215,7 +225,7 @@ namespace RCCom.Managers
                     int count = Mathf.Max(0, spawn.count);
                     for (int i = 0; i < count; i++)
                     {
-                        _spawnQueue.Enqueue(spawn.enemy);
+                        _spawnQueue.Enqueue(definition);
                         float delay = i == 0 ? spawn.initialDelay : spawn.interval;
                         _stageSpawnDelays.Enqueue(Mathf.Max(0f, delay));
                     }

@@ -530,29 +530,34 @@ namespace RCCom.EditorTools
 
         private static void ValidateEnemyRegistration(List<string> warnings)
         {
+            // EnemyRoster는 이제 Definition을 직접(GUID로) 들고 있지 않고 enemyId 문자열
+            // 목록만 직렬화한다 — enemies는 런타임에만 채워지는 [NonSerialized] 필드라
+            // 에디터에서 이 메서드가 실행되는 시점엔 항상 비어 있다. 그래서 등록 여부는
+            // 객체 동일성이 아니라 enemyId 문자열 일치로 판단한다.
             List<EnemyDefinition> definitions = FindAssets<EnemyDefinition>();
             List<EnemyRoster> rosters = FindAssets<EnemyRoster>();
-            var registered = new HashSet<EnemyDefinition>();
+            var registeredIds = new HashSet<string>(StringComparer.Ordinal);
 
             foreach (EnemyRoster roster in rosters)
             {
-                if (roster.enemies == null)
+                if (roster.enemyIds == null)
                 {
                     continue;
                 }
 
-                foreach (EnemyDefinition definition in roster.enemies)
+                foreach (string enemyId in roster.enemyIds)
                 {
-                    if (definition != null)
+                    if (!string.IsNullOrWhiteSpace(enemyId))
                     {
-                        registered.Add(definition);
+                        registeredIds.Add(enemyId);
                     }
                 }
             }
 
             foreach (EnemyDefinition definition in definitions)
             {
-                if (!registered.Contains(definition))
+                string enemyId = definition.data != null ? definition.data.enemyId : null;
+                if (string.IsNullOrWhiteSpace(enemyId) || !registeredIds.Contains(enemyId))
                 {
                     warnings.Add($"어느 EnemyRoster에도 등록되지 않은 EnemyDefinition: {AssetDatabase.GetAssetPath(definition)}");
                 }

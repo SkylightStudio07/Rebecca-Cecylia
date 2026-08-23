@@ -391,7 +391,9 @@ namespace RCCom.EditorTools
             foreach (string guid in guids)
             {
                 EnemyRoster roster = AssetDatabase.LoadAssetAtPath<EnemyRoster>(AssetDatabase.GUIDToAssetPath(guid));
-                if (roster != null && roster.enemies != null && roster.enemies.Count > 0)
+                // enemies는 [NonSerialized]라 에디터에서 로드한 시점엔 항상 비어 있다 —
+                // 직렬화된 실체는 enemyIds뿐이라 그걸로 판단한다.
+                if (roster != null && roster.enemyIds != null && roster.enemyIds.Count > 0)
                 {
                     return roster;
                 }
@@ -453,14 +455,14 @@ namespace RCCom.EditorTools
         private static void AddSpawn(StageWaveDefinition wave, EnemyRoster roster, int enemyIndex,
             int count, float interval, float initialDelay)
         {
-            if (count <= 0 || roster.enemies == null || enemyIndex < 0 || enemyIndex >= roster.enemies.Count)
+            if (count <= 0 || roster.enemyIds == null || enemyIndex < 0 || enemyIndex >= roster.enemyIds.Count)
             {
                 return;
             }
 
             wave.spawns.Add(new StageEnemySpawn
             {
-                enemy = roster.enemies[enemyIndex],
+                enemyId = roster.enemyIds[enemyIndex],
                 count = count,
                 interval = interval,
                 initialDelay = initialDelay
