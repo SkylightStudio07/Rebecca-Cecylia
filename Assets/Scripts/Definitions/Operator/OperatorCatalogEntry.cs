@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using RCCom.Data;
 using UnityEngine;
 
 namespace RCCom.Definitions.Operator
@@ -30,12 +31,66 @@ namespace RCCom.Definitions.Operator
         [Tooltip("선택 화면에서 다운로드 콘텐츠임을 안내하기 위한 표시값")]
         public bool remoteContent;
 
+        public OperatorUnlockType unlockType = OperatorUnlockType.InitiallyAvailable;
+
         [Min(0)]
         public int requiredBestWave;
+
+        [Min(0)]
+        public int purchasePrice;
+
+        public string requiredStageId;
+
+        [Tooltip("스테이지 보상 화면에 표시할 경량 초상화")]
+        public Sprite unlockRewardPortrait;
 
         [Tooltip("Definition을 내려받기 전 로스터 패널에 표시할 경량 유닛 정보")]
         public List<OperatorUnitPreview> unitPreviews = new();
 
-        public bool IsUnlocked(int bestWave) => bestWave >= requiredBestWave;
+        public bool IsUnlocked(PlayerProfile profile)
+        {
+            if (profile == null)
+            {
+                return false;
+            }
+
+            return unlockType switch
+            {
+                OperatorUnlockType.InitiallyAvailable => true,
+                OperatorUnlockType.BestWave => profile.bestWave >= requiredBestWave,
+                OperatorUnlockType.CommodityPurchase => profile.HasAcquiredOperator(operatorId),
+                OperatorUnlockType.StageClearReward => profile.HasClearedStage(requiredStageId),
+                _ => false,
+            };
+        }
+
+        public string GetLockedDescription()
+        {
+            return unlockType switch
+            {
+                OperatorUnlockType.BestWave => $"최고 웨이브 {requiredBestWave} 달성 시 해금",
+                OperatorUnlockType.CommodityPurchase => $"{purchasePrice} 골드로 영입",
+                OperatorUnlockType.StageClearReward => $"스테이지 {FormatStageLabel(requiredStageId)} 클리어 보상",
+                _ => "사용 가능",
+            };
+        }
+
+        private static string FormatStageLabel(string stageId)
+        {
+            if (string.IsNullOrWhiteSpace(stageId))
+            {
+                return "미지정";
+            }
+
+            string[] parts = stageId.Split('-');
+            if (parts.Length == 2 && parts[0].StartsWith("ch", StringComparison.OrdinalIgnoreCase) &&
+                int.TryParse(parts[0].Substring(2), out int chapter) &&
+                int.TryParse(parts[1], out int stage))
+            {
+                return $"{chapter}-{stage}";
+            }
+
+            return stageId;
+        }
     }
 }

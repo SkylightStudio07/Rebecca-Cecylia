@@ -117,7 +117,11 @@ namespace RCCom.EditorTools
                 catalogDefinitions.Add(definition);
 
                 if (definition.operatorId != catalogEntry.operatorId ||
-                    definition.requiredBestWave != catalogEntry.requiredBestWave)
+                    definition.unlockType != catalogEntry.unlockType ||
+                    definition.requiredBestWave != catalogEntry.requiredBestWave ||
+                    definition.purchasePrice != catalogEntry.purchasePrice ||
+                    !string.Equals(definition.requiredStageId, catalogEntry.requiredStageId,
+                        StringComparison.Ordinal))
                 {
                     errors.Add($"카탈로그 메타데이터가 Definition과 일치하지 않습니다: {definitionPath}");
                 }
@@ -279,6 +283,23 @@ namespace RCCom.EditorTools
                 if (definition.requiredBestWave < 0)
                 {
                     errors.Add($"requiredBestWave가 음수입니다: {path}");
+                }
+
+                if (definition.purchasePrice < 0)
+                {
+                    errors.Add($"purchasePrice가 음수입니다: {path}");
+                }
+
+                if (definition.unlockType == OperatorUnlockType.CommodityPurchase &&
+                    definition.purchasePrice <= 0)
+                {
+                    errors.Add($"골드 구매 오퍼레이터의 가격은 1 이상이어야 합니다: {path}");
+                }
+
+                if (definition.unlockType == OperatorUnlockType.StageClearReward &&
+                    string.IsNullOrWhiteSpace(definition.requiredStageId))
+                {
+                    errors.Add($"스테이지 보상 오퍼레이터의 Stage ID가 비어 있습니다: {path}");
                 }
             }
         }

@@ -5,6 +5,7 @@
     "playStyleDescription": "타워 건설과 카드 강화를 중심으로 방어선을 확장하는 기본 오퍼레이터",
     "selectionPortraitPath": "Assets/Art/Operator Sprite/Chibby_smile_idle.png",
     "managementPortraitPath": "Assets/Art/Character Standing Arts/레베카/레베카/오퍼레이터관리_카시아.png",
+    "unlockRewardPortraitPath": "",
     "sourceTowerRosterPath": "Assets/Data/Prefabs/TowerRoaster.asset",
     "sourceCardRosterPath": "Assets/Data/Cards/Unlock/플레이어 카드 로스터.asset",
     "sourceAllyUnitRosterPath": "Assets/Data/Operators/cassia/AllyUnits/cassia-ally-unit-roster.asset",
@@ -22,5 +23,8 @@
         "skillRange": 5.0,
         "skillDamage": 5.0
     },
-    "requiredBestWave": 0
+    "requiredBestWave": 0,
+    "unlockType": 0,
+    "purchasePrice": 0,
+    "requiredStageId": ""
 }

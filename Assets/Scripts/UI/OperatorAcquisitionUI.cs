@@ -1,0 +1,491 @@
+using System.Collections;
+using System.Collections.Generic;
+using TMPro;
+using RCCom.Core;
+using RCCom.Data;
+using RCCom.Definitions.Operator;
+using RCCom.Runtime;
+using UnityEngine;
+using UnityEngine.AddressableAssets;
+using UnityEngine.ResourceManagement.AsyncOperations;
+using UnityEngine.UI;
+
+namespace RCCom.UI
+{
+    /// <summary>
+    /// 로비 진입 뒤 새로 해금된 오퍼레이터를 한 명씩 소개한다.
+    /// 해금 판정은 카탈로그와 프로필에서 파생하고, 이 컴포넌트는 연출과 표시 이력만 소유해
+    /// 이후 실제 획득 수단이 추가되어도 전투 및 오퍼레이터 선택 흐름과 결합되지 않게 한다.
+    /// </summary>
+    public sealed class OperatorAcquisitionUI : MonoBehaviour
+    {
+        [Header("Flow")]
+        [SerializeField] private OperatorCatalog catalog;
+        [SerializeField] private GameObject mainMenuBackground;
+        [SerializeField] private bool silentlyRegisterStarterOperator = true;
+
+        [Header("Root")]
+        [SerializeField] private CanvasGroup rootGroup;
+        [SerializeField] private Button advanceButton;
+
+        [Header("Headline")]
+        [SerializeField] private RectTransform newLabel;
+        [SerializeField] private RectTransform operatorLabel;
+        [SerializeField] private RectTransform operatorNameLabel;
+        [SerializeField] private TMP_Text operatorNameText;
+
+        [Header("Character")]
+        [SerializeField] private Image characterStanding;
+        [SerializeField] private CanvasGroup characterGroup;
+
+        [Header("Dialogue")]
+        [SerializeField] private RectTransform dialoguePanel;
+        [SerializeField] private CanvasGroup dialogueGroup;
+        [SerializeField] private TMP_Text dialogueSpeakerText;
+        [SerializeField] private TMP_Text dialogueBodyText;
+
+        [Header("Timing")]
+        [SerializeField, Min(0f)] private float lobbyReadyDelay = 0.15f;
+        [SerializeField, Min(0.01f)] private float labelSlideDuration = 0.24f;
+        [SerializeField, Min(0f)] private float labelStagger = 0.08f;
+        [SerializeField, Min(0.01f)] private float characterDuration = 0.38f;
+        [SerializeField, Min(0.01f)] private float dialogueDuration = 0.25f;
+        [SerializeField] private float labelSlideDistance = 520f;
+        [SerializeField] private float characterSlideDistance = 110f;
+        [SerializeField] private float dialogueRiseDistance = 70f;
+
+        private readonly List<OperatorCatalogEntry> _pendingEntries = new();
+        private readonly Vector2[] _labelPositions = new Vector2[3];
+        private IProfileStorage _profileStorage;
+        private PlayerProfile _profile;
+        private Vector2 _characterPosition;
+        private Vector2 _dialoguePosition;
+        private bool _skipRequested;
+        private bool _sequenceComplete;
+        private bool _isOpen;
+        private int _pendingIndex;
+        private AsyncOperationHandle<OperatorDefinition> _definitionHandle;
+        private bool _ownsDefinitionHandle;
+
+        private void Awake()
+        {
+            ResolveReferences();
+            CachePositions();
+            SetRootVisible(false);
+
+            if (advanceButton != null)
+            {
+                advanceButton.onClick.RemoveListener(HandleAdvance);
+                advanceButton.onClick.AddListener(HandleAdvance);
+            }
+        }
+
+        private void Start()
+        {
+            _profileStorage = new PlayerPrefsProfileStorage();
+            StartCoroutine(WaitForLobbyAndPresent());
+        }
+
+        public void PresentNewlyUnlocked()
+        {
+            if (_isOpen || _profileStorage == null)
+            {
+                return;
+            }
+
+            BuildPendingQueue();
+            if (_pendingEntries.Count > 0)
+            {
+                StartCoroutine(PresentNext());
+            }
+        }
+
+        private void OnDestroy()
+        {
+            ReleaseDefinitionHandle();
+        }
+
+        private IEnumerator WaitForLobbyAndPresent()
+        {
+            while (mainMenuBackground != null && !mainMenuBackground.activeInHierarchy)
+            {
+                yield return null;
+            }
+
+            float elapsed = 0f;
+            while (elapsed < lobbyReadyDelay)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                yield return null;
+            }
+
+            BuildPendingQueue();
+            if (_pendingEntries.Count > 0)
+            {
+                yield return PresentNext();
+            }
+        }
+
+        private void BuildPendingQueue()
+        {
+            _pendingEntries.Clear();
+            _pendingIndex = 0;
+            _profile = _profileStorage.Load();
+            if (catalog == null || catalog.entries == null)
+            {
+                Debug.LogWarning("[OperatorAcquisition] OperatorCatalog가 연결되지 않았습니다.", this);
+                return;
+            }
+
+            bool profileChanged = false;
+            for (int i = 0; i < catalog.entries.Count; i++)
+            {
+                OperatorCatalogEntry entry = catalog.entries[i];
+                if (entry == null || !entry.IsUnlocked(_profile) ||
+                    _profile.HasPresentedOperatorAcquisition(entry.operatorId))
+                {
+                    continue;
+                }
+
+                // 첫 슬롯은 게임 시작부터 함께하는 기본 오퍼레이터다. 기존 사용자에게도
+                // 신규 획득처럼 다시 소개하지 않고 이후 실제 해금 슬롯만 연출한다.
+                if (i == 0 && silentlyRegisterStarterOperator)
+                {
+                    profileChanged |= _profile.MarkOperatorAcquisitionPresented(entry.operatorId);
+                    continue;
+                }
+
+                _pendingEntries.Add(entry);
+            }
+
+            if (profileChanged)
+            {
+                _profileStorage.Save(_profile);
+            }
+        }
+
+        private IEnumerator PresentNext()
+        {
+            if (_pendingIndex >= _pendingEntries.Count)
+            {
+                CloseOverlay();
+                yield break;
+            }
+
+            OperatorCatalogEntry entry = _pendingEntries[_pendingIndex];
+            OperatorDefinition definition = null;
+            yield return LoadDefinition(entry, loaded => definition = loaded);
+            if (definition == null)
+            {
+                Debug.LogWarning($"[OperatorAcquisition] {entry.operatorId} 콘텐츠를 불러오지 못해 이번 연출을 건너뜁니다.", this);
+                _pendingIndex++;
+                yield return PresentNext();
+                yield break;
+            }
+
+            PrepareContent(entry, definition);
+            _skipRequested = false;
+            _sequenceComplete = false;
+            _isOpen = true;
+            SetRootVisible(true);
+            SetMainMenuInput(false);
+            yield return PlaySequence();
+            _sequenceComplete = true;
+        }
+
+        private IEnumerator LoadDefinition(OperatorCatalogEntry entry,
+            System.Action<OperatorDefinition> onLoaded)
+        {
+            ReleaseDefinitionHandle();
+            if (OperatorLoadoutSession.SelectedDefinition != null &&
+                OperatorLoadoutSession.SelectedDefinition.operatorId == entry.operatorId)
+            {
+                onLoaded(OperatorLoadoutSession.SelectedDefinition);
+                yield break;
+            }
+
+            _definitionHandle = Addressables.LoadAssetAsync<OperatorDefinition>(entry.address);
+            _ownsDefinitionHandle = true;
+            yield return _definitionHandle;
+            onLoaded(_definitionHandle.Status == AsyncOperationStatus.Succeeded
+                ? _definitionHandle.Result
+                : null);
+        }
+
+        private void PrepareContent(OperatorCatalogEntry entry, OperatorDefinition definition)
+        {
+            string displayName = !string.IsNullOrWhiteSpace(definition.displayName)
+                ? definition.displayName
+                : entry.displayName;
+            if (operatorNameText != null) { operatorNameText.text = displayName; }
+            if (dialogueSpeakerText != null) { dialogueSpeakerText.text = displayName; }
+
+            string dialogue = "새로운 오퍼레이터가 합류했습니다.";
+            Sprite standing = null;
+            OperatorLineSet acquisition = definition.dialogueSet != null
+                ? definition.dialogueSet.operatorAcquired
+                : null;
+            if (acquisition != null && acquisition.TryGetRandomLobby(out string selectedLine,
+                    out Sprite selectedStanding))
+            {
+                dialogue = selectedLine;
+                standing = selectedStanding;
+            }
+
+            if (standing == null && acquisition != null) { standing = acquisition.defaultLobbySprite; }
+            if (standing == null && definition.dialogueSet != null) { standing = definition.dialogueSet.lobbyIdleSprite; }
+            if (standing == null) { standing = definition.managementPortrait; }
+            if (standing == null) { standing = entry.managementPortrait; }
+
+            if (characterStanding != null)
+            {
+                characterStanding.sprite = standing;
+                characterStanding.enabled = standing != null;
+                characterStanding.preserveAspect = true;
+            }
+
+            if (dialogueBodyText != null) { dialogueBodyText.text = dialogue; }
+            ResetAnimatedElements();
+        }
+
+        private IEnumerator PlaySequence()
+        {
+            RectTransform[] labels = { newLabel, operatorLabel, operatorNameLabel };
+            for (int i = 0; i < labels.Length; i++)
+            {
+                yield return SlideLabel(labels[i], _labelPositions[i]);
+                if (labelStagger > 0f && !_skipRequested)
+                {
+                    yield return WaitUnscaled(labelStagger);
+                }
+            }
+
+            yield return RevealCharacter();
+            yield return RevealDialogue();
+            ApplyFinalState();
+        }
+
+        private IEnumerator SlideLabel(RectTransform target, Vector2 destination)
+        {
+            if (target == null) { yield break; }
+            Vector2 start = destination + Vector2.right * labelSlideDistance;
+            target.anchoredPosition = start;
+            CanvasGroup group = GetOrAddCanvasGroup(target.gameObject);
+            group.alpha = 0f;
+
+            float elapsed = 0f;
+            while (elapsed < labelSlideDuration && !_skipRequested)
+            {
+                float t = EaseOutCubic(Mathf.Clamp01(elapsed / labelSlideDuration));
+                target.anchoredPosition = Vector2.LerpUnclamped(start, destination, t);
+                group.alpha = t;
+                elapsed += Time.unscaledDeltaTime;
+                yield return null;
+            }
+
+            target.anchoredPosition = destination;
+            group.alpha = 1f;
+        }
+
+        private IEnumerator RevealCharacter()
+        {
+            if (characterStanding == null || characterGroup == null) { yield break; }
+            RectTransform rect = characterStanding.rectTransform;
+            Vector2 start = _characterPosition + Vector2.right * characterSlideDistance;
+            rect.anchoredPosition = start;
+            characterGroup.alpha = 0f;
+
+            float elapsed = 0f;
+            while (elapsed < characterDuration && !_skipRequested)
+            {
+                float t = EaseOutCubic(Mathf.Clamp01(elapsed / characterDuration));
+                rect.anchoredPosition = Vector2.LerpUnclamped(start, _characterPosition, t);
+                characterGroup.alpha = t;
+                elapsed += Time.unscaledDeltaTime;
+                yield return null;
+            }
+
+            rect.anchoredPosition = _characterPosition;
+            characterGroup.alpha = 1f;
+        }
+
+        private IEnumerator RevealDialogue()
+        {
+            if (dialoguePanel == null || dialogueGroup == null) { yield break; }
+            Vector2 start = _dialoguePosition - Vector2.up * dialogueRiseDistance;
+            dialoguePanel.anchoredPosition = start;
+            dialogueGroup.alpha = 0f;
+
+            float elapsed = 0f;
+            while (elapsed < dialogueDuration && !_skipRequested)
+            {
+                float t = EaseOutCubic(Mathf.Clamp01(elapsed / dialogueDuration));
+                dialoguePanel.anchoredPosition = Vector2.LerpUnclamped(start, _dialoguePosition, t);
+                dialogueGroup.alpha = t;
+                elapsed += Time.unscaledDeltaTime;
+                yield return null;
+            }
+
+            dialoguePanel.anchoredPosition = _dialoguePosition;
+            dialogueGroup.alpha = 1f;
+        }
+
+        private void HandleAdvance()
+        {
+            if (!_isOpen) { return; }
+            if (!_sequenceComplete)
+            {
+                _skipRequested = true;
+                ApplyFinalState();
+                return;
+            }
+
+            OperatorCatalogEntry completed = _pendingEntries[_pendingIndex];
+            if (_profile.MarkOperatorAcquisitionPresented(completed.operatorId))
+            {
+                _profileStorage.Save(_profile);
+            }
+
+            _pendingIndex++;
+            _isOpen = false;
+            SetRootVisible(false);
+            ReleaseDefinitionHandle();
+            if (_pendingIndex < _pendingEntries.Count)
+            {
+                StartCoroutine(PresentNext());
+            }
+            else
+            {
+                CloseOverlay();
+            }
+        }
+
+        private void ResetAnimatedElements()
+        {
+            RectTransform[] labels = { newLabel, operatorLabel, operatorNameLabel };
+            for (int i = 0; i < labels.Length; i++)
+            {
+                if (labels[i] == null) { continue; }
+                labels[i].anchoredPosition = _labelPositions[i] + Vector2.right * labelSlideDistance;
+                GetOrAddCanvasGroup(labels[i].gameObject).alpha = 0f;
+            }
+
+            if (characterStanding != null)
+            {
+                characterStanding.rectTransform.anchoredPosition =
+                    _characterPosition + Vector2.right * characterSlideDistance;
+            }
+            if (characterGroup != null) { characterGroup.alpha = 0f; }
+            if (dialoguePanel != null) { dialoguePanel.anchoredPosition = _dialoguePosition - Vector2.up * dialogueRiseDistance; }
+            if (dialogueGroup != null) { dialogueGroup.alpha = 0f; }
+        }
+
+        private void ApplyFinalState()
+        {
+            RectTransform[] labels = { newLabel, operatorLabel, operatorNameLabel };
+            for (int i = 0; i < labels.Length; i++)
+            {
+                if (labels[i] == null) { continue; }
+                labels[i].anchoredPosition = _labelPositions[i];
+                GetOrAddCanvasGroup(labels[i].gameObject).alpha = 1f;
+            }
+
+            if (characterStanding != null) { characterStanding.rectTransform.anchoredPosition = _characterPosition; }
+            if (characterGroup != null) { characterGroup.alpha = 1f; }
+            if (dialoguePanel != null) { dialoguePanel.anchoredPosition = _dialoguePosition; }
+            if (dialogueGroup != null) { dialogueGroup.alpha = 1f; }
+        }
+
+        private IEnumerator WaitUnscaled(float duration)
+        {
+            float elapsed = 0f;
+            while (elapsed < duration && !_skipRequested)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                yield return null;
+            }
+        }
+
+        private void CloseOverlay()
+        {
+            _isOpen = false;
+            SetRootVisible(false);
+            SetMainMenuInput(true);
+            ReleaseDefinitionHandle();
+        }
+
+        private void ResolveReferences()
+        {
+            if (rootGroup == null) { rootGroup = GetOrAddCanvasGroup(gameObject); }
+            if (advanceButton == null) { advanceButton = GetComponent<Button>(); }
+            if (newLabel == null) { newLabel = transform.Find("NEW") as RectTransform; }
+            if (operatorLabel == null) { operatorLabel = transform.Find("OPERATOR") as RectTransform; }
+            if (operatorNameLabel == null) { operatorNameLabel = transform.Find("OperatorNameText") as RectTransform; }
+            if (operatorNameText == null && operatorNameLabel != null) { operatorNameText = operatorNameLabel.GetComponent<TMP_Text>(); }
+            if (characterStanding == null) { characterStanding = transform.Find("CharacterStanding")?.GetComponent<Image>(); }
+            if (characterStanding != null && characterGroup == null) { characterGroup = GetOrAddCanvasGroup(characterStanding.gameObject); }
+            if (dialoguePanel == null) { dialoguePanel = transform.Find("AcquisitionDialogue") as RectTransform; }
+            if (dialoguePanel != null && dialogueGroup == null) { dialogueGroup = GetOrAddCanvasGroup(dialoguePanel.gameObject); }
+            if (dialoguePanel != null)
+            {
+                if (dialogueSpeakerText == null) { dialogueSpeakerText = dialoguePanel.Find("SpeakerText")?.GetComponent<TMP_Text>(); }
+                if (dialogueBodyText == null) { dialogueBodyText = dialoguePanel.Find("DialogueText")?.GetComponent<TMP_Text>(); }
+            }
+            if (mainMenuBackground == null && transform.parent != null)
+            {
+                mainMenuBackground = transform.parent.Find("MainMenuBackground")?.gameObject;
+            }
+        }
+
+        private void CachePositions()
+        {
+            _labelPositions[0] = newLabel != null ? newLabel.anchoredPosition : Vector2.zero;
+            _labelPositions[1] = operatorLabel != null ? operatorLabel.anchoredPosition : Vector2.zero;
+            _labelPositions[2] = operatorNameLabel != null ? operatorNameLabel.anchoredPosition : Vector2.zero;
+            _characterPosition = characterStanding != null
+                ? characterStanding.rectTransform.anchoredPosition
+                : Vector2.zero;
+            _dialoguePosition = dialoguePanel != null ? dialoguePanel.anchoredPosition : Vector2.zero;
+        }
+
+        private void SetRootVisible(bool visible)
+        {
+            if (rootGroup == null) { return; }
+            rootGroup.alpha = visible ? 1f : 0f;
+            rootGroup.interactable = visible;
+            rootGroup.blocksRaycasts = visible;
+        }
+
+        private void SetMainMenuInput(bool enabled)
+        {
+            if (mainMenuBackground == null) { return; }
+            CanvasGroup group = mainMenuBackground.GetComponent<CanvasGroup>();
+            if (group == null) { return; }
+            group.interactable = enabled;
+            group.blocksRaycasts = enabled;
+        }
+
+        private void ReleaseDefinitionHandle()
+        {
+            if (_ownsDefinitionHandle && _definitionHandle.IsValid())
+            {
+                Addressables.Release(_definitionHandle);
+            }
+
+            _ownsDefinitionHandle = false;
+            _definitionHandle = default;
+        }
+
+        private static CanvasGroup GetOrAddCanvasGroup(GameObject target)
+        {
+            CanvasGroup group = target.GetComponent<CanvasGroup>();
+            return group != null ? group : target.AddComponent<CanvasGroup>();
+        }
+
+        private static float EaseOutCubic(float value)
+        {
+            float inverse = 1f - value;
+            return 1f - inverse * inverse * inverse;
+        }
+    }
+}

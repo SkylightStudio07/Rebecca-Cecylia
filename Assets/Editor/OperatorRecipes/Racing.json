@@ -5,6 +5,7 @@
     "playStyleDescription": "레이싱걸 컨셉의 캐릭터",
     "selectionPortraitPath": "Assets/Art/Character Standing Arts/실비아/실비아.default-1.png",
     "managementPortraitPath": "Assets/Art/Character Standing Arts/실비아/오퍼레이터관리_실비아.png",
+    "unlockRewardPortraitPath": "Assets/Art/Character Standing Arts/실비아/실비아.default-1.png",
     "sourceTowerRosterPath": "Assets/Data/Operators/cassia/TowerRoster.asset",
     "sourceCardRosterPath": "Assets/Data/Cards/Unlock/플레이어 카드 로스터.asset",
     "sourceAllyUnitRosterPath": "Assets/Data/Operators/cassia/AllyUnits/CassiaTestAllyUnitRoster.asset",
@@ -22,5 +23,8 @@
         "skillRange": 5.0,
         "skillDamage": 5.0
     },
-    "requiredBestWave": 0
+    "requiredBestWave": 0,
+    "unlockType": 3,
+    "purchasePrice": 0,
+    "requiredStageId": "ch1-02"
 }

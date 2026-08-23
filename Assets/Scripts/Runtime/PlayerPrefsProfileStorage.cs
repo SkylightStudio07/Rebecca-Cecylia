@@ -53,6 +53,7 @@ namespace RCCom.Runtime
                 // 목록과 미수령 상태를 넣어 자연스럽게 v2로 승격한다.
                 profile.schemaVersion = Math.Max(1, profile.schemaVersion);
                 profile.bestWave = Math.Max(0, profile.bestWave);
+                profile.commodity = Math.Max(0, profile.commodity);
                 profile.selectedOperatorId ??= string.Empty;
                 profile.operatorAffinities ??= new System.Collections.Generic.List<OperatorAffinityRecord>();
                 for (int i = profile.operatorAffinities.Count - 1; i >= 0; i--)
@@ -67,6 +68,22 @@ namespace RCCom.Runtime
                     record.affinity = Math.Max(0, Math.Min(PlayerProfile.MaxOperatorAffinity,
                         record.affinity));
                 }
+
+                profile.presentedOperatorAcquisitionIds ??=
+                    new System.Collections.Generic.List<string>();
+                for (int i = profile.presentedOperatorAcquisitionIds.Count - 1; i >= 0; i--)
+                {
+                    string operatorId = profile.presentedOperatorAcquisitionIds[i];
+                    if (string.IsNullOrWhiteSpace(operatorId) ||
+                        profile.presentedOperatorAcquisitionIds.FindIndex(id =>
+                            string.Equals(id, operatorId, StringComparison.Ordinal)) != i)
+                    {
+                        profile.presentedOperatorAcquisitionIds.RemoveAt(i);
+                    }
+                }
+
+                NormalizeIdList(ref profile.acquiredOperatorIds);
+                NormalizeIdList(ref profile.clearedStageIds);
 
                 profile.pendingReturnOperatorId ??= string.Empty;
                 profile.pendingReturnCount = Math.Max(0, profile.pendingReturnCount);
@@ -96,6 +113,20 @@ namespace RCCom.Runtime
             // 프로필 저장은 매 프레임 호출되는 경로가 아니라 게임 결과/선택 확정 시점의
             // 체크포인트이므로, 브라우저 종료 전에 IndexedDB 반영을 보장하도록 즉시 확정한다.
             PlayerPrefs.Save();
+        }
+
+        private static void NormalizeIdList(ref System.Collections.Generic.List<string> ids)
+        {
+            ids ??= new System.Collections.Generic.List<string>();
+            for (int i = ids.Count - 1; i >= 0; i--)
+            {
+                string id = ids[i];
+                if (string.IsNullOrWhiteSpace(id) || ids.FindIndex(candidate =>
+                        string.Equals(candidate, id, StringComparison.Ordinal)) != i)
+                {
+                    ids.RemoveAt(i);
+                }
+            }
         }
     }
 }

@@ -29,6 +29,7 @@ namespace RCCom.UI
         [SerializeField] private Button queueParticipatedReturnButton;
         [SerializeField] private Button queueOtherReturnButton;
         [SerializeField] private Button clearReturnButton;
+        [SerializeField] private Button resetOperatorAcquisitionButton;
         [SerializeField] private Button showDialogueButton;
         [SerializeField] private Button refreshButton;
         [SerializeField] private LobbyOperatorDialogueUI lobbyDialogueUi;
@@ -72,6 +73,7 @@ namespace RCCom.UI
             if (queueParticipatedReturnButton != null) { queueParticipatedReturnButton.onClick.AddListener(QueueParticipatedReturn); }
             if (queueOtherReturnButton != null) { queueOtherReturnButton.onClick.AddListener(QueueOtherReturn); }
             if (clearReturnButton != null) { clearReturnButton.onClick.AddListener(ClearReturn); }
+            if (resetOperatorAcquisitionButton != null) { resetOperatorAcquisitionButton.onClick.AddListener(ResetOperatorAcquisition); }
             if (showDialogueButton != null) { showDialogueButton.onClick.AddListener(ShowDialogue); }
             if (refreshButton != null) { refreshButton.onClick.AddListener(RefreshFromProfile); }
 #endif
@@ -91,6 +93,7 @@ namespace RCCom.UI
             if (queueParticipatedReturnButton != null) { queueParticipatedReturnButton.onClick.RemoveListener(QueueParticipatedReturn); }
             if (queueOtherReturnButton != null) { queueOtherReturnButton.onClick.RemoveListener(QueueOtherReturn); }
             if (clearReturnButton != null) { clearReturnButton.onClick.RemoveListener(ClearReturn); }
+            if (resetOperatorAcquisitionButton != null) { resetOperatorAcquisitionButton.onClick.RemoveListener(ResetOperatorAcquisition); }
             if (showDialogueButton != null) { showDialogueButton.onClick.RemoveListener(ShowDialogue); }
             if (refreshButton != null) { refreshButton.onClick.RemoveListener(RefreshFromProfile); }
 #endif
@@ -182,6 +185,15 @@ namespace RCCom.UI
             RefreshFromProfile();
         }
 
+        private void ResetOperatorAcquisition()
+        {
+            PlayerProfile profile = _storage.Load();
+            profile.presentedOperatorAcquisitionIds ??= new System.Collections.Generic.List<string>();
+            profile.presentedOperatorAcquisitionIds.Clear();
+            _storage.Save(profile);
+            RefreshFromProfile();
+        }
+
         private void ShowDialogue()
         {
             if (lobbyDialogueUi == null)
@@ -243,7 +255,8 @@ namespace RCCom.UI
                 $"ID  {operatorId}\n" +
                 $"호감도  {affinity}/100\n" +
                 $"등급  {profile.GetOperatorAffinityTier(operatorId)}\n" +
-                $"귀환 예약  {pending}";
+                $"귀환 예약  {pending}\n" +
+                $"합류 연출  {profile.presentedOperatorAcquisitionIds?.Count ?? 0}명 완료";
         }
 
         private int GetCurrentAffinity()

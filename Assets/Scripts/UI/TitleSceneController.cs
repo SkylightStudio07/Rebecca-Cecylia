@@ -1,5 +1,9 @@
 using System.Collections;
+using RCCom.Core;
+using RCCom.Data;
 using RCCom.Managers;
+using RCCom.Runtime;
+using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
@@ -42,10 +46,15 @@ namespace RCCom.UI
         private Color promptStartColor;
         private bool isAnimating;
         private bool isMenuOpen;
+        private IProfileStorage profileStorage;
+        private TextMeshProUGUI commodityText;
 
         private void Awake()
         {
+            profileStorage = new PlayerPrefsProfileStorage();
             ResolveReferences();
+            ResolveCommodityText();
+            RefreshCommodityText();
             CacheInitialState();
             ResetToTitle();
         }
@@ -105,6 +114,66 @@ namespace RCCom.UI
             {
                 pressAnyButtonGraphic = GetComponent<Graphic>();
             }
+        }
+
+        private void ResolveCommodityText()
+        {
+            Transform panel = FindTransformByName("CommodityPanel");
+            if (panel == null)
+            {
+                return;
+            }
+
+            Transform textTransform = FindChildByName(panel, "Text (TMP)");
+            if (textTransform != null)
+            {
+                commodityText = textTransform.GetComponent<TextMeshProUGUI>();
+            }
+        }
+
+        public void RefreshCommodityText()
+        {
+            if (commodityText == null || profileStorage == null)
+            {
+                return;
+            }
+
+            PlayerProfile profile = profileStorage.Load();
+            commodityText.text = profile.commodity.ToString();
+        }
+
+        private static Transform FindTransformByName(string name)
+        {
+            Transform[] allTransforms = FindObjectsByType<Transform>(FindObjectsInactive.Include,
+                FindObjectsSortMode.None);
+            for (int i = 0; i < allTransforms.Length; i++)
+            {
+                if (allTransforms[i].name == name)
+                {
+                    return allTransforms[i];
+                }
+            }
+
+            return null;
+        }
+
+        private static Transform FindChildByName(Transform root, string name)
+        {
+            if (root.name == name)
+            {
+                return root;
+            }
+
+            for (int i = 0; i < root.childCount; i++)
+            {
+                Transform found = FindChildByName(root.GetChild(i), name);
+                if (found != null)
+                {
+                    return found;
+                }
+            }
+
+            return null;
         }
 
         private void CacheInitialState()
@@ -214,6 +283,7 @@ namespace RCCom.UI
             }
 
             mainMenuBackground.SetActive(true);
+            RefreshCommodityText();
             SetCanvasGroup(mainMenuGroup, 0f, false);
 
             if (mainMenuRect != null)

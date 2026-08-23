@@ -14,6 +14,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RCCom.UI.OperatorDialogueSet
   lobbyIdleSprite: {fileID: 4639284181257070056, guid: 5cb4ce48fc6687a48b7ba0bb4339495a, type: 3}
   idleSprite: {fileID: 8101380904372118242, guid: 7692c1b2ac922604a964bcd1026289c7, type: 3}
+  operatorAcquired:
+    defaultPortraitSprite: {fileID: 0}
+    portraitSprite: {fileID: 0}
+    defaultLobbySprite: {fileID: 0}
+    entries: []
+    lines: []
   lobbyInteraction:
     defaultPortraitSprite: {fileID: 0}
     portraitSprite: {fileID: 0}

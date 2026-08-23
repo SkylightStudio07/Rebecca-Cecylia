@@ -76,6 +76,11 @@ namespace RCCom.UI
                 return;
             }
 
+            CloseCovered();
+        }
+
+        private void CloseCovered()
+        {
             SetPanelVisible(false);
 
             if (EventSystem.current != null)
@@ -97,11 +102,13 @@ namespace RCCom.UI
         public void Confirm()
         {
             if (_isLoading || !TryGetSelectedEntry(out OperatorCatalogEntry entry) ||
-                !entry.IsUnlocked(_profile.bestWave))
+                !entry.IsUnlocked(_profile))
             {
                 return;
             }
 
+            // 콘텐츠 다운로드는 로비 화면 안에서 진행된다. 씬 전환 전용 커버를 씌우면
+            // 선택 흐름이 끊겨 보이므로, 상태 문구와 진행 바로만 현재 화면에 표시한다.
             StartCoroutine(LoadAndStart(entry));
         }
 
@@ -212,7 +219,7 @@ namespace RCCom.UI
             }
 
             OperatorSelectionCard card = Instantiate(cardPrefab, cardContent);
-            card.Setup(entry, entry.IsUnlocked(_profile?.bestWave ?? 0), true, FocusDefaultButton);
+            card.Setup(entry, entry.IsUnlocked(_profile), true, FocusDefaultButton);
             _cards.Add(card);
         }
 
@@ -272,13 +279,13 @@ namespace RCCom.UI
             }
 
             int savedIndex = catalog.FindIndex(_profile?.selectedOperatorId);
-            if (savedIndex >= 0 && catalog.entries[savedIndex].IsUnlocked(_profile.bestWave))
+            if (savedIndex >= 0 && catalog.entries[savedIndex].IsUnlocked(_profile))
             {
                 _selectedIndex = savedIndex;
                 return;
             }
 
-            int firstUnlocked = catalog.FindFirstUnlockedIndex(_profile?.bestWave ?? 0);
+            int firstUnlocked = catalog.FindFirstUnlockedIndex(_profile);
             _selectedIndex = firstUnlocked >= 0 ? firstUnlocked : 0;
         }
 
@@ -289,7 +296,7 @@ namespace RCCom.UI
                 return;
             }
 
-            bool unlocked = entry.IsUnlocked(_profile.bestWave);
+            bool unlocked = entry.IsUnlocked(_profile);
             if (portraitImage != null)
             {
                 portraitImage.sprite = entry.previewPortrait;
@@ -301,7 +308,7 @@ namespace RCCom.UI
             if (unlockText != null)
             {
                 unlockText.text = unlocked ? (entry.remoteContent ? "다운로드 콘텐츠" : "사용 가능") :
-                    $"최고 웨이브 {entry.requiredBestWave} 도달 시 해금";
+                    entry.GetLockedDescription();
             }
 
             if (statusText != null) { statusText.text = unlocked ? "선택하면 필요한 콘텐츠를 확인합니다." : "잠긴 오퍼레이터입니다."; }
@@ -347,7 +354,7 @@ namespace RCCom.UI
         private void UpdateButtons()
         {
             bool hasEntry = TryGetSelectedEntry(out OperatorCatalogEntry entry);
-            bool unlocked = hasEntry && entry.IsUnlocked(_profile?.bestWave ?? 0);
+            bool unlocked = hasEntry && entry.IsUnlocked(_profile);
             bool canNavigate = !_isLoading && catalog != null && catalog.entries.Count > 1;
 
             if (previousButton != null) { previousButton.interactable = canNavigate; }

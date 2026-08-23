@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using RCCom.Core;
 using RCCom.Data;
+using RCCom.Definitions.Operator;
 using RCCom.Definitions.Stage;
 using RCCom.Runtime;
 using TMPro;
@@ -15,6 +16,7 @@ namespace RCCom.UI
     public sealed class StageSelectionUI : MonoBehaviour
     {
         [SerializeField] private StageCatalog catalog;
+        [SerializeField] private OperatorCatalog operatorCatalog;
         [SerializeField] private GameObject panel;
         [SerializeField] private CanvasGroup mainMenuGroup;
         [SerializeField] private ModeSelectionUI modeSelectionUI;
@@ -30,6 +32,10 @@ namespace RCCom.UI
         [SerializeField] private TextMeshProUGUI selectedDescriptionText;
         [SerializeField] private TextMeshProUGUI recommendedLevelText;
         [SerializeField] private Image descriptionBackgroundImage;
+        [Header("스테이지 오퍼레이터 보상")]
+        [SerializeField] private GameObject operatorRewardPanel;
+        [SerializeField] private Image operatorRewardPortrait;
+        [SerializeField] private TextMeshProUGUI operatorRewardNameText;
         [SerializeField] private TextMeshProUGUI statusText;
         [SerializeField] private Button startStageButton;
         [SerializeField] private Button backButton;
@@ -64,6 +70,11 @@ namespace RCCom.UI
 
         public void Close()
         {
+            CloseCovered();
+        }
+
+        private void CloseCovered()
+        {
             SetPanelVisible(false);
             if (modeSelectionUI != null)
             {
@@ -85,7 +96,7 @@ namespace RCCom.UI
 
             BattleSession.SelectStage(entry.stageDefinition);
             Time.timeScale = 1f;
-            SceneManager.LoadScene("DefenseScene");
+            UILoadingTransition.LoadScene("DefenseScene");
         }
 
         public void ScrollPrevious()
@@ -181,6 +192,7 @@ namespace RCCom.UI
                 descriptionBackgroundImage.sprite = background;
                 descriptionBackgroundImage.enabled = background != null;
             }
+            RenderOperatorReward(definition);
             if (statusText != null)
             {
                 statusText.text = "스테이지를 선택하면 작전 정보가 표시됩니다.";
@@ -194,6 +206,52 @@ namespace RCCom.UI
             {
                 if (_nodes[i] != null) { _nodes[i].SetSelected(i == _selectedIndex); }
             }
+        }
+
+        private void RenderOperatorReward(StageDefinition definition)
+        {
+            OperatorCatalogEntry rewardEntry = FindOperatorReward(definition);
+            bool hasReward = rewardEntry != null;
+            if (operatorRewardPanel != null) { operatorRewardPanel.SetActive(hasReward); }
+            if (!hasReward)
+            {
+                return;
+            }
+
+            if (operatorRewardPortrait != null)
+            {
+                operatorRewardPortrait.sprite = rewardEntry.unlockRewardPortrait != null
+                    ? rewardEntry.unlockRewardPortrait
+                    : rewardEntry.previewPortrait;
+                operatorRewardPortrait.enabled = operatorRewardPortrait.sprite != null;
+            }
+
+            if (operatorRewardNameText != null)
+            {
+                string state = rewardEntry.IsUnlocked(_profile) ? "획득 완료" : "클리어 보상";
+                operatorRewardNameText.text = $"{state}\n{rewardEntry.displayName}";
+            }
+        }
+
+        private OperatorCatalogEntry FindOperatorReward(StageDefinition definition)
+        {
+            if (definition == null || operatorCatalog == null || operatorCatalog.entries == null)
+            {
+                return null;
+            }
+
+            for (int i = 0; i < operatorCatalog.entries.Count; i++)
+            {
+                OperatorCatalogEntry entry = operatorCatalog.entries[i];
+                if (entry != null && entry.unlockType == OperatorUnlockType.StageClearReward &&
+                    string.Equals(entry.requiredStageId, definition.stageId,
+                        System.StringComparison.Ordinal))
+                {
+                    return entry;
+                }
+            }
+
+            return null;
         }
 
         private StageCatalogEntry TryGetSelectedEntry()

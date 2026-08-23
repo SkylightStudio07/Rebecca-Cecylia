@@ -34,4 +34,8 @@ MonoBehaviour:
   cardRoster: {fileID: 11400000, guid: bc89c00a530cb1b478439ed1a1e16841, type: 2}
   allyUnitRoster: {fileID: 11400000, guid: 8c9cb0d7d35553b4da054e240f6fc513, type: 2}
   dialogueSet: {fileID: 11400000, guid: 993a8531fa925e94abb55a5603de6975, type: 2}
+  unlockType: 0
   requiredBestWave: 0
+  purchasePrice: 0
+  requiredStageId: 
+  unlockRewardPortrait: {fileID: 0}

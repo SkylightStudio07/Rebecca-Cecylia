@@ -1,0 +1,546 @@
+fileFormatVersion: 2
+guid: 51ef63ac970151d4f854f85e17b4eb7b
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 2433972447430422483
+    second: UILoadingGeometry_0
+  - first:
+      213: 583875812373002465
+    second: UILoadingGeometry_1
+  - first:
+      213: 4091147324965282265
+    second: UILoadingGeometry_2
+  - first:
+      213: -7088139242071090148
+    second: UILoadingGeometry_3
+  - first:
+      213: 5726712380029858749
+    second: UILoadingGeometry_4
+  - first:
+      213: 5282299351796329833
+    second: UILoadingGeometry_5
+  - first:
+      213: 3485381955917153575
+    second: UILoadingGeometry_6
+  - first:
+      213: -4828299296343298005
+    second: UILoadingGeometry_7
+  - first:
+      213: 8413949046195588889
+    second: UILoadingGeometry_8
+  - first:
+      213: -1607036713547587249
+    second: UILoadingGeometry_9
+  - first:
+      213: -2341905835189998853
+    second: UILoadingGeometry_10
+  - first:
+      213: -2379228906316025467
+    second: UILoadingGeometry_11
+  - first:
+      213: 1750208908754054704
+    second: UILoadingGeometry_12
+  - first:
+      213: -924654253341209412
+    second: UILoadingGeometry_13
+  - first:
+      213: -5903084734647259146
+    second: UILoadingGeometry_14
+  - first:
+      213: -5874661121491558677
+    second: UILoadingGeometry_15
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 1
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: UILoadingGeometry_0
+      rect:
+        serializedVersion: 2
+        x: 293
+        y: 1193
+        width: 8
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3dfad229b0537c120800000000000000
+      internalID: 2433972447430422483
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UILoadingGeometry_1
+      rect:
+        serializedVersion: 2
+        x: 295
+        y: 1189
+        width: 12
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1e87f6535f75a1800800000000000000
+      internalID: 583875812373002465
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UILoadingGeometry_2
+      rect:
+        serializedVersion: 2
+        x: 475
+        y: 1110
+        width: 304
+        height: 93
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9d16854f0dca6c830800000000000000
+      internalID: 4091147324965282265
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UILoadingGeometry_3
+      rect:
+        serializedVersion: 2
+        x: 788
+        y: 770
+        width: 340
+        height: 464
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c1c98d5f9eed1ad90800000000000000
+      internalID: -7088139242071090148
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UILoadingGeometry_4
+      rect:
+        serializedVersion: 2
+        x: 56
+        y: 238
+        width: 946
+        height: 822
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: db3f286719e597f40800000000000000
+      internalID: 5726712380029858749
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UILoadingGeometry_5
+      rect:
+        serializedVersion: 2
+        x: 137
+        y: 833
+        width: 297
+        height: 295
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 96da81d064f7e4940800000000000000
+      internalID: 5282299351796329833
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UILoadingGeometry_6
+      rect:
+        serializedVersion: 2
+        x: 157
+        y: 722
+        width: 347
+        height: 376
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7258ffc2c609e5030800000000000000
+      internalID: 3485381955917153575
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UILoadingGeometry_7
+      rect:
+        serializedVersion: 2
+        x: 499
+        y: 1060
+        width: 259
+        height: 48
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b2070341f5f6efcb0800000000000000
+      internalID: -4828299296343298005
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UILoadingGeometry_8
+      rect:
+        serializedVersion: 2
+        x: 759
+        y: 854
+        width: 275
+        height: 243
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 91f89b8141a54c470800000000000000
+      internalID: 8413949046195588889
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UILoadingGeometry_9
+      rect:
+        serializedVersion: 2
+        x: 124
+        y: 171
+        width: 318
+        height: 342
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f412cfb9f98a2b9e0800000000000000
+      internalID: -1607036713547587249
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UILoadingGeometry_10
+      rect:
+        serializedVersion: 2
+        x: 762
+        y: 208
+        width: 333
+        height: 356
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bfae5140d01ef7fd0800000000000000
+      internalID: -2341905835189998853
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UILoadingGeometry_11
+      rect:
+        serializedVersion: 2
+        x: 899
+        y: 376
+        width: 132
+        height: 542
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 58131b75ae74bfed0800000000000000
+      internalID: -2379228906316025467
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UILoadingGeometry_12
+      rect:
+        serializedVersion: 2
+        x: 999
+        y: 501
+        width: 222
+        height: 364
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 03e6201cabdf94810800000000000000
+      internalID: 1750208908754054704
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UILoadingGeometry_13
+      rect:
+        serializedVersion: 2
+        x: 215
+        y: 218
+        width: 243
+        height: 219
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cbc0b890bd7fa23f0800000000000000
+      internalID: -924654253341209412
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UILoadingGeometry_14
+      rect:
+        serializedVersion: 2
+        x: 822
+        y: 107
+        width: 323
+        height: 369
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6ffa150b5b7041ea0800000000000000
+      internalID: -5903084734647259146
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UILoadingGeometry_15
+      rect:
+        serializedVersion: 2
+        x: 386
+        y: 39
+        width: 391
+        height: 174
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bee92b5d5d2097ea0800000000000000
+      internalID: -5874661121491558677
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      UILoadingGeometry_0: 2433972447430422483
+      UILoadingGeometry_1: 583875812373002465
+      UILoadingGeometry_10: -2341905835189998853
+      UILoadingGeometry_11: -2379228906316025467
+      UILoadingGeometry_12: 1750208908754054704
+      UILoadingGeometry_13: -924654253341209412
+      UILoadingGeometry_14: -5903084734647259146
+      UILoadingGeometry_15: -5874661121491558677
+      UILoadingGeometry_2: 4091147324965282265
+      UILoadingGeometry_3: -7088139242071090148
+      UILoadingGeometry_4: 5726712380029858749
+      UILoadingGeometry_5: 5282299351796329833
+      UILoadingGeometry_6: 3485381955917153575
+      UILoadingGeometry_7: -4828299296343298005
+      UILoadingGeometry_8: 8413949046195588889
+      UILoadingGeometry_9: -1607036713547587249
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

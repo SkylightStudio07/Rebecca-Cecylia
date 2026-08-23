@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using RCCom.Data;
 using UnityEngine;
 
 namespace RCCom.Definitions.Operator
@@ -24,9 +25,9 @@ namespace RCCom.Definitions.Operator
                 entry != null && string.Equals(entry.operatorId, operatorId, StringComparison.Ordinal));
         }
 
-        public int FindFirstUnlockedIndex(int bestWave)
+        public int FindFirstUnlockedIndex(PlayerProfile profile)
         {
-            return entries.FindIndex(entry => entry != null && entry.IsUnlocked(bestWave));
+            return entries.FindIndex(entry => entry != null && entry.IsUnlocked(profile));
         }
     }
 }

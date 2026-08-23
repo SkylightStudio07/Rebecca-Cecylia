@@ -1,5 +1,6 @@
 using System;
 using RCCom.Data;
+using RCCom.Definitions.Operator;
 
 namespace RCCom.EditorTools
 {
@@ -17,6 +18,7 @@ namespace RCCom.EditorTools
         public string playStyleDescription;
         public string selectionPortraitPath;
         public string managementPortraitPath;
+        public string unlockRewardPortraitPath;
         public string sourceTowerRosterPath;
         public string sourceCardRosterPath;
         public string sourceAllyUnitRosterPath;
@@ -24,5 +26,8 @@ namespace RCCom.EditorTools
         public bool remoteContent;
         public PlayerData playerData = new();
         public int requiredBestWave;
+        public OperatorUnlockType unlockType;
+        public int purchasePrice;
+        public string requiredStageId;
     }
 }

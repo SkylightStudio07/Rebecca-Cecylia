@@ -123,6 +123,11 @@ namespace RCCom.UI
                 return;
             }
 
+            CloseCovered();
+        }
+
+        private void CloseCovered()
+        {
             if (mainMenuBackground != null)
             {
                 mainMenuBackground.SetActive(true);

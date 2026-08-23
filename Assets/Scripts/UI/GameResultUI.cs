@@ -29,6 +29,13 @@ namespace RCCom.UI
         [SerializeField] private TextMeshProUGUI defeatedEnemiesText;
         [SerializeField] private TextMeshProUGUI earnedGoldText;
         [SerializeField] private TextMeshProUGUI survivalTimeText;
+        [Header("계정 보상")]
+        [Tooltip("전투 결과마다 지급하는 기본 계정 재화. 전투 중 골드와는 별개로 PlayerProfile에 누적된다.")]
+        [SerializeField, Min(0)] private int baseCommodityReward = 100;
+        [Tooltip("전투 시간 1분마다 더하는 계정 재화. 결과 화면·카드 선택으로 멈춘 시간은 SurvivalTime에 포함되지 않는다.")]
+        [SerializeField, Min(0)] private int commodityPerCompletedMinute = 20;
+        [Tooltip("플레이타임 보너스 상한. 장시간 생존으로 보상이 끝없이 커지지 않게 막는다.")]
+        [SerializeField, Min(0)] private int maxCommodityTimeBonus = 100;
         [SerializeField] private TextMeshProUGUI resultTitleText;
         [SerializeField] private string victoryTitle = "MISSION CLEAR";
         [SerializeField] private string defeatTitle = "MISSION FAILED";
@@ -49,6 +56,8 @@ namespace RCCom.UI
         private float? _pendingSceneDelay;
         private string _pendingSceneName;
         private IProfileStorage _profileStorage;
+        private bool _hasGrantedCommodity;
+        private int _grantedCommodity;
 
         private void Awake()
         {
@@ -80,10 +89,21 @@ namespace RCCom.UI
         {
             PlayerProfile profile = _profileStorage.Load();
             bool shouldSaveProfile = false;
+            GrantCommodity(profile);
+            shouldSaveProfile = true;
             if (profile.TryRecordBestWave(waveManager.CurrentWave))
             {
                 // 결과 화면이 세션 통계를 확정하는 체크포인트이므로 최고 기록도 여기서 한 번만 저장한다.
                 // 매 웨이브마다 PlayerPrefs.Save를 호출하지 않아 WebGL 저장 비용과 중간 상태 기록을 피한다.
+                shouldSaveProfile = true;
+            }
+
+            if (outcome == BattleOutcome.Victory && BattleSession.IsStageMode &&
+                BattleSession.SelectedStage != null &&
+                profile.MarkStageCleared(BattleSession.SelectedStage.stageId))
+            {
+                // 스테이지 보상 오퍼레이터는 이 클리어 기록에서 파생한다. 별도 획득 목록에도
+                // 중복 기록하면 조건 변경 시 두 원본이 어긋날 수 있어 스테이지 ID만 저장한다.
                 shouldSaveProfile = true;
             }
 
@@ -124,6 +144,22 @@ namespace RCCom.UI
             Show();
         }
 
+        private int GrantCommodity(PlayerProfile profile)
+        {
+            if (_hasGrantedCommodity)
+            {
+                return _grantedCommodity;
+            }
+
+            int completedMinutes = Mathf.FloorToInt(Mathf.Max(0f, gameManager.SurvivalTime) / 60f);
+            int timeBonus = Mathf.Min(maxCommodityTimeBonus,
+                completedMinutes * commodityPerCompletedMinute);
+            _grantedCommodity = Mathf.Max(0, baseCommodityReward) + timeBonus;
+            profile.AddCommodity(_grantedCommodity);
+            _hasGrantedCommodity = true;
+            return _grantedCommodity;
+        }
+
         private static string FormatTime(float seconds)
         {
             int totalSeconds = Mathf.FloorToInt(seconds);
@@ -147,6 +183,8 @@ namespace RCCom.UI
 
             _pendingSceneDelay = null;
             Time.timeScale = 1f;
+            // 결과 화면의 재도전·로비 복귀는 이미 종료 연출을 마친 뒤의 선택이다.
+            // 출격 전용 로딩 캔버스를 다시 노출하지 않고 즉시 씬을 전환한다.
             SceneManager.LoadScene(_pendingSceneName ?? SceneManager.GetActiveScene().name);
         }
 

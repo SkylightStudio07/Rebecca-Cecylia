@@ -33,8 +33,10 @@ namespace RCCom.UI
         [SerializeField] private Button previousButton;
         [SerializeField] private Button nextButton;
         [SerializeField] private Button deployButton;
+        [SerializeField] private Button purchaseButton;
         [SerializeField] private Button backButton;
         [SerializeField] private LobbyOperatorDialogueUI lobbyDialogueUI;
+        [SerializeField] private OperatorAcquisitionUI acquisitionUI;
 
         private readonly List<OperatorManagementCardView> _cards = new();
         private IProfileStorage _profileStorage;
@@ -52,6 +54,7 @@ namespace RCCom.UI
             if (previousButton != null) { previousButton.onClick.AddListener(Previous); }
             if (nextButton != null) { nextButton.onClick.AddListener(Next); }
             if (deployButton != null) { deployButton.onClick.AddListener(Deploy); }
+            if (purchaseButton != null) { purchaseButton.onClick.AddListener(Purchase); }
             if (backButton != null) { backButton.onClick.AddListener(Close); }
         }
 
@@ -60,6 +63,7 @@ namespace RCCom.UI
             if (previousButton != null) { previousButton.onClick.RemoveListener(Previous); }
             if (nextButton != null) { nextButton.onClick.RemoveListener(Next); }
             if (deployButton != null) { deployButton.onClick.RemoveListener(Deploy); }
+            if (purchaseButton != null) { purchaseButton.onClick.RemoveListener(Purchase); }
             if (backButton != null) { backButton.onClick.RemoveListener(Close); }
         }
 
@@ -84,6 +88,11 @@ namespace RCCom.UI
         public void Close()
         {
             if (_isLoading) { return; }
+            CloseCovered();
+        }
+
+        private void CloseCovered()
+        {
             SetPanelVisible(false);
             if (EventSystem.current != null) { EventSystem.current.SetSelectedGameObject(null); }
         }
@@ -94,12 +103,45 @@ namespace RCCom.UI
         public void Deploy()
         {
             if (_isLoading || !TryGetBrowsingEntry(out OperatorCatalogEntry entry) ||
-                !entry.IsUnlocked(_profile.bestWave))
+                !entry.IsUnlocked(_profile))
             {
                 return;
             }
 
             StartCoroutine(DeployRoutine(entry));
+        }
+
+        public void Purchase()
+        {
+            if (_isLoading || !TryGetBrowsingEntry(out OperatorCatalogEntry entry) ||
+                entry.unlockType != OperatorUnlockType.CommodityPurchase || entry.IsUnlocked(_profile))
+            {
+                return;
+            }
+
+            if (!_profile.TryPurchaseOperator(entry.operatorId, entry.purchasePrice))
+            {
+                if (statusText != null)
+                {
+                    statusText.text = $"골드가 부족합니다. 필요 {entry.purchasePrice} / 보유 {_profile.commodity}";
+                }
+                UpdateButtons();
+                return;
+            }
+
+            _profileStorage.Save(_profile);
+            TitleSceneController titleController = FindFirstObjectByType<TitleSceneController>(
+                FindObjectsInactive.Include);
+            if (titleController != null) { titleController.RefreshCommodityText(); }
+            RefreshCards();
+            RenderSelection();
+            if (statusText != null) { statusText.text = $"{entry.displayName} 영입 완료"; }
+
+            if (acquisitionUI != null)
+            {
+                SetPanelVisible(false);
+                acquisitionUI.PresentNewlyUnlocked();
+            }
         }
 
         private void Update()
@@ -172,7 +214,9 @@ namespace RCCom.UI
         private void SelectSavedOrFirst()
         {
             int saved = catalog.FindIndex(_profile.selectedOperatorId);
-            _browsingIndex = saved >= 0 ? saved : Mathf.Max(0, catalog.FindFirstUnlockedIndex(_profile.bestWave));
+            _browsingIndex = saved >= 0 && catalog.entries[saved].IsUnlocked(_profile)
+                ? saved
+                : Mathf.Max(0, catalog.FindFirstUnlockedIndex(_profile));
         }
 
         private void RebuildCards()
@@ -205,7 +249,7 @@ namespace RCCom.UI
         {
             if (view == null || index < 0 || index >= GetSlotCount()) { return; }
             OperatorCatalogEntry entry = index < catalog.entries.Count ? catalog.entries[index] : null;
-            bool unlocked = entry != null && entry.IsUnlocked(_profile.bestWave);
+            bool unlocked = entry != null && entry.IsUnlocked(_profile);
             bool active = entry != null && entry.operatorId == _profile.selectedOperatorId;
             int affinity = entry != null ? _profile.GetOperatorAffinity(entry.operatorId) : 0;
             view.Setup(entry, index, unlocked, active, index == _browsingIndex, affinity,
@@ -226,13 +270,13 @@ namespace RCCom.UI
                 UpdateButtons();
                 return;
             }
-            bool unlocked = entry.IsUnlocked(_profile.bestWave);
+            bool unlocked = entry.IsUnlocked(_profile);
             if (nameText != null) { nameText.text = entry.displayName; }
             if (descriptionText != null) { descriptionText.text = entry.playStyleDescription; }
             if (unlockText != null)
             {
                 unlockText.text = unlocked ? (entry.remoteContent ? "REMOTE CONTENT" : "LOCAL OPERATOR")
-                    : $"BEST WAVE {entry.requiredBestWave} 달성 시 해금";
+                    : entry.GetLockedDescription();
             }
             if (affinityText != null)
             {
@@ -243,13 +287,17 @@ namespace RCCom.UI
                 int unlockedCount = 0;
                 for (int i = 0; i < catalog.entries.Count; i++)
                 {
-                    if (catalog.entries[i] != null && catalog.entries[i].IsUnlocked(_profile.bestWave)) { unlockedCount++; }
+                    if (catalog.entries[i] != null && catalog.entries[i].IsUnlocked(_profile)) { unlockedCount++; }
                 }
                 registeredText.text = $"{unlockedCount:00} / {GetSlotCount():00}\nREGISTERED";
             }
             if (statusText != null)
             {
-                statusText.text = unlocked ? "DEPLOY를 눌러 활성 오퍼레이터로 지정합니다." : "잠금 조건을 충족해야 배치할 수 있습니다.";
+                statusText.text = unlocked
+                    ? "DEPLOY를 눌러 활성 오퍼레이터로 지정합니다."
+                    : entry.unlockType == OperatorUnlockType.CommodityPurchase
+                        ? $"PURCHASE를 눌러 {entry.purchasePrice} 골드로 영입합니다."
+                        : "잠금 조건을 충족해야 배치할 수 있습니다.";
             }
             if (downloadProgress != null) { downloadProgress.value = 0f; }
 
@@ -263,7 +311,7 @@ namespace RCCom.UI
             int unlockedCount = 0;
             for (int i = 0; i < catalog.entries.Count; i++)
             {
-                if (catalog.entries[i] != null && catalog.entries[i].IsUnlocked(_profile.bestWave)) { unlockedCount++; }
+                if (catalog.entries[i] != null && catalog.entries[i].IsUnlocked(_profile)) { unlockedCount++; }
             }
             registeredText.text = $"{unlockedCount:00} / {GetSlotCount():00}\nREGISTERED";
         }
@@ -297,6 +345,14 @@ namespace RCCom.UI
             // 해금 여부는 Deploy()가 판정한다. Disabled 상태로 고정하면 잠금 슬롯에서도 Hover가 사라진다.
             // 현재 오퍼레이터의 재Deploy는 허용해 단일 오퍼레이터 상태에서도 클릭 피드백을 유지한다.
             if (deployButton != null) { deployButton.interactable = !_isLoading; }
+            if (purchaseButton != null)
+            {
+                bool canPurchase = TryGetBrowsingEntry(out OperatorCatalogEntry entry) &&
+                    entry.unlockType == OperatorUnlockType.CommodityPurchase && !entry.IsUnlocked(_profile);
+                purchaseButton.gameObject.SetActive(canPurchase);
+                purchaseButton.interactable = canPurchase && !_isLoading &&
+                    _profile != null && _profile.commodity >= entry.purchasePrice;
+            }
             if (backButton != null) { backButton.interactable = !_isLoading; }
         }
 

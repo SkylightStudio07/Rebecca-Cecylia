@@ -64,7 +64,7 @@ namespace RCCom.EditorTools
             rootRect.anchorMax = new Vector2(1f, 1f);
             rootRect.pivot = new Vector2(1f, 1f);
             rootRect.anchoredPosition = new Vector2(-24f, -24f);
-            rootRect.sizeDelta = new Vector2(360f, 390f);
+            rootRect.sizeDelta = new Vector2(360f, 434f);
 
             Image background = rootObject.GetComponent<Image>();
             if (background == null)
@@ -90,38 +90,40 @@ namespace RCCom.EditorTools
                 "새로고침", 248f, 46f, 96f, 30f, new Color(0.08f, 0.15f, 0.2f, 1f));
             TextMeshProUGUI status = CreateLabel("Status", rootObject.transform, font,
                 string.Empty, 13f, Color.white, TextAlignmentOptions.Left,
-                16f, 84f, 328f, 70f);
+                16f, 84f, 328f, 86f);
             Slider slider = CreateSlider("AffinitySlider", rootObject.transform,
-                16f, 162f, 328f, 22f);
+                16f, 178f, 328f, 22f);
             Button apply = CreateButton("Apply", rootObject.transform, font,
-                "적용", 16f, 194f, 108f, 28f, new Color(0.05f, 0.22f, 0.32f, 1f));
+                "적용", 16f, 210f, 108f, 28f, new Color(0.05f, 0.22f, 0.32f, 1f));
             Button decrease = CreateButton("Decrease", rootObject.transform, font,
-                "-1", 132f, 194f, 90f, 28f, new Color(0.08f, 0.08f, 0.11f, 1f));
+                "-1", 132f, 210f, 90f, 28f, new Color(0.08f, 0.08f, 0.11f, 1f));
             Button increase = CreateButton("Increase", rootObject.transform, font,
-                "+1", 230f, 194f, 114f, 28f, new Color(0.08f, 0.08f, 0.11f, 1f));
+                "+1", 230f, 210f, 114f, 28f, new Color(0.08f, 0.08f, 0.11f, 1f));
 
             Button unfamiliar = CreateButton("SetUnfamiliar", rootObject.transform, font,
-                "0 낯섦", 16f, 232f, 60f, 28f, new Color(0.08f, 0.08f, 0.11f, 1f));
+                "0 낯섦", 16f, 248f, 60f, 28f, new Color(0.08f, 0.08f, 0.11f, 1f));
             Button favorable = CreateButton("SetFavorable", rootObject.transform, font,
-                "25 호감", 82f, 232f, 60f, 28f, new Color(0.08f, 0.08f, 0.11f, 1f));
+                "25 호감", 82f, 248f, 60f, 28f, new Color(0.08f, 0.08f, 0.11f, 1f));
             Button joy = CreateButton("SetJoy", rootObject.transform, font,
-                "50 기쁨", 148f, 232f, 60f, 28f, new Color(0.08f, 0.08f, 0.11f, 1f));
+                "50 기쁨", 148f, 248f, 60f, 28f, new Color(0.08f, 0.08f, 0.11f, 1f));
             Button love = CreateButton("SetLove", rootObject.transform, font,
-                "75 사랑", 214f, 232f, 60f, 28f, new Color(0.08f, 0.08f, 0.11f, 1f));
+                "75 사랑", 214f, 248f, 60f, 28f, new Color(0.08f, 0.08f, 0.11f, 1f));
             Button ex = CreateButton("SetEx", rootObject.transform, font,
-                "100 EX", 280f, 232f, 64f, 28f, new Color(0.24f, 0.13f, 0.06f, 1f));
+                "100 EX", 280f, 248f, 64f, 28f, new Color(0.24f, 0.13f, 0.06f, 1f));
 
             Button participatedReturn = CreateButton("QueueParticipatedReturn", rootObject.transform, font,
-                "귀환 +5", 16f, 270f, 156f, 28f, new Color(0.05f, 0.22f, 0.32f, 1f));
+                "귀환 +5", 16f, 286f, 156f, 28f, new Color(0.05f, 0.22f, 0.32f, 1f));
             Button otherReturn = CreateButton("QueueOtherReturn", rootObject.transform, font,
-                "비참전 +2", 188f, 270f, 156f, 28f, new Color(0.12f, 0.12f, 0.16f, 1f));
+                "비참전 +2", 188f, 286f, 156f, 28f, new Color(0.12f, 0.12f, 0.16f, 1f));
             Button clearReturn = CreateButton("ClearReturn", rootObject.transform, font,
-                "예약 초기화", 16f, 306f, 156f, 28f, new Color(0.12f, 0.06f, 0.08f, 1f));
+                "예약 초기화", 16f, 322f, 156f, 28f, new Color(0.12f, 0.06f, 0.08f, 1f));
             Button showDialogue = CreateButton("ShowDialogue", rootObject.transform, font,
-                "대사 출력", 188f, 306f, 156f, 28f, new Color(0.05f, 0.22f, 0.32f, 1f));
+                "대사 출력", 188f, 322f, 156f, 28f, new Color(0.05f, 0.22f, 0.32f, 1f));
+            Button resetAcquisition = CreateButton("ResetOperatorAcquisition", rootObject.transform, font,
+                "합류 초기화", 16f, 358f, 328f, 28f, new Color(0.12f, 0.06f, 0.08f, 1f));
             TextMeshProUGUI footer = CreateLabel("Footer", rootObject.transform, font,
                 "에디터 전용 · 실제 로비 클릭 경로 사용", 11f, new Color(0.55f, 0.65f, 0.7f),
-                TextAlignmentOptions.Left, 16f, 350f, 328f, 22f);
+                TextAlignmentOptions.Left, 16f, 394f, 328f, 22f);
 
             OperatorAffinityDebugPanel panel = rootObject.GetComponent<OperatorAffinityDebugPanel>();
             if (panel == null)
@@ -145,6 +147,7 @@ namespace RCCom.EditorTools
             serialized.FindProperty("queueParticipatedReturnButton").objectReferenceValue = participatedReturn;
             serialized.FindProperty("queueOtherReturnButton").objectReferenceValue = otherReturn;
             serialized.FindProperty("clearReturnButton").objectReferenceValue = clearReturn;
+            serialized.FindProperty("resetOperatorAcquisitionButton").objectReferenceValue = resetAcquisition;
             serialized.FindProperty("showDialogueButton").objectReferenceValue = showDialogue;
             serialized.FindProperty("refreshButton").objectReferenceValue = refreshButton;
             serialized.FindProperty("lobbyDialogueUi").objectReferenceValue = lobbyDialogueUi;
@@ -177,7 +180,7 @@ namespace RCCom.EditorTools
             {
                 "operatorIdInput", "statusText", "affinitySlider", "applyAffinityButton",
                 "queueParticipatedReturnButton", "queueOtherReturnButton", "clearReturnButton",
-                "showDialogueButton", "lobbyDialogueUi",
+                "resetOperatorAcquisitionButton", "showDialogueButton", "lobbyDialogueUi",
             };
             for (int i = 0; i < requiredProperties.Length; i++)
             {

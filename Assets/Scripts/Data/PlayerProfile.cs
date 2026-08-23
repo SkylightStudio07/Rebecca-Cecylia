@@ -5,13 +5,13 @@ namespace RCCom.Data
 {
     /// <summary>
     /// 씬 재시작으로 사라지는 전투 세션과 분리해 보존하는 계정 데이터의 모양.
-    /// 해금 여부는 bestWave와 OperatorDefinition.requiredBestWave로 계산하므로 같은 상태를
-    /// 목록으로 중복 저장하지 않는다 — 두 값이 어긋나 잠금 상태가 모순되는 일을 막기 위함이다.
+    /// 계산 가능한 웨이브·스테이지 조건은 진행 기록에서 판정하고, 구매처럼 명시적 소유가
+    /// 필요한 조건만 ID 목록으로 저장한다. 표시 연출 이력은 소유 상태와 별도로 유지한다.
     /// </summary>
     [Serializable]
     public class PlayerProfile
     {
-        public const int CurrentSchemaVersion = 2;
+        public const int CurrentSchemaVersion = 5;
 
         public const int MaxOperatorAffinity = 100;
         public const int ReturnAffinityWithoutParticipation = 2;
@@ -19,6 +19,11 @@ namespace RCCom.Data
 
         public int schemaVersion = CurrentSchemaVersion;
         public int bestWave;
+        /// <summary>
+        /// 전투 결과로 누적되는 계정 재화. 전투 중에 소비하는 GameManager.Gold와 달리
+        /// 씬을 넘어도 유지되는 값이므로 PlayerProfile만 원본으로 둔다.
+        /// </summary>
+        public int commodity;
         public string selectedOperatorId = string.Empty;
 
         /// <summary>
@@ -26,6 +31,22 @@ namespace RCCom.Data
         /// 목록 항목이 없는 오퍼레이터는 호감도 0으로 간주한다.
         /// </summary>
         public List<OperatorAffinityRecord> operatorAffinities = new List<OperatorAffinityRecord>();
+
+        /// <summary>
+        /// 해금 여부 자체는 bestWave에서 계속 계산한다. 이 목록은 해금 상태를 중복 저장하는
+        /// 값이 아니라, 획득 연출을 이미 끝까지 본 오퍼레이터만 기록해 재접속 때 같은 연출이
+        /// 반복되는 것을 막는 표시 이력이다.
+        /// </summary>
+        public List<string> presentedOperatorAcquisitionIds = new List<string>();
+
+        /// <summary>
+        /// 구매처럼 조건을 만족한 뒤에도 소유 상태를 보존해야 하는 오퍼레이터 목록.
+        /// 웨이브·스테이지 조건은 각 진행 기록에서 계산하므로 여기에 중복 저장하지 않는다.
+        /// </summary>
+        public List<string> acquiredOperatorIds = new List<string>();
+
+        /// <summary>최초 클리어 여부와 스테이지 보상 판정에 사용하는 영구 Stage ID 목록.</summary>
+        public List<string> clearedStageIds = new List<string>();
 
         /// <summary>
         /// 결과 화면에서 귀환한 오퍼레이터. 실제 보상은 로비에서 해당 오퍼레이터를
@@ -47,6 +68,69 @@ namespace RCCom.Data
             }
 
             bestWave = normalizedWave;
+            return true;
+        }
+
+        public int AddCommodity(int amount)
+        {
+            commodity = Math.Max(0, commodity + Math.Max(0, amount));
+            return commodity;
+        }
+
+        public bool TrySpendCommodity(int amount)
+        {
+            int normalizedAmount = Math.Max(0, amount);
+            if (commodity < normalizedAmount)
+            {
+                return false;
+            }
+
+            commodity -= normalizedAmount;
+            return true;
+        }
+
+        public bool HasAcquiredOperator(string operatorId)
+        {
+            return ContainsId(acquiredOperatorIds, operatorId);
+        }
+
+        public bool AcquireOperator(string operatorId)
+        {
+            if (string.IsNullOrWhiteSpace(operatorId) || HasAcquiredOperator(operatorId))
+            {
+                return false;
+            }
+
+            acquiredOperatorIds ??= new List<string>();
+            acquiredOperatorIds.Add(operatorId);
+            return true;
+        }
+
+        public bool TryPurchaseOperator(string operatorId, int price)
+        {
+            if (string.IsNullOrWhiteSpace(operatorId) || HasAcquiredOperator(operatorId) ||
+                !TrySpendCommodity(price))
+            {
+                return false;
+            }
+
+            return AcquireOperator(operatorId);
+        }
+
+        public bool HasClearedStage(string stageId)
+        {
+            return ContainsId(clearedStageIds, stageId);
+        }
+
+        public bool MarkStageCleared(string stageId)
+        {
+            if (string.IsNullOrWhiteSpace(stageId) || HasClearedStage(stageId))
+            {
+                return false;
+            }
+
+            clearedStageIds ??= new List<string>();
+            clearedStageIds.Add(stageId);
             return true;
         }
 
@@ -145,6 +229,29 @@ namespace RCCom.Data
             return OperatorAffinityTier.Unfamiliar;
         }
 
+        public bool HasPresentedOperatorAcquisition(string operatorId)
+        {
+            if (string.IsNullOrWhiteSpace(operatorId) || presentedOperatorAcquisitionIds == null)
+            {
+                return false;
+            }
+
+            return presentedOperatorAcquisitionIds.Exists(id =>
+                string.Equals(id, operatorId, StringComparison.Ordinal));
+        }
+
+        public bool MarkOperatorAcquisitionPresented(string operatorId)
+        {
+            if (string.IsNullOrWhiteSpace(operatorId) || HasPresentedOperatorAcquisition(operatorId))
+            {
+                return false;
+            }
+
+            presentedOperatorAcquisitionIds ??= new List<string>();
+            presentedOperatorAcquisitionIds.Add(operatorId);
+            return true;
+        }
+
         private OperatorAffinityRecord FindAffinityRecord(string operatorId)
         {
             if (string.IsNullOrWhiteSpace(operatorId) || operatorAffinities == null)
@@ -182,6 +289,12 @@ namespace RCCom.Data
         private static int ClampAffinity(int value)
         {
             return Math.Max(0, Math.Min(MaxOperatorAffinity, value));
+        }
+
+        private static bool ContainsId(List<string> ids, string id)
+        {
+            return !string.IsNullOrWhiteSpace(id) && ids != null && ids.Exists(candidate =>
+                string.Equals(candidate, id, StringComparison.Ordinal));
         }
     }
 }

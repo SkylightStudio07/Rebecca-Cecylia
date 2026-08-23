@@ -124,6 +124,7 @@ namespace RCCom.EditorTools
             OperatorDialogueSet dialogueSet = LoadRequired<OperatorDialogueSet>(recipe.dialogueSetPath, recipe.operatorId);
             Sprite selectionPortrait = LoadOptional<Sprite>(recipe.selectionPortraitPath);
             Sprite managementPortrait = LoadOptional<Sprite>(recipe.managementPortraitPath);
+            Sprite unlockRewardPortrait = LoadOptional<Sprite>(recipe.unlockRewardPortraitPath);
 
             string operatorFolder = $"{OutputRoot}/{recipe.operatorId}";
             EnsureFolder(operatorFolder);
@@ -162,12 +163,16 @@ namespace RCCom.EditorTools
                 asset.playStyleDescription = recipe.playStyleDescription;
                 asset.selectionPortrait = selectionPortrait;
                 asset.managementPortrait = managementPortrait;
+                asset.unlockRewardPortrait = unlockRewardPortrait;
                 asset.playerData = ClonePlayerData(recipe.playerData);
                 asset.towerRoster = towerRoster;
                 asset.cardRoster = cardRoster;
                 asset.allyUnitRoster = allyUnitRoster;
                 asset.dialogueSet = dialogueSet;
+                asset.unlockType = recipe.unlockType;
                 asset.requiredBestWave = recipe.requiredBestWave;
+                asset.purchasePrice = recipe.purchasePrice;
+                asset.requiredStageId = recipe.requiredStageId ?? string.Empty;
             }, changedAssets);
         }
 
@@ -285,9 +290,20 @@ namespace RCCom.EditorTools
                 throw new InvalidOperationException($"표시 이름 또는 PlayerData가 비어 있습니다: {recipePath}");
             }
 
-            if (recipe.requiredBestWave < 0)
+            if (recipe.requiredBestWave < 0 || recipe.purchasePrice < 0)
             {
-                throw new InvalidOperationException($"requiredBestWave는 음수일 수 없습니다: {recipePath}");
+                throw new InvalidOperationException($"해금 수치는 음수일 수 없습니다: {recipePath}");
+            }
+
+            if (recipe.unlockType == OperatorUnlockType.CommodityPurchase && recipe.purchasePrice <= 0)
+            {
+                throw new InvalidOperationException($"골드 구매 가격은 1 이상이어야 합니다: {recipePath}");
+            }
+
+            if (recipe.unlockType == OperatorUnlockType.StageClearReward &&
+                string.IsNullOrWhiteSpace(recipe.requiredStageId))
+            {
+                throw new InvalidOperationException($"스테이지 보상 Stage ID가 비어 있습니다: {recipePath}");
             }
         }
 

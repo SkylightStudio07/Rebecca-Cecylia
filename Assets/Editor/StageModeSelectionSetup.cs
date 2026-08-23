@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using RCCom.Data;
 using RCCom.Definitions.Enemy;
+using RCCom.Definitions.Operator;
 using RCCom.Definitions.Stage;
 using RCCom.UI;
 using TMPro;
@@ -23,6 +24,7 @@ namespace RCCom.EditorTools
         private const string ModeSystemName = "ModeSelectionSystem";
         private const string StageSystemName = "StageSelectionSystem";
         private const string CatalogPath = "Assets/Data/Stages/StageCatalog.asset";
+        private const string OperatorCatalogPath = "Assets/Data/Operators/OperatorCatalog.asset";
         private const string StageDefinitionFolder = "Assets/Data/Stages/CH1";
         private const string NodePrefabPath = "Assets/Data/Prefabs/StageNode.prefab";
         private const string KoreanFontPath = "Assets/Resource/Font/Pretendard-Bold SDF.asset";
@@ -48,6 +50,11 @@ namespace RCCom.EditorTools
             }
 
             StageCatalog catalog = BuildCatalog();
+            OperatorCatalog operatorCatalog = AssetDatabase.LoadAssetAtPath<OperatorCatalog>(OperatorCatalogPath);
+            if (operatorCatalog == null)
+            {
+                throw new InvalidOperationException("스테이지 보상 표시에 필요한 OperatorCatalog가 없습니다.");
+            }
             StageNodeView nodePrefab = BuildNodePrefab(koreanFont);
             CanvasGroup mainMenuGroup = GetOrAddCanvasGroup(canvas.transform.Find("MainMenuBackground")?.gameObject);
             OperatorSelectionUI operatorSelectionUI = UnityEngine.Object.FindFirstObjectByType<OperatorSelectionUI>(
@@ -68,6 +75,8 @@ namespace RCCom.EditorTools
                 out Button nextNodeButton, out TextMeshProUGUI chapterText, out TextMeshProUGUI selectedTitle,
                 out TextMeshProUGUI selectedSubtitle, out TextMeshProUGUI selectedDescription,
                 out TextMeshProUGUI recommendedLevel, out Image descriptionBackground,
+                out GameObject operatorRewardPanel, out Image operatorRewardPortrait,
+                out TextMeshProUGUI operatorRewardName,
                 out TextMeshProUGUI stageStatus, out Button startStageButton, out Button stageBackButton);
 
             var modeSerialized = new SerializedObject(modeController);
@@ -84,6 +93,7 @@ namespace RCCom.EditorTools
 
             var stageSerialized = new SerializedObject(stageController);
             SetReference(stageSerialized, "catalog", catalog);
+            SetReference(stageSerialized, "operatorCatalog", operatorCatalog);
             SetReference(stageSerialized, "panel", stagePanel);
             SetReference(stageSerialized, "mainMenuGroup", mainMenuGroup);
             SetReference(stageSerialized, "modeSelectionUI", modeController);
@@ -98,6 +108,9 @@ namespace RCCom.EditorTools
             SetReference(stageSerialized, "selectedDescriptionText", selectedDescription);
             SetReference(stageSerialized, "recommendedLevelText", recommendedLevel);
             SetReference(stageSerialized, "descriptionBackgroundImage", descriptionBackground);
+            SetReference(stageSerialized, "operatorRewardPanel", operatorRewardPanel);
+            SetReference(stageSerialized, "operatorRewardPortrait", operatorRewardPortrait);
+            SetReference(stageSerialized, "operatorRewardNameText", operatorRewardName);
             SetReference(stageSerialized, "statusText", stageStatus);
             SetReference(stageSerialized, "startStageButton", startStageButton);
             SetReference(stageSerialized, "backButton", stageBackButton);
@@ -178,13 +191,17 @@ namespace RCCom.EditorTools
 
             var stageSerialized = new SerializedObject(stage);
             if (stageSerialized.FindProperty("catalog").objectReferenceValue != catalog ||
+                stageSerialized.FindProperty("operatorCatalog").objectReferenceValue == null ||
                 stageSerialized.FindProperty("nodePrefab").objectReferenceValue != prefab ||
                 stageSerialized.FindProperty("nodeScrollRect").objectReferenceValue == null ||
                 stageSerialized.FindProperty("previousNodeButton").objectReferenceValue == null ||
                 stageSerialized.FindProperty("nextNodeButton").objectReferenceValue == null ||
                 stageSerialized.FindProperty("startStageButton").objectReferenceValue == null ||
                 stageSerialized.FindProperty("recommendedLevelText").objectReferenceValue == null ||
-                stageSerialized.FindProperty("descriptionBackgroundImage").objectReferenceValue == null)
+                stageSerialized.FindProperty("descriptionBackgroundImage").objectReferenceValue == null ||
+                stageSerialized.FindProperty("operatorRewardPanel").objectReferenceValue == null ||
+                stageSerialized.FindProperty("operatorRewardPortrait").objectReferenceValue == null ||
+                stageSerialized.FindProperty("operatorRewardNameText").objectReferenceValue == null)
             {
                 throw new InvalidOperationException("StageSelectionUI 참조 배선이 올바르지 않습니다.");
             }
@@ -245,6 +262,8 @@ namespace RCCom.EditorTools
             out TextMeshProUGUI chapterText, out TextMeshProUGUI selectedTitle,
             out TextMeshProUGUI selectedSubtitle, out TextMeshProUGUI selectedDescription,
             out TextMeshProUGUI recommendedLevel, out Image descriptionBackground,
+            out GameObject operatorRewardPanel, out Image operatorRewardPortrait,
+            out TextMeshProUGUI operatorRewardName,
             out TextMeshProUGUI statusText, out Button startButton, out Button backButton)
         {
             GameObject system = GetOrCreateSystem(StageSystemName, canvas, typeof(StageSelectionUI));
@@ -314,6 +333,27 @@ namespace RCCom.EditorTools
             recommendedLevel = CreateText("RecommendedLevel", detail.transform, "RECOMMENDED LV.  1", koreanFont,
                 14f, new Vector2(0.56f, 0.7f), new Vector2(0.94f, 0.88f), TextAlignmentOptions.Right);
             recommendedLevel.color = new Color(0.18f, 0.72f, 1f, 1f);
+
+            operatorRewardPanel = CreateImageObject("OperatorReward", panel.transform,
+                new Color(0.01f, 0.035f, 0.065f, 0.94f));
+            SetRect((RectTransform)operatorRewardPanel.transform, new Vector2(0.66f, 0.75f),
+                new Vector2(0.92f, 0.9f));
+            CreateText("RewardHeader", operatorRewardPanel.transform, "OPERATOR REWARD", koreanFont, 14f,
+                new Vector2(0.36f, 0.68f), new Vector2(0.96f, 0.94f), TextAlignmentOptions.Left).color =
+                new Color(0.18f, 0.72f, 1f, 1f);
+            GameObject rewardPortraitObject = CreateImageObject("RewardPortrait",
+                operatorRewardPanel.transform, Color.white);
+            SetRect((RectTransform)rewardPortraitObject.transform, new Vector2(0.03f, 0.08f),
+                new Vector2(0.33f, 0.92f));
+            operatorRewardPortrait = rewardPortraitObject.GetComponent<Image>();
+            operatorRewardPortrait.preserveAspect = true;
+            operatorRewardPortrait.raycastTarget = false;
+            operatorRewardName = CreateText("RewardName", operatorRewardPanel.transform,
+                "클리어 보상\nOPERATOR", koreanFont, 18f, new Vector2(0.36f, 0.1f),
+                new Vector2(0.96f, 0.65f), TextAlignmentOptions.Left);
+            operatorRewardName.textWrappingMode = TextWrappingModes.Normal;
+            operatorRewardPanel.SetActive(false);
+
             statusText = CreateText("Status", panel.transform, "스테이지를 선택하면 작전 정보가 표시됩니다.", koreanFont,
                 17f, new Vector2(0.64f, 0.31f), new Vector2(0.92f, 0.37f), TextAlignmentOptions.Left);
             statusText.color = new Color(0.75f, 0.82f, 0.9f, 1f);

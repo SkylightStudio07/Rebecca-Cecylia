@@ -104,6 +104,13 @@ namespace RCCom.UI
                 SoundManager.Instance.PlayMainMenuClick();
             }
 
+            // 로비 내부 패널은 즉시 전환한다. 로딩 연출은 DefenseScene 출격처럼
+            // 실제 씬을 떠나는 동선에서만 사용한다.
+            ExecuteActionCovered();
+        }
+
+        private void ExecuteActionCovered()
+        {
             switch (action)
             {
                 case MenuAction.NewGame:
@@ -114,7 +121,7 @@ namespace RCCom.UI
                     else
                     {
                         // 선택 UI가 아직 배선되지 않은 개발 씬에서도 기존 진입 경로는 유지한다.
-                        SceneManager.LoadScene(defenseSceneName);
+                        UILoadingTransition.LoadScene(defenseSceneName);
                     }
                     break;
                 case MenuAction.Preference:

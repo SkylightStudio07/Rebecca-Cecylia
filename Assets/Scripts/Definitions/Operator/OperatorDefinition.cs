@@ -53,8 +53,20 @@ namespace RCCom.Definitions.Operator
         public OperatorDialogueSet dialogueSet;
 
         [Header("해금")]
+        public OperatorUnlockType unlockType = OperatorUnlockType.InitiallyAvailable;
+
         [Min(0)]
-        [Tooltip("PlayerProfile.bestWave가 이 값 이상일 때 해금. 0이면 처음부터 사용 가능.")]
+        [Tooltip("해금 방식이 BestWave일 때 필요한 최고 웨이브")]
         public int requiredBestWave;
+
+        [Min(0)]
+        [Tooltip("해금 방식이 CommodityPurchase일 때 필요한 계정 재화")]
+        public int purchasePrice;
+
+        [Tooltip("해금 방식이 StageClearReward일 때 클리어해야 하는 영구 Stage ID")]
+        public string requiredStageId = string.Empty;
+
+        [Tooltip("스테이지 보상 UI 전용 초상화. 비어 있으면 선택 화면 초상화를 사용한다.")]
+        public Sprite unlockRewardPortrait;
     }
 }

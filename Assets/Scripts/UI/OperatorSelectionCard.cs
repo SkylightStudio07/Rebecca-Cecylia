@@ -47,7 +47,7 @@ namespace RCCom.UI
             {
                 stateText.text = unlocked
                     ? (entry.remoteContent ? "DOWNLOAD READY" : "AVAILABLE")
-                    : $"WAVE {entry.requiredBestWave} REQUIRED";
+                    : entry.GetLockedDescription();
                 stateText.color = unlocked
                     ? new Color(0.45f, 0.88f, 1f, 1f)
                     : new Color(0.74f, 0.48f, 0.48f, 1f);

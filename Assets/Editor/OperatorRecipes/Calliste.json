@@ -5,6 +5,7 @@
     "playStyleDescription": "",
     "selectionPortraitPath": "Assets/Art/Character Standing Arts/바텐더/레베카/레베카/칼리스테_chibby_default.png",
     "managementPortraitPath": "Assets/Art/Character Standing Arts/바텐더/레베카/오퍼레이터관리_칼리스테.png",
+    "unlockRewardPortraitPath": "",
     "sourceTowerRosterPath": "Assets/Data/Operators/cassia/TowerRoster.asset",
     "sourceCardRosterPath": "Assets/Data/Operators/cassia/CardRoster.asset",
     "sourceAllyUnitRosterPath": "Assets/Data/Operators/cassia/AllyUnits/CassiaTestAllyUnitRoster.asset",
@@ -22,5 +23,8 @@
         "skillRange": 5.0,
         "skillDamage": 5.0
     },
-    "requiredBestWave": 0
+    "requiredBestWave": 0,
+    "unlockType": 2,
+    "purchasePrice": 100,
+    "requiredStageId": ""
 }

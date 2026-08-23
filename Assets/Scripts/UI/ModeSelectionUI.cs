@@ -58,6 +58,11 @@ namespace RCCom.UI
 
         public void SelectStageMode()
         {
+            SelectStageModeCovered();
+        }
+
+        private void SelectStageModeCovered()
+        {
             SetPanelVisible(false);
             if (stageSelectionUI != null)
             {
@@ -73,10 +78,15 @@ namespace RCCom.UI
         {
             BattleSession.SelectEndless();
             Time.timeScale = 1f;
-            SceneManager.LoadScene(defenseSceneName);
+            UILoadingTransition.LoadScene(defenseSceneName);
         }
 
         public void Back()
+        {
+            BackCovered();
+        }
+
+        private void BackCovered()
         {
             SetPanelVisible(false);
             if (operatorSelectionUI != null)

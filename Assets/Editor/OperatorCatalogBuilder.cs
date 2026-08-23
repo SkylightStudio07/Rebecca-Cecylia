@@ -132,9 +132,16 @@ namespace RCCom.EditorTools
                 // 실제 초상화를 사용하고, 카탈로그에는 ID/설명만 남긴다.
                 previewPortrait = recipe.remoteContent ? null : definition.selectionPortrait,
                 managementPortrait = recipe.remoteContent ? null : definition.managementPortrait,
+                unlockRewardPortrait = recipe.remoteContent ? null :
+                    (definition.unlockRewardPortrait != null
+                        ? definition.unlockRewardPortrait
+                        : definition.selectionPortrait),
                 address = GetAddress(recipe.operatorId),
                 remoteContent = recipe.remoteContent,
+                unlockType = recipe.unlockType,
                 requiredBestWave = recipe.requiredBestWave,
+                purchasePrice = recipe.purchasePrice,
+                requiredStageId = recipe.requiredStageId ?? string.Empty,
                 unitPreviews = BuildUnitPreviews(definition, recipe.remoteContent),
             };
         }

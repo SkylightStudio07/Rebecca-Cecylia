@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using RCCom.Data;
 using RCCom.Definitions.Card;
+using RCCom.Definitions.Operator;
 using RCCom.Definitions.Tower;
 using RCCom.Definitions.Unit;
 using RCCom.UI;
@@ -25,7 +26,7 @@ namespace RCCom.EditorTools
 
         private static readonly string[] DialogueFields =
         {
-            "lobbyInteraction", "lobbyReturnTogether", "lobbyReturn",
+            "operatorAcquired", "lobbyInteraction", "lobbyReturnTogether", "lobbyReturn",
             "lobbyTouchUnfamiliar", "lobbyTouchFavorable", "lobbyTouchJoy",
             "lobbyTouchLove", "lobbyTouchEx", "gameStart", "skillUsed",
             "baseAttacked", "playerHit", "playerHitCritical", "insufficientGold",
@@ -34,7 +35,7 @@ namespace RCCom.EditorTools
 
         private static readonly string[] DialogueLabels =
         {
-            "로비 클릭", "귀환·참전", "귀환·비참전",
+            "오퍼레이터 획득", "로비 클릭", "귀환·참전", "귀환·비참전",
             "터치·낯섦", "터치·호감", "터치·기쁨", "터치·사랑", "터치·EX",
             "게임 개시", "스킬 사용", "거점 피격", "플레이어 피격",
             "플레이어 피격·위험", "골드 부족", "슬롯 부족", "플레이어 사망", "거점 파괴",
@@ -210,13 +211,31 @@ namespace RCCom.EditorTools
                 "Selection Portrait", _recipe.selectionPortraitPath);
             _recipe.managementPortraitPath = DrawAssetPathField<Sprite>(
                 "Management Card Portrait", _recipe.managementPortraitPath);
+            _recipe.unlockRewardPortraitPath = DrawAssetPathField<Sprite>(
+                "Stage Reward Portrait", _recipe.unlockRewardPortraitPath);
             EditorGUILayout.HelpBox(
                 "Selection Portrait는 선택 화면용 머리 크롭, Management Card Portrait는 Operators 관리 카드용 전신·반신 이미지입니다.",
                 MessageType.None);
             _recipe.remoteContent = EditorGUILayout.ToggleLeft("Remote Content", _recipe.remoteContent);
-            _recipe.requiredBestWave = Mathf.Max(
-                0,
-                EditorGUILayout.IntField("Required Best Wave", _recipe.requiredBestWave));
+            GUILayout.Space(8);
+            GUILayout.Label("Unlock Condition", EditorStyles.boldLabel);
+            _recipe.unlockType = (OperatorUnlockType)EditorGUILayout.EnumPopup(
+                "Unlock Type", _recipe.unlockType);
+            switch (_recipe.unlockType)
+            {
+                case OperatorUnlockType.BestWave:
+                    _recipe.requiredBestWave = Mathf.Max(0,
+                        EditorGUILayout.IntField("Required Best Wave", _recipe.requiredBestWave));
+                    break;
+                case OperatorUnlockType.CommodityPurchase:
+                    _recipe.purchasePrice = Mathf.Max(1,
+                        EditorGUILayout.IntField("Purchase Price", _recipe.purchasePrice));
+                    break;
+                case OperatorUnlockType.StageClearReward:
+                    _recipe.requiredStageId = EditorGUILayout.TextField(
+                        "Required Stage ID", _recipe.requiredStageId ?? string.Empty).Trim();
+                    break;
+            }
 
             GUILayout.Space(12);
             DrawSaveButton();
@@ -320,7 +339,7 @@ namespace RCCom.EditorTools
         private void DrawLineSet(SerializedProperty lineSet, int slotIndex)
         {
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-            bool isLobbySlot = slotIndex <= 7;
+            bool isLobbySlot = slotIndex <= 8;
             SerializedProperty slotSprite = lineSet.FindPropertyRelative(
                 isLobbySlot ? "defaultLobbySprite" : "portraitSprite");
             EditorGUILayout.PropertyField(slotSprite, new GUIContent(
@@ -663,6 +682,7 @@ namespace RCCom.EditorTools
 
             return DialogueFields[index] switch
             {
+                "operatorAcquired" => _dialogueSet.operatorAcquired,
                 "lobbyInteraction" => _dialogueSet.lobbyInteraction,
                 "lobbyReturnTogether" => _dialogueSet.lobbyReturnTogether,
                 "lobbyReturn" => _dialogueSet.lobbyReturn,

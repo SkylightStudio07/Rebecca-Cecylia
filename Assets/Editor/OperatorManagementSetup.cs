@@ -88,6 +88,8 @@ namespace RCCom.EditorTools
             Button back = CreateButton("BackButton", generated, font, "BACK", new Vector2(0.61f, 0.055f),
                 new Vector2(0.70f, 0.12f), new Color(0.02f, 0.04f, 0.065f, 0.94f));
             ConfigureBackSprites(back);
+            Button purchase = CreateButton("PurchaseButton", generated, font, "PURCHASE", new Vector2(0.72f, 0.055f),
+                new Vector2(0.82f, 0.12f), new Color(0.02f, 0.34f, 0.62f, 0.97f));
 
             TextMeshProUGUI status = CreateText("Status", generated, font,
                 "오퍼레이터를 선택하십시오.", 16f, new Vector2(0.41f, 0.09f), new Vector2(0.59f, 0.14f),
@@ -98,6 +100,8 @@ namespace RCCom.EditorTools
             if (controller == null) { controller = root.gameObject.AddComponent<OperatorManagementUI>(); }
             CanvasGroup lobbyGroup = canvas.transform.Find("MainMenuBackground")?.GetComponent<CanvasGroup>();
             LobbyOperatorDialogueUI lobbyDialogue = UnityEngine.Object.FindFirstObjectByType<LobbyOperatorDialogueUI>(
+                FindObjectsInactive.Include);
+            OperatorAcquisitionUI acquisition = UnityEngine.Object.FindFirstObjectByType<OperatorAcquisitionUI>(
                 FindObjectsInactive.Include);
 
             var serialized = new SerializedObject(controller);
@@ -116,8 +120,10 @@ namespace RCCom.EditorTools
             SetReference(serialized, "previousButton", previous);
             SetReference(serialized, "nextButton", next);
             SetReference(serialized, "deployButton", deploy);
+            SetReference(serialized, "purchaseButton", purchase);
             SetReference(serialized, "backButton", back);
             SetReference(serialized, "lobbyDialogueUI", lobbyDialogue);
+            SetReference(serialized, "acquisitionUI", acquisition);
             serialized.ApplyModifiedPropertiesWithoutUndo();
 
             WireOperatorsMenu(canvas.transform, controller);
@@ -149,7 +155,12 @@ namespace RCCom.EditorTools
             }
             var serialized = new SerializedObject(controller);
             Button back = serialized.FindProperty("backButton").objectReferenceValue as Button;
+            Button purchase = serialized.FindProperty("purchaseButton").objectReferenceValue as Button;
             ValidateBackSprites(back);
+            if (purchase == null)
+            {
+                throw new InvalidOperationException("오퍼레이터 구매 버튼 참조가 누락되었습니다.");
+            }
             if (scene.path != TitleScenePath) { throw new InvalidOperationException("TitleScene 검증에 실패했습니다."); }
             Debug.Log("[OperatorManagementSetup] 관리 화면 프리팹·씬·메뉴 연결 검증 통과");
         }
