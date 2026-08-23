@@ -20,8 +20,8 @@ MonoBehaviour:
     moveSpeed: 1.5
     attackDamage: 3
     attackInterval: 0.8
-    attackRange: 4.5
-    detectionRange: 4.5
+    attackRange: 6
+    detectionRange: 6
     projectileSpeed: 8
   effects:
   - {fileID: 11400000, guid: 8f138e77d4cda09468de16d4dec8edfa, type: 2}
