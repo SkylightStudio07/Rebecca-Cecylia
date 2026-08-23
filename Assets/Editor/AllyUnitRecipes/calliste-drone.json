@@ -10,7 +10,9 @@
         "a": 1.0
     },
     "spriteForwardOffsetDegrees": 45.0,
-    "effectPaths": [],
+    "effectPaths": [
+        "Assets/Data/Effects/Unit/TacticalRelayAuraEffect.asset"
+    ],
     "remoteContent": false,
     "data": {
         "unitId": "calliste-drone",
@@ -18,10 +20,10 @@
         "deployCost": 40,
         "maxHealth": 10.0,
         "moveSpeed": 1.0,
-        "attackDamage": 1.0,
+        "attackDamage": 200.0,
         "attackInterval": 1.0,
         "attackRange": 10.0,
-        "detectionRange": 10.0,
+        "detectionRange": 50.0,
         "projectileSpeed": 8.0
     }
 }
