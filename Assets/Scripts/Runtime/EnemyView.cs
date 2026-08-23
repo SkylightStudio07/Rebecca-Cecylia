@@ -28,6 +28,10 @@ namespace RCCom.Runtime
         [Tooltip("자식 오브젝트로 둔 체력바(선택) — 회전은 EnemyView가 이동방향으로 매 프레임 돌리므로, 자식이면 그대로 두면 같이 돌아가 버려 여기서 역회전으로 상쇄한다")]
         [SerializeField] private EnemyHealthBar healthBar;
 
+        [Header("회전 보간 (0 = 즉시 회전, 기존 동작)")]
+        [Tooltip("초당 회전 각도 상한. 0이면 기존처럼 목표 방향으로 즉시 스냅한다. 유선형 맵에서는 360~720 권장.")]
+        [SerializeField] private float turnSpeedDegreesPerSecond = 0f;
+
         private SpriteRenderer _spriteRenderer;
         private Color _baseColor;
         private float _hitFlashRemaining;
@@ -112,7 +116,17 @@ namespace RCCom.Runtime
             }
 
             float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg + Instance.definition.spriteForwardOffsetDegrees;
-            transform.rotation = Quaternion.Euler(0f, 0f, angle);
+
+            // 경로 정점을 아무리 촘촘하게 베이킹해도(스플라인 곡선) View가 매 프레임 목표
+            // 방향으로 즉시 스냅하면 정점마다 각도가 계단식으로 튄다(간격 0.5, 곡률 반경 4
+            // 기준 약 7도/스텝). 정점 밀도를 더 올려 완화하는 것보다 회전 속도를 제한해
+            // 부드럽게 따라가게 하는 쪽이 훨씬 싸고 효과가 크다. 기본값 0은 이 옵션이 없던
+            // 기존 동작(즉시 스냅)을 그대로 보존하기 위함 — 프리팹이 값을 직렬화하지 않으면
+            // 아무것도 바뀌지 않는다.
+            Quaternion targetRotation = Quaternion.Euler(0f, 0f, angle);
+            transform.rotation = turnSpeedDegreesPerSecond <= 0f
+                ? targetRotation
+                : Quaternion.RotateTowards(transform.rotation, targetRotation, turnSpeedDegreesPerSecond * Time.deltaTime);
         }
 
         /// <summary>
