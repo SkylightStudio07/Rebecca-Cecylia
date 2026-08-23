@@ -1,5 +1,7 @@
 fileFormatVersion: 2
-guid: 8085fad79c4b0f8418ad673230725a51
+guid: c95e50a628fdf14499dffb81cf696989
+labels:
+- RCCom.GeneratedEnemy
 NativeFormatImporter:
   externalObjects: {}
   mainObjectFileID: 11400000

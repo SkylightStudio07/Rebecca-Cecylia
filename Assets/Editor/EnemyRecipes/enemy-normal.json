@@ -1,0 +1,25 @@
+{
+    "enemyId": "enemy-normal",
+    "catalogOrder": 0,
+    "displayName": "기본 적",
+    "spritePath": "Assets/Art/Enemies/enemy-cursor-normal.png",
+    "spriteForwardOffsetDegrees": -90.0,
+    "effectPaths": [
+        "Assets/Data/Effects/Enemy_ContactDamageEffect_Default.asset"
+    ],
+    "remoteContent": false,
+    "data": {
+        "enemyId": "enemy-normal",
+        "displayName": "기본 적",
+        "kind": 0,
+        "maxHealth": 32.0,
+        "moveSpeed": 2.0,
+        "contactDamage": 5.0,
+        "attackRange": 0.0,
+        "attackInterval": 1.0,
+        "waveCost": 1.0,
+        "minWave": 1,
+        "goldReward": 20,
+        "expReward": 7
+    }
+}

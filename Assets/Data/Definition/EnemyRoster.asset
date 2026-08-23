@@ -10,9 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f2941af90a033574ba6949edebadfdf1, type: 3}
-  m_Name: EnemyRoaster
+  m_Name: EnemyRoster
   m_EditorClassIdentifier: Assembly-CSharp::RCCom.Definitions.Enemy.EnemyRoster
-  enemies:
-  - {fileID: 11400000, guid: 8085fad79c4b0f8418ad673230725a51, type: 2}
-  - {fileID: 11400000, guid: 078774e9c4f231144a02bdc863dc9cdf, type: 2}
-  - {fileID: 11400000, guid: c95e50a628fdf14499dffb81cf696989, type: 2}
+  enemyIds:
+  - enemy-normal
+  - enemy-rusher
+  - enemy-tanker

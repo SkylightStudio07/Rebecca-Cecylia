@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: Enemy-enemy-tanker-Local
+  m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
+  m_GroupName: Enemy-enemy-tanker-Local
+  m_GUID: d130849b16fb46d42b9e7198c5129231
+  m_SerializeEntries:
+  - m_GUID: c95e50a628fdf14499dffb81cf696989
+    m_Address: enemy/enemy-tanker
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - enemy-definition
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 2afb846ca87b5fb4d915c11291554efd, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 871922a47cbfe91409be39b42fd3fb79, type: 2}
+    - {fileID: 11400000, guid: bce59c2587e9a7d4d9e3f5e02b7b1592, type: 2}

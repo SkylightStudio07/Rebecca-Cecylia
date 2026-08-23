@@ -61,9 +61,12 @@ MonoBehaviour:
   m_overridePlayerVersion: '[UnityEditor.PlayerSettings.bundleVersion]'
   m_GroupAssets:
   - {fileID: 11400000, guid: 5b5583a25b413a546a9c03ebdd82e62e, type: 2}
+  - {fileID: 11400000, guid: cabeb2be420ee52479e56e7f3a46522c, type: 2}
   - {fileID: 11400000, guid: ff5725f83beb35749a79e00bc197cfc7, type: 2}
   - {fileID: 11400000, guid: 77006e0879868f445878adb7bc7aa241, type: 2}
   - {fileID: 11400000, guid: 0f158fc46f1a7404eb98e04a931a1d57, type: 2}
+  - {fileID: 11400000, guid: b6fcbbb847a3627418a431225278ff0a, type: 2}
+  - {fileID: 11400000, guid: 81e7bf597a15884499fa3d6a350cb082, type: 2}
   - {fileID: 11400000, guid: fd034023be31cb944afd38c0cb38dca2, type: 2}
   m_BuildSettings:
     m_LogResourceManagerExceptions: 1
@@ -106,6 +109,7 @@ MonoBehaviour:
     - default
     - operator-definition
     - ui-loading
+    - enemy-definition
   m_SchemaTemplates: []
   m_GroupTemplateObjects:
   - {fileID: 11400000, guid: 61f30e1e0f81f5f458b4b2b68b835400, type: 2}

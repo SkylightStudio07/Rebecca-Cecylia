@@ -1,0 +1,25 @@
+{
+    "enemyId": "enemy-tanker",
+    "catalogOrder": 2,
+    "displayName": "탱커",
+    "spritePath": "Assets/Art/Enemies/enemy-cursor-tanker.png",
+    "spriteForwardOffsetDegrees": -90.0,
+    "effectPaths": [
+        "Assets/Data/Effects/Enemy_ContactDamageEffect_Default.asset"
+    ],
+    "remoteContent": false,
+    "data": {
+        "enemyId": "enemy-tanker",
+        "displayName": "탱커",
+        "kind": 2,
+        "maxHealth": 50.0,
+        "moveSpeed": 1.5,
+        "contactDamage": 7.0,
+        "attackRange": 0.0,
+        "attackInterval": 1.0,
+        "waveCost": 2.0,
+        "minWave": 1,
+        "goldReward": 35,
+        "expReward": 12
+    }
+}
