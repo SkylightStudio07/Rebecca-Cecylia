@@ -16,9 +16,9 @@ MonoBehaviour:
     unitId: cassia-vanguard
     displayName: "\uC804\uC9C4 \uC0AC\uC218"
     deployCost: 40
-    maxHealth: 40
+    maxHealth: 20
     moveSpeed: 1.5
-    attackDamage: 4
+    attackDamage: 3
     attackInterval: 0.8
     attackRange: 4.5
     detectionRange: 4.5

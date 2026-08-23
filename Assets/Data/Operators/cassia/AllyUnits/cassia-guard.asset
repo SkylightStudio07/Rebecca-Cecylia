@@ -16,9 +16,9 @@ MonoBehaviour:
     unitId: cassia-guard
     displayName: "\uBC29\uD638 \uC694\uC6D0"
     deployCost: 20
-    maxHealth: 110
+    maxHealth: 40
     moveSpeed: 1
-    attackDamage: 8
+    attackDamage: 6
     attackInterval: 1
     attackRange: 1.25
     detectionRange: 2
