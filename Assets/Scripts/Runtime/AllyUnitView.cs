@@ -12,7 +12,7 @@ namespace RCCom.Runtime
     {
         private static Sprite _fallbackSprite;
 
-        [SerializeField] private float targetVisualSize = 0.9f;
+        [SerializeField] private float targetVisualSize = 2.0f;
         [SerializeField] private Color hitFlashColor = Color.red;
         [SerializeField] private float hitFlashDuration = 0.1f;
 
