@@ -7,7 +7,7 @@
     "managementPortraitPath": "Assets/Art/Character Standing Arts/레베카/레베카/오퍼레이터관리_카시아.png",
     "sourceTowerRosterPath": "Assets/Data/Prefabs/TowerRoaster.asset",
     "sourceCardRosterPath": "Assets/Data/Cards/Unlock/플레이어 카드 로스터.asset",
-    "sourceAllyUnitRosterPath": "",
+    "sourceAllyUnitRosterPath": "Assets/Data/Operators/cassia/AllyUnits/cassia-ally-unit-roster.asset",
     "dialogueSetPath": "Assets/Data/Prefabs/UI/New Operator Dialogue Set.asset",
     "remoteContent": false,
     "playerData": {

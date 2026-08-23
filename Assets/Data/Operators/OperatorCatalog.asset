@@ -23,7 +23,15 @@ MonoBehaviour:
     address: operator/cassia
     remoteContent: 0
     requiredBestWave: 0
-    unitPreviews: []
+    unitPreviews:
+    - displayName: "\uBC29\uD638 \uC694\uC6D0"
+      deployCost: 20
+      previewIcon: {fileID: -8413095918329177645, guid: 7e35eecaac8a90f438d090c8352af8c9, type: 3}
+      fallbackColor: {r: 1, g: 1, b: 1, a: 1}
+    - displayName: "\uC804\uC9C4 \uC0AC\uC218"
+      deployCost: 40
+      previewIcon: {fileID: -641549399214325815, guid: 4741539cc7d4c6944b24877efe88e424, type: 3}
+      fallbackColor: {r: 1, g: 1, b: 1, a: 1}
   - operatorId: calliste
     displayName: "\uCE7C\uB9AC\uC2A4\uD14C"
     playStyleDescription: 
