@@ -104,4 +104,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 40516dc6988005e468ad8d15e1e60a43, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RCCom.Runtime.AllyUnitView
-  targetVisualSize: 0.9
+  targetVisualSize: 2
+  hitFlashColor: {r: 1, g: 0, b: 0, a: 1}
+  hitFlashDuration: 0.1
