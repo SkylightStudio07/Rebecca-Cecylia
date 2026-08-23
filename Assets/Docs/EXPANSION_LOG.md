@@ -1292,3 +1292,46 @@ Phase 0 자동화 경로를 실제로 열고, 이후 오퍼레이터별 원격 �
 
 ### 검증
 - 두 Definition의 ID와 Roster 참조를 유지한 채 수치만 변경된 것을 확인했다.
+
+## 2026-08-23 — 웨이포인트 경로 스플라인 베이킹 (유선형 맵 대응)
+
+### 맥락
+배경 아트의 도로는 부드러운 S자 곡선인데 적/아군 이동 경로는 씬에 배치한 웨이포인트 9개를 직선으로 이은 폴리라인이라, 궤적이 각지고 정점 통과 시 View 회전이 튀었다. 유선형 맵과 직선형 맵을 모두 지원하되 전투 로직은 건드리지 않는 방법이 필요했다.
+
+### 결정
+- `PathSmoothing.GenerateSmoothPath()`(신규, `Assets/Scripts/Core/`)로 구심(centripetal, α=0.5) Catmull-Rom 곡선을 따라 촘촘한 정점 배열을 만들고, `MapManager.Awake()`가 이를 1회 베이킹해 기존과 동일한 `IReadOnlyList<Vector2>`로 넘긴다. **전투·타기팅·스폰 코드는 한 줄도 고치지 않았다.**
+- 인스펙터 파라미터는 `pathSmoothness`(0~1)와 `maxPointSpacing`(0.25~5, 기본 0.5) 두 개다. `pathSmoothness = 0`이면 **세분화조차 하지 않고** 원본 배열을 그대로 반환한다.
+- `MapManager.OnDrawGizmosSelected()`를 추가해 Play 모드 없이 씬 뷰에서 곡선을 미리 본다. 곡선이 배경 도로 아트를 벗어나는지는 사람이 눈으로 검수해야 하는 항목이라, 이 프리뷰가 이번 작업의 실질적 검수 수단이다.
+- `AllyUnitTargeting`에 경로 누적 거리 캐시를 넣었다(참조 비교로 무효화, `ResetPathCache()`를 `GameManager.Awake()`의 static 캐시 초기화 목록에 등록).
+- `EnemyView`/`AllyUnitView`에 `turnSpeedDegreesPerSecond`(기본 0 = 기존 즉시 회전)를 추가했다.
+
+### 근거
+- **왜 Unity Splines 패키지가 아닌가** — 런타임에 스플라인 수식으로 위치를 계산하게 바꾸면 `AllyUnitTargeting`의 선분-구체 교점 판정(`DistanceBeforeContact`)과 누적 진행도 공식이 전부 재작성 대상이 된다. 반면 초기화 시점에 정점 배열로 베이킹하면 기존 시스템이 수정 없이 곡선에 적응한다. 소비처를 전수 확인한 결과 `path[0]`, `path[^1]`, `path.Count >= 2` 외에 정점 개수에 의존하는 코드가 없었다.
+- **왜 Bézier/B-spline이 아니라 Catmull-Rom인가** — 제어점을 정확히 통과하므로 디자이너가 도로 중앙에 찍은 웨이포인트 의도가 어긋나지 않는다.
+- **왜 α=0.5(구심)인가** — 0(uniform)은 급커브에서 오버슈트/자체 교차가 생기고, 1(chordal)은 코너가 무뎌진다. 0.5는 자체 교차가 없음이 증명된 값이다.
+- **왜 `pathSmoothness = 0`에서 세분화조차 하지 않는가** — 좌표가 원본 직선과 같아도 정점 수가 늘면 아래의 속도 손실이 그대로 생긴다. "곡선을 끈다"가 "정점 수도 그대로"를 포함해야 완전한 하위호환이 된다.
+- **왜 구간당 고정 분할 수가 아니라 거리 기반(`maxPointSpacing`)인가** — 웨이포인트 간격이 제각각인 맵에서 정점 밀도와 속도 손실률이 맵마다 달라지는 것을 막는다.
+- **왜 진행도 캐시가 조기 최적화가 아닌가** — `CalculatePathProgress`는 O(n)인데 `PathProgress` 프로퍼티로 노출되어 `IsPreferredAlly`/`IsPreferredEnemy`의 비교문에서 후보 하나당 최대 4회 재평가되고, 그 비교가 아군×적 이중 루프 안에서 매 프레임 돈다. 정점이 9→98개가 되면 이 핫패스가 그대로 약 11배가 된다. 이번 변경이 만드는 회귀를 상쇄하는 조치다.
+
+### 의도적으로 하지 않은 것
+- **`EnemyInstance.MoveAlongPath()`를 잔여 이동량 소비 루프로 바꾸지 않았다.** 이 함수는 프레임당 웨이포인트 1개까지만 전진하고 정점 도달 시 남은 이동량을 버리는데(`AllyUnitInstance`는 `while` 루프라 버리지 않는다 — 기존부터 있던 비대칭), 그래서 **정점 밀도를 높이면 적이 프레임레이트에 비례해 느려진다.** 실측 기준 정점 98개(간격 0.5)에서 60fps 약 5%, 30fps 약 10%다(현재 9정점은 각각 0.4%/0.9%).
+  루프로 바꾸는 것이 근본 해법이지만, `TryGetMovementSweep`이 `deltaTime = float.PositiveInfinity`로 호출되어 "현재 선분 전체"를 전방 sweep으로 삼는 프로토콜과 맞물려 있다. 루프로 바꾸면 `Tick(0f)`에서 `_pathIndex`가 전진하지 않아 sweep이 무효가 되고 **적이 아군 전열을 관통하는 회귀**가 난다(기존 검증 `VerifyContactBoundaryOnLargeStep`도 깨진다). 별도 작업으로 분리했다.
+  → **이 속도 손실은 밸런스 판단이 필요한 사항이다.** `maxPointSpacing`을 키우거나(1.0이면 52정점·60fps 2.7%), 적 `moveSpeed`를 보정하거나, 위 별도 작업을 진행하는 선택지가 있다.
+- `PathMode` enum(Linear/SmoothSpline/CornerRounding)을 도입하지 않았다. `pathSmoothness = 0`이 Linear 역할을 하므로 지금은 불필요하다.
+- Unity Splines 패키지를 설치하지 않았고 `Packages/manifest.json`을 건드리지 않았다.
+- 프리팹의 `turnSpeedDegreesPerSecond` 직렬화 값을 설정하지 않았다. 코드 기본값 0이라 기존 동작이 그대로다.
+
+### 검증
+- Unity 에디터가 기동되지 않는 상태라 Pipeline `recompile`을 쓸 수 없어, `dotnet build`로 `Assembly-CSharp` / `Assembly-CSharp-Editor`를 직접 컴파일해 확인했다(양쪽 경고 0·오류 0, 변경 전 baseline도 동일).
+- `PathSmoothingVerifier`(신규 에디터 검증기, `RCCom/Map/Verify Path Smoothing`) 9개 시나리오를 작성했다. 이 중 Unity 로깅에 의존하지 않는 8개는 컴파일된 `Assembly-CSharp.dll`을 직접 호출하는 순수 C# 하니스로 **실제 실행해 전부 통과**시켰다. 실행 결과:
+  - `smoothness=0`에서 정점 9개·좌표 완전 동일 / `smoothness=0.6` 및 `1.0`에서 정점 98개
+  - 끝점 정확 보존, 모든 제어점 정확 통과, 일직선 제어점의 직선 유지(이탈 0)
+  - 제어점 AABB 오버슈트 0, 경로 길이 증가율 1.017배
+  - 진행도 캐시 도입 전후 비트 단위 동일 (참조 구현과 4,000회 무작위 비교, 불일치 0건)
+- **정점 간격은 `maxPointSpacing`의 약 1.19배까지 나온다.** 분할 수를 현(chord) 길이로 정하는데 점은 더 긴 곡선 위에 놓이고 구심 파라미터화가 호 길이에 균일하지 않기 때문이다. 간격 값을 0.3~1.0으로 바꿔도 1.18~1.21배로 일정해, 검증기 단언은 실측 기반으로 1.25배를 상한으로 잡았다.
+
+### 사람 액션
+- **Unity 에디터를 띄운 뒤 `RCCom/Map/Verify Path Smoothing`과 기존 `RCCom/Ally Units/Verify Combat Core`(21개 시나리오)를 실행해야 한다.** 후자는 `ScriptableObject.CreateInstance`/`SerializedObject`에 의존해 에디터 밖에서 실행할 수 없어, 진행도 캐시 변경에 대한 회귀 검증이 아직 에디터에서 이뤄지지 않았다.
+- `DefenseScene`의 MapManager `pathSmoothness`를 `0.6`으로 설정해야 곡선이 실제로 적용된다(기본값 0이라 현재는 기존과 동일하게 동작한다). `.unity` 텍스트 직접 편집은 금지이므로 인스펙터에서 조정할 것.
+- MapManager를 선택한 상태로 씬 뷰에서 **곡선이 배경 도로 아트를 벗어나지 않는지 육안 확인**이 필요하다.
+- 신규 파일 2개(`PathSmoothing.cs`, `PathSmoothingVerifier.cs`)의 `.meta`는 에디터 최초 기동 시 생성되므로, 생성된 것을 함께 커밋해야 한다.
