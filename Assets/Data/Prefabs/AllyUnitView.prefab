@@ -107,3 +107,4 @@ MonoBehaviour:
   targetVisualSize: 2
   hitFlashColor: {r: 1, g: 0, b: 0, a: 1}
   hitFlashDuration: 0.1
+  turnSmoothTime: 0.1

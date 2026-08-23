@@ -16,9 +16,15 @@ namespace RCCom.Runtime
         [SerializeField] private Color hitFlashColor = Color.red;
         [SerializeField] private float hitFlashDuration = 0.1f;
 
+        [Header("회전 보간 (0 = 즉시 회전, 기존 동작)")]
+        [Tooltip("목표 방향을 따라잡는 시간 상수(초). 0이면 기존처럼 즉시 스냅한다. 0.08~0.15 권장 — " +
+                 "클수록 부드럽지만 코너에서 방향이 더 밀리고 조준도 함께 굼떠진다.")]
+        [SerializeField] private float turnSmoothTime = 0f;
+
         private SpriteRenderer _spriteRenderer;
         private Color _baseColor;
         private float _hitFlashRemaining;
+        private bool _hasFacing;
         public AllyUnitInstance Instance { get; private set; }
 
         private void Awake()
@@ -125,7 +131,28 @@ namespace RCCom.Runtime
 
             float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg +
                           Instance.Definition.spriteForwardOffsetDegrees;
-            transform.rotation = Quaternion.Euler(0f, 0f, angle);
+
+            Quaternion targetRotation = Quaternion.Euler(0f, 0f, angle);
+
+            // 소환 직후 첫 프레임은 보간하지 않는다 — Instantiate가 준 회전에서 서서히
+            // 돌아오면 등장하자마자 엉뚱한 방향을 보고 있게 된다.
+            if (turnSmoothTime <= 0f || !_hasFacing)
+            {
+                transform.rotation = targetRotation;
+                _hasFacing = true;
+                return;
+            }
+
+            // 목표 각도는 웨이포인트 단위로 끊기는 계단 함수라(간격 0.5·곡률 반경 4 기준
+            // 약 7도/스텝) 즉시 스냅하면 코너에서 각도가 딱딱 끊겨 보인다. 각속도 상한
+            // (RotateTowards) 방식은 상한이 자연 회전 속도(이 경로 기준 약 42도/초)보다
+            // 조금만 커도 한 프레임에 다 돌아버려 보간이 사실상 사라지는 튜닝 절벽이 있어서,
+            // 스텝 크기와 무관하게 항상 부드러운 지수 감쇠(저역통과)를 쓴다.
+            // 1 - exp(-dt/τ)는 프레임레이트가 변해도 같은 감쇠 속도를 유지한다(dt 비례 Lerp와 다름).
+            // 위 분기에서 공격 대상을 바라볼 때도 같은 보간이 걸린다 — 조준도 "방향 전환"이라
+            // 동일하게 취급하며, 조준이 굼떠 보이면 이 값을 줄이거나 0으로 두면 된다.
+            float t = 1f - Mathf.Exp(-Time.deltaTime / turnSmoothTime);
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, t);
         }
 
         /// <summary>

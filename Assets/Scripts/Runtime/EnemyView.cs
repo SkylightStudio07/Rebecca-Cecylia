@@ -28,9 +28,15 @@ namespace RCCom.Runtime
         [Tooltip("자식 오브젝트로 둔 체력바(선택) — 회전은 EnemyView가 이동방향으로 매 프레임 돌리므로, 자식이면 그대로 두면 같이 돌아가 버려 여기서 역회전으로 상쇄한다")]
         [SerializeField] private EnemyHealthBar healthBar;
 
+        [Header("회전 보간 (0 = 즉시 회전, 기존 동작)")]
+        [Tooltip("목표 방향을 따라잡는 시간 상수(초). 0이면 기존처럼 즉시 스냅한다. 0.08~0.15 권장 — " +
+                 "클수록 부드럽지만 코너에서 방향이 더 밀린다.")]
+        [SerializeField] private float turnSmoothTime = 0f;
+
         private SpriteRenderer _spriteRenderer;
         private Color _baseColor;
         private float _hitFlashRemaining;
+        private bool _hasFacing;
 
         public EnemyInstance Instance { get; private set; }
 
@@ -112,7 +118,27 @@ namespace RCCom.Runtime
             }
 
             float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg + Instance.definition.spriteForwardOffsetDegrees;
-            transform.rotation = Quaternion.Euler(0f, 0f, angle);
+
+            Quaternion targetRotation = Quaternion.Euler(0f, 0f, angle);
+
+            // 스폰 직후 첫 프레임은 보간하지 않는다 — Instantiate가 준 identity 회전에서
+            // 서서히 돌아오면 등장하자마자 엉뚱한 방향을 보고 있게 된다.
+            if (turnSmoothTime <= 0f || !_hasFacing)
+            {
+                transform.rotation = targetRotation;
+                _hasFacing = true;
+                return;
+            }
+
+            // 목표 각도는 웨이포인트 단위로 끊기는 계단 함수라(간격 0.5·곡률 반경 4 기준
+            // 약 7도/스텝) 즉시 스냅하면 코너에서 각도가 딱딱 끊겨 보인다. 각속도 상한
+            // (RotateTowards) 방식은 상한이 자연 회전 속도(이 경로 기준 약 42도/초)보다
+            // 조금만 커도 한 프레임에 다 돌아버려 보간이 사실상 사라지는 튜닝 절벽이 있어서,
+            // 스텝 크기와 무관하게 항상 부드러운 지수 감쇠(저역통과)를 쓴다.
+            // 1 - exp(-dt/τ)는 프레임레이트가 변해도 같은 감쇠 속도를 유지한다(dt 비례 Lerp와 다름).
+            // 등속 코너링 시 정상상태 지연은 ω×τ 정도라 τ=0.1이면 약 4도로 눈에 띄지 않는다.
+            float t = 1f - Mathf.Exp(-Time.deltaTime / turnSmoothTime);
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, t);
         }
 
         /// <summary>

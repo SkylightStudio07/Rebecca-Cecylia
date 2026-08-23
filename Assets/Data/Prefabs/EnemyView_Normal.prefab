@@ -173,6 +173,7 @@ MonoBehaviour:
   hitFlashColor: {r: 1, g: 0, b: 0, a: 1}
   hitFlashDuration: 0.1
   healthBar: {fileID: 5783486534490285849}
+  turnSmoothTime: 0.1
 --- !u!1 &6592273245750616418
 GameObject:
   m_ObjectHideFlags: 0

@@ -51,7 +51,10 @@ namespace RCCom.Debugging
             for (int i = 0; i < mapManager.Waypoints.Count; i++)
             {
                 Vector2 point = mapManager.Waypoints[i];
-                Gizmos.DrawSphere(point, 0.15f);
+                // 정점이 98개(간격 0.5)까지 늘어날 수 있으므로 반경 0.15는 정점 간격보다
+                // 커서 인접 구가 서로 겹쳐 경로가 노란 덩어리로 뭉개진다. 0.04로 줄여
+                // 정점 간격이 좁아도 각 점이 개별 구로 분리되어 보이게 한다.
+                Gizmos.DrawSphere(point, 0.04f);
 
                 if (i > 0)
                 {
