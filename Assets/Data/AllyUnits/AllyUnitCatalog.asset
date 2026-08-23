@@ -13,6 +13,13 @@ MonoBehaviour:
   m_Name: AllyUnitCatalog
   m_EditorClassIdentifier: Assembly-CSharp::RCCom.Definitions.Unit.AllyUnitCatalog
   entries:
+  - unitId: calliste-guard
+    displayName: "\uC911\uC7A5\uAC11 \uC13C\uD2F0\uB12C"
+    deployCost: 60
+    address: ally-unit/calliste-guard
+    remoteContent: 0
+    previewIcon: {fileID: -7446801812974973004, guid: 5af903ec0309d704d84ed95be71926e5, type: 3}
+    fallbackColor: {r: 1, g: 1, b: 1, a: 1}
   - unitId: cassia-guard
     displayName: "\uBC29\uD638 \uC694\uC6D0"
     deployCost: 20
@@ -41,3 +48,10 @@ MonoBehaviour:
     remoteContent: 0
     previewIcon: {fileID: 0}
     fallbackColor: {r: 1, g: 0.58, b: 0.18, a: 1}
+  - unitId: calliste-drone
+    displayName: "\uC11C\uD3EC\uD2B8 \uB4DC\uB860"
+    deployCost: 40
+    address: ally-unit/calliste-drone
+    remoteContent: 0
+    previewIcon: {fileID: -2236739543955786705, guid: a4e49e29c671100468f2165a179ea335, type: 3}
+    fallbackColor: {r: 1, g: 1, b: 1, a: 1}

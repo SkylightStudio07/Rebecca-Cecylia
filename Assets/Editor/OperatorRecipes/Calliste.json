@@ -8,7 +8,7 @@
     "unlockRewardPortraitPath": "",
     "sourceTowerRosterPath": "Assets/Data/Operators/cassia/TowerRoster.asset",
     "sourceCardRosterPath": "Assets/Data/Operators/cassia/CardRoster.asset",
-    "sourceAllyUnitRosterPath": "Assets/Data/Operators/cassia/AllyUnits/CassiaTestAllyUnitRoster.asset",
+    "sourceAllyUnitRosterPath": "Assets/Data/Operators/calliste/AllyUnits/calliste-ally-unit-roster.asset",
     "dialogueSetPath": "Assets/Data/Operators/calliste/OperatorDialogueSet.asset",
     "remoteContent": false,
     "playerData": {

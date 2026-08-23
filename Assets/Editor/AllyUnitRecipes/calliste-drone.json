@@ -1,0 +1,27 @@
+{
+    "unitId": "calliste-drone",
+    "catalogOrder": 5,
+    "displayName": "서포트 드론",
+    "spritePath": "Assets/Art/AllyUnits/tactical-relay-drone.png",
+    "tint": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+    },
+    "spriteForwardOffsetDegrees": 45.0,
+    "effectPaths": [],
+    "remoteContent": false,
+    "data": {
+        "unitId": "calliste-drone",
+        "displayName": "서포트 드론",
+        "deployCost": 40,
+        "maxHealth": 10.0,
+        "moveSpeed": 1.0,
+        "attackDamage": 1.0,
+        "attackInterval": 1.0,
+        "attackRange": 10.0,
+        "detectionRange": 10.0,
+        "projectileSpeed": 8.0
+    }
+}

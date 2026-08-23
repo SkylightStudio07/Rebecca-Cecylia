@@ -55,20 +55,20 @@ MonoBehaviour:
     requiredStageId: 
     unlockRewardPortrait: {fileID: 8573740378125166142, guid: 93979212c860bc740a289e3b210e4fdf, type: 3}
     unitPreviews:
-    - unitId: test-rifleman
-      displayName: "\uC804\uC9C4 \uC0AC\uC218"
-      deployCost: 25
-      address: ally-unit/test-rifleman
+    - unitId: calliste-drone
+      displayName: "\uC11C\uD3EC\uD2B8 \uB4DC\uB860"
+      deployCost: 40
+      address: ally-unit/calliste-drone
       remoteContent: 0
-      previewIcon: {fileID: 0}
-      fallbackColor: {r: 0.25, g: 0.75, b: 1, a: 1}
-    - unitId: test-guard
-      displayName: "\uBC29\uD638 \uC694\uC6D0"
-      deployCost: 55
-      address: ally-unit/test-guard
+      previewIcon: {fileID: -2236739543955786705, guid: a4e49e29c671100468f2165a179ea335, type: 3}
+      fallbackColor: {r: 1, g: 1, b: 1, a: 1}
+    - unitId: calliste-guard
+      displayName: "\uC911\uC7A5\uAC11 \uC13C\uD2F0\uB12C"
+      deployCost: 60
+      address: ally-unit/calliste-guard
       remoteContent: 0
-      previewIcon: {fileID: 0}
-      fallbackColor: {r: 1, g: 0.58, b: 0.18, a: 1}
+      previewIcon: {fileID: -7446801812974973004, guid: 5af903ec0309d704d84ed95be71926e5, type: 3}
+      fallbackColor: {r: 1, g: 1, b: 1, a: 1}
   - operatorId: racing
     displayName: "\uC2E4\uBE44\uC544"
     playStyleDescription: "\uB808\uC774\uC2F1\uAC78 \uCEE8\uC149\uC758 \uCE90\uB9AD\uD130"
