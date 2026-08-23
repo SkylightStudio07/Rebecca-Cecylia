@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b25f4a80fa1882148ad41da8c9491d35, type: 3}
   m_Name: cassia-ally-unit-roster
   m_EditorClassIdentifier: Assembly-CSharp::RCCom.Definitions.Unit.AllyUnitRoster
-  units:
-  - {fileID: 11400000, guid: f3ab953e6c54971469fb129e7dd784ef, type: 2}
-  - {fileID: 11400000, guid: 8fcf33a82dd3fe342be7e3046a252958, type: 2}
+  unitIds:
+  - cassia-guard
+  - cassia-vanguard

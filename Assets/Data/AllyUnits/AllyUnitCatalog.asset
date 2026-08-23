@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2b0321099361e4741929858a037ef444, type: 3}
+  m_Name: AllyUnitCatalog
+  m_EditorClassIdentifier: Assembly-CSharp::RCCom.Definitions.Unit.AllyUnitCatalog
+  entries:
+  - unitId: cassia-guard
+    displayName: "\uBC29\uD638 \uC694\uC6D0"
+    deployCost: 20
+    address: ally-unit/cassia-guard
+    remoteContent: 0
+    previewIcon: {fileID: -8413095918329177645, guid: 7e35eecaac8a90f438d090c8352af8c9, type: 3}
+    fallbackColor: {r: 1, g: 1, b: 1, a: 1}
+  - unitId: cassia-vanguard
+    displayName: "\uC804\uC9C4 \uC0AC\uC218"
+    deployCost: 40
+    address: ally-unit/cassia-vanguard
+    remoteContent: 0
+    previewIcon: {fileID: -641549399214325815, guid: 4741539cc7d4c6944b24877efe88e424, type: 3}
+    fallbackColor: {r: 1, g: 1, b: 1, a: 1}
+  - unitId: test-rifleman
+    displayName: "\uC804\uC9C4 \uC0AC\uC218"
+    deployCost: 25
+    address: ally-unit/test-rifleman
+    remoteContent: 0
+    previewIcon: {fileID: 0}
+    fallbackColor: {r: 0.25, g: 0.75, b: 1, a: 1}
+  - unitId: test-guard
+    displayName: "\uBC29\uD638 \uC694\uC6D0"
+    deployCost: 55
+    address: ally-unit/test-guard
+    remoteContent: 0
+    previewIcon: {fileID: 0}
+    fallbackColor: {r: 1, g: 0.58, b: 0.18, a: 1}

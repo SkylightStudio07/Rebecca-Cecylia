@@ -1,0 +1,29 @@
+{
+    "unitId": "cassia-guard",
+    "catalogOrder": 0,
+    "displayName": "방호 요원",
+    "spritePath": "Assets/Art/AllyUnits/frontline-guard-aegis-bulwark.png",
+    "tint": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+    },
+    "spriteForwardOffsetDegrees": -90.0,
+    "effectPaths": [
+        "Assets/Data/Effects/Unit/BasicAttackEffect.asset"
+    ],
+    "remoteContent": false,
+    "data": {
+        "unitId": "cassia-guard",
+        "displayName": "방호 요원",
+        "deployCost": 20,
+        "maxHealth": 40.0,
+        "moveSpeed": 1.0,
+        "attackDamage": 6.0,
+        "attackInterval": 1.0,
+        "attackRange": 1.25,
+        "detectionRange": 2.0,
+        "projectileSpeed": 8.0
+    }
+}

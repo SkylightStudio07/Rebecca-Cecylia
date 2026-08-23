@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using RCCom.Definitions.Operator;
+using RCCom.Definitions.Unit;
 using UnityEditor;
 using UnityEditor.AddressableAssets;
 using UnityEditor.AddressableAssets.Settings;
@@ -24,6 +25,9 @@ namespace RCCom.EditorTools
         [MenuItem("RCCom/Operators/Build Operator Catalog And Addressables")]
         public static void BuildAll()
         {
+            // 오퍼레이터 카탈로그의 유닛 미리보기는 유닛 전용 카탈로그가 정본이다.
+            // 이 호출을 여기에도 두어 Operator 메뉴만 실행해도 두 카탈로그가 어긋나지 않게 한다.
+            AllyUnitCatalogBuilder.BuildAll();
             List<OperatorAssetRecipe> recipes = LoadRecipes();
             OperatorCatalog catalog = GetOrCreateCatalog();
             var entries = new List<OperatorCatalogEntry>();
@@ -68,6 +72,7 @@ namespace RCCom.EditorTools
         /// </summary>
         public static void BuildForOperator(OperatorAssetRecipe recipe, List<string> changedAssets)
         {
+            AllyUnitCatalogBuilder.BuildAll();
             if (recipe == null || string.IsNullOrWhiteSpace(recipe.operatorId))
             {
                 throw new InvalidOperationException("유효하지 않은 오퍼레이터 레시피입니다.");
@@ -189,31 +194,69 @@ namespace RCCom.EditorTools
             return $"operator/{operatorId}";
         }
 
-        private static List<OperatorUnitPreview> BuildUnitPreviews(
+        private static List<AllyUnitCatalogEntry> BuildUnitPreviews(
             OperatorDefinition definition,
             bool remoteContent)
         {
-            var previews = new List<OperatorUnitPreview>();
-            if (definition.allyUnitRoster == null || definition.allyUnitRoster.units == null)
+            var previews = new List<AllyUnitCatalogEntry>();
+            if (definition.allyUnitRoster == null)
             {
                 return previews;
             }
 
-            foreach (var unit in definition.allyUnitRoster.units)
+            AllyUnitCatalog catalog =
+                AssetDatabase.LoadAssetAtPath<AllyUnitCatalog>(AllyUnitCatalogBuilder.CatalogPath);
+            if (catalog == null)
             {
-                if (unit == null || unit.data == null)
+                Debug.LogWarning(
+                    $"[OperatorCatalogBuilder] AllyUnitCatalog가 없어 유닛 미리보기를 비웁니다: " +
+                    $"{definition.operatorId}");
+                return previews;
+            }
+
+            List<string> unitIds = definition.allyUnitRoster.unitIds;
+            if ((unitIds == null || unitIds.Count == 0) &&
+                definition.allyUnitRoster.units != null)
+            {
+                // 스키마 전환 중인 에셋을 한 번 읽을 수 있게 하는 대체 경로다. 최종
+                // 생성물은 unitIds만 보유하며 이 경로는 다음 빌드부터 사용되지 않는다.
+                unitIds = new List<string>();
+                foreach (AllyUnitDefinition unit in definition.allyUnitRoster.units)
                 {
+                    if (unit != null && unit.data != null)
+                    {
+                        unitIds.Add(unit.data.unitId);
+                    }
+                }
+            }
+
+            if (unitIds == null)
+            {
+                return previews;
+            }
+
+            foreach (string unitId in unitIds)
+            {
+                AllyUnitCatalogEntry source = catalog.FindById(unitId);
+                if (source == null)
+                {
+                    Debug.LogWarning(
+                        $"[OperatorCatalogBuilder] 유닛 카탈로그 항목을 찾지 못했습니다: " +
+                        $"{unitId} ({definition.operatorId})");
                     continue;
                 }
 
-                previews.Add(new OperatorUnitPreview
+                previews.Add(new AllyUnitCatalogEntry
                 {
-                    displayName = unit.data.displayName,
-                    deployCost = unit.data.deployCost,
-                    // 원격 전용 Definition의 실제 스프라이트를 카탈로그가 참조하면 메인 빌드에
-                    // 의존성이 새어 들어간다. 원격 유닛은 색상 미리보기만 로컬에 남긴다.
-                    previewIcon = remoteContent ? null : unit.sprite,
-                    fallbackColor = unit.tint,
+                    unitId = source.unitId,
+                    displayName = source.displayName,
+                    deployCost = source.deployCost,
+                    address = source.address,
+                    remoteContent = source.remoteContent,
+                    // 원격 오퍼레이터 또는 원격 유닛이면 실제 Sprite를 카탈로그에
+                    // 남기지 않는다. fallbackColor는 값 타입이라 항상 복사한다.
+                    previewIcon = remoteContent || source.remoteContent ? null : source.previewIcon,
+                    fallbackColor = source.fallbackColor,
                 });
             }
 

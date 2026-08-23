@@ -10,21 +10,21 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a2662b906e76a244ba5a59ae4e877a4f, type: 3}
-  m_Name: TestRifleman
+  m_Name: AllyUnitDefinition
   m_EditorClassIdentifier: Assembly-CSharp::RCCom.Definitions.Unit.AllyUnitDefinition
   data:
-    unitId: test-rifleman
+    unitId: cassia-vanguard
     displayName: "\uC804\uC9C4 \uC0AC\uC218"
-    deployCost: 25
-    maxHealth: 40
-    moveSpeed: 2.7
-    attackDamage: 6
-    attackInterval: 0.55
-    attackRange: 3.8
-    detectionRange: 5
-    projectileSpeed: 12
+    deployCost: 40
+    maxHealth: 20
+    moveSpeed: 1.5
+    attackDamage: 3
+    attackInterval: 0.8
+    attackRange: 4.5
+    detectionRange: 4.5
+    projectileSpeed: 8
   effects:
   - {fileID: 11400000, guid: 8f138e77d4cda09468de16d4dec8edfa, type: 2}
-  sprite: {fileID: 0}
-  tint: {r: 0.25, g: 0.75, b: 1, a: 1}
-  spriteForwardOffsetDegrees: 0
+  sprite: {fileID: -641549399214325815, guid: 4741539cc7d4c6944b24877efe88e424, type: 3}
+  tint: {r: 1, g: 1, b: 1, a: 1}
+  spriteForwardOffsetDegrees: -90

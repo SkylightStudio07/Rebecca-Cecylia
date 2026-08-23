@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: AllyUnit-test-guard-Local
+  m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
+  m_GroupName: AllyUnit-test-guard-Local
+  m_GUID: b36e4978278b3b74eace0bc704f57fb2
+  m_SerializeEntries:
+  - m_GUID: 6b67e534549993e4a9e08952a523731e
+    m_Address: ally-unit/test-guard
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ally-unit-definition
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 2afb846ca87b5fb4d915c11291554efd, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 468ec0b7f9ef7af45bf8b2442652a62a, type: 2}
+    - {fileID: 11400000, guid: f343f574725ca2a49a5eb0c26373338c, type: 2}

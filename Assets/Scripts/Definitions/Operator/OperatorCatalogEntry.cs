@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using RCCom.Data;
+using RCCom.Definitions.Unit;
 using UnityEngine;
 
 namespace RCCom.Definitions.Operator
@@ -45,7 +46,9 @@ namespace RCCom.Definitions.Operator
         public Sprite unlockRewardPortrait;
 
         [Tooltip("Definition을 내려받기 전 로스터 패널에 표시할 경량 유닛 정보")]
-        public List<OperatorUnitPreview> unitPreviews = new();
+        // 유닛 전용 카탈로그와 같은 엔트리 타입을 사용해 선택 화면이 별도 미리보기
+        // 데이터 모델을 다시 정의하지 않게 한다.
+        public List<AllyUnitCatalogEntry> unitPreviews = new();
 
         public bool IsUnlocked(PlayerProfile profile)
         {
