@@ -7320,9 +7320,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RCCom.Runtime.UnitDeployController
   mapManager: {fileID: 1033692483}
   waveManager: {fileID: 1033692485}
+  inputModeController: {fileID: 0}
   allyUnitRoster: {fileID: 11400000, guid: a618eb8977cac2042be3b9eb7d1b9539, type: 2}
   viewPrefab: {fileID: 2031104094073036567, guid: 972e5a34c490295469e1c18189367971, type: 3}
-  combatSettings: {fileID: 11400000, guid: b724b25962877ea4c9ef69772d3be56c, type: 2}
+  combatSettings: {fileID: 11400000, guid: 6c89cb97aaaf6ff48888ae47d5c2d172, type: 2}
   startingCommandPoints: 40
   maxCommandPoints: 100
   commandPointRecoveryPerSecond: 4
