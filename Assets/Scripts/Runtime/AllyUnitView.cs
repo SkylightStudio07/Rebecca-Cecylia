@@ -17,12 +17,14 @@ namespace RCCom.Runtime
         [SerializeField] private float hitFlashDuration = 0.1f;
 
         [Header("회전 보간 (0 = 즉시 회전, 기존 동작)")]
-        [Tooltip("초당 회전 각도 상한. 0이면 기존처럼 목표 방향으로 즉시 스냅한다. 유선형 맵에서는 360~720 권장.")]
-        [SerializeField] private float turnSpeedDegreesPerSecond = 0f;
+        [Tooltip("목표 방향을 따라잡는 시간 상수(초). 0이면 기존처럼 즉시 스냅한다. 0.08~0.15 권장 — " +
+                 "클수록 부드럽지만 코너에서 방향이 더 밀리고 조준도 함께 굼떠진다.")]
+        [SerializeField] private float turnSmoothTime = 0f;
 
         private SpriteRenderer _spriteRenderer;
         private Color _baseColor;
         private float _hitFlashRemaining;
+        private bool _hasFacing;
         public AllyUnitInstance Instance { get; private set; }
 
         private void Awake()
@@ -130,18 +132,27 @@ namespace RCCom.Runtime
             float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg +
                           Instance.Definition.spriteForwardOffsetDegrees;
 
-            // 경로 정점을 아무리 촘촘하게 베이킹해도(스플라인 곡선) View가 매 프레임 목표
-            // 방향으로 즉시 스냅하면 정점마다 각도가 계단식으로 튄다(간격 0.5, 곡률 반경 4
-            // 기준 약 7도/스텝). 정점 밀도를 더 올려 완화하는 것보다 회전 속도를 제한해
-            // 부드럽게 따라가게 하는 쪽이 훨씬 싸고 효과가 크다. 기본값 0은 이 옵션이 없던
-            // 기존 동작(즉시 스냅)을 그대로 보존하기 위함 — 프리팹이 값을 직렬화하지 않으면
-            // 아무것도 바뀌지 않는다. 위의 분기에서 공격 대상을 바라볼 때도 이 값이 그대로
-            // 적용되는데(조준도 "방향 전환"이므로 동일하게 취급), 조준이 굼떠 보이면 이 값을
-            // 0으로 두거나 충분히 큰 값으로 조절하면 된다.
             Quaternion targetRotation = Quaternion.Euler(0f, 0f, angle);
-            transform.rotation = turnSpeedDegreesPerSecond <= 0f
-                ? targetRotation
-                : Quaternion.RotateTowards(transform.rotation, targetRotation, turnSpeedDegreesPerSecond * Time.deltaTime);
+
+            // 소환 직후 첫 프레임은 보간하지 않는다 — Instantiate가 준 회전에서 서서히
+            // 돌아오면 등장하자마자 엉뚱한 방향을 보고 있게 된다.
+            if (turnSmoothTime <= 0f || !_hasFacing)
+            {
+                transform.rotation = targetRotation;
+                _hasFacing = true;
+                return;
+            }
+
+            // 목표 각도는 웨이포인트 단위로 끊기는 계단 함수라(간격 0.5·곡률 반경 4 기준
+            // 약 7도/스텝) 즉시 스냅하면 코너에서 각도가 딱딱 끊겨 보인다. 각속도 상한
+            // (RotateTowards) 방식은 상한이 자연 회전 속도(이 경로 기준 약 42도/초)보다
+            // 조금만 커도 한 프레임에 다 돌아버려 보간이 사실상 사라지는 튜닝 절벽이 있어서,
+            // 스텝 크기와 무관하게 항상 부드러운 지수 감쇠(저역통과)를 쓴다.
+            // 1 - exp(-dt/τ)는 프레임레이트가 변해도 같은 감쇠 속도를 유지한다(dt 비례 Lerp와 다름).
+            // 위 분기에서 공격 대상을 바라볼 때도 같은 보간이 걸린다 — 조준도 "방향 전환"이라
+            // 동일하게 취급하며, 조준이 굼떠 보이면 이 값을 줄이거나 0으로 두면 된다.
+            float t = 1f - Mathf.Exp(-Time.deltaTime / turnSmoothTime);
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, t);
         }
 
         /// <summary>
