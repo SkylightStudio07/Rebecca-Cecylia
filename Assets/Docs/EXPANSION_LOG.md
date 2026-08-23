@@ -1271,3 +1271,14 @@ Phase 0 자동화 경로를 실제로 열고, 이후 오퍼레이터별 원격 �
 - Unity `6000.3.13f1` Pipeline `recompile` 결과 `up_to_date`, 컴파일 오류 0건.
 - `AllyUnitViewPrefabBuilder.Validate()`, `AllyUnitCombatVerifier.Verify()`, `OperatorAssetValidator.ValidateAll(false)`를 CLI에서 통과시켰다.
 - 검증 후 Unity 콘솔 신규 오류 0건을 확인했다.
+
+## 2026-08-23 — 실비아 관리 초상화 카탈로그 연결
+
+### 결정
+- 실비아(`racing`)의 `OperatorDefinition.managementPortrait`에 전용 관리 화면 포트릿을 연결했다.
+- 로컬 카탈로그의 실비아 항목에도 같은 Sprite를 연결해 관리 카드가 Definition 다운로드 전에도 빈 이미지로 표시되지 않게 했다.
+- `UnitDeployController`의 전투 설정 승격은 이미 `0f0ee71`에서 테스트 설정 GUID를 정식 `UnitCombatSettings` GUID로 교체했으므로 이번 커밋에서는 중복 반영하지 않았다.
+
+### 검증
+- 카탈로그와 Definition의 실비아 관리 초상화 GUID가 일치하는 것을 확인했다.
+- 기존 오퍼레이터 에셋 검증과 Unity 콘솔 오류 검사를 다시 수행했다.
