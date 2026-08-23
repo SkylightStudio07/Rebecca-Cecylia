@@ -150,7 +150,14 @@ namespace RCCom.EditorTools
                     $"{operatorFolder}/AllyUnitRoster.asset", changedAssets);
                 ApplyIfChanged(
                     allyUnitRoster,
-                    asset => asset.units = new List<AllyUnitDefinition>(sourceAllyUnitRoster.units),
+                    asset =>
+                    {
+                        // 오퍼레이터 패키지가 유닛 Definition을 암묵적으로 끌고 가지 않도록
+                        // 생성 Roster에는 ID만 복제한다. units는 스키마 전환 중인 기존
+                        // 생성물의 GUID를 비워 다음 저장에서 완전히 제거한다.
+                        asset.unitIds = new List<string>(sourceAllyUnitRoster.unitIds);
+                        asset.units = new List<AllyUnitDefinition>();
+                    },
                     changedAssets);
             }
 

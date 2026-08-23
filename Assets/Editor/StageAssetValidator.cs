@@ -126,7 +126,7 @@ namespace RCCom.EditorTools
             for (int spawnIndex = 0; spawnIndex < wave.spawns.Count; spawnIndex++)
             {
                 StageEnemySpawn spawn = wave.spawns[spawnIndex];
-                if (spawn == null || spawn.enemy == null)
+                if (spawn == null || string.IsNullOrWhiteSpace(spawn.enemyId))
                 {
                     errors.Add($"WAVE {waveIndex + 1} 편성 {spawnIndex + 1}의 적이 비어 있습니다: {path}");
                     continue;

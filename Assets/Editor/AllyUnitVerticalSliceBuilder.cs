@@ -82,6 +82,9 @@ namespace RCCom.EditorTools
                 new Color(1f, 0.58f, 0.18f, 1f),
                 basicAttack);
 
+            roster.unitIds = new List<string> { "test-rifleman", "test-guard" };
+            // 에디터에서 즉시 실행하는 수직 슬라이스 검증은 아직 프리로드 훅을 거치지
+            // 않으므로 임시 런타임 목록도 함께 채운다. 이 목록은 에셋에 저장되지 않는다.
             roster.units = new List<AllyUnitDefinition> { rifleman, guard };
             ConfigureCombatSettings(combatSettings, 0.75f, 0.05f);
             ConnectCassiaRoster(roster);
@@ -130,7 +133,10 @@ namespace RCCom.EditorTools
             UnitDeployButton buttonPrefab = RequirePrefabComponent<UnitDeployButton>(ButtonPrefabPath);
             OperatorDefinition cassia = RequireAsset<OperatorDefinition>(CassiaOperatorPath);
 
-            if (roster.units.Count != 2 || roster.units[0] != rifleman || roster.units[1] != guard ||
+            if (roster.unitIds == null || roster.unitIds.Count != 2 ||
+                roster.unitIds[0] != "test-rifleman" || roster.unitIds[1] != "test-guard" ||
+                roster.units == null || roster.units.Count != 2 ||
+                roster.units[0] != rifleman || roster.units[1] != guard ||
                 cassia.allyUnitRoster != roster)
             {
                 throw new InvalidOperationException("Cassia 임시 아군 Roster 연결이 올바르지 않습니다.");

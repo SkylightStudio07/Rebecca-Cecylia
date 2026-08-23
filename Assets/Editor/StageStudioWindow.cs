@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using RCCom.Definitions.Enemy;
 using RCCom.Definitions.Stage;
 using UnityEditor;
 using UnityEngine;
@@ -201,6 +202,7 @@ namespace RCCom.EditorTools
         {
             GUILayout.Space(6f);
             GUILayout.Label($"Enemy Spawns  /  {spawns.arraySize}", EditorStyles.boldLabel);
+            EnemyCatalog catalog = AssetDatabase.LoadAssetAtPath<EnemyCatalog>(EnemyCatalogBuilder.CatalogPath);
             for (int spawnIndex = 0; spawnIndex < spawns.arraySize; spawnIndex++)
             {
                 SerializedProperty spawn = spawns.GetArrayElementAtIndex(spawnIndex);
@@ -216,7 +218,7 @@ namespace RCCom.EditorTools
                     break;
                 }
                 EditorGUILayout.EndHorizontal();
-                EditorGUILayout.PropertyField(spawn.FindPropertyRelative("enemy"), new GUIContent("Enemy Definition"));
+                DrawEnemyIdField(spawn.FindPropertyRelative("enemyId"), catalog);
                 EditorGUILayout.PropertyField(spawn.FindPropertyRelative("count"), new GUIContent("Count"));
                 EditorGUILayout.PropertyField(spawn.FindPropertyRelative("interval"), new GUIContent("Spawn Interval"));
                 EditorGUILayout.PropertyField(spawn.FindPropertyRelative("initialDelay"), new GUIContent("Initial Delay"));
@@ -224,6 +226,43 @@ namespace RCCom.EditorTools
             }
 
             if (GUILayout.Button("+ Add Enemy Spawn")) { AddSpawn(spawns); }
+        }
+
+        /// <summary>
+        /// EnemyCatalog가 있으면 등록된 enemyId 중에서 고르는 팝업으로 보여준다. 카탈로그
+        /// 에셋 자체가 아직 없는 초기 상태(레시피/빌드 전)에는 팝업을 만들 수 없으므로 예외
+        /// 대신 일반 텍스트 필드로 저하시켜, 이 창이 그 단계에서도 계속 열리게 한다.
+        /// </summary>
+        private static void DrawEnemyIdField(SerializedProperty enemyIdProperty, EnemyCatalog catalog)
+        {
+            if (catalog == null || catalog.entries == null || catalog.entries.Count == 0)
+            {
+                EditorGUILayout.PropertyField(enemyIdProperty, new GUIContent("Enemy ID"));
+                EditorGUILayout.HelpBox("EnemyCatalog를 찾을 수 없어 직접 입력 모드로 표시합니다.", MessageType.None);
+                return;
+            }
+
+            var ids = new List<string>();
+            var labels = new List<string>();
+            foreach (EnemyCatalogEntry entry in catalog.entries)
+            {
+                if (entry == null || string.IsNullOrWhiteSpace(entry.enemyId))
+                {
+                    continue;
+                }
+
+                ids.Add(entry.enemyId);
+                labels.Add(string.IsNullOrWhiteSpace(entry.displayName)
+                    ? entry.enemyId
+                    : $"{entry.displayName} ({entry.enemyId})");
+            }
+
+            int currentIndex = ids.IndexOf(enemyIdProperty.stringValue);
+            int selectedIndex = EditorGUILayout.Popup("Enemy ID", currentIndex, labels.ToArray());
+            if (selectedIndex >= 0 && selectedIndex < ids.Count)
+            {
+                enemyIdProperty.stringValue = ids[selectedIndex];
+            }
         }
 
         private void DrawRewardsTab()
@@ -409,7 +448,7 @@ namespace RCCom.EditorTools
             int index = spawns.arraySize;
             spawns.InsertArrayElementAtIndex(index);
             SerializedProperty spawn = spawns.GetArrayElementAtIndex(index);
-            spawn.FindPropertyRelative("enemy").objectReferenceValue = null;
+            spawn.FindPropertyRelative("enemyId").stringValue = string.Empty;
             spawn.FindPropertyRelative("count").intValue = 1;
             spawn.FindPropertyRelative("interval").floatValue = 1f;
             spawn.FindPropertyRelative("initialDelay").floatValue = 0f;

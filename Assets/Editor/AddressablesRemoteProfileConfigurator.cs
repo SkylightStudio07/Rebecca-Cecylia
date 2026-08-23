@@ -49,11 +49,36 @@ namespace RCCom.EditorTools
 
             profiles.SetValue(settings.activeProfileId, loadVariableId, normalizedLoadPath);
             profiles.SetValue(settings.activeProfileId, buildVariableId, normalizedBuildPath);
+            EnsureRemoteCatalogEnabled(settings);
             EditorUtility.SetDirty(settings);
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
 
             Debug.Log($"[AddressablesProfile] 활성 프로필 원격 경로 설정 완료: {normalizedLoadPath}");
+        }
+
+        /// <summary>
+        /// 원격 카탈로그를 켠다. 이게 꺼져 있으면 Remote 그룹이라도 "번들만 원격, 카탈로그는
+        /// 빌드에 내장"인 상태라 빌드 이후에 새 ID를 추가해도 플레이어가 알 수 없다 —
+        /// 즉 진짜 라이브 드랍이 불가능하다. .asset YAML을 직접 켜면 AGENTS.md 규칙 위반이라
+        /// 여기서 코드로만 설정한다. 이미 같은 값이면 다시 쓰지 않아 불필요한 SetDirty를 피한다.
+        /// </summary>
+        private static void EnsureRemoteCatalogEnabled(AddressableAssetSettings settings)
+        {
+            if (!settings.BuildRemoteCatalog)
+            {
+                settings.BuildRemoteCatalog = true;
+            }
+
+            if (settings.RemoteCatalogBuildPath.GetName(settings) != AddressableAssetSettings.kRemoteBuildPath)
+            {
+                settings.RemoteCatalogBuildPath.SetVariableByName(settings, AddressableAssetSettings.kRemoteBuildPath);
+            }
+
+            if (settings.RemoteCatalogLoadPath.GetName(settings) != AddressableAssetSettings.kRemoteLoadPath)
+            {
+                settings.RemoteCatalogLoadPath.SetVariableByName(settings, AddressableAssetSettings.kRemoteLoadPath);
+            }
         }
 
         public static string NormalizeRemoteLoadPath(string remoteLoadPath)

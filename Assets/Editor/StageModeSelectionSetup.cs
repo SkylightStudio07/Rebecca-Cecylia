@@ -39,8 +39,14 @@ namespace RCCom.EditorTools
         public static void Build()
         {
             Scene scene = OpenTitleSceneSafely();
-            Canvas canvas = UnityEngine.Object.FindFirstObjectByType<Canvas>(FindObjectsInactive.Include);
-            if (canvas == null) { throw new InvalidOperationException("TitleScene에 Canvas가 없습니다."); }
+            GameObject mainMenuBackgroundObject = GameObject.Find("MainMenuBackground");
+            Canvas canvas = mainMenuBackgroundObject != null
+                ? mainMenuBackgroundObject.GetComponentInParent<Canvas>()
+                : null;
+            if (canvas == null)
+            {
+                throw new InvalidOperationException("TitleScene의 MainMenuBackground 또는 부모 Canvas가 없습니다.");
+            }
 
             TMP_FontAsset koreanFont = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(KoreanFontPath);
             TMP_FontAsset titleFont = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(TitleFontPath);
@@ -50,13 +56,14 @@ namespace RCCom.EditorTools
             }
 
             StageCatalog catalog = BuildCatalog();
+            EnemyRoster enemyRoster = FindEnemyRoster();
             OperatorCatalog operatorCatalog = AssetDatabase.LoadAssetAtPath<OperatorCatalog>(OperatorCatalogPath);
             if (operatorCatalog == null)
             {
                 throw new InvalidOperationException("스테이지 보상 표시에 필요한 OperatorCatalog가 없습니다.");
             }
             StageNodeView nodePrefab = BuildNodePrefab(koreanFont);
-            CanvasGroup mainMenuGroup = GetOrAddCanvasGroup(canvas.transform.Find("MainMenuBackground")?.gameObject);
+            CanvasGroup mainMenuGroup = GetOrAddCanvasGroup(mainMenuBackgroundObject);
             OperatorSelectionUI operatorSelectionUI = UnityEngine.Object.FindFirstObjectByType<OperatorSelectionUI>(
                 FindObjectsInactive.Include);
             if (operatorSelectionUI == null)
@@ -89,6 +96,7 @@ namespace RCCom.EditorTools
             SetReference(modeSerialized, "stageButton", stageModeButton);
             SetReference(modeSerialized, "endlessButton", endlessButton);
             SetReference(modeSerialized, "backButton", modeBackButton);
+            SetReference(modeSerialized, "enemyRoster", enemyRoster);
             modeSerialized.ApplyModifiedPropertiesWithoutUndo();
 
             var stageSerialized = new SerializedObject(stageController);
@@ -177,7 +185,8 @@ namespace RCCom.EditorTools
             var modeSerialized = new SerializedObject(mode);
             if (modeSerialized.FindProperty("stageSelectionUI").objectReferenceValue != stage ||
                 modeSerialized.FindProperty("stageButton").objectReferenceValue == null ||
-                modeSerialized.FindProperty("endlessButton").objectReferenceValue == null)
+                modeSerialized.FindProperty("endlessButton").objectReferenceValue == null ||
+                modeSerialized.FindProperty("enemyRoster").objectReferenceValue == null)
             {
                 throw new InvalidOperationException("ModeSelectionUI 참조 배선이 올바르지 않습니다.");
             }
@@ -391,7 +400,9 @@ namespace RCCom.EditorTools
             foreach (string guid in guids)
             {
                 EnemyRoster roster = AssetDatabase.LoadAssetAtPath<EnemyRoster>(AssetDatabase.GUIDToAssetPath(guid));
-                if (roster != null && roster.enemies != null && roster.enemies.Count > 0)
+                // enemies는 [NonSerialized]라 에디터에서 로드한 시점엔 항상 비어 있다 —
+                // 직렬화된 실체는 enemyIds뿐이라 그걸로 판단한다.
+                if (roster != null && roster.enemyIds != null && roster.enemyIds.Count > 0)
                 {
                     return roster;
                 }
@@ -453,14 +464,14 @@ namespace RCCom.EditorTools
         private static void AddSpawn(StageWaveDefinition wave, EnemyRoster roster, int enemyIndex,
             int count, float interval, float initialDelay)
         {
-            if (count <= 0 || roster.enemies == null || enemyIndex < 0 || enemyIndex >= roster.enemies.Count)
+            if (count <= 0 || roster.enemyIds == null || enemyIndex < 0 || enemyIndex >= roster.enemyIds.Count)
             {
                 return;
             }
 
             wave.spawns.Add(new StageEnemySpawn
             {
-                enemy = roster.enemies[enemyIndex],
+                enemyId = roster.enemyIds[enemyIndex],
                 count = count,
                 interval = interval,
                 initialDelay = initialDelay

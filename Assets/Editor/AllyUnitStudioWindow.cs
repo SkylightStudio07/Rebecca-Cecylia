@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using RCCom.Data;
 using RCCom.Definitions.Operator;
 using RCCom.Definitions.Unit;
+using RCCom.Effects.Unit;
 using UnityEditor;
 using UnityEngine;
 
@@ -17,8 +19,10 @@ namespace RCCom.EditorTools
     public sealed class AllyUnitStudioWindow : EditorWindow
     {
         private const string DefaultAssetRoot = "Assets/Data/Operators";
+        private const string RecipeFolder = "Assets/Editor/AllyUnitRecipes";
+        private const string OutputRoot = "Assets/Data/AllyUnits";
         private const string EffectsPropertyPath = "effects";
-        private const string UnitsPropertyPath = "units";
+        private const string UnitsPropertyPath = "unitIds";
         private const string GeneratedOperatorLabel = "RCCom.GeneratedOperator";
         private const string VerticalSliceLabel = "RCCom.GeneratedAllyUnitVerticalSlice";
 
@@ -43,6 +47,8 @@ namespace RCCom.EditorTools
         private string _searchText = string.Empty;
         private AllyUnitDefinition _selectedUnit;
         private AllyUnitRoster _selectedRoster;
+        private AllyUnitAssetRecipe _recipe;
+        private string _selectedRecipePath;
         private SerializedObject _serializedUnit;
         private SerializedObject _serializedRoster;
         private GUIStyle _selectedSidebarButtonStyle;
@@ -53,6 +59,7 @@ namespace RCCom.EditorTools
             Units,
             Rosters,
             Audit,
+            Package,
         }
 
         private enum ArrayEditKind
@@ -129,10 +136,19 @@ namespace RCCom.EditorTools
 
             DrawToolbar();
 
-            if ((StudioTab)_tabIndex == StudioTab.Audit)
+            if ((StudioTab)_tabIndex == StudioTab.Audit ||
+                (StudioTab)_tabIndex == StudioTab.Package)
             {
                 _contentScroll = EditorGUILayout.BeginScrollView(_contentScroll);
-                DrawAuditTab();
+                if ((StudioTab)_tabIndex == StudioTab.Audit)
+                {
+                    DrawAuditTab();
+                }
+                else
+                {
+                    DrawPackageTab();
+                }
+
                 EditorGUILayout.EndScrollView();
                 return;
             }
@@ -156,9 +172,9 @@ namespace RCCom.EditorTools
             int previousTab = _tabIndex;
             _tabIndex = GUILayout.Toolbar(
                 _tabIndex,
-                new[] { $"Units ({_units.Count})", $"Rosters ({_rosters.Count})", "Audit" },
+                new[] { $"Units ({_units.Count})", $"Rosters ({_rosters.Count})", "Audit", "Package" },
                 EditorStyles.toolbarButton,
-                GUILayout.Width(310f));
+                GUILayout.Width(390f));
             if (previousTab != _tabIndex)
             {
                 _contentScroll = Vector2.zero;
@@ -232,7 +248,7 @@ namespace RCCom.EditorTools
             _contentScroll = EditorGUILayout.BeginScrollView(_contentScroll);
             if ((StudioTab)_tabIndex == StudioTab.Units)
             {
-                DrawUnitEditor();
+                DrawUnitRecipeEditor();
             }
             else
             {
@@ -243,59 +259,83 @@ namespace RCCom.EditorTools
             EditorGUILayout.EndVertical();
         }
 
-        private void DrawUnitEditor()
+        private void DrawUnitRecipeEditor()
         {
-            if (_selectedUnit == null || _serializedUnit == null)
+            if (_recipe == null)
             {
                 EditorGUILayout.HelpBox(
-                    "AllyUnitDefinition이 없습니다. New Unit으로 첫 유닛 데이터를 만드세요.",
+                    "AllyUnit 레시피가 없습니다. New Unit으로 제작 원본을 먼저 만드세요.",
                     MessageType.Info);
                 return;
             }
 
-            _serializedUnit.Update();
-            DrawAssetHeader(_selectedUnit, "Unit Definition");
-            DrawGeneratedAssetNotice(_selectedUnit, false);
-            DrawIssueSummary(_unitIssues);
-
-            SerializedProperty data = _serializedUnit.FindProperty("data");
-            GUILayout.Label("Identity & Deployment", EditorStyles.boldLabel);
-            EditorGUILayout.PropertyField(data.FindPropertyRelative("unitId"), new GUIContent("Unit ID"));
-            EditorGUILayout.PropertyField(data.FindPropertyRelative("displayName"), new GUIContent("Display Name"));
-            EditorGUILayout.PropertyField(data.FindPropertyRelative("deployCost"), new GUIContent("Deploy Cost"));
+            EnsureRecipeData();
+            GUILayout.Label("Ally Unit Recipe", EditorStyles.largeLabel);
+            EditorGUILayout.LabelField("Recipe", _selectedRecipePath ?? string.Empty);
             EditorGUILayout.HelpBox(
-                "Unit ID는 Roster 내부 조회에 쓰이는 영구 식별자입니다. 같은 Roster 안에서는 중복될 수 없습니다.",
+                "이 탭은 Definition 결과물이 아니라 JSON 레시피를 편집합니다. Save + Build를 실행하면 " +
+                "유닛 Definition·카탈로그·Addressables 그룹이 같은 원본에서 갱신됩니다.",
+                MessageType.Info);
+
+            GUILayout.Label("Identity & Deployment", EditorStyles.boldLabel);
+            _recipe.unitId = NormalizeId(EditorGUILayout.TextField("Unit ID", _recipe.unitId));
+            _recipe.catalogOrder = Mathf.Max(
+                0,
+                EditorGUILayout.IntField("Catalog Order", _recipe.catalogOrder));
+            _recipe.displayName = EditorGUILayout.TextField("Display Name", _recipe.displayName);
+            _recipe.data.deployCost = Mathf.Max(
+                0,
+                EditorGUILayout.IntField("Deploy Cost", _recipe.data.deployCost));
+            _recipe.remoteContent = EditorGUILayout.ToggleLeft("Remote Content", _recipe.remoteContent);
+            EditorGUILayout.HelpBox(
+                "Unit ID는 Roster와 Addressables 주소에 쓰이는 영구 식별자입니다. 배포 후에는 변경하지 마세요.",
                 MessageType.None);
 
             GUILayout.Space(10f);
             GUILayout.Label("Combat Data", EditorStyles.boldLabel);
-            EditorGUILayout.PropertyField(data.FindPropertyRelative("maxHealth"), new GUIContent("Max Health"));
-            EditorGUILayout.PropertyField(data.FindPropertyRelative("moveSpeed"), new GUIContent("Move Speed"));
-            EditorGUILayout.PropertyField(data.FindPropertyRelative("attackDamage"), new GUIContent("Attack Damage"));
-            EditorGUILayout.PropertyField(data.FindPropertyRelative("attackInterval"), new GUIContent("Attack Interval"));
-            EditorGUILayout.PropertyField(data.FindPropertyRelative("attackRange"), new GUIContent("Attack Range"));
-            EditorGUILayout.PropertyField(data.FindPropertyRelative("detectionRange"), new GUIContent("Detection Range"));
-            EditorGUILayout.PropertyField(data.FindPropertyRelative("projectileSpeed"), new GUIContent("Projectile Speed"));
+            _recipe.data.maxHealth = Mathf.Max(
+                0f,
+                EditorGUILayout.FloatField("Max Health", _recipe.data.maxHealth));
+            _recipe.data.moveSpeed = Mathf.Max(
+                0f,
+                EditorGUILayout.FloatField("Move Speed", _recipe.data.moveSpeed));
+            _recipe.data.attackDamage = Mathf.Max(
+                0f,
+                EditorGUILayout.FloatField("Attack Damage", _recipe.data.attackDamage));
+            _recipe.data.attackInterval = Mathf.Max(
+                0.01f,
+                EditorGUILayout.FloatField("Attack Interval", _recipe.data.attackInterval));
+            _recipe.data.attackRange = Mathf.Max(
+                0f,
+                EditorGUILayout.FloatField("Attack Range", _recipe.data.attackRange));
+            _recipe.data.detectionRange = Mathf.Max(
+                _recipe.data.attackRange,
+                EditorGUILayout.FloatField("Detection Range", _recipe.data.detectionRange));
+            _recipe.data.projectileSpeed = Mathf.Max(
+                0f,
+                EditorGUILayout.FloatField("Projectile Speed", _recipe.data.projectileSpeed));
 
             GUILayout.Space(10f);
             GUILayout.Label("Presentation", EditorStyles.boldLabel);
-            EditorGUILayout.PropertyField(_serializedUnit.FindProperty("sprite"), new GUIContent("Sprite"));
-            EditorGUILayout.PropertyField(_serializedUnit.FindProperty("tint"), new GUIContent("Tint"));
-            EditorGUILayout.PropertyField(
-                _serializedUnit.FindProperty("spriteForwardOffsetDegrees"),
-                new GUIContent("Forward Offset Degrees"));
-            DrawSpritePreview(_serializedUnit.FindProperty("sprite").objectReferenceValue as Sprite);
+            _recipe.spritePath = DrawRecipeAssetPathField<Sprite>("Sprite", _recipe.spritePath);
+            _recipe.tint = EditorGUILayout.ColorField("Fallback Tint", _recipe.tint);
+            _recipe.spriteForwardOffsetDegrees = EditorGUILayout.FloatField(
+                "Forward Offset Degrees",
+                _recipe.spriteForwardOffsetDegrees);
+            DrawSpritePreview(
+                string.IsNullOrWhiteSpace(_recipe.spritePath)
+                    ? null
+                    : AssetDatabase.LoadAssetAtPath<Sprite>(_recipe.spritePath));
 
             GUILayout.Space(10f);
-            DrawEffects(_serializedUnit.FindProperty("effects"));
+            DrawRecipeEffects();
             DrawUnitUsage(_selectedUnit);
-            DrawIssueDetails(_unitIssues);
 
             GUILayout.Space(12f);
             EditorGUILayout.BeginHorizontal();
-            if (GUILayout.Button("Save Unit", GUILayout.Height(30f)))
+            if (GUILayout.Button("Save Recipe", GUILayout.Height(30f)))
             {
-                SaveAll();
+                SaveCurrentRecipe();
             }
 
             if (GUILayout.Button("Duplicate Unit", GUILayout.Height(30f)))
@@ -303,17 +343,66 @@ namespace RCCom.EditorTools
                 DuplicateSelectedUnit();
             }
 
-            if (GUILayout.Button("Ping Asset", GUILayout.Height(30f)))
+            if (GUILayout.Button("Ping Definition", GUILayout.Height(30f)))
             {
-                Selection.activeObject = _selectedUnit;
-                EditorGUIUtility.PingObject(_selectedUnit);
+                if (_selectedUnit != null)
+                {
+                    Selection.activeObject = _selectedUnit;
+                    EditorGUIUtility.PingObject(_selectedUnit);
+                }
             }
 
             EditorGUILayout.EndHorizontal();
+        }
 
-            if (_serializedUnit.ApplyModifiedProperties())
+        private void DrawRecipeEffects()
+        {
+            EnsureRecipeData();
+            GUILayout.Label($"Effect Composition  /  {_recipe.effectPaths.Count}", EditorStyles.boldLabel);
+            EditorGUILayout.HelpBox(
+                "효과 SO는 공유되는 무상태 훅입니다. 효과의 경로 순서는 실행 순서가 되며, " +
+                "개체별 상태는 AllyUnitInstance가 소유합니다.",
+                MessageType.Info);
+
+            for (int i = 0; i < _recipe.effectPaths.Count; i++)
             {
-                EditorUtility.SetDirty(_selectedUnit);
+                EditorGUILayout.BeginHorizontal(EditorStyles.helpBox);
+                _recipe.effectPaths[i] = DrawRecipeAssetPathField<AllyUnitEffectBase>(
+                    $"Effect {i + 1}",
+                    _recipe.effectPaths[i]);
+                using (new EditorGUI.DisabledGroupScope(i <= 0))
+                {
+                    if (GUILayout.Button("▲", GUILayout.Width(28f)))
+                    {
+                        SwapRecipeEffects(i, i - 1);
+                        EditorGUILayout.EndHorizontal();
+                        break;
+                    }
+                }
+
+                using (new EditorGUI.DisabledGroupScope(i >= _recipe.effectPaths.Count - 1))
+                {
+                    if (GUILayout.Button("▼", GUILayout.Width(28f)))
+                    {
+                        SwapRecipeEffects(i, i + 1);
+                        EditorGUILayout.EndHorizontal();
+                        break;
+                    }
+                }
+
+                if (GUILayout.Button("Remove", GUILayout.Width(62f)))
+                {
+                    _recipe.effectPaths.RemoveAt(i);
+                    EditorGUILayout.EndHorizontal();
+                    break;
+                }
+
+                EditorGUILayout.EndHorizontal();
+            }
+
+            if (GUILayout.Button("+ Add Effect"))
+            {
+                _recipe.effectPaths.Add(string.Empty);
             }
         }
 
@@ -333,10 +422,11 @@ namespace RCCom.EditorTools
             DrawGeneratedAssetNotice(_selectedRoster, readOnly);
             DrawIssueSummary(_rosterIssues);
 
-            SerializedProperty units = _serializedRoster.FindProperty("units");
+            SerializedProperty units = _serializedRoster.FindProperty(UnitsPropertyPath);
             GUILayout.Label($"Roster Entries  /  {units.arraySize}", EditorStyles.boldLabel);
             EditorGUILayout.HelpBox(
-                "위에서 아래 순서가 선택 화면과 전투 배치 메뉴의 버튼 순서입니다.",
+                "Roster는 Definition 참조가 아니라 Unit ID 순서를 저장합니다. 위에서 아래 순서가 " +
+                "선택 화면과 전투 배치 메뉴의 버튼 순서입니다.",
                 MessageType.Info);
 
             DrawRosterEntries(units, readOnly);
@@ -431,7 +521,8 @@ namespace RCCom.EditorTools
             for (int i = 0; i < units.arraySize; i++)
             {
                 SerializedProperty element = units.GetArrayElementAtIndex(i);
-                AllyUnitDefinition definition = element.objectReferenceValue as AllyUnitDefinition;
+                string unitId = element.stringValue;
+                AllyUnitDefinition definition = FindUnitById(unitId);
                 EditorGUILayout.BeginVertical(EditorStyles.helpBox);
                 EditorGUILayout.BeginHorizontal();
                 using (new EditorGUI.DisabledGroupScope(readOnly))
@@ -474,8 +565,12 @@ namespace RCCom.EditorTools
                     GUILayout.FlexibleSpace();
                     if (GUILayout.Button("Edit", GUILayout.Width(48f)))
                     {
-                        SelectUnit(definition);
-                        _tabIndex = (int)StudioTab.Units;
+                        if (definition != null)
+                        {
+                            SelectUnit(definition);
+                            _tabIndex = (int)StudioTab.Units;
+                        }
+
                         _contentScroll = Vector2.zero;
                     }
 
@@ -491,7 +586,7 @@ namespace RCCom.EditorTools
             var available = new List<AllyUnitDefinition>();
             for (int i = 0; i < _units.Count; i++)
             {
-                if (!SerializedArrayContains(rosterUnits, _units[i]))
+                if (!SerializedArrayContainsString(rosterUnits, _units[i].data?.unitId))
                 {
                     available.Add(_units[i]);
                 }
@@ -532,14 +627,14 @@ namespace RCCom.EditorTools
             for (int i = 0; i < _rosters.Count; i++)
             {
                 AllyUnitRoster roster = _rosters[i];
-                if (roster == null || roster.units == null)
+                if (roster == null || roster.unitIds == null)
                 {
                     continue;
                 }
 
-                for (int unitIndex = 0; unitIndex < roster.units.Count; unitIndex++)
+                for (int unitIndex = 0; unitIndex < roster.unitIds.Count; unitIndex++)
                 {
-                    AllyUnitDefinition definition = roster.units[unitIndex];
+                    AllyUnitDefinition definition = FindUnitById(roster.unitIds[unitIndex]);
                     if (definition != null)
                     {
                         registeredUnits.Add(definition);
@@ -650,6 +745,61 @@ namespace RCCom.EditorTools
             }
 
             EditorGUILayout.EndHorizontal();
+        }
+
+        private void DrawPackageTab()
+        {
+            GUILayout.Label("Save, Validate & Package", EditorStyles.boldLabel);
+            if (_recipe == null)
+            {
+                EditorGUILayout.HelpBox(
+                    "선택한 유닛의 레시피를 찾지 못했습니다. Refresh 후 마이그레이션/빌드 상태를 확인하세요.",
+                    MessageType.Error);
+                return;
+            }
+
+            EnsureRecipeData();
+            EditorGUILayout.HelpBox(
+                "레시피를 저장하면 제작 원본만 바뀝니다. 단일 빌드는 Definition·AllyUnitCatalog·" +
+                "전용 Addressables 그룹을 함께 갱신합니다.",
+                MessageType.Info);
+            EditorGUILayout.LabelField("Recipe", _selectedRecipePath ?? string.Empty);
+            EditorGUILayout.LabelField(
+                "Definition",
+                AllyUnitCatalogBuilder.GetDefinitionPath(_recipe.unitId));
+            EditorGUILayout.LabelField("Address", AllyUnitCatalogBuilder.GetAddress(_recipe.unitId));
+            EditorGUILayout.LabelField(
+                "Group",
+                AllyUnitCatalogBuilder.GetGroupName(_recipe.unitId, _recipe.remoteContent));
+
+            GUILayout.Space(12f);
+            if (GUILayout.Button(
+                    $"Save + Validate + Build ▶ {_recipe.unitId}",
+                    GUILayout.Height(34f)))
+            {
+                BuildSelectedUnit();
+            }
+
+            if (GUILayout.Button("Save Recipe", GUILayout.Height(28f)))
+            {
+                SaveCurrentRecipe();
+            }
+
+            if (GUILayout.Button("Validate Ally Unit Assets", GUILayout.Height(28f)))
+            {
+                ValidateAllyUnitAssets();
+            }
+
+            if (GUILayout.Button("Build All Ally Unit Assets + Addressables", GUILayout.Height(32f)))
+            {
+                SaveAll();
+                BuildAllUnits();
+            }
+
+            if (GUILayout.Button("Save & Run Full Operator Asset Validator", GUILayout.Height(32f)))
+            {
+                ValidateAllAssets();
+            }
         }
 
         private void DrawAssetHeader(UnityEngine.Object asset, string typeLabel)
@@ -834,39 +984,39 @@ namespace RCCom.EditorTools
             return issues;
         }
 
-        private static List<string> CollectRosterIssues(AllyUnitRoster roster)
+        private List<string> CollectRosterIssues(AllyUnitRoster roster)
         {
             var issues = new List<string>();
-            if (roster == null || roster.units == null)
+            if (roster == null || roster.unitIds == null)
             {
                 issues.Add("Roster 목록이 null입니다.");
                 return issues;
             }
 
-            if (roster.units.Count == 0)
+            if (roster.unitIds.Count == 0)
             {
                 issues.Add("Roster가 비어 있습니다.");
                 return issues;
             }
 
             var unitIds = new HashSet<string>(StringComparer.Ordinal);
-            for (int i = 0; i < roster.units.Count; i++)
+            for (int i = 0; i < roster.unitIds.Count; i++)
             {
-                AllyUnitDefinition definition = roster.units[i];
-                if (definition == null)
-                {
-                    issues.Add($"Slot {i + 1}이 null입니다.");
-                    continue;
-                }
-
-                string unitId = definition.data?.unitId;
+                string unitId = roster.unitIds[i];
                 if (string.IsNullOrWhiteSpace(unitId))
                 {
                     issues.Add($"Slot {i + 1}의 Unit ID가 비어 있습니다.");
+                    continue;
                 }
-                else if (!unitIds.Add(unitId))
+
+                if (!unitIds.Add(unitId))
                 {
                     issues.Add($"Unit ID가 중복됩니다: {unitId}");
+                }
+
+                if (FindUnitById(unitId) == null)
+                {
+                    issues.Add($"존재하지 않는 AllyUnitDefinition을 가리킵니다: {unitId}");
                 }
             }
 
@@ -993,7 +1143,20 @@ namespace RCCom.EditorTools
                     RemoveArrayElement(array, edit.index);
                     break;
                 case ArrayEditKind.Insert:
-                    InsertObjectReference(array, edit.value);
+                    if (edit.onRoster)
+                    {
+                        AllyUnitDefinition definition = edit.value as AllyUnitDefinition;
+                        InsertStringValue(
+                            array,
+                            definition != null && definition.data != null
+                                ? definition.data.unitId
+                                : string.Empty);
+                    }
+                    else
+                    {
+                        InsertObjectReference(array, edit.value);
+                    }
+
                     break;
             }
 
@@ -1054,6 +1217,20 @@ namespace RCCom.EditorTools
         {
             _selectedUnit = definition;
             _serializedUnit = definition != null ? new SerializedObject(definition) : null;
+            _recipe = null;
+            _selectedRecipePath = null;
+            if (definition == null || definition.data == null ||
+                string.IsNullOrWhiteSpace(definition.data.unitId))
+            {
+                return;
+            }
+
+            _selectedRecipePath = $"{RecipeFolder}/{definition.data.unitId}.json";
+            TextAsset recipeAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(_selectedRecipePath);
+            _recipe = recipeAsset == null
+                ? null
+                : JsonUtility.FromJson<AllyUnitAssetRecipe>(recipeAsset.text);
+            EnsureRecipeData();
         }
 
         private void SelectRoster(AllyUnitRoster roster)
@@ -1065,71 +1242,73 @@ namespace RCCom.EditorTools
         private void CreateNewUnit()
         {
             string path = EditorUtility.SaveFilePanelInProject(
-                "새 아군 유닛 Definition",
-                "new-ally-unit.asset",
-                "asset",
-                "유닛 데이터 원본을 저장할 위치를 선택하세요.",
-                GetDefaultFolder());
-            if (string.IsNullOrWhiteSpace(path) || !EnsureNewAssetPath(path, "AllyUnitDefinition"))
+                "새 아군 유닛 레시피",
+                "new-ally-unit.json",
+                "json",
+                "Assets/Editor/AllyUnitRecipes 아래에 영문 소문자 ID로 저장하세요.",
+                RecipeFolder);
+            if (string.IsNullOrWhiteSpace(path) || !EnsureNewAssetPath(path, "AllyUnitRecipe"))
             {
                 return;
             }
 
-            string assetName = Path.GetFileNameWithoutExtension(path);
-            AllyUnitDefinition definition = CreateInstance<AllyUnitDefinition>();
-            definition.name = assetName;
-            definition.data = new AllyUnitData
+            string unitId = NormalizeId(Path.GetFileNameWithoutExtension(path));
+            var recipe = new AllyUnitAssetRecipe
             {
-                unitId = NormalizeId(assetName),
-                displayName = assetName,
-                deployCost = 10,
-                maxHealth = 10f,
-                moveSpeed = 1f,
-                attackDamage = 1f,
-                attackInterval = 1f,
-                attackRange = 1f,
-                detectionRange = 2f,
-                projectileSpeed = 8f,
+                unitId = unitId,
+                catalogOrder = _units.Count,
+                displayName = unitId,
+                spriteForwardOffsetDegrees = 0f,
+                effectPaths = new List<string> { "Assets/Data/Effects/Unit/BasicAttackEffect.asset" },
+                data = new AllyUnitData
+                {
+                    unitId = unitId,
+                    displayName = unitId,
+                    deployCost = 10,
+                    maxHealth = 10f,
+                    moveSpeed = 1f,
+                    attackDamage = 1f,
+                    attackInterval = 1f,
+                    attackRange = 1f,
+                    detectionRange = 2f,
+                    projectileSpeed = 8f,
+                },
             };
-            AssetDatabase.CreateAsset(definition, path);
-            Undo.RegisterCreatedObjectUndo(definition, "Create Ally Unit Definition");
-            AssetDatabase.SaveAssets();
-            AssetDatabase.Refresh();
-            RefreshAssets(path, GetPath(_selectedRoster));
+            WriteRecipeFile(recipe, path);
+            BuildRecipe(path);
+            RefreshAssets(GetPath(_selectedUnit), GetPath(_selectedRoster));
             _tabIndex = (int)StudioTab.Units;
         }
 
         private void DuplicateSelectedUnit()
         {
-            if (_selectedUnit == null)
+            if (_recipe == null)
             {
                 return;
             }
 
-            string sourcePath = GetPath(_selectedUnit);
-            string sourceFolder = Path.GetDirectoryName(sourcePath)?.Replace('\\', '/');
             string path = EditorUtility.SaveFilePanelInProject(
-                "아군 유닛 Definition 복제",
-                $"{_selectedUnit.name}-copy.asset",
-                "asset",
-                "효과와 Sprite 참조는 재사용하고 인라인 AllyUnitData는 복제합니다.",
-                string.IsNullOrWhiteSpace(sourceFolder) ? DefaultAssetRoot : sourceFolder);
-            if (string.IsNullOrWhiteSpace(path) || !EnsureNewAssetPath(path, "AllyUnitDefinition"))
+                "아군 유닛 레시피 복제",
+                $"{_recipe.unitId}-copy.json",
+                "json",
+                "효과와 Sprite 경로를 재사용하고 AllyUnitData를 복제합니다.",
+                RecipeFolder);
+            if (string.IsNullOrWhiteSpace(path) || !EnsureNewAssetPath(path, "AllyUnitRecipe"))
             {
                 return;
             }
 
-            AllyUnitDefinition duplicate = Instantiate(_selectedUnit);
-            string assetName = Path.GetFileNameWithoutExtension(path);
-            duplicate.name = assetName;
+            string unitId = NormalizeId(Path.GetFileNameWithoutExtension(path));
+            AllyUnitAssetRecipe duplicate =
+                JsonUtility.FromJson<AllyUnitAssetRecipe>(JsonUtility.ToJson(_recipe));
+            duplicate.unitId = unitId;
+            duplicate.displayName = unitId;
             duplicate.data ??= new AllyUnitData();
-            duplicate.data.unitId = NormalizeId(assetName);
-            duplicate.data.displayName = assetName;
-            AssetDatabase.CreateAsset(duplicate, path);
-            Undo.RegisterCreatedObjectUndo(duplicate, "Duplicate Ally Unit Definition");
-            AssetDatabase.SaveAssets();
-            AssetDatabase.Refresh();
-            RefreshAssets(path, GetPath(_selectedRoster));
+            duplicate.data.unitId = unitId;
+            duplicate.data.displayName = unitId;
+            WriteRecipeFile(duplicate, path);
+            BuildRecipe(path);
+            RefreshAssets(GetPath(_selectedUnit), GetPath(_selectedRoster));
             _tabIndex = (int)StudioTab.Units;
         }
 
@@ -1148,10 +1327,11 @@ namespace RCCom.EditorTools
 
             AllyUnitRoster roster = CreateInstance<AllyUnitRoster>();
             roster.name = Path.GetFileNameWithoutExtension(path);
-            if (_selectedUnit != null)
+            roster.unitIds = new List<string>();
+            if (_selectedUnit != null && _selectedUnit.data != null)
             {
                 // 빈 Roster는 전체 검증을 막으므로 현재 선택 유닛이 있으면 첫 항목으로 사용한다.
-                roster.units.Add(_selectedUnit);
+                roster.unitIds.Add(_selectedUnit.data.unitId);
             }
 
             AssetDatabase.CreateAsset(roster, path);
@@ -1164,9 +1344,7 @@ namespace RCCom.EditorTools
 
         private void SaveAll()
         {
-            _serializedUnit?.ApplyModifiedProperties();
             _serializedRoster?.ApplyModifiedProperties();
-            if (_selectedUnit != null) { EditorUtility.SetDirty(_selectedUnit); }
             if (_selectedRoster != null && !HasLabel(_selectedRoster, GeneratedOperatorLabel))
             {
                 EditorUtility.SetDirty(_selectedRoster);
@@ -1174,10 +1352,121 @@ namespace RCCom.EditorTools
 
             string unitPath = GetPath(_selectedUnit);
             string rosterPath = GetPath(_selectedRoster);
+            SaveRecipeToDisk();
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
             RefreshAssets(unitPath, rosterPath);
             Debug.Log("[AllyUnitStudio] 아군 유닛 데이터셋 저장 완료");
+        }
+
+        private void SaveCurrentRecipe()
+        {
+            if (_recipe == null || string.IsNullOrWhiteSpace(_selectedRecipePath))
+            {
+                return;
+            }
+
+            SaveRecipeToDisk();
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+            RefreshAssets(GetPath(_selectedUnit), GetPath(_selectedRoster));
+            Debug.Log($"[AllyUnitStudio] 레시피 저장 완료: {_recipe.unitId}");
+        }
+
+        private void SaveRecipeToDisk()
+        {
+            if (_recipe == null || string.IsNullOrWhiteSpace(_selectedRecipePath))
+            {
+                return;
+            }
+
+            EnsureRecipeData();
+            _recipe.data.unitId = _recipe.unitId;
+            _recipe.data.displayName = _recipe.displayName;
+            File.WriteAllText(
+                Path.GetFullPath(_selectedRecipePath),
+                JsonUtility.ToJson(_recipe, true),
+                new UTF8Encoding(false));
+            AssetDatabase.ImportAsset(_selectedRecipePath, ImportAssetOptions.ForceUpdate);
+        }
+
+        private static void WriteRecipeFile(AllyUnitAssetRecipe recipe, string path)
+        {
+            File.WriteAllText(
+                Path.GetFullPath(path),
+                JsonUtility.ToJson(recipe, true),
+                new UTF8Encoding(false));
+            AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+        }
+
+        private void BuildRecipe(string recipePath)
+        {
+            try
+            {
+                AllyUnitBuildReport report = AllyUnitAssetBuilder.BuildSingle(recipePath);
+                string changes = report.changedAssets.Count == 0
+                    ? "이미 최신 상태입니다. 다시 쓴 에셋 없음."
+                    : $"갱신된 에셋 {report.changedAssets.Count}개:\n· " +
+                      string.Join("\n· ", report.changedAssets);
+                EditorUtility.DisplayDialog(
+                    $"Build {report.unitId}",
+                    $"{changes}\n\n{(report.validationPassed ? "검증 통과" : "검증 실패 — Console을 확인하세요.")}",
+                    "확인");
+            }
+            catch (Exception exception)
+            {
+                Debug.LogException(exception);
+                EditorUtility.DisplayDialog("Ally Unit Build", exception.Message, "확인");
+            }
+        }
+
+        private void BuildSelectedUnit()
+        {
+            if (_recipe == null || string.IsNullOrWhiteSpace(_selectedRecipePath))
+            {
+                return;
+            }
+
+            SaveCurrentRecipe();
+            BuildRecipe(_selectedRecipePath);
+            RefreshAssets(GetPath(_selectedUnit), GetPath(_selectedRoster));
+        }
+
+        private void BuildAllUnits()
+        {
+            try
+            {
+                AllyUnitAssetBuilder.BuildAll();
+                EditorUtility.DisplayDialog(
+                    "Ally Unit Build",
+                    "Definition, Catalog, Addressables 갱신 완료",
+                    "확인");
+            }
+            catch (Exception exception)
+            {
+                Debug.LogException(exception);
+                EditorUtility.DisplayDialog("Ally Unit Build", exception.Message, "확인");
+            }
+        }
+
+        private void ValidateAllyUnitAssets()
+        {
+            try
+            {
+                SaveCurrentRecipe();
+                bool valid = AllyUnitAssetValidator.ValidateAll();
+                EditorUtility.DisplayDialog(
+                    "Ally Unit Validation",
+                    valid ? "검증 통과" : "검증 실패 — Console을 확인하세요.",
+                    "확인");
+            }
+            catch (Exception exception)
+            {
+                Debug.LogException(exception);
+                EditorUtility.DisplayDialog("Ally Unit Validation", exception.Message, "확인");
+            }
         }
 
         private void ValidateAllAssets()
@@ -1185,7 +1474,8 @@ namespace RCCom.EditorTools
             try
             {
                 SaveAll();
-                bool valid = OperatorAssetValidator.ValidateAll();
+                bool valid = AllyUnitAssetValidator.ValidateAll(false) &&
+                             OperatorAssetValidator.ValidateAll();
                 EditorUtility.DisplayDialog(
                     valid ? "Ally Unit Validation" : "Ally Unit Validation Failed",
                     valid ? "전체 오퍼레이터·유닛 에셋 검증을 통과했습니다." : "검증 실패 — Console을 확인하세요.",
@@ -1234,6 +1524,45 @@ namespace RCCom.EditorTools
                 : value.Trim().ToLowerInvariant().Replace(' ', '-');
         }
 
+        private void EnsureRecipeData()
+        {
+            if (_recipe == null)
+            {
+                return;
+            }
+
+            _recipe.data ??= new AllyUnitData();
+            _recipe.effectPaths ??= new List<string>();
+        }
+
+        private void SwapRecipeEffects(int left, int right)
+        {
+            EnsureRecipeData();
+            if (left < 0 || right < 0 ||
+                left >= _recipe.effectPaths.Count || right >= _recipe.effectPaths.Count)
+            {
+                return;
+            }
+
+            string temporary = _recipe.effectPaths[left];
+            _recipe.effectPaths[left] = _recipe.effectPaths[right];
+            _recipe.effectPaths[right] = temporary;
+        }
+
+        private static string DrawRecipeAssetPathField<T>(string label, string path)
+            where T : UnityEngine.Object
+        {
+            T current = string.IsNullOrWhiteSpace(path)
+                ? null
+                : AssetDatabase.LoadAssetAtPath<T>(path);
+            T selected = (T)EditorGUILayout.ObjectField(label, current, typeof(T), false);
+            return selected == current
+                ? path
+                : selected == null
+                    ? string.Empty
+                    : AssetDatabase.GetAssetPath(selected);
+        }
+
         private static string GetUnitLabel(AllyUnitDefinition definition)
         {
             if (definition == null)
@@ -1247,6 +1576,26 @@ namespace RCCom.EditorTools
             return string.IsNullOrWhiteSpace(unitId) ? displayName : $"{displayName}  /  {unitId}";
         }
 
+        private AllyUnitDefinition FindUnitById(string unitId)
+        {
+            if (string.IsNullOrWhiteSpace(unitId))
+            {
+                return null;
+            }
+
+            for (int i = 0; i < _units.Count; i++)
+            {
+                AllyUnitDefinition definition = _units[i];
+                if (definition != null && definition.data != null &&
+                    string.Equals(definition.data.unitId, unitId, StringComparison.Ordinal))
+                {
+                    return definition;
+                }
+            }
+
+            return null;
+        }
+
         private static string GetRosterLabel(AllyUnitRoster roster)
         {
             if (roster == null)
@@ -1254,7 +1603,7 @@ namespace RCCom.EditorTools
                 return "<Missing Roster>";
             }
 
-            int count = roster.units?.Count ?? 0;
+            int count = roster.unitIds?.Count ?? 0;
             string suffix = HasLabel(roster, GeneratedOperatorLabel) ? "  [generated]" : string.Empty;
             return $"{roster.name}  ({count}){suffix}";
         }
@@ -1277,7 +1626,8 @@ namespace RCCom.EditorTools
 
         private static bool RosterContains(AllyUnitRoster roster, AllyUnitDefinition definition)
         {
-            return roster != null && roster.units != null && roster.units.Contains(definition);
+            return roster != null && roster.unitIds != null && definition != null &&
+                   definition.data != null && roster.unitIds.Contains(definition.data.unitId);
         }
 
         private static bool SerializedArrayContains(SerializedProperty array, UnityEngine.Object value)
@@ -1293,11 +1643,31 @@ namespace RCCom.EditorTools
             return false;
         }
 
+        private static bool SerializedArrayContainsString(SerializedProperty array, string value)
+        {
+            for (int i = 0; i < array.arraySize; i++)
+            {
+                if (array.GetArrayElementAtIndex(i).stringValue == value)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         private static void InsertObjectReference(SerializedProperty array, UnityEngine.Object value)
         {
             int index = array.arraySize;
             array.InsertArrayElementAtIndex(index);
             array.GetArrayElementAtIndex(index).objectReferenceValue = value;
+        }
+
+        private static void InsertStringValue(SerializedProperty array, string value)
+        {
+            int index = array.arraySize;
+            array.InsertArrayElementAtIndex(index);
+            array.GetArrayElementAtIndex(index).stringValue = value ?? string.Empty;
         }
 
         private static void RemoveArrayElement(SerializedProperty array, int index)

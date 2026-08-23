@@ -1,0 +1,29 @@
+{
+    "unitId": "test-guard",
+    "catalogOrder": 3,
+    "displayName": "방호 요원",
+    "spritePath": "",
+    "tint": {
+        "r": 1.0,
+        "g": 0.5799999833106995,
+        "b": 0.18000000715255738,
+        "a": 1.0
+    },
+    "spriteForwardOffsetDegrees": 0.0,
+    "effectPaths": [
+        "Assets/Data/Effects/Unit/BasicAttackEffect.asset"
+    ],
+    "remoteContent": false,
+    "data": {
+        "unitId": "test-guard",
+        "displayName": "방호 요원",
+        "deployCost": 55,
+        "maxHealth": 110.0,
+        "moveSpeed": 1.600000023841858,
+        "attackDamage": 9.0,
+        "attackInterval": 0.8999999761581421,
+        "attackRange": 1.100000023841858,
+        "detectionRange": 3.0,
+        "projectileSpeed": 8.0
+    }
+}

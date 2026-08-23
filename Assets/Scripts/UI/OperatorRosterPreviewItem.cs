@@ -1,4 +1,4 @@
-using RCCom.Definitions.Operator;
+using RCCom.Definitions.Unit;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -15,7 +15,7 @@ namespace RCCom.UI
         [SerializeField] private TextMeshProUGUI nameText;
         [SerializeField] private TextMeshProUGUI costText;
 
-        public void Setup(OperatorUnitPreview preview)
+        public void Setup(AllyUnitCatalogEntry preview)
         {
             if (preview == null)
             {

@@ -93,25 +93,44 @@ public static class OperatorAssetBuilder
     public static void BuildAll() { /* ... */ }
 }
 ```
-→ 실행: `unity command eval "UnityEditor.EditorApplication.ExecuteMenuItem(\"RCCom/Build Operator Assets\")" --project-path .`
+→ 이 저장소에서 확인한 연결형 CLI(1.0.0-beta.5) 실행: `unity command menu --path "RCCom/Build Operator Assets"`
+
+프로젝트 지정형 CLI나 다른 협업자 CLI에서 `menu` 명령이 다르게 노출되면 먼저
+`unity list --format json` 또는 `unity list --project-path . --format json`으로 문법을
+확인한다. 해당 환경이 eval 메뉴 실행을 제공하는 경우의 병기 예시는 다음과 같다.
+`unity command eval "UnityEditor.EditorApplication.ExecuteMenuItem(\"RCCom/Build Operator Assets\")" --project-path .`
 
 **② 일회성 eval 스크립트** — 한 번 쓰고 버릴 작업
-`Tools/eval/` 아래 `.cs`로 작성 → `unity command eval_file Tools/eval/xxx.cs --project-path .`
+`Tools/eval/` 아래 `.cs`로 작성한다. 이 저장소의 연결형 CLI에서는
+`unity command eval_file Tools/eval/xxx.cs`를 사용하고, 프로젝트 지정형 CLI에서는
+`unity command eval_file Tools/eval/xxx.cs --project-path .`를 병기해 사용한다.
 
 **eval 작성 시 반드시 지킬 것** (실패의 대부분이 여기서 나온다)
 - **완전한 타입명**을 쓸 것: `UnityEditor.AssetDatabase`, `UnityEngine.GameObject`. eval 스니펫은 프로젝트의 `using`을 상속하지 않는다
 - 에셋을 건드렸으면 **끝에 `UnityEditor.AssetDatabase.SaveAssets()` + `.Refresh()`** 호출. 없으면 메모리에만 반영되고 디스크에 저장되지 않는다
 - **한 번의 eval에 묶어서 처리하라.** 필드 하나당 한 번씩 호출하면 왕복 오버헤드만 늘어난다
 - **여러 줄 C#을 셸 인자로 인라인하지 마라.** Windows 환경이라 따옴표 처리가 지옥이다. 두 줄 넘어가면 파일로 써서 `eval_file`을 쓸 것
-- `unity list --project-path . --format json`으로 **실제 사용 가능한 명령 이름을 먼저 확인**하라. 명령 집합은 프로젝트에 설치된 Pipeline 패키지 버전이 정하는 것이지 고정된 게 아니다. 인자는 `key=value`가 아니라 **위치 인자**다
+- `unity list --format json`으로 **실제 사용 가능한 명령 이름을 먼저 확인**하라. 명령 집합은 프로젝트에 설치된 Pipeline 패키지 버전이 정하는 것이지 고정된 게 아니다. 인자는 `key=value`가 아니라 **위치 인자**다
+
+현재 연결된 Unity Editor(이 세션에서 확인한 1.0.0-beta.5)에 보내는 라이브 명령은
+`--project-path` 없이 실행하고 메뉴는 `unity command menu --path "메뉴 경로"`를 사용한다.
+다른 CLI/협업자 환경에서 프로젝트 경로 인자를 요구하거나 eval 경로만 제공할 수 있으므로,
+그 환경에서는 `unity list --format json` 또는 `unity list --project-path . --format json`으로
+지원 문법을 확인한 뒤 `--project-path .` 및 `eval` 형식을 함께 사용할 수 있다.
 
 ### 3-4. 검증 루프 — 네 손으로 닫아라
 
 파일을 저장하는 것은 끝이 아니다. **스크립트를 건드렸으면 컴파일 확인까지가 한 작업이다.**
 ```
+# 현재 연결된 Editor를 제어하는 CLI
+unity command recompile
+unity command recompile_status    # 완료까지 폴링
+unity --format ndjson command console | Select-String '"level":"(error|exception)"'
+
+# 프로젝트 지정형 CLI를 사용하는 협업자 환경에서는 위 명령에 다음처럼 병기
 unity command recompile --project-path .
-unity command recompile_status --project-path .    # 완료까지 폴링
-unity command console --project-path .             # 컴파일 에러/경고 확인
+unity command recompile_status --project-path .
+unity command console --project-path .
 ```
 
 - **"코드를 작성했다"가 아니라 "작성했고 컴파일을 확인했다"까지 가라.** 사람에게 "Unity 콘솔을 확인해 주세요"라고 미루지 마라 — 네가 직접 확인할 수 있다
@@ -277,14 +296,14 @@ Assets/Editor/                (아직 없음 — 네가 만들 에디터 자동�
 
 ---
 
-## 9. 지금 이 프로젝트의 상태 (최종 갱신: 2026-08-13)
+## 9. 지금 이 프로젝트의 상태 (최종 갱신: 2026-08-24)
 
-- `main` 브랜치, 원격은 `origin` = `SkylightStudio07/Rebecca-Cecylia` **하나뿐**
+- `feature/enemy-studio` 브랜치에서 적/아군 데이터 파이프라인 확장을 진행 중이며, 원격은 `origin` = `SkylightStudio07/Rebecca-Cecylia` **하나뿐**
 - 넥슨 제출본은 별도 저장소에 보존되어 있으며 **이 저장소에서는 건드리지 않는다**
 - 기준 태그 `nexon-final`이 넥슨 최종 커밋(`4803059`)에 부착됨
-- **Addressables 패키지 미설치** (`Packages/manifest.json` 확인)
-- **`Assets/Editor/` 및 빌드 스크립트 부재** — 현재 `unity build`가 불가능한 상태다. Phase 0의 첫 작업(P0-0)
-- WebGL 빌드는 검증 완료 (수동 빌드 기준)
+- **Addressables 패키지 설치 및 설정 완료** — 적/아군/오퍼레이터를 종류별 전용 그룹으로 패키징한다.
+- **`Assets/Editor/BuildScript.cs`와 에셋 검증/스튜디오 도구가 존재** — `unity build --target WebGL --execute-method BuildScript.BuildWebGL` 경로를 사용한다.
+- WebGL Addressables 사전 검증 완료. 최종 플레이어 빌드는 코드를 변경한 작업 단위의 마지막 검증으로 실행한다.
 - 개발 환경은 **Windows** — 셸 따옴표 처리에 주의(§3-3), 경로에 공백이 있으면 인용할 것
 
 ### 시작할 때 먼저 확인하면 좋은 것
@@ -292,9 +311,13 @@ Assets/Editor/                (아직 없음 — 네가 만들 에디터 자동�
 unity doctor                    # CLI 환경 상태
 unity editors -i                # 설치된 에디터 (6000.3.13f1 필요)
 unity status                    # 실행 중인 에디터 인스턴스 — 비어 있으면 라이브 명령 불가
-unity list --project-path . --format json   # 이 프로젝트에서 쓸 수 있는 실제 명령 목록
+unity list --format json                    # 연결된 Editor/현재 CLI의 실제 명령 목록
+unity list --project-path . --format json   # 프로젝트 지정형 CLI의 명령 목록
 ```
 `unity status`가 비어 있으면 Pipeline 라이브 제어가 안 된다. 사람에게 에디터를 열어달라고 요청하거나, 라이브 제어가 필요 없는 작업(코드 작성)부터 진행하라.
+다른 협업자 CLI에서 `--project-path`가 필요한지, `menu`/`eval` 중 어느 메뉴 실행 경로를
+제공하는지는 위 목록으로 확인한 뒤 해당 형식을 사용한다. 이 세션의 beta.5 관찰값만 모든
+환경의 규칙으로 일반화하지 않는다.
 Pipeline 패키지가 아직 설치되지 않았다면 `unity pipeline install --project-path .` 이 필요하며, 이는 패키지 매니페스트를 수정하고 도메인 리로드를 유발하므로 **사람에게 먼저 알릴 것**.
 
 ---

@@ -1,0 +1,29 @@
+{
+    "unitId": "test-rifleman",
+    "catalogOrder": 2,
+    "displayName": "전진 사수",
+    "spritePath": "",
+    "tint": {
+        "r": 0.25,
+        "g": 0.75,
+        "b": 1.0,
+        "a": 1.0
+    },
+    "spriteForwardOffsetDegrees": 0.0,
+    "effectPaths": [
+        "Assets/Data/Effects/Unit/BasicAttackEffect.asset"
+    ],
+    "remoteContent": false,
+    "data": {
+        "unitId": "test-rifleman",
+        "displayName": "전진 사수",
+        "deployCost": 25,
+        "maxHealth": 40.0,
+        "moveSpeed": 2.700000047683716,
+        "attackDamage": 6.0,
+        "attackInterval": 0.550000011920929,
+        "attackRange": 3.799999952316284,
+        "detectionRange": 5.0,
+        "projectileSpeed": 12.0
+    }
+}

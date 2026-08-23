@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using RCCom.Core;
 using RCCom.Data;
 using RCCom.Definitions.Operator;
+using RCCom.Definitions.Unit;
 using RCCom.Runtime;
 using TMPro;
 using UnityEngine;
@@ -244,7 +245,7 @@ namespace RCCom.UI
                 return;
             }
 
-            foreach (OperatorUnitPreview preview in entry.unitPreviews)
+            foreach (AllyUnitCatalogEntry preview in entry.unitPreviews)
             {
                 if (preview == null)
                 {

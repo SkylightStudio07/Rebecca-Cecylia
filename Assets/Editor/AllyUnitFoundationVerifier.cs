@@ -118,9 +118,14 @@ namespace RCCom.EditorTools
                 operatorDefinition.allyUnitRoster = unitRoster;
                 operatorDefinition.dialogueSet = dialogueSet;
                 OperatorLoadoutSession.Select(operatorDefinition);
-                if (OperatorLoadoutSession.ResolveAllyUnitRoster() != unitRoster)
+                AllyUnitRoster resolvedRoster = OperatorLoadoutSession.ResolveAllyUnitRoster();
+                if (resolvedRoster == null || resolvedRoster.units == null ||
+                    resolvedRoster.units.Count != 1 ||
+                    resolvedRoster.units[0] != unitDefinition ||
+                    resolvedRoster.unitIds == null || resolvedRoster.unitIds.Count != 1 ||
+                    resolvedRoster.unitIds[0] != "verification-unit")
                 {
-                    throw new InvalidOperationException("오퍼레이터 유닛 로스터 해석 계약이 올바르지 않습니다.");
+                    throw new InvalidOperationException("오퍼레이터 아군 Roster 런타임 클론 계약이 올바르지 않습니다.");
                 }
 
                 OperatorLoadoutSession.ClearSelection();

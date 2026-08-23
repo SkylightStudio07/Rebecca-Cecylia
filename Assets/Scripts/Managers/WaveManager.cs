@@ -99,6 +99,7 @@ namespace RCCom.Managers
 
         private void Awake()
         {
+            enemyRoster = BattleContentCache.CreateRuntimeEnemyRoster(enemyRoster);
             _rng = new System.Random(randomSeed);
             _stageDefinition = BattleSession.IsStageMode ? BattleSession.SelectedStage : null;
             _isStageMode = _stageDefinition != null && _stageDefinition.IsPlayable;
@@ -207,15 +208,26 @@ namespace RCCom.Managers
             {
                 foreach (StageEnemySpawn spawn in wave.spawns)
                 {
-                    if (spawn == null || spawn.enemy == null || spawn.count <= 0)
+                    if (spawn == null || spawn.count <= 0)
                     {
+                        continue;
+                    }
+
+                    EnemyDefinition definition = BattleContentCache.ResolveEnemy(spawn.enemyId);
+                    if (definition == null && enemyRoster != null)
+                    {
+                        definition = enemyRoster.FindById(spawn.enemyId);
+                    }
+                    if (definition == null)
+                    {
+                        Debug.LogError($"[Wave] 프리로드되지 않은 적 Definition입니다: {spawn.enemyId}");
                         continue;
                     }
 
                     int count = Mathf.Max(0, spawn.count);
                     for (int i = 0; i < count; i++)
                     {
-                        _spawnQueue.Enqueue(spawn.enemy);
+                        _spawnQueue.Enqueue(definition);
                         float delay = i == 0 ? spawn.initialDelay : spawn.interval;
                         _stageSpawnDelays.Enqueue(Mathf.Max(0f, delay));
                     }
@@ -315,6 +327,12 @@ namespace RCCom.Managers
             float budget = CalculateBudget(waveNumber) * (isBossWave ? bossBudgetMultiplier : 1f);
 
             var eligible = new List<EnemyDefinition>();
+            if (enemyRoster == null || enemyRoster.enemies == null)
+            {
+                Debug.LogError("[Wave] 전투용 EnemyRoster가 준비되지 않았습니다.");
+                return queue;
+            }
+
             foreach (EnemyDefinition definition in enemyRoster.enemies)
             {
                 if (waveNumber >= definition.data.minWave)

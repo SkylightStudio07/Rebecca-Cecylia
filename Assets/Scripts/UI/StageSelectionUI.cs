@@ -96,7 +96,9 @@ namespace RCCom.UI
 
             BattleSession.SelectStage(entry.stageDefinition);
             Time.timeScale = 1f;
-            UILoadingTransition.LoadScene("DefenseScene");
+            UILoadingTransition.LoadSceneWithPreload(
+                "DefenseScene",
+                BattleContentCache.PreloadEnemiesForStage(BattleSession.SelectedStage, null, null));
         }
 
         public void ScrollPrevious()
