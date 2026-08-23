@@ -12,6 +12,17 @@ using UnityEngine;
 namespace RCCom.EditorTools
 {
     /// <summary>
+    /// 단일 오퍼레이터 빌드 결과. 어떤 에셋이 실제로 다시 쓰였는지 남겨,
+    /// "빌드했더니 관계없는 파일까지 변경됐다"는 상황을 눈으로 구분할 수 있게 한다.
+    /// </summary>
+    public sealed class OperatorBuildReport
+    {
+        public string operatorId;
+        public readonly List<string> changedAssets = new();
+        public bool validationPassed;
+    }
+
+    /// <summary>
     /// JSON 레시피에서 오퍼레이터 Definition과 전용 Tower/Card Roster를 일괄 생성한다.
     /// 생성물에 라벨을 붙이고 그 라벨이 없는 기존 에셋은 수정하지 않아, 같은 경로에 사람이
     /// 만든 에셋이 있어도 자동화가 조용히 덮어쓰는 사고를 막는다.
@@ -45,12 +56,13 @@ namespace RCCom.EditorTools
 
             EnsureFolder(OutputRoot);
 
+            var changedAssets = new List<string>();
             foreach (string recipePath in recipePaths)
             {
                 TextAsset recipeAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(recipePath);
                 OperatorAssetRecipe recipe = JsonUtility.FromJson<OperatorAssetRecipe>(recipeAsset.text);
                 ValidateRecipe(recipe, recipePath);
-                BuildOperator(recipe);
+                BuildOperator(recipe, changedAssets);
             }
 
             AssetDatabase.SaveAssets();
@@ -65,10 +77,46 @@ namespace RCCom.EditorTools
                 throw new InvalidOperationException("오퍼레이터 에셋 생성 후 검증에 실패했습니다. 콘솔 오류를 확인하세요.");
             }
 
-            Debug.Log($"[OperatorAssetBuilder] 오퍼레이터 {recipePaths.Count}명 생성/갱신 및 검증 완료");
+            Debug.Log(
+                $"[OperatorAssetBuilder] 오퍼레이터 {recipePaths.Count}명 생성/갱신 및 검증 완료 " +
+                $"(내용이 바뀐 에셋 {changedAssets.Count}개)");
         }
 
-        private static void BuildOperator(OperatorAssetRecipe recipe)
+        /// <summary>
+        /// 레시피 한 개만 다시 만든다. 작업 중이 아닌 오퍼레이터의 생성물과 그룹은 건드리지
+        /// 않아, 변경이 없는 캐릭터의 에셋이 다시 쓰이면서 생기는 형상관리 잡음을 없앤다.
+        /// 그룹 정리 같은 전체 동기화는 BuildAll이 계속 담당한다.
+        /// </summary>
+        public static OperatorBuildReport BuildSingle(string recipePath)
+        {
+            TextAsset recipeAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(recipePath);
+            if (recipeAsset == null)
+            {
+                throw new InvalidOperationException($"오퍼레이터 레시피를 찾지 못했습니다: {recipePath}");
+            }
+
+            OperatorAssetRecipe recipe = JsonUtility.FromJson<OperatorAssetRecipe>(recipeAsset.text);
+            ValidateRecipe(recipe, recipePath);
+            EnsureFolder(OutputRoot);
+
+            var report = new OperatorBuildReport { operatorId = recipe.operatorId };
+            BuildOperator(recipe, report.changedAssets);
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+
+            OperatorCatalogBuilder.BuildForOperator(recipe, report.changedAssets);
+
+            // 카탈로그와 Addressables는 오퍼레이터끼리 공유하는 상태이므로, 한 명만 빌드해도
+            // 검증은 전체를 돌려 다른 오퍼레이터와 어긋난 상태를 여기서 잡는다.
+            report.validationPassed = OperatorAssetValidator.ValidateAll(false);
+            Debug.Log(
+                $"[OperatorAssetBuilder] {recipe.operatorId} 단일 빌드 완료 " +
+                $"(내용이 바뀐 에셋 {report.changedAssets.Count}개, " +
+                $"검증 {(report.validationPassed ? "통과" : "실패")})");
+            return report;
+        }
+
+        private static void BuildOperator(OperatorAssetRecipe recipe, List<string> changedAssets)
         {
             TowerRoster sourceTowerRoster = LoadRequired<TowerRoster>(recipe.sourceTowerRosterPath, recipe.operatorId);
             CardRoster sourceCardRoster = LoadRequired<CardRoster>(recipe.sourceCardRosterPath, recipe.operatorId);
@@ -80,35 +128,75 @@ namespace RCCom.EditorTools
             string operatorFolder = $"{OutputRoot}/{recipe.operatorId}";
             EnsureFolder(operatorFolder);
 
-            TowerRoster towerRoster = GetOrCreateOwnedAsset<TowerRoster>($"{operatorFolder}/TowerRoster.asset");
-            towerRoster.towers = new List<TowerDefinition>(sourceTowerRoster.towers);
-            EditorUtility.SetDirty(towerRoster);
+            TowerRoster towerRoster = GetOrCreateOwnedAsset<TowerRoster>(
+                $"{operatorFolder}/TowerRoster.asset", changedAssets);
+            ApplyIfChanged(
+                towerRoster,
+                asset => asset.towers = new List<TowerDefinition>(sourceTowerRoster.towers),
+                changedAssets);
 
-            CardRoster cardRoster = GetOrCreateOwnedAsset<CardRoster>($"{operatorFolder}/CardRoster.asset");
-            cardRoster.cards = new List<RCCom.Effects.Card.CardEffectBase>(sourceCardRoster.cards);
-            EditorUtility.SetDirty(cardRoster);
+            CardRoster cardRoster = GetOrCreateOwnedAsset<CardRoster>(
+                $"{operatorFolder}/CardRoster.asset", changedAssets);
+            ApplyIfChanged(
+                cardRoster,
+                asset => asset.cards = new List<RCCom.Effects.Card.CardEffectBase>(sourceCardRoster.cards),
+                changedAssets);
 
             AllyUnitRoster allyUnitRoster = null;
             if (sourceAllyUnitRoster != null)
             {
-                allyUnitRoster = GetOrCreateOwnedAsset<AllyUnitRoster>($"{operatorFolder}/AllyUnitRoster.asset");
-                allyUnitRoster.units = new List<AllyUnitDefinition>(sourceAllyUnitRoster.units);
-                EditorUtility.SetDirty(allyUnitRoster);
+                allyUnitRoster = GetOrCreateOwnedAsset<AllyUnitRoster>(
+                    $"{operatorFolder}/AllyUnitRoster.asset", changedAssets);
+                ApplyIfChanged(
+                    allyUnitRoster,
+                    asset => asset.units = new List<AllyUnitDefinition>(sourceAllyUnitRoster.units),
+                    changedAssets);
             }
 
-            OperatorDefinition definition = GetOrCreateOwnedAsset<OperatorDefinition>($"{operatorFolder}/OperatorDefinition.asset");
-            definition.operatorId = recipe.operatorId;
-            definition.displayName = recipe.displayName;
-            definition.playStyleDescription = recipe.playStyleDescription;
-            definition.selectionPortrait = selectionPortrait;
-            definition.managementPortrait = managementPortrait;
-            definition.playerData = ClonePlayerData(recipe.playerData);
-            definition.towerRoster = towerRoster;
-            definition.cardRoster = cardRoster;
-            definition.allyUnitRoster = allyUnitRoster;
-            definition.dialogueSet = dialogueSet;
-            definition.requiredBestWave = recipe.requiredBestWave;
-            EditorUtility.SetDirty(definition);
+            OperatorDefinition definition = GetOrCreateOwnedAsset<OperatorDefinition>(
+                $"{operatorFolder}/OperatorDefinition.asset", changedAssets);
+            ApplyIfChanged(definition, asset =>
+            {
+                asset.operatorId = recipe.operatorId;
+                asset.displayName = recipe.displayName;
+                asset.playStyleDescription = recipe.playStyleDescription;
+                asset.selectionPortrait = selectionPortrait;
+                asset.managementPortrait = managementPortrait;
+                asset.playerData = ClonePlayerData(recipe.playerData);
+                asset.towerRoster = towerRoster;
+                asset.cardRoster = cardRoster;
+                asset.allyUnitRoster = allyUnitRoster;
+                asset.dialogueSet = dialogueSet;
+                asset.requiredBestWave = recipe.requiredBestWave;
+            }, changedAssets);
+        }
+
+        /// <summary>
+        /// 값이 실제로 달라졌을 때만 더티 플래그를 세운다. 내용이 같은데도 저장되면 에셋
+        /// 파일이 다시 쓰이면서 형상관리에 의미 없는 변경으로 잡히고, 나중에 병합 충돌을 만든다.
+        /// </summary>
+        private static void ApplyIfChanged<T>(T asset, Action<T> mutate, List<string> changedAssets)
+            where T : UnityEngine.Object
+        {
+            string before = EditorJsonUtility.ToJson(asset);
+            mutate(asset);
+            if (EditorJsonUtility.ToJson(asset) == before)
+            {
+                return;
+            }
+
+            EditorUtility.SetDirty(asset);
+            RecordChange(AssetDatabase.GetAssetPath(asset), changedAssets);
+        }
+
+        internal static void RecordChange(string path, List<string> changedAssets)
+        {
+            if (changedAssets == null || string.IsNullOrEmpty(path) || changedAssets.Contains(path))
+            {
+                return;
+            }
+
+            changedAssets.Add(path);
         }
 
         private static T LoadRequired<T>(string path, string operatorId) where T : UnityEngine.Object
@@ -127,7 +215,8 @@ namespace RCCom.EditorTools
             return string.IsNullOrWhiteSpace(path) ? null : AssetDatabase.LoadAssetAtPath<T>(path);
         }
 
-        private static T GetOrCreateOwnedAsset<T>(string path) where T : ScriptableObject
+        private static T GetOrCreateOwnedAsset<T>(string path, List<string> changedAssets)
+            where T : ScriptableObject
         {
             UnityEngine.Object existing = AssetDatabase.LoadMainAssetAtPath(path);
             if (existing != null)
@@ -149,6 +238,7 @@ namespace RCCom.EditorTools
             T created = ScriptableObject.CreateInstance<T>();
             AssetDatabase.CreateAsset(created, path);
             AssetDatabase.SetLabels(created, new[] { GeneratedLabel });
+            RecordChange(path, changedAssets);
             return created;
         }
 

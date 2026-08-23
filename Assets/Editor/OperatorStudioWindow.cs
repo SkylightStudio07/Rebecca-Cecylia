@@ -390,7 +390,8 @@ namespace RCCom.EditorTools
         {
             GUILayout.Label("Save, Validate & Package", EditorStyles.boldLabel);
             EditorGUILayout.HelpBox(
-                "Save Recipe는 제작 원본만 저장합니다. Build Operator Assets는 Definition·Roster 복제본·카탈로그·오퍼레이터별 Addressables 그룹까지 갱신합니다.",
+                "Save Recipe는 제작 원본만 저장합니다. 저장한 레시피를 게임에 반영하려면 아래 단일 빌드 버튼으로 " +
+                "저장·빌드·검증을 한 번에 실행하세요.",
                 MessageType.Info);
             EditorGUILayout.LabelField("Recipe", _selectedRecipePath ?? string.Empty);
             EditorGUILayout.LabelField("Dialogue Set", _recipe.dialogueSetPath ?? string.Empty);
@@ -402,7 +403,23 @@ namespace RCCom.EditorTools
                 : OperatorCatalogBuilder.GetGroupName(_recipe.operatorId, _recipe.remoteContent));
 
             GUILayout.Space(12);
-            if (GUILayout.Button("Save Recipe & Dialogue", GUILayout.Height(30)))
+            using (new EditorGUI.DisabledScope(string.IsNullOrWhiteSpace(_recipe.operatorId)))
+            {
+                if (GUILayout.Button(
+                        $"Save + Validate + Build \u25B6 {_recipe.operatorId}",
+                        GUILayout.Height(34)))
+                {
+                    BuildSelectedOperator();
+                }
+            }
+
+            EditorGUILayout.HelpBox(
+                "이 오퍼레이터의 Definition·Roster 복제본·카탈로그 항목·전용 Addressables 그룹만 갱신합니다. " +
+                "다른 오퍼레이터의 에셋은 건드리지 않으므로 형상관리에 불필요한 변경이 생기지 않습니다.",
+                MessageType.None);
+
+            GUILayout.Space(12);
+            if (GUILayout.Button("Save Recipe & Dialogue", GUILayout.Height(26)))
             {
                 SaveCurrentAssets();
             }
@@ -412,20 +429,37 @@ namespace RCCom.EditorTools
                 ValidateAll();
             }
 
-            if (GUILayout.Button("Build All Operator Assets + Addressables", GUILayout.Height(30)))
+            if (GUILayout.Button("Build All Operator Assets + Addressables", GUILayout.Height(26)))
             {
                 SaveCurrentAssets();
                 BuildAll();
             }
+
+            EditorGUILayout.HelpBox(
+                "Build All은 레시피 전체를 다시 만들고, 카탈로그에서 사라진 오퍼레이터 그룹까지 정리합니다. " +
+                "오퍼레이터를 추가·삭제했거나 단일 빌드 검증이 다른 오퍼레이터 문제를 지적할 때 사용하세요.",
+                MessageType.None);
         }
 
         private void DrawSaveButton()
         {
             GUILayout.Space(8);
+            EditorGUILayout.BeginHorizontal();
             if (GUILayout.Button("Save Recipe & Dialogue", GUILayout.Height(28)))
             {
                 SaveCurrentAssets();
             }
+
+            // 편집 중인 탭에서 바로 게임 반영까지 끝낼 수 있게 단일 빌드를 함께 둔다.
+            using (new EditorGUI.DisabledScope(string.IsNullOrWhiteSpace(_recipe.operatorId)))
+            {
+                if (GUILayout.Button("Save + Build This Operator", GUILayout.Height(28), GUILayout.Width(190)))
+                {
+                    BuildSelectedOperator();
+                }
+            }
+
+            EditorGUILayout.EndHorizontal();
         }
 
         private void RefreshRecipes(string preferredPath)
@@ -662,6 +696,35 @@ namespace RCCom.EditorTools
             {
                 Debug.LogException(exception);
                 EditorUtility.DisplayDialog("Operator Validation", exception.Message, "확인");
+            }
+        }
+
+        private void BuildSelectedOperator()
+        {
+            if (_recipe == null || string.IsNullOrWhiteSpace(_selectedRecipePath))
+            {
+                return;
+            }
+
+            string recipePath = _selectedRecipePath;
+            try
+            {
+                SaveCurrentAssets();
+                OperatorBuildReport report = OperatorAssetBuilder.BuildSingle(recipePath);
+                string changes = report.changedAssets.Count == 0
+                    ? "이미 최신 상태입니다. 다시 쓴 에셋 없음."
+                    : $"갱신된 에셋 {report.changedAssets.Count}개:\n· " +
+                      string.Join("\n· ", report.changedAssets);
+                string validation = report.validationPassed
+                    ? "검증 통과"
+                    : "검증 실패 — Console을 확인하세요.";
+                EditorUtility.DisplayDialog(
+                    $"Build {report.operatorId}", $"{changes}\n\n{validation}", "확인");
+            }
+            catch (Exception exception)
+            {
+                Debug.LogException(exception);
+                EditorUtility.DisplayDialog("Operator Build", exception.Message, "확인");
             }
         }
 
