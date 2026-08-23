@@ -15,6 +15,14 @@ namespace RCCom.Core
         private const float DistanceEpsilon = 0.0001f;
 
         /// <summary>
+        /// 사거리·접촉 판정 공통 허용 오차. 이동은 상대의 접촉 원 경계면에서 정확히 멈추는데,
+        /// float 반올림 때문에 멈춘 뒤의 실제 거리가 경계보다 1e-7 단위로 커질 수 있다. 판정에
+        /// 오차가 없으면 그 상태에서 사거리 밖으로 취급돼 이동량 0·타깃 null이 영구 반복되는
+        /// 교착이 생기므로, 밸런스에 영향이 없는 폭만 더해 경계에 멈춘 상대를 항상 인정한다.
+        /// </summary>
+        public const float RangeTolerance = 0.001f;
+
+        /// <summary>
         /// 아군이 공격할 적을 고른다. 진행도가 높은 적(거점 방향으로 더 전진한 적)을
         /// 우선하고, 진행도가 같을 때만 거리와 열거 순서를 사용한다.
         /// </summary>
@@ -141,7 +149,13 @@ namespace RCCom.Core
 
         public static bool IsWithinRange(Vector2 origin, Vector2 target, float range)
         {
-            return range > 0f && (target - origin).sqrMagnitude <= range * range;
+            if (range <= 0f)
+            {
+                return false;
+            }
+
+            float toleratedRange = range + RangeTolerance;
+            return (target - origin).sqrMagnitude <= toleratedRange * toleratedRange;
         }
 
         /// <summary>

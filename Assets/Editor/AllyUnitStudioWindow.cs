@@ -17,12 +17,25 @@ namespace RCCom.EditorTools
     public sealed class AllyUnitStudioWindow : EditorWindow
     {
         private const string DefaultAssetRoot = "Assets/Data/Operators";
+        private const string EffectsPropertyPath = "effects";
+        private const string UnitsPropertyPath = "units";
         private const string GeneratedOperatorLabel = "RCCom.GeneratedOperator";
         private const string VerticalSliceLabel = "RCCom.GeneratedAllyUnitVerticalSlice";
 
         private readonly List<AllyUnitDefinition> _units = new();
         private readonly List<AllyUnitRoster> _rosters = new();
         private readonly List<OperatorDefinition> _operators = new();
+
+        // IMGUI 키보드 포커스는 그리기 순서로 매겨진 컨트롤 ID를 붙잡고 있으므로, 편집 중인 값에
+        // 따라 컨트롤 개수가 달라지면 포커스가 옆 필드로 튀고 편집 중이던 문자열이 그쪽에 써진다.
+        // 목록·이슈·검색 필터는 Layout 이벤트에서 한 번만 확정해 한 프레임 안에서 개수를 고정한다.
+        private readonly List<string> _unitSearchKeys = new();
+        private readonly List<string> _rosterSearchKeys = new();
+        private readonly List<AllyUnitDefinition> _filteredUnits = new();
+        private readonly List<AllyUnitRoster> _filteredRosters = new();
+        private readonly List<string> _unitIssues = new();
+        private readonly List<string> _rosterIssues = new();
+        private PendingArrayEdit _pendingArrayEdit;
 
         private Vector2 _sidebarScroll;
         private Vector2 _contentScroll;
@@ -40,6 +53,28 @@ namespace RCCom.EditorTools
             Units,
             Rosters,
             Audit,
+        }
+
+        private enum ArrayEditKind
+        {
+            Move,
+            Remove,
+            Insert,
+        }
+
+        /// <summary>
+        /// 배열 편집은 클릭 이벤트 도중이 아니라 다음 Layout 이벤트에서 적용한다. 같은 프레임 안에서
+        /// arraySize를 바꾸면 Layout 패스와 Repaint 패스의 컨트롤 수가 어긋난다.
+        /// </summary>
+        private struct PendingArrayEdit
+        {
+            public bool active;
+            public bool onRoster;
+            public string propertyPath;
+            public ArrayEditKind kind;
+            public int index;
+            public int targetIndex;
+            public UnityEngine.Object value;
         }
 
         private GUIStyle SelectedSidebarButtonStyle =>
@@ -86,6 +121,12 @@ namespace RCCom.EditorTools
 
         private void OnGUI()
         {
+            if (Event.current.type == EventType.Layout)
+            {
+                ApplyPendingArrayEdit();
+                RebuildFrameCaches();
+            }
+
             DrawToolbar();
 
             if ((StudioTab)_tabIndex == StudioTab.Audit)
@@ -150,16 +191,13 @@ namespace RCCom.EditorTools
             _searchText = EditorGUILayout.TextField(_searchText, EditorStyles.toolbarSearchField);
             _sidebarScroll = EditorGUILayout.BeginScrollView(_sidebarScroll);
 
+            // 버튼 개수는 Layout에서 확정한 _filtered* 목록이 정하고, 글자만 실시간 라벨을 쓴다.
+            // 라벨 문자열이 바뀌는 것은 컨트롤 ID에 영향이 없지만 개수가 바뀌면 포커스가 튄다.
             if ((StudioTab)_tabIndex == StudioTab.Units)
             {
-                for (int i = 0; i < _units.Count; i++)
+                for (int i = 0; i < _filteredUnits.Count; i++)
                 {
-                    AllyUnitDefinition definition = _units[i];
-                    if (!MatchesSearch(GetUnitLabel(definition), _searchText))
-                    {
-                        continue;
-                    }
-
+                    AllyUnitDefinition definition = _filteredUnits[i];
                     GUIStyle style = definition == _selectedUnit
                         ? SelectedSidebarButtonStyle
                         : EditorStyles.toolbarButton;
@@ -171,14 +209,9 @@ namespace RCCom.EditorTools
             }
             else
             {
-                for (int i = 0; i < _rosters.Count; i++)
+                for (int i = 0; i < _filteredRosters.Count; i++)
                 {
-                    AllyUnitRoster roster = _rosters[i];
-                    if (!MatchesSearch(GetRosterLabel(roster), _searchText))
-                    {
-                        continue;
-                    }
-
+                    AllyUnitRoster roster = _filteredRosters[i];
                     GUIStyle style = roster == _selectedRoster
                         ? SelectedSidebarButtonStyle
                         : EditorStyles.toolbarButton;
@@ -223,7 +256,7 @@ namespace RCCom.EditorTools
             _serializedUnit.Update();
             DrawAssetHeader(_selectedUnit, "Unit Definition");
             DrawGeneratedAssetNotice(_selectedUnit, false);
-            DrawUnitIssues(_selectedUnit);
+            DrawIssueSummary(_unitIssues);
 
             SerializedProperty data = _serializedUnit.FindProperty("data");
             GUILayout.Label("Identity & Deployment", EditorStyles.boldLabel);
@@ -256,6 +289,7 @@ namespace RCCom.EditorTools
             GUILayout.Space(10f);
             DrawEffects(_serializedUnit.FindProperty("effects"));
             DrawUnitUsage(_selectedUnit);
+            DrawIssueDetails(_unitIssues);
 
             GUILayout.Space(12f);
             EditorGUILayout.BeginHorizontal();
@@ -297,7 +331,7 @@ namespace RCCom.EditorTools
             bool readOnly = HasLabel(_selectedRoster, GeneratedOperatorLabel);
             DrawAssetHeader(_selectedRoster, "Ally Unit Roster");
             DrawGeneratedAssetNotice(_selectedRoster, readOnly);
-            DrawRosterIssues(_selectedRoster);
+            DrawIssueSummary(_rosterIssues);
 
             SerializedProperty units = _serializedRoster.FindProperty("units");
             GUILayout.Label($"Roster Entries  /  {units.arraySize}", EditorStyles.boldLabel);
@@ -311,19 +345,20 @@ namespace RCCom.EditorTools
             {
                 if (GUILayout.Button("+ Add Empty Slot", GUILayout.Height(28f)))
                 {
-                    InsertObjectReference(units, null);
+                    QueueInsert(true, UnitsPropertyPath, null);
                 }
 
                 if (_selectedUnit != null && !RosterContains(_selectedRoster, _selectedUnit) &&
                     GUILayout.Button($"+ Add Selected Unit: {GetUnitLabel(_selectedUnit)}", GUILayout.Height(28f)))
                 {
-                    InsertObjectReference(units, _selectedUnit);
+                    QueueInsert(true, UnitsPropertyPath, _selectedUnit);
                 }
 
                 DrawAvailableUnits(units);
             }
 
             DrawRosterUsage(_selectedRoster);
+            DrawIssueDetails(_rosterIssues);
 
             GUILayout.Space(12f);
             EditorGUILayout.BeginHorizontal();
@@ -365,9 +400,7 @@ namespace RCCom.EditorTools
                 {
                     if (GUILayout.Button("▲", GUILayout.Width(28f)))
                     {
-                        effects.MoveArrayElement(i, i - 1);
-                        EditorGUILayout.EndHorizontal();
-                        break;
+                        QueueMove(false, EffectsPropertyPath, i, i - 1);
                     }
                 }
 
@@ -375,17 +408,13 @@ namespace RCCom.EditorTools
                 {
                     if (GUILayout.Button("▼", GUILayout.Width(28f)))
                     {
-                        effects.MoveArrayElement(i, i + 1);
-                        EditorGUILayout.EndHorizontal();
-                        break;
+                        QueueMove(false, EffectsPropertyPath, i, i + 1);
                     }
                 }
 
                 if (GUILayout.Button("Remove", GUILayout.Width(62f)))
                 {
-                    RemoveArrayElement(effects, i);
-                    EditorGUILayout.EndHorizontal();
-                    break;
+                    QueueRemove(false, EffectsPropertyPath, i);
                 }
 
                 EditorGUILayout.EndHorizontal();
@@ -393,7 +422,7 @@ namespace RCCom.EditorTools
 
             if (GUILayout.Button("+ Add Effect Slot"))
             {
-                InsertObjectReference(effects, null);
+                QueueInsert(false, EffectsPropertyPath, null);
             }
         }
 
@@ -414,10 +443,7 @@ namespace RCCom.EditorTools
                 {
                     if (GUILayout.Button("▲", GUILayout.Width(28f)))
                     {
-                        units.MoveArrayElement(i, i - 1);
-                        EditorGUILayout.EndHorizontal();
-                        EditorGUILayout.EndVertical();
-                        break;
+                        QueueMove(true, UnitsPropertyPath, i, i - 1);
                     }
                 }
 
@@ -425,10 +451,7 @@ namespace RCCom.EditorTools
                 {
                     if (GUILayout.Button("▼", GUILayout.Width(28f)))
                     {
-                        units.MoveArrayElement(i, i + 1);
-                        EditorGUILayout.EndHorizontal();
-                        EditorGUILayout.EndVertical();
-                        break;
+                        QueueMove(true, UnitsPropertyPath, i, i + 1);
                     }
                 }
 
@@ -436,10 +459,7 @@ namespace RCCom.EditorTools
                 {
                     if (GUILayout.Button("Remove", GUILayout.Width(62f)))
                     {
-                        RemoveArrayElement(units, i);
-                        EditorGUILayout.EndHorizontal();
-                        EditorGUILayout.EndVertical();
-                        break;
+                        QueueRemove(true, UnitsPropertyPath, i);
                     }
                 }
 
@@ -493,7 +513,7 @@ namespace RCCom.EditorTools
                 GUILayout.FlexibleSpace();
                 if (GUILayout.Button("Add", GUILayout.Width(50f)))
                 {
-                    InsertObjectReference(rosterUnits, definition);
+                    QueueInsert(true, UnitsPropertyPath, definition);
                 }
 
                 EditorGUILayout.EndHorizontal();
@@ -741,18 +761,27 @@ namespace RCCom.EditorTools
             }
         }
 
-        private static void DrawUnitIssues(AllyUnitDefinition definition)
+        /// <summary>
+        /// 입력 필드보다 위에 그려지므로 개수가 항상 하나로 고정되어야 한다. 내용과 아이콘만 바뀐다.
+        /// </summary>
+        private static void DrawIssueSummary(List<string> issues)
         {
-            List<string> issues = CollectUnitIssues(definition);
-            for (int i = 0; i < issues.Count; i++)
-            {
-                EditorGUILayout.HelpBox(issues[i], MessageType.Error);
-            }
+            EditorGUILayout.HelpBox(
+                issues.Count == 0
+                    ? "인라인 데이터 오류가 없습니다."
+                    : $"인라인 데이터 오류 {issues.Count}건 — 아래 Validation 섹션에서 확인하세요.",
+                issues.Count == 0 ? MessageType.Info : MessageType.Error);
         }
 
-        private static void DrawRosterIssues(AllyUnitRoster roster)
+        private static void DrawIssueDetails(List<string> issues)
         {
-            List<string> issues = CollectRosterIssues(roster);
+            if (issues.Count == 0)
+            {
+                return;
+            }
+
+            GUILayout.Space(10f);
+            GUILayout.Label("Validation", EditorStyles.boldLabel);
             for (int i = 0; i < issues.Count; i++)
             {
                 EditorGUILayout.HelpBox(issues[i], MessageType.Error);
@@ -844,8 +873,139 @@ namespace RCCom.EditorTools
             return issues;
         }
 
+        /// <summary>
+        /// 한 프레임 안에서 Layout·Repaint 패스가 같은 컨트롤 수를 그리도록, 값에 따라 개수가 변하는
+        /// 목록을 Layout 이벤트에서만 확정한다.
+        /// </summary>
+        private void RebuildFrameCaches()
+        {
+            _filteredUnits.Clear();
+            for (int i = 0; i < _units.Count; i++)
+            {
+                // 검색 판정은 편집 중에 실시간으로 흔들리지 않도록 Refresh 시점 스냅샷 라벨로 한다.
+                string key = i < _unitSearchKeys.Count ? _unitSearchKeys[i] : GetUnitLabel(_units[i]);
+                if (MatchesSearch(key, _searchText))
+                {
+                    _filteredUnits.Add(_units[i]);
+                }
+            }
+
+            _filteredRosters.Clear();
+            for (int i = 0; i < _rosters.Count; i++)
+            {
+                string key = i < _rosterSearchKeys.Count ? _rosterSearchKeys[i] : GetRosterLabel(_rosters[i]);
+                if (MatchesSearch(key, _searchText))
+                {
+                    _filteredRosters.Add(_rosters[i]);
+                }
+            }
+
+            _unitIssues.Clear();
+            if (_selectedUnit != null)
+            {
+                _unitIssues.AddRange(CollectUnitIssues(_selectedUnit));
+            }
+
+            _rosterIssues.Clear();
+            if (_selectedRoster != null)
+            {
+                _rosterIssues.AddRange(CollectRosterIssues(_selectedRoster));
+            }
+        }
+
+        private void QueueMove(bool onRoster, string propertyPath, int index, int targetIndex)
+        {
+            QueueArrayEdit(onRoster, propertyPath, ArrayEditKind.Move, index, targetIndex, null);
+        }
+
+        private void QueueRemove(bool onRoster, string propertyPath, int index)
+        {
+            QueueArrayEdit(onRoster, propertyPath, ArrayEditKind.Remove, index, -1, null);
+        }
+
+        private void QueueInsert(bool onRoster, string propertyPath, UnityEngine.Object value)
+        {
+            QueueArrayEdit(onRoster, propertyPath, ArrayEditKind.Insert, -1, -1, value);
+        }
+
+        private void QueueArrayEdit(
+            bool onRoster,
+            string propertyPath,
+            ArrayEditKind kind,
+            int index,
+            int targetIndex,
+            UnityEngine.Object value)
+        {
+            _pendingArrayEdit = new PendingArrayEdit
+            {
+                active = true,
+                onRoster = onRoster,
+                propertyPath = propertyPath,
+                kind = kind,
+                index = index,
+                targetIndex = targetIndex,
+                value = value,
+            };
+            Repaint();
+        }
+
+        private void ApplyPendingArrayEdit()
+        {
+            if (!_pendingArrayEdit.active)
+            {
+                return;
+            }
+
+            PendingArrayEdit edit = _pendingArrayEdit;
+            _pendingArrayEdit = default;
+
+            SerializedObject owner = edit.onRoster ? _serializedRoster : _serializedUnit;
+            UnityEngine.Object target = edit.onRoster ? _selectedRoster : (UnityEngine.Object)_selectedUnit;
+            if (owner == null || target == null)
+            {
+                return;
+            }
+
+            owner.Update();
+            SerializedProperty array = owner.FindProperty(edit.propertyPath);
+            if (array == null || !array.isArray)
+            {
+                return;
+            }
+
+            switch (edit.kind)
+            {
+                case ArrayEditKind.Move:
+                    if (edit.index < 0 || edit.index >= array.arraySize ||
+                        edit.targetIndex < 0 || edit.targetIndex >= array.arraySize)
+                    {
+                        return;
+                    }
+
+                    array.MoveArrayElement(edit.index, edit.targetIndex);
+                    break;
+                case ArrayEditKind.Remove:
+                    if (edit.index < 0 || edit.index >= array.arraySize)
+                    {
+                        return;
+                    }
+
+                    RemoveArrayElement(array, edit.index);
+                    break;
+                case ArrayEditKind.Insert:
+                    InsertObjectReference(array, edit.value);
+                    break;
+            }
+
+            if (owner.ApplyModifiedProperties())
+            {
+                EditorUtility.SetDirty(target);
+            }
+        }
+
         private void RefreshAssets(string preferredUnitPath, string preferredRosterPath)
         {
+            _pendingArrayEdit = default;
             _units.Clear();
             _rosters.Clear();
             _operators.Clear();
@@ -856,6 +1016,18 @@ namespace RCCom.EditorTools
             _units.Sort((left, right) => string.CompareOrdinal(GetPath(left), GetPath(right)));
             _rosters.Sort((left, right) => string.CompareOrdinal(GetPath(left), GetPath(right)));
             _operators.Sort((left, right) => string.CompareOrdinal(GetPath(left), GetPath(right)));
+
+            _unitSearchKeys.Clear();
+            for (int i = 0; i < _units.Count; i++)
+            {
+                _unitSearchKeys.Add(GetUnitLabel(_units[i]));
+            }
+
+            _rosterSearchKeys.Clear();
+            for (int i = 0; i < _rosters.Count; i++)
+            {
+                _rosterSearchKeys.Add(GetRosterLabel(_rosters[i]));
+            }
 
             AllyUnitDefinition preferredUnit = AssetDatabase.LoadAssetAtPath<AllyUnitDefinition>(preferredUnitPath);
             AllyUnitRoster preferredRoster = AssetDatabase.LoadAssetAtPath<AllyUnitRoster>(preferredRosterPath);

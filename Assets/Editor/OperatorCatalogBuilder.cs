@@ -46,35 +46,140 @@ namespace RCCom.EditorTools
                     throw new InvalidOperationException($"먼저 오퍼레이터 에셋을 생성해야 합니다: {definitionPath}");
                 }
 
-                string address = $"operator/{recipe.operatorId}";
-                ConfigureAddressable(settings, definitionPath, recipe, address);
+                ConfigureAddressable(settings, definitionPath, recipe, GetAddress(recipe.operatorId));
                 expectedGroupNames.Add(GetGroupName(recipe.operatorId, recipe.remoteContent));
-                entries.Add(new OperatorCatalogEntry
-                {
-                    operatorId = recipe.operatorId,
-                    displayName = recipe.displayName,
-                    playStyleDescription = recipe.playStyleDescription,
-                    // 원격 Definition의 선택 초상화를 로컬 카탈로그가 직접 참조하면
-                    // CDN 콘텐츠가 본체 빌드로 새어 나온다. 원격은 Definition을 받은 뒤
-                    // 실제 초상화를 사용하고, 카탈로그에는 ID/설명만 남긴다.
-                    previewPortrait = recipe.remoteContent ? null : definition.selectionPortrait,
-                    managementPortrait = recipe.remoteContent ? null : definition.managementPortrait,
-                    address = address,
-                    remoteContent = recipe.remoteContent,
-                    requiredBestWave = recipe.requiredBestWave,
-                    unitPreviews = BuildUnitPreviews(definition, recipe.remoteContent),
-                });
+                entries.Add(CreateEntry(recipe, definition));
             }
 
             RemoveStaleGeneratedGroups(settings, expectedGroupNames);
 
-            catalog.entries = entries;
-            EditorUtility.SetDirty(catalog);
+            ApplyEntriesIfChanged(catalog, entries, null);
             EditorUtility.SetDirty(settings);
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
 
             Debug.Log($"[OperatorCatalogBuilder] 카탈로그 {entries.Count}명 및 Addressables 그룹 갱신 완료");
+        }
+
+        /// <summary>
+        /// 오퍼레이터 한 명만 카탈로그와 Addressables에 반영한다. 다른 오퍼레이터의 카탈로그
+        /// 항목은 기존 값을 그대로 두어, 손대지 않은 캐릭터의 에셋이 다시 쓰이지 않게 한다.
+        /// 사라진 그룹 정리처럼 전체를 봐야 하는 동기화는 BuildAll이 계속 담당한다.
+        /// </summary>
+        public static void BuildForOperator(OperatorAssetRecipe recipe, List<string> changedAssets)
+        {
+            if (recipe == null || string.IsNullOrWhiteSpace(recipe.operatorId))
+            {
+                throw new InvalidOperationException("유효하지 않은 오퍼레이터 레시피입니다.");
+            }
+
+            AddressableAssetSettings settings = AddressableAssetSettingsDefaultObject.GetSettings(true);
+            if (settings == null)
+            {
+                throw new InvalidOperationException("Addressables Settings를 만들지 못했습니다.");
+            }
+
+            settings.AddLabel(AddressablesLabel, false);
+
+            string definitionPath = $"Assets/Data/Operators/{recipe.operatorId}/OperatorDefinition.asset";
+            OperatorDefinition definition = AssetDatabase.LoadAssetAtPath<OperatorDefinition>(definitionPath);
+            if (definition == null)
+            {
+                throw new InvalidOperationException($"먼저 오퍼레이터 에셋을 생성해야 합니다: {definitionPath}");
+            }
+
+            if (ConfigureAddressable(settings, definitionPath, recipe, GetAddress(recipe.operatorId)))
+            {
+                EditorUtility.SetDirty(settings);
+                OperatorAssetBuilder.RecordChange(
+                    AssetDatabase.GetAssetPath(settings), changedAssets);
+            }
+
+            OperatorCatalog catalog = GetOrCreateCatalog();
+            var entries = catalog.entries == null
+                ? new List<OperatorCatalogEntry>()
+                : new List<OperatorCatalogEntry>(catalog.entries);
+            OperatorCatalogEntry updated = CreateEntry(recipe, definition);
+            int index = entries.FindIndex(
+                entry => entry != null &&
+                         string.Equals(entry.operatorId, recipe.operatorId, StringComparison.Ordinal));
+            if (index >= 0)
+            {
+                entries[index] = updated;
+            }
+            else
+            {
+                entries.Add(updated);
+            }
+
+            SortEntriesByRecipeOrder(entries);
+            ApplyEntriesIfChanged(catalog, entries, changedAssets);
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+
+            Debug.Log($"[OperatorCatalogBuilder] {recipe.operatorId} 카탈로그 항목과 Addressables 그룹 갱신 완료");
+        }
+
+        private static OperatorCatalogEntry CreateEntry(OperatorAssetRecipe recipe, OperatorDefinition definition)
+        {
+            return new OperatorCatalogEntry
+            {
+                operatorId = recipe.operatorId,
+                displayName = recipe.displayName,
+                playStyleDescription = recipe.playStyleDescription,
+                // 원격 Definition의 선택 초상화를 로컬 카탈로그가 직접 참조하면
+                // CDN 콘텐츠가 본체 빌드로 새어 나온다. 원격은 Definition을 받은 뒤
+                // 실제 초상화를 사용하고, 카탈로그에는 ID/설명만 남긴다.
+                previewPortrait = recipe.remoteContent ? null : definition.selectionPortrait,
+                managementPortrait = recipe.remoteContent ? null : definition.managementPortrait,
+                address = GetAddress(recipe.operatorId),
+                remoteContent = recipe.remoteContent,
+                requiredBestWave = recipe.requiredBestWave,
+                unitPreviews = BuildUnitPreviews(definition, recipe.remoteContent),
+            };
+        }
+
+        /// <summary>
+        /// 내용이 같은 카탈로그를 다시 저장하면 형상관리에 의미 없는 변경으로 잡히므로,
+        /// 직렬화 결과가 실제로 달라진 경우에만 더티 플래그를 세운다.
+        /// </summary>
+        private static void ApplyEntriesIfChanged(
+            OperatorCatalog catalog,
+            List<OperatorCatalogEntry> entries,
+            List<string> changedAssets)
+        {
+            string before = EditorJsonUtility.ToJson(catalog);
+            catalog.entries = entries;
+            if (EditorJsonUtility.ToJson(catalog) == before)
+            {
+                return;
+            }
+
+            EditorUtility.SetDirty(catalog);
+            OperatorAssetBuilder.RecordChange(CatalogPath, changedAssets);
+        }
+
+        private static void SortEntriesByRecipeOrder(List<OperatorCatalogEntry> entries)
+        {
+            var order = new Dictionary<string, int>(StringComparer.Ordinal);
+            foreach (OperatorAssetRecipe recipe in LoadRecipes())
+            {
+                order[recipe.operatorId] = recipe.catalogOrder;
+            }
+
+            entries.Sort((left, right) =>
+            {
+                // 레시피가 사라진 항목은 뒤로 밀어 두고 검증이 잡게 한다.
+                int leftOrder = order.TryGetValue(left.operatorId, out int leftValue) ? leftValue : int.MaxValue;
+                int rightOrder = order.TryGetValue(right.operatorId, out int rightValue) ? rightValue : int.MaxValue;
+                int compared = leftOrder.CompareTo(rightOrder);
+                return compared != 0 ? compared : string.CompareOrdinal(left.operatorId, right.operatorId);
+            });
+        }
+
+        private static string GetAddress(string operatorId)
+        {
+            return $"operator/{operatorId}";
         }
 
         private static List<OperatorUnitPreview> BuildUnitPreviews(
@@ -108,12 +213,17 @@ namespace RCCom.EditorTools
             return previews;
         }
 
-        private static void ConfigureAddressable(
+        /// <summary>
+        /// 그룹과 엔트리를 기대 상태로 맞추고, 실제로 바꾼 것이 있는지 돌려준다.
+        /// 이미 같은 값이면 다시 쓰지 않아 Addressables 에셋이 불필요하게 갱신되지 않는다.
+        /// </summary>
+        private static bool ConfigureAddressable(
             AddressableAssetSettings settings,
             string definitionPath,
             OperatorAssetRecipe recipe,
             string address)
         {
+            bool changed = false;
             string groupName = GetGroupName(recipe.operatorId, recipe.remoteContent);
             AddressableAssetGroup group = settings.FindGroup(groupName);
             if (group == null)
@@ -126,32 +236,81 @@ namespace RCCom.EditorTools
                     null,
                     typeof(BundledAssetGroupSchema),
                     typeof(ContentUpdateGroupSchema));
+                changed = true;
             }
 
             BundledAssetGroupSchema bundled = group.GetSchema<BundledAssetGroupSchema>();
             if (bundled == null)
             {
                 bundled = group.AddSchema<BundledAssetGroupSchema>();
+                changed = true;
             }
 
             if (group.GetSchema<ContentUpdateGroupSchema>() == null)
             {
                 group.AddSchema<ContentUpdateGroupSchema>();
+                changed = true;
             }
 
-            bundled.BuildPath.SetVariableByName(
-                settings,
-                recipe.remoteContent ? AddressableAssetSettings.kRemoteBuildPath : AddressableAssetSettings.kLocalBuildPath);
-            bundled.LoadPath.SetVariableByName(
-                settings,
-                recipe.remoteContent ? AddressableAssetSettings.kRemoteLoadPath : AddressableAssetSettings.kLocalLoadPath);
-            bundled.BundleMode = BundledAssetGroupSchema.BundlePackingMode.PackTogether;
-            bundled.IncludeInBuild = true;
+            string buildPath = recipe.remoteContent
+                ? AddressableAssetSettings.kRemoteBuildPath
+                : AddressableAssetSettings.kLocalBuildPath;
+            string loadPath = recipe.remoteContent
+                ? AddressableAssetSettings.kRemoteLoadPath
+                : AddressableAssetSettings.kLocalLoadPath;
+            bool schemaChanged = false;
+            if (bundled.BuildPath.GetName(settings) != buildPath)
+            {
+                bundled.BuildPath.SetVariableByName(settings, buildPath);
+                schemaChanged = true;
+            }
+
+            if (bundled.LoadPath.GetName(settings) != loadPath)
+            {
+                bundled.LoadPath.SetVariableByName(settings, loadPath);
+                schemaChanged = true;
+            }
+
+            if (bundled.BundleMode != BundledAssetGroupSchema.BundlePackingMode.PackTogether)
+            {
+                bundled.BundleMode = BundledAssetGroupSchema.BundlePackingMode.PackTogether;
+                schemaChanged = true;
+            }
+
+            if (!bundled.IncludeInBuild)
+            {
+                bundled.IncludeInBuild = true;
+                schemaChanged = true;
+            }
+
+            if (schemaChanged)
+            {
+                EditorUtility.SetDirty(bundled);
+                EditorUtility.SetDirty(group);
+                changed = true;
+            }
 
             string guid = AssetDatabase.AssetPathToGUID(definitionPath);
+            AddressableAssetEntry existing = settings.FindAssetEntry(guid);
+            if (existing == null || existing.parentGroup != group)
+            {
+                changed = true;
+            }
+
             AddressableAssetEntry entry = settings.CreateOrMoveEntry(guid, group, false, true);
-            entry.address = address;
-            entry.SetLabel(AddressablesLabel, true, true, false);
+            if (entry.address != address)
+            {
+                entry.address = address;
+                changed = true;
+            }
+
+            if (!entry.labels.Contains(AddressablesLabel))
+            {
+                entry.SetLabel(AddressablesLabel, true, true, false);
+                changed = true;
+            }
+
+            return changed;
         }
 
         public static string GetGroupName(string operatorId, bool remoteContent)

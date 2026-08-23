@@ -1232,3 +1232,63 @@ Phase 0 자동화 경로를 실제로 열고, 이후 오퍼레이터별 원격 �
 - PR #10의 SpriteSwap 상태 구분을 반영해 Normal/Selected/Disabled는 `_0`, Highlighted/Pressed는 `_1`을 사용한다.
 - Deploy 버튼은 콘텐츠 로딩 중에만 비활성화하고, 잠금 여부는 기존 `Deploy()` 가드가 판정한다. 잠금 슬롯에서도 포인터 호버 표현은 유지된다.
 - PR의 “현재 활성 오퍼레이터 클릭 차단”은 적용하지 않았다. 단일 오퍼레이터 상태에서도 버튼이 죽은 것처럼 보이지 않도록 현재 선택을 다시 Deploy하는 기존 통합 결정을 유지한다.
+
+## 2026-08-23 — 카시아 아군 유닛 아트·로드아웃 에셋 연결
+
+### 맥락
+- 카시아의 아군 유닛을 테스트 수직 슬라이스 에셋과 분리된 제출용 데이터로 만들고, 두 유닛의 Sprite·수치·출격 순서를 하나의 원본 Roster에서 관리할 필요가 있었다.
+- `OperatorAssetBuilder.BuildAll()`은 모든 JSON 레시피를 순회하므로 카시아를 빌드할 때 칼리스테·실비아의 생성물과 공용 생성 파일도 함께 갱신될 수 있다. 커밋 단위에서 카시아 범위를 분리하지 않으면 이번 작업의 변경 근거와 다른 오퍼레이터 산출물이 섞인다.
+
+### 결정
+- `Assets/Art/AllyUnits/`에 방호 요원과 전진 사수 Sprite PNG 및 Unity가 생성한 폴더·텍스처 `.meta`를 등록했다. Definition은 이 Sprite GUID를 직접 참조하고 별도 런타임 뷰나 유닛별 프리팹을 만들지 않는다.
+- `cassia-guard`와 `cassia-vanguard` Definition, `cassia-ally-unit-roster` 원본, 공용 `UnitCombatSettings`를 추가했다. 원본 Roster는 레시피의 입력으로 유지하고, `Assets/Data/Operators/cassia/AllyUnitRoster.asset`은 Builder가 만든 오퍼레이터 로드아웃 출력으로 분리했다.
+- `Cassia.json`의 `sourceAllyUnitRosterPath`를 연결하고 기존 Builder를 실행해 카시아 `OperatorDefinition`과 카탈로그 유닛 미리보기를 생성했다. 전투 코드는 수정하지 않고 기존 효과 SO·Definition/Roster 조립 경로를 그대로 사용한다.
+- `AllyUnitStudioWindow`의 배열 편집은 클릭 이벤트 중 즉시 직렬화 배열을 바꾸지 않고 다음 Layout 이벤트에서 적용하도록 보정했다. IMGUI의 Layout/Repaint 컨트롤 수 불일치로 검색·효과·Roster 편집 포커스가 옆 필드로 튀는 문제를 데이터 제작 도구에서 차단하기 위해서다.
+
+### 의도적으로 하지 않은 것
+- 칼리스테·실비아의 Definition/Roster/대화 및 그 오퍼레이터별 Builder 산출물은 이번 커밋에 포함하지 않았다. `Build All`이 함께 건드린 파일은 카시아 변경과 독립된 작업으로 남긴다.
+- 공용 Addressables 설정과 카탈로그의 실비아 관리 포트레잇 변경은 포함하지 않았다. 카시아 유닛 연결에 필요한 카탈로그 hunk만 반영했다.
+- 씬의 타일맵·UI·TMP 자동 직렬화 변경은 포함하지 않았다. 이번 작업과 무관한 기존 작업 트리 변경을 보존하고 커밋 범위를 오퍼레이터 데이터에 한정했다.
+
+### 검증
+- Unity `6000.3.13f1` Pipeline에서 `recompile` 결과 `up_to_date`를 확인했다.
+- `OperatorAssetValidator.ValidateAll(false)`가 `True`를 반환했고, 카시아 Definition·Roster·Catalog의 Sprite/효과/Addressables 참조를 검증했다.
+- 콘솔 신규 오류는 0건이었다. 기존 `Assets/Data/Definition/Tower/축적.asset` 미등록 경고 1건만 유지됐다.
+
+## 2026-08-23 — 아군 유닛 View 스케일·단일 오퍼레이터 빌드·경계 교착 보정
+
+### 결정
+- 공용 `AllyUnitView`의 기본 목표 표시 크기를 `0.9`에서 `2.0`으로 조정하고, 생성된 공용 프리팹에도 같은 값을 반영했다. 유닛별 프리팹을 늘리지 않고 Definition Sprite의 실제 크기에 따라 런타임에서 맞추는 기존 구조는 유지한다.
+- `OperatorAssetBuilder.BuildSingle()`과 `OperatorCatalogBuilder.BuildForOperator()`를 추가하고 Operator Studio에 `Save + Validate + Build This Operator` 진입점을 배치했다. 레시피를 하나만 반영할 때 다른 오퍼레이터의 Definition/Roster/Addressables 그룹을 다시 저장하지 않도록 하며, `Build All`은 오퍼레이터 추가·삭제 시의 전체 동기화 용도로 남긴다.
+- Builder와 Catalog Builder는 직렬화 전후 값을 비교해 실제 내용이 달라질 때만 `SetDirty`하고, 변경된 에셋 목록을 단일 빌드 결과에 표시한다. 같은 값을 다시 쓰는 에셋이 커밋에 섞이는 것을 줄이기 위한 장치다.
+- `AllyUnitTargeting.IsWithinRange()`에 `0.001` 허용 오차를 공통 적용했다. 접촉 경계에서 float 반올림으로 실제 거리가 사거리보다 극소량 커지면 이동량 0·타깃 null이 반복되던 교착을, 밸런스에 영향을 주지 않는 경계 보정으로 해소한다.
+
+### 의도적으로 하지 않은 것
+- `Build All`은 이번 작업에서 실행·커밋하지 않았다. 카시아 외 오퍼레이터의 Builder 산출물과 공용 Addressables 파일을 이번 범위에 섞지 않기 위해서다.
+- 기준 커밋과 내용이 동일했던 Addressables/Roster/대화 에셋의 상태 변경과 TMP 폴백 폰트 재직렬화는 복원했다. 실비아 관리 초상화와 `DefenseScene`의 타일맵·UI 변경은 별도 작업으로 판단해 작업 트리에 보존하고 이번 커밋에서는 제외했다.
+
+### 검증
+- Unity `6000.3.13f1` Pipeline `recompile` 결과 `up_to_date`, 컴파일 오류 0건.
+- `AllyUnitViewPrefabBuilder.Validate()`, `AllyUnitCombatVerifier.Verify()`, `OperatorAssetValidator.ValidateAll(false)`를 CLI에서 통과시켰다.
+- 검증 후 Unity 콘솔 신규 오류 0건을 확인했다.
+
+## 2026-08-23 — 실비아 관리 초상화 카탈로그 연결
+
+### 결정
+- 실비아(`racing`)의 `OperatorDefinition.managementPortrait`에 전용 관리 화면 포트릿을 연결했다.
+- 로컬 카탈로그의 실비아 항목에도 같은 Sprite를 연결해 관리 카드가 Definition 다운로드 전에도 빈 이미지로 표시되지 않게 했다.
+- `UnitDeployController`의 전투 설정 승격은 이미 `0f0ee71`에서 테스트 설정 GUID를 정식 `UnitCombatSettings` GUID로 교체했으므로 이번 커밋에서는 중복 반영하지 않았다.
+
+### 검증
+- 카탈로그와 Definition의 실비아 관리 초상화 GUID가 일치하는 것을 확인했다.
+- 기존 오퍼레이터 에셋 검증과 Unity 콘솔 오류 검사를 다시 수행했다.
+
+## 2026-08-23 — 카시아 아군 유닛 밸런스 조정
+
+### 결정
+- 방호 요원(`cassia-guard`)의 최대 체력을 `110 → 40`, 공격력을 `8 → 6`으로 낮췄다.
+- 전진 사수(`cassia-vanguard`)의 최대 체력을 `40 → 20`, 공격력을 `4 → 3`으로 낮췄다.
+- 배치 비용·이동 속도·공격 간격·사거리·탐지 범위는 유지해, 이번 조정의 영향이 전투 내구도와 화력에만 한정되도록 했다.
+
+### 검증
+- 두 Definition의 ID와 Roster 참조를 유지한 채 수치만 변경된 것을 확인했다.
