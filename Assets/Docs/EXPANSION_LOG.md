@@ -1254,3 +1254,20 @@ Phase 0 자동화 경로를 실제로 열고, 이후 오퍼레이터별 원격 �
 - Unity `6000.3.13f1` Pipeline에서 `recompile` 결과 `up_to_date`를 확인했다.
 - `OperatorAssetValidator.ValidateAll(false)`가 `True`를 반환했고, 카시아 Definition·Roster·Catalog의 Sprite/효과/Addressables 참조를 검증했다.
 - 콘솔 신규 오류는 0건이었다. 기존 `Assets/Data/Definition/Tower/축적.asset` 미등록 경고 1건만 유지됐다.
+
+## 2026-08-23 — 아군 유닛 View 스케일·단일 오퍼레이터 빌드·경계 교착 보정
+
+### 결정
+- 공용 `AllyUnitView`의 기본 목표 표시 크기를 `0.9`에서 `2.0`으로 조정하고, 생성된 공용 프리팹에도 같은 값을 반영했다. 유닛별 프리팹을 늘리지 않고 Definition Sprite의 실제 크기에 따라 런타임에서 맞추는 기존 구조는 유지한다.
+- `OperatorAssetBuilder.BuildSingle()`과 `OperatorCatalogBuilder.BuildForOperator()`를 추가하고 Operator Studio에 `Save + Validate + Build This Operator` 진입점을 배치했다. 레시피를 하나만 반영할 때 다른 오퍼레이터의 Definition/Roster/Addressables 그룹을 다시 저장하지 않도록 하며, `Build All`은 오퍼레이터 추가·삭제 시의 전체 동기화 용도로 남긴다.
+- Builder와 Catalog Builder는 직렬화 전후 값을 비교해 실제 내용이 달라질 때만 `SetDirty`하고, 변경된 에셋 목록을 단일 빌드 결과에 표시한다. 같은 값을 다시 쓰는 에셋이 커밋에 섞이는 것을 줄이기 위한 장치다.
+- `AllyUnitTargeting.IsWithinRange()`에 `0.001` 허용 오차를 공통 적용했다. 접촉 경계에서 float 반올림으로 실제 거리가 사거리보다 극소량 커지면 이동량 0·타깃 null이 반복되던 교착을, 밸런스에 영향을 주지 않는 경계 보정으로 해소한다.
+
+### 의도적으로 하지 않은 것
+- `Build All`은 이번 작업에서 실행·커밋하지 않았다. 카시아 외 오퍼레이터의 Builder 산출물과 공용 Addressables 파일을 이번 범위에 섞지 않기 위해서다.
+- 기준 커밋과 내용이 동일했던 Addressables/Roster/대화 에셋의 상태 변경과 TMP 폴백 폰트 재직렬화는 복원했다. 실비아 관리 초상화와 `DefenseScene`의 타일맵·UI 변경은 별도 작업으로 판단해 작업 트리에 보존하고 이번 커밋에서는 제외했다.
+
+### 검증
+- Unity `6000.3.13f1` Pipeline `recompile` 결과 `up_to_date`, 컴파일 오류 0건.
+- `AllyUnitViewPrefabBuilder.Validate()`, `AllyUnitCombatVerifier.Verify()`, `OperatorAssetValidator.ValidateAll(false)`를 CLI에서 통과시켰다.
+- 검증 후 Unity 콘솔 신규 오류 0건을 확인했다.
