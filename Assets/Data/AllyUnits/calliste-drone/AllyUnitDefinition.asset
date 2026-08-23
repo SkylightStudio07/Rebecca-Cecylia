@@ -25,6 +25,8 @@ MonoBehaviour:
     projectileSpeed: 8
   effects:
   - {fileID: 11400000, guid: 7a2b57b438585b34bad32d4cd10998bc, type: 2}
+  visualEffects:
+  - {fileID: 11400000, guid: 7a1c62fa4f7fcf84e8959e0ce734c6e9, type: 2}
   sprite: {fileID: -2236739543955786705, guid: a4e49e29c671100468f2165a179ea335, type: 3}
   tint: {r: 1, g: 1, b: 1, a: 1}
   spriteForwardOffsetDegrees: 45

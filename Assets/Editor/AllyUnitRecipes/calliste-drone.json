@@ -13,6 +13,9 @@
     "effectPaths": [
         "Assets/Data/Effects/Unit/TacticalRelayAuraEffect.asset"
     ],
+    "visualEffectPaths": [
+        "Assets/Data/Effects/Unit/Visual/CallisteBuffRangePulseVisualEffect.asset"
+    ],
     "remoteContent": false,
     "data": {
         "unitId": "calliste-drone",

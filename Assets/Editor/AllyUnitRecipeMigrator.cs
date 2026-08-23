@@ -5,6 +5,7 @@ using System.Text;
 using RCCom.Data;
 using RCCom.Definitions.Unit;
 using RCCom.Effects.Unit;
+using RCCom.Effects.UnitVisual;
 using UnityEditor;
 using UnityEngine;
 
@@ -248,6 +249,21 @@ namespace RCCom.EditorTools
                 }
             }
 
+            var visualEffectPaths = new List<string>();
+            if (definition.visualEffects != null)
+            {
+                foreach (AllyUnitVisualEffectBase visualEffect in definition.visualEffects)
+                {
+                    if (visualEffect == null)
+                    {
+                        throw new InvalidOperationException(
+                            $"비주얼 효과 목록에 null이 있어 레시피로 옮길 수 없습니다: {AssetDatabase.GetAssetPath(definition)}");
+                    }
+
+                    visualEffectPaths.Add(AssetDatabase.GetAssetPath(visualEffect));
+                }
+            }
+
             return new AllyUnitAssetRecipe
             {
                 unitId = data.unitId,
@@ -257,6 +273,7 @@ namespace RCCom.EditorTools
                 tint = definition.tint,
                 spriteForwardOffsetDegrees = definition.spriteForwardOffsetDegrees,
                 effectPaths = effectPaths,
+                visualEffectPaths = visualEffectPaths,
                 remoteContent = false,
                 data = CloneData(data),
             };

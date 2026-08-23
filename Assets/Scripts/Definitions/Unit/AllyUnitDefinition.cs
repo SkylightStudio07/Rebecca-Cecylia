@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using RCCom.Data;
 using RCCom.Effects.Unit;
+using RCCom.Effects.UnitVisual;
 using UnityEngine;
 
 namespace RCCom.Definitions.Unit
@@ -14,6 +15,7 @@ namespace RCCom.Definitions.Unit
     {
         public AllyUnitData data = new();
         public List<AllyUnitEffectBase> effects = new();
+        public List<AllyUnitVisualEffectBase> visualEffects = new();
         public Sprite sprite;
 
         [Tooltip("정식 스프라이트가 아직 없을 때 공용 사각형 마커에 적용할 색. 스프라이트가 있으면 기본 틴트로도 사용한다.")]

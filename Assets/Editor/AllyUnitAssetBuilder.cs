@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using RCCom.Data;
 using RCCom.Definitions.Unit;
 using RCCom.Effects.Unit;
+using RCCom.Effects.UnitVisual;
 using UnityEditor;
 using UnityEngine;
 
@@ -97,6 +98,20 @@ namespace RCCom.EditorTools
                 }
             }
 
+            var visualEffects = new List<AllyUnitVisualEffectBase>();
+            if (recipe.visualEffectPaths != null)
+            {
+                foreach (string visualEffectPath in recipe.visualEffectPaths)
+                {
+                    AllyUnitVisualEffectBase visualEffect =
+                        LoadOptional<AllyUnitVisualEffectBase>(visualEffectPath);
+                    if (visualEffect != null)
+                    {
+                        visualEffects.Add(visualEffect);
+                    }
+                }
+            }
+
             string unitFolder = $"{OutputRoot}/{recipe.unitId}";
             EnsureFolder(unitFolder);
             AllyUnitDefinition definition = GetOrCreateOwnedAsset<AllyUnitDefinition>(
@@ -106,6 +121,7 @@ namespace RCCom.EditorTools
             {
                 asset.data = CloneData(recipe);
                 asset.effects = effects;
+                asset.visualEffects = visualEffects;
                 asset.sprite = sprite;
                 asset.tint = recipe.tint;
                 asset.spriteForwardOffsetDegrees = recipe.spriteForwardOffsetDegrees;
