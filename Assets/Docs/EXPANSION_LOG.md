@@ -1481,3 +1481,22 @@ Phase 0 자동화 경로를 실제로 열고, 이후 오퍼레이터별 원격 �
 
 - `UILoadingTransitionCanvas`는 로비에서 `DefenseScene`으로 출격할 때만 사용하도록 범위를 제한했다. 스테이지·엔드리스 출격과 레거시 New Game 폴백은 로딩 연출을 유지한다.
 - 오퍼레이터 콘텐츠 다운로드, 로비 내부 패널(오퍼레이터·모드·스테이지·환경설정·관리) 이동, 결과 화면의 재도전·로비 복귀는 즉시 전환한다. 같은 로비 안에서 매번 화면 전체가 닫히면 조작 흐름이 느려지고, 결과 이후의 재도전은 출격 연출로 오인될 수 있기 때문이다.
+## 2026-08-24 — Enemy/Ally Studio 및 전투 콘텐츠 프리로드 파이프라인
+
+### 결정
+- 적과 아군 유닛 모두 JSON 레시피를 단일 원본으로 삼고, Definition·Catalog·Addressables 그룹을 에디터 빌더가 함께 갱신한다. 따라서 신규 종류를 추가할 때 전투 런타임 C# 클래스를 만들 필요가 없다.
+- 아군 Roster는 직렬화된 `unitIds`만 보유한다. `units`는 Addressables 프리로드 결과를 넣는 비직렬화 런타임 목록으로 분리해, 오퍼레이터 번들이 유닛 Definition을 의존성으로 끌고 가지 않게 했다.
+- `BattleContentCache`는 적/아군 Definition과 Addressables 핸들을 애플리케이션 실행 동안 보유한다. 씬 재로드 Retry에서는 캐시를 유지하고, 새 애플리케이션 실행의 SubsystemRegistration에서만 핸들을 해제한다.
+- TitleScene의 모드 선택은 전투 씬을 열기 전에 선택된 아군 유닛과 스테이지/무한 모드의 적을 프리로드한다. `WaveManager`는 로컬 Roster의 직접 참조가 아니라 캐시에서 ID로 Definition을 해결한다.
+- `AllyUnitFoundationVerifier`는 Roster 참조 동일성이 아니라 런타임 클론의 ID와 Definition 목록 계약을 검증한다. 클론은 원본 SO를 수정하지 않으므로 Play 모드 종료 후 에셋이 오염되지 않는다.
+
+### 의도적으로 하지 않은 것
+- 새 `AllyUnitManager`나 `EnemyManager`는 만들지 않았다. 다수 개체의 상태는 기존 순수 C# 인스턴스가 보유하고, 매니저는 전투 흐름과 목록 조율만 담당한다.
+- `GameResultUI`의 직접 `SceneManager.LoadScene` Retry 경로는 캐시 생존을 검증하기 위해 유지했다. 전투 씬 재로드가 캐시를 무효화하지 않는 것이 이번 단계의 계약이다.
+- 원격 URL은 저장소에 하드코딩하지 않았다. 실제 CDN 주소가 확정될 때 환경 변수와 Addressables 프로필 설정 메뉴를 실행한다.
+
+### 검증
+- Unity 6000.3.13f1에서 컴파일 `failed=false`, `errors=[]`.
+- 아군 레시피/Definition/Catalog/Addressables 검증 통과(레시피 4개, 경고 0건), 오퍼레이터 검증 통과(기존 미등록 타워 경고 1건).
+- Foundation 계약, Stage/Chapter UI 배선, WebGL Addressables 사전 검증 통과.
+- Roster 5개를 Unity `ForceReserializeAssets`로 현재 스키마에 재직렬화해 이전 Definition 참조를 제거했다.
