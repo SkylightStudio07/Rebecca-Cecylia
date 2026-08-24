@@ -10,7 +10,9 @@
         "a": 1.0
     },
     "spriteForwardOffsetDegrees": 0.0,
-    "effectPaths": [],
+    "effectPaths": [
+        "Assets/Data/Effects/Unit/SlowAuraEffect.asset"
+    ],
     "visualEffectPaths": [
         "Assets/Data/Effects/Unit/Visual/RangeAuraWhite.asset"
     ],
@@ -19,7 +21,7 @@
         "unitId": "aurora-slow-drone",
         "displayName": "중장갑 감속 드론",
         "deployCost": 60,
-        "maxHealth": 60.0,
+        "maxHealth": 100.0,
         "moveSpeed": 2.5,
         "attackDamage": 0.0,
         "attackInterval": 10.0,

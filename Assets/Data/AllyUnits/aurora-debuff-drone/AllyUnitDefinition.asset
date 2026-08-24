@@ -16,14 +16,15 @@ MonoBehaviour:
     unitId: aurora-debuff-drone
     displayName: "\uC911\uC7A5\uAC11 \uC57D\uD654 \uB4DC\uB860"
     deployCost: 60
-    maxHealth: 60
+    maxHealth: 80
     moveSpeed: 2.5
     attackDamage: 0
     attackInterval: 10
     attackRange: 6
     detectionRange: 6
     projectileSpeed: 8
-  effects: []
+  effects:
+  - {fileID: 11400000, guid: a01d8656682899bf9f5fa7a0fa1fda91, type: 2}
   visualEffects:
   - {fileID: 11400000, guid: a9d93482827b2b041b568d47e3318f73, type: 2}
   sprite: {fileID: -4417582713298616247, guid: a7433232eec441b44b6fed99d2e48ce9, type: 3}

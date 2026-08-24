@@ -16,14 +16,15 @@ MonoBehaviour:
     unitId: aurora-slow-drone
     displayName: "\uC911\uC7A5\uAC11 \uAC10\uC18D \uB4DC\uB860"
     deployCost: 60
-    maxHealth: 60
+    maxHealth: 100
     moveSpeed: 2.5
     attackDamage: 0
     attackInterval: 10
     attackRange: 12
     detectionRange: 12
     projectileSpeed: 8
-  effects: []
+  effects:
+  - {fileID: 11400000, guid: c5424bb8e474b2797b57cd6abf2bedab, type: 2}
   visualEffects:
   - {fileID: 11400000, guid: 1d6faa60a4ddaef4ca128c6bb2744ccb, type: 2}
   sprite: {fileID: -7489246896140172759, guid: 7cf264685bdfa6b4da89d1794ee316b0, type: 3}
