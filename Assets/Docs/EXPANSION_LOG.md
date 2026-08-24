@@ -1585,3 +1585,63 @@ Phase 0 자동화 경로를 실제로 열고, 이후 오퍼레이터별 원격 �
 
 ### 사람이 할 일
 - 요청대로 플레이 테스트에서 투사체 크기·이동 가독성과 히트 스파크 밀도를 최종 비주얼 검수한다.
+
+## 2026-08-24 — 전투 VFX 1단계 후속 정리: AttackFlash 중첩 제거 + 플레이어/맹독 배선 누락 보완
+
+### 문제
+- `DamageEffect`/`SplashDamageEffect`/`PierceDamageEffect`가 `FakeProjectile`(신규 투사체) 도입 후에도
+  `AttackFlash.Spawn`(기존 사각형 LineRenderer)을 여전히 같이 호출하고 있어, 공격할 때마다 두 시각효과가
+  겹쳐 보였다({{user}} 발견).
+- 직전 턴 킥오프가 세 타워 효과만 예시로 짚어주는 바람에, 구조가 완전히 동일한
+  `PoisonDamageEffect.cs`(맹독 타워)가 `FakeProjectile` 배선에서 누락됐다 — 방치했으면 `AttackFlash` 제거
+  후 이 타워만 공격 시 시각효과가 전혀 없는 상태가 될 뻔했다.
+- `PlayerController.TryAutoAttack()`도 같은 이유로 누락돼 있었다. `PlayerData.projectileSpeed`를 쓰는
+  `FakeProjectile.Spawn(prefab, from, to, PlayerData)` 오버로드는 1단계에서 이미 만들어 뒀는데
+  호출부만 안 붙어 있었다.
+
+### 결정
+- `DamageEffect`/`SplashDamageEffect`/`PierceDamageEffect`/`PoisonDamageEffect` 네 파일 전부에서
+  `attackFlashPrefab` 필드와 `AttackFlash.Spawn(...)` 호출을 제거했다. `PoisonDamageEffect`에는
+  `DamageEffect`와 동일한 방식으로 `fakeProjectilePrefab` 필드 + `FakeProjectile.Spawn(...)`을 새로
+  추가했다 — `target.TakeDamage`/`target.ApplyPoison` 순서(판정)는 건드리지 않았다.
+- `PlayerController.cs`도 `attackFlashPrefab` → `fakeProjectilePrefab`로 교체하고,
+  `FakeProjectile.Spawn(fakeProjectilePrefab, transform.position, target.position, data)`를
+  `TakeDamage` 바로 다음 줄에 추가했다. `FakeProjectile.cs` 자체는 수정하지 않았다(오버로드가 이미 있었음).
+- `Assets/Editor/CombatVfxAssetBuilder.cs`를 확장해 이번 배선도 재현 가능하게 만들었다:
+  - `ConnectEffect<PoisonDamageEffect>`를 기존 세 효과 옆에 추가.
+  - `PlayerController`는 SO/프리팹이 아니라 `DefenseScene.unity`에 직접 배치된 씬 오브젝트라, 기존
+    `ConnectEffect<TEffect>` 패턴을 그대로 못 써서 `ConnectPlayerController(prefab)`을 새로 작성했다 —
+    씬을 열어(원래 열려 있지 않았다면 추가로 열고) `PlayerController`를 찾아 `SerializedObject`로 필드를
+    바꾼 뒤 저장하고, 원래 안 열려 있던 씬이면 다시 닫아 에디터가 작업 중이던 씬(TitleScene)을
+    조용히 바꿔버리지 않게 했다. `Validate()`에도 `ValidatePlayerController`를 대응 추가.
+- 이 메뉴(`RCCom/Combat VFX/Build Projectile And Hit Spark`)를 직접 재실행해 네 SO + 플레이어 씬
+  오브젝트 배선을 실제로 갱신했다(손으로 인스펙터를 만지지 않음, AGENTS.md §3-2 원칙).
+
+### 의도적으로 하지 않은 것
+- `AttackFlash.cs` 클래스 자체는 삭제하지 않았다. 정리 후 `Assets/Scripts` 전체에서
+  `AttackFlash.Spawn` 호출이 0건임을 grep으로 확인했지만(`GameManager.ClearPool()` 호출만 남음),
+  이 프리팹을 참조하는 다른 프리팹/씬이 더 있을 수 있어 스크립트를 지우면 `Missing Script`로
+  깨질 위험이 있다. 삭제는 별도 검토가 필요한 작업으로 남겨둔다.
+- 아군 유닛 기본 공격(`Assets/Scripts/Effects/Unit/Concrete/BasicAttackEffect.cs`)에는 여전히
+  아무 시각효과가 없다. `AllyUnitData` 오버로드도 이미 있어 붙이기는 쉽지만, 이번 요청 범위(플레이어)
+  밖이라 손대지 않았다.
+- §3-②(레이저 빔), §3-③(충격파 링), §4(사망 페이드)는 이번 정리와 무관해 손대지 않았다.
+
+### 검증
+- Unity 6000.3.13f1 Pipeline `recompile` → `recompile_status`로 에러 0건 확인(코드 수정 직후,
+  에디터 툴 확장 직후 각각 별도로 재확인).
+- `unity command menu --path "RCCom/Combat VFX/Build Projectile And Hit Spark"` 실행 후 콘솔에서
+  `[CombatVfxAssetBuilder] 투사체·히트 스파크 생성 및 네 공격 효과 + 플레이어 배선 완료`와
+  `검증 통과` 로그, error/exception 0건을 확인했다.
+- `unity command list_open_scenes`로 실행 전후 열린 씬이 `TitleScene` 하나로 동일함을 확인해
+  `ConnectPlayerController`의 씬 원복 로직이 의도대로 동작함을 검증했다.
+- `git diff`로 각 `.asset`/씬 변경분이 `attackFlashPrefab → fakeProjectilePrefab` 필드 교체 한 줄
+  (씬은 관련 라인 2줄)뿐임을 직접 확인했다. 단, `DefenseScene.unity`에는 무관한 부수 diff가 하나 더
+  있었다 — `GameResultUI`의 `baseCommodityReward`/`commodityPerCompletedMinute`/`maxCommodityTimeBonus`
+  필드가 이번에 처음 직렬화됐다. 코드엔 이미 있던 필드인데 스크립트 추가 이후 씬이 한 번도
+  재저장되지 않아 빠져 있던 것으로 보이며(`SaveScene` 호출의 부수효과), 값은 전부 코드 쪽 기본값과
+  같고 이번 작업의 로직 변경과는 무관하다.
+
+### 사람이 할 일
+- 없음 — 배선까지 이번 턴에 자동으로 완료했다. 플레이 테스트로 최종 눈으로 확인하고 싶다면
+  해도 되지만 필수는 아니다.
