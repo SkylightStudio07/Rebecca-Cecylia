@@ -1,0 +1,30 @@
+{
+    "unitId": "valentina-pyro-crawler",
+    "catalogOrder": 11,
+    "displayName": "속사 박격포 크롤러",
+    "spritePath": "Assets/Art/AllyUnits/valentina-pyro-crawler.png",
+    "tint": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+    },
+    "spriteForwardOffsetDegrees": -90.0,
+    "effectPaths": [
+        "Assets/Data/Effects/Unit/BasicAttackEffect.asset"
+    ],
+    "visualEffectPaths": [],
+    "remoteContent": true,
+    "data": {
+        "unitId": "valentina-pyro-crawler",
+        "displayName": "속사 박격포 크롤러",
+        "deployCost": 20,
+        "maxHealth": 20.0,
+        "moveSpeed": 1.0,
+        "attackDamage": 1.0,
+        "attackInterval": 0.125,
+        "attackRange": 8.0,
+        "detectionRange": 8.0,
+        "projectileSpeed": 8.0
+    }
+}
