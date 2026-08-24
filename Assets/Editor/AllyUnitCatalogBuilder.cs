@@ -19,8 +19,10 @@ namespace RCCom.EditorTools
         public const string CatalogPath = "Assets/Data/AllyUnits/AllyUnitCatalog.asset";
         public const string AllyUnitGroupPrefix = "AllyUnit-";
         public const string AddressablesLabel = "ally-unit-definition";
+        public const string PreviewAddressablesLabel = "ally-unit-preview";
         private const string RecipeFolder = "Assets/Editor/AllyUnitRecipes";
         private const string GeneratedLabel = "RCCom.GeneratedAllyUnit";
+        private const string PreviewSlot = "preview";
 
         [MenuItem("RCCom/Ally Units/Build Ally Unit Catalog And Addressables")]
         public static void BuildAll()
@@ -42,6 +44,7 @@ namespace RCCom.EditorTools
             }
 
             settings.AddLabel(AddressablesLabel, false);
+            settings.AddLabel(PreviewAddressablesLabel, false);
             foreach (AllyUnitAssetRecipe recipe in recipes)
             {
                 string definitionPath = GetDefinitionPath(recipe.unitId);
@@ -82,6 +85,7 @@ namespace RCCom.EditorTools
             }
 
             settings.AddLabel(AddressablesLabel, false);
+            settings.AddLabel(PreviewAddressablesLabel, false);
             string definitionPath = GetDefinitionPath(recipe.unitId);
             AllyUnitDefinition definition = AssetDatabase.LoadAssetAtPath<AllyUnitDefinition>(definitionPath);
             if (definition == null)
@@ -128,6 +132,11 @@ namespace RCCom.EditorTools
             return $"{AllyUnitGroupPrefix}{unitId}-{(remoteContent ? "Remote" : "Local")}";
         }
 
+        public static string GetPreviewAddress(string unitId)
+        {
+            return $"ally-unit/{unitId}/{PreviewSlot}";
+        }
+
         public static string GetDefinitionPath(string unitId)
         {
             return $"Assets/Data/AllyUnits/{unitId}/AllyUnitDefinition.asset";
@@ -147,6 +156,12 @@ namespace RCCom.EditorTools
                 // 원격 Definition의 Sprite가 카탈로그로 새어 들어가면 본체 빌드에 의존성이
                 // 생긴다. tint는 값 타입이므로 다운로드 전 스와치로 항상 복사한다.
                 previewIcon = recipe.remoteContent ? null : definition.sprite,
+                // 위 Sprite가 원격이라 비어 있는 동안 상점/로스터 화면이 아이콘 한 장만 담긴
+                // 독립 번들을 내려받을 수 있도록 주소를 남긴다 — ConfigureAddressable이 같은
+                // 이름 규칙으로 그 번들을 등록해 둔다.
+                previewIconAddress = recipe.remoteContent && !string.IsNullOrWhiteSpace(recipe.spritePath)
+                    ? GetPreviewAddress(recipe.unitId)
+                    : null,
                 fallbackColor = definition.tint,
             };
         }
@@ -238,9 +253,16 @@ namespace RCCom.EditorTools
                 schemaChanged = true;
             }
 
-            if (bundled.BundleMode != BundledAssetGroupSchema.BundlePackingMode.PackTogether)
+            // 원격 그룹은 PackSeparately로 묶는다: 미리보기 아이콘을 Definition과 별개
+            // 항목으로 등록해도 PackTogether면 결국 한 번들로 합쳐져, 상점/로스터가 아이콘
+            // 하나만 보려 해도 프리팹·이펙트가 딸린 Definition 전체를 받게 된다. 로컬
+            // 그룹은 어차피 본체 빌드에 통째로 들어가므로 번들 수를 굳이 늘리지 않는다.
+            BundledAssetGroupSchema.BundlePackingMode desiredBundleMode = recipe.remoteContent
+                ? BundledAssetGroupSchema.BundlePackingMode.PackSeparately
+                : BundledAssetGroupSchema.BundlePackingMode.PackTogether;
+            if (bundled.BundleMode != desiredBundleMode)
             {
-                bundled.BundleMode = BundledAssetGroupSchema.BundlePackingMode.PackTogether;
+                bundled.BundleMode = desiredBundleMode;
                 schemaChanged = true;
             }
 
@@ -269,6 +291,29 @@ namespace RCCom.EditorTools
             {
                 entry.SetLabel(AddressablesLabel, true, true, false);
                 changed = true;
+            }
+
+            if (recipe.remoteContent && !string.IsNullOrWhiteSpace(recipe.spritePath))
+            {
+                string spriteGuid = AssetDatabase.AssetPathToGUID(recipe.spritePath);
+                if (string.IsNullOrEmpty(spriteGuid))
+                {
+                    throw new InvalidOperationException($"스프라이트 경로가 실제 에셋을 가리키지 않습니다: {recipe.spritePath}");
+                }
+
+                string previewAddress = GetPreviewAddress(recipe.unitId);
+                AddressableAssetEntry previewEntry = settings.CreateOrMoveEntry(spriteGuid, group, false, true);
+                if (previewEntry.address != previewAddress)
+                {
+                    previewEntry.address = previewAddress;
+                    changed = true;
+                }
+
+                if (!previewEntry.labels.Contains(PreviewAddressablesLabel))
+                {
+                    previewEntry.SetLabel(PreviewAddressablesLabel, true, true, false);
+                    changed = true;
+                }
             }
 
             return changed;

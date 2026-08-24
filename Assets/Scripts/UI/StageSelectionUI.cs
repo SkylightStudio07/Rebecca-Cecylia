@@ -227,10 +227,13 @@ namespace RCCom.UI
 
             if (operatorRewardPortrait != null)
             {
-                operatorRewardPortrait.sprite = rewardEntry.unlockRewardPortrait != null
+                Sprite localSprite = rewardEntry.unlockRewardPortrait != null
                     ? rewardEntry.unlockRewardPortrait
                     : rewardEntry.previewPortrait;
-                operatorRewardPortrait.enabled = operatorRewardPortrait.sprite != null;
+                string remoteAddress = !string.IsNullOrEmpty(rewardEntry.unlockRewardPortraitAddress)
+                    ? rewardEntry.unlockRewardPortraitAddress
+                    : rewardEntry.previewPortraitAddress;
+                RemotePreviewSpriteLoader.LoadInto(operatorRewardPortrait, localSprite, remoteAddress, Color.clear);
             }
 
             if (operatorRewardNameText != null)

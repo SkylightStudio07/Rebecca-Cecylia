@@ -16,6 +16,12 @@ namespace RCCom.Definitions.Unit
         public string address;
         public bool remoteContent;
         public Sprite previewIcon;
+
+        // previewIcon이 원격이라 비어 있을 때 RemotePreviewSpriteLoader가 내려받을 독립
+        // 번들 주소. Definition(프리팹·이펙트 포함) 전체를 당기지 않고 아이콘 한 장만 받는다.
+        [Tooltip("previewIcon이 원격이라 비어 있을 때 내려받을 Addressables 주소")]
+        public string previewIconAddress;
+
         public Color fallbackColor = Color.white;
     }
 }
