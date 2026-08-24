@@ -69,6 +69,20 @@ namespace RCCom.Runtime
                         record.affinity));
                 }
 
+                profile.operatorUpgrades ??= new System.Collections.Generic.List<OperatorUpgradeRecord>();
+                for (int i = profile.operatorUpgrades.Count - 1; i >= 0; i--)
+                {
+                    OperatorUpgradeRecord record = profile.operatorUpgrades[i];
+                    if (record == null || string.IsNullOrWhiteSpace(record.operatorId) ||
+                        string.IsNullOrWhiteSpace(record.trackId))
+                    {
+                        profile.operatorUpgrades.RemoveAt(i);
+                        continue;
+                    }
+
+                    record.level = Math.Max(0, record.level);
+                }
+
                 profile.presentedOperatorAcquisitionIds ??=
                     new System.Collections.Generic.List<string>();
                 for (int i = profile.presentedOperatorAcquisitionIds.Count - 1; i >= 0; i--)
