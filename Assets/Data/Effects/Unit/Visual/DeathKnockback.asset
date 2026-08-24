@@ -12,10 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ad488d86afeef6a4fbd74aec3cc559af, type: 3}
   m_Name: DeathKnockback
   m_EditorClassIdentifier: Assembly-CSharp::RCCom.Runtime.Visuals.DeathKnockbackVisualEffect
-  knockbackDistance: 0.25
-  knockbackDuration: 0.2
-  minRotationDegrees: 15
-  maxRotationDegrees: 30
+  knockbackDistance: 0.8
+  knockbackDuration: 0.25
+  minRotationDegrees: 8.1
+  maxRotationDegrees: 13.3
   targetAlpha: 0.75
   tintBrightness: 0.55
   holdDuration: 1.25
