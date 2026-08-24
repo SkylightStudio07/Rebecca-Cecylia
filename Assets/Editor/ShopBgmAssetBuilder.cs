@@ -14,7 +14,8 @@ namespace RCCom.EditorTools
     public static class ShopBgmAssetBuilder
     {
         private const string TitleScenePath = "Assets/Scenes/TitleScene.unity";
-        private const string ShopBgmPath = "Assets/Music/BGM/Rare_Item_Bgm.mp3";
+        private const string ShopBgmPath = "Assets/Music/BGM/Late_Hours_Rainfall.mp3";
+        private const string LegacyShopBgmPath = "Assets/Music/BGM/Rare_Item_Bgm.mp3";
 
         [MenuItem("RCCom/Audio/Build Recruit Shop BGM")]
         public static void BuildAndVerify()
@@ -63,6 +64,16 @@ namespace RCCom.EditorTools
             {
                 throw new InvalidOperationException("상점 BGM 참조가 TitleScene에 저장되지 않았습니다.");
             }
+
+            // 새 참조가 씬에 저장된 뒤에만 이전 음원을 제거해 중간 실패 시 Missing 참조를 남기지 않는다.
+            if (AssetDatabase.LoadAssetAtPath<AudioClip>(LegacyShopBgmPath) != null &&
+                !AssetDatabase.DeleteAsset(LegacyShopBgmPath))
+            {
+                throw new InvalidOperationException($"이전 상점 BGM을 제거하지 못했습니다: {LegacyShopBgmPath}");
+            }
+
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
 
             Debug.Log($"[ShopBgmAssetBuilder] PASS — {clip.name}, {clip.length:0.00}초, Recruit 반복 BGM 배선 완료");
         }

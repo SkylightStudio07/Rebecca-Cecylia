@@ -1659,3 +1659,8 @@ Phase 0 자동화 경로를 실제로 열고, 이후 오퍼레이터별 원격 �
 - 제공된 `Rare_Item_Bgm.mp3`를 리크루트 화면 전용 BGM으로 추가했다. `LobbyShopPanelUI`가 로딩 커버 안에서 실제 패널을 여는 순간 `SoundManager`에 임시 반복 재생을 요청하므로 상점 화면과 음악의 전환 시점이 일치한다.
 - 상점 진입 전 로비 BGM의 클립과 재생 위치를 `SoundManager` 런타임 상태로 보존한다. 뒤로 나갈 때 랜덤 곡을 새로 시작하지 않고 기존 로비곡의 같은 위치로 복귀해 메뉴 이동 때문에 청취 흐름이 매번 초기화되지 않게 했다.
 - 상점 BGM은 기존 BGM AudioSource와 Mixer 그룹을 그대로 사용하므로 사용자의 Master/BGM 볼륨 설정이 별도 처리 없이 적용된다. MP3 참조는 전용 Editor 도구가 TitleScene에 배선해 `.unity` 텍스트 직접 편집을 피했다.
+
+## 2026-08-25 — 리크루트 상점 BGM 교체
+
+- 사용자 검수 결과에 따라 리크루트 반복곡을 `Rare_Item_Bgm`에서 `Late_Hours_Rainfall`로 교체했다. 런타임 전환·반복·로비곡 복귀 계약은 그대로 유지하고 데이터 참조만 바꿨다.
+- Editor 도구는 새 참조가 TitleScene에 저장됐는지 먼저 검증한 뒤 이전 MP3를 `AssetDatabase.DeleteAsset`으로 제거한다. 교체 중 실패하더라도 씬에 Missing 오디오 참조가 남지 않도록 삭제 순서를 보수적으로 잡았다.
