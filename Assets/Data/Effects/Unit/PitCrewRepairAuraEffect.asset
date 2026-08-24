@@ -9,9 +9,8 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b25f4a80fa1882148ad41da8c9491d35, type: 3}
-  m_Name: AllyUnitRoster
-  m_EditorClassIdentifier: Assembly-CSharp::RCCom.Definitions.Unit.AllyUnitRoster
-  unitIds:
-  - racing-heavy
-  - racing-pitcrew
+  m_Script: {fileID: 11500000, guid: 09e05ff9d2e99f64393777a85a31729a, type: 3}
+  m_Name: PitCrewRepairAuraEffect
+  m_EditorClassIdentifier: Assembly-CSharp::RCCom.Effects.Unit.Concrete.PitCrewRepairAuraEffect
+  repairPerSecond: 2
+  pitStopMultiplier: 2

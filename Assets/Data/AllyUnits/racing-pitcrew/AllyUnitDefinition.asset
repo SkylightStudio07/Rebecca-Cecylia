@@ -13,19 +13,20 @@ MonoBehaviour:
   m_Name: AllyUnitDefinition
   m_EditorClassIdentifier: Assembly-CSharp::RCCom.Definitions.Unit.AllyUnitDefinition
   data:
-    unitId: calliste-guard
-    displayName: "\uC911\uC7A5\uAC11 \uC13C\uD2F0\uB12C"
-    deployCost: 60
-    maxHealth: 50
-    moveSpeed: 0.8
-    attackDamage: 10
-    attackInterval: 1.5
-    attackRange: 5
-    detectionRange: 5
+    unitId: racing-pitcrew
+    displayName: "\uD53C\uD2B8\uD06C\uB8E8 \uB85C\uBC84"
+    deployCost: 40
+    maxHealth: 15
+    moveSpeed: 8
+    attackDamage: 2
+    attackInterval: 1
+    attackRange: 4
+    detectionRange: 4
     projectileSpeed: 8
   effects:
-  - {fileID: 11400000, guid: 8f138e77d4cda09468de16d4dec8edfa, type: 2}
-  visualEffects: []
-  sprite: {fileID: -7446801812974973004, guid: 5af903ec0309d704d84ed95be71926e5, type: 3}
+  - {fileID: 11400000, guid: d55096d9407a87b49acb124a3b7e519c, type: 2}
+  visualEffects:
+  - {fileID: 11400000, guid: b2d31038cd0d4df49904824adb134dbd, type: 2}
+  sprite: {fileID: 650332114069399369, guid: 4ea8fe6b3a9a37d4ebcae94d2ddff187, type: 3}
   tint: {r: 1, g: 1, b: 1, a: 1}
-  spriteForwardOffsetDegrees: 90
+  spriteForwardOffsetDegrees: -90

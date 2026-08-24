@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b0659941387a6d34a8aa740855bfa73c, type: 3}
   m_Name: TacticalRelayAuraEffect
   m_EditorClassIdentifier: Assembly-CSharp::RCCom.Effects.Unit.Concrete.TacticalRelayAuraEffect
-  moveSpeedMultiplier: 1.2
-  attackSpeedMultiplier: 1.2
+  moveSpeedMultiplier: 1.35
+  attackSpeedMultiplier: 1.35
   refreshDuration: 0.2

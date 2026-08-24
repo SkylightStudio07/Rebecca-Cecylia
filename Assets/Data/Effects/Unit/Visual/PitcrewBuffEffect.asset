@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ffba40c49f52ff34dafa872220b0e9b8, type: 3}
+  m_Name: PitcrewBuffEffect
+  m_EditorClassIdentifier: Assembly-CSharp::RCCom.Effects.UnitVisual.Concrete.RangePulseVisualEffect
+  material: {fileID: 2100000, guid: c5434a0b77e94e140ba8e386c73a4a14, type: 2}
+  auraColor: {r: 0.20677069, g: 1.2, b: 0.15078536, a: 0.8}
+  pulseDuration: 0.4
+  pulseInterval: 0.15
+  strokeWidth: 0.008
+  glowIntensity: 0.334
+  glossIntensity: 0.236
+  opacity: 0.8

@@ -1,0 +1,30 @@
+{
+    "unitId": "racing-heavy",
+    "catalogOrder": 7,
+    "displayName": "헤비 페이스카",
+    "spritePath": "Assets/Art/AllyUnits/heavy-pace-car.png",
+    "tint": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+    },
+    "spriteForwardOffsetDegrees": 90.0,
+    "effectPaths": [
+        "Assets/Data/Effects/Unit/BasicAttackEffect.asset"
+    ],
+    "visualEffectPaths": [],
+    "remoteContent": false,
+    "data": {
+        "unitId": "racing-heavy",
+        "displayName": "헤비 페이스카",
+        "deployCost": 60,
+        "maxHealth": 60.0,
+        "moveSpeed": 4.0,
+        "attackDamage": 0.0,
+        "attackInterval": 10.0,
+        "attackRange": 0.0,
+        "detectionRange": 0.0,
+        "projectileSpeed": 8.0
+    }
+}

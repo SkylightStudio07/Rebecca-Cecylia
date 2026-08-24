@@ -16,12 +16,12 @@ MonoBehaviour:
     unitId: calliste-drone
     displayName: "\uC11C\uD3EC\uD2B8 \uB4DC\uB860"
     deployCost: 40
-    maxHealth: 10
-    moveSpeed: 1
-    attackDamage: 200
+    maxHealth: 5
+    moveSpeed: 2
+    attackDamage: 0
     attackInterval: 1
-    attackRange: 10
-    detectionRange: 50
+    attackRange: 5
+    detectionRange: 5
     projectileSpeed: 8
   effects:
   - {fileID: 11400000, guid: 7a2b57b438585b34bad32d4cd10998bc, type: 2}

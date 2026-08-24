@@ -10,6 +10,10 @@ namespace RCCom.EditorTools
     /// <summary>
     /// 전술 중계 오라 공용 효과 에셋을 재현 가능한 기본값으로 만들고 Calliste 드론 레시피를
     /// 다시 빌드한다. 수작업으로 SO 필드와 Definition 참조가 엇갈리는 일을 막기 위한 도구다.
+    /// 기본값 주입은 에셋을 "이번 실행에서 새로 생성했을 때"만 한다 — 기획자가 인스펙터에서
+    /// 배율·색상 등을 밸런싱해 둔 뒤 이 메뉴가 다시 실행되면(다른 유닛 온보딩 등) 그 값을
+    /// 말없이 하드코딩 기본값으로 되돌려버리는 사고를 막기 위해서다. 반면 Material 참조 같은
+    /// "배선"은 밸런싱 값이 아니므로 매번 재확인해 끊어지지 않게 한다.
     /// </summary>
     public static class TacticalRelayAuraEffectBuilder
     {
@@ -31,13 +35,21 @@ namespace RCCom.EditorTools
         public static void BuildAndConnect()
         {
             EnsureFolder(EffectFolder);
-            TacticalRelayAuraEffect effect = LoadOrCreateEffect();
-            ConfigureEffect(effect);
+            TacticalRelayAuraEffect effect = LoadOrCreateEffect(out bool effectCreated);
+            if (effectCreated)
+            {
+                ConfigureEffect(effect);
+            }
 
             EnsureFolder(VisualFolder);
             Material material = LoadOrCreateMaterial();
-            RangePulseVisualEffect visualEffect = LoadOrCreateVisualEffect();
-            ConfigureVisualEffect(visualEffect, material);
+            RangePulseVisualEffect visualEffect = LoadOrCreateVisualEffect(out bool visualEffectCreated);
+            ConnectMaterial(visualEffect, material);
+            if (visualEffectCreated)
+            {
+                ConfigureVisualEffectDefaults(visualEffect);
+            }
+
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
 
@@ -57,7 +69,7 @@ namespace RCCom.EditorTools
                 "[TacticalRelayAuraEffectBuilder] 전술 중계 오라·범위 비주얼 생성 및 Calliste 드론 연결 완료");
         }
 
-        private static TacticalRelayAuraEffect LoadOrCreateEffect()
+        private static TacticalRelayAuraEffect LoadOrCreateEffect(out bool created)
         {
             UnityEngine.Object existing = AssetDatabase.LoadMainAssetAtPath(EffectPath);
             if (existing != null)
@@ -74,15 +86,20 @@ namespace RCCom.EditorTools
                         $"자동 생성 라벨이 없는 기존 에셋은 덮어쓸 수 없습니다: {EffectPath}");
                 }
 
+                created = false;
                 return effect;
             }
 
-            var created = ScriptableObject.CreateInstance<TacticalRelayAuraEffect>();
-            AssetDatabase.CreateAsset(created, EffectPath);
-            AssetDatabase.SetLabels(created, new[] { GeneratedLabel });
-            return created;
+            var instance = ScriptableObject.CreateInstance<TacticalRelayAuraEffect>();
+            AssetDatabase.CreateAsset(instance, EffectPath);
+            AssetDatabase.SetLabels(instance, new[] { GeneratedLabel });
+            created = true;
+            return instance;
         }
 
+        /// <summary>
+        /// 배율 기본값. 에셋을 이번 실행에서 새로 만들었을 때만 호출한다(위 클래스 주석 참고).
+        /// </summary>
         private static void ConfigureEffect(TacticalRelayAuraEffect effect)
         {
             var serializedEffect = new SerializedObject(effect);
@@ -131,7 +148,7 @@ namespace RCCom.EditorTools
             return material;
         }
 
-        private static RangePulseVisualEffect LoadOrCreateVisualEffect()
+        private static RangePulseVisualEffect LoadOrCreateVisualEffect(out bool created)
         {
             UnityEngine.Object existing = AssetDatabase.LoadMainAssetAtPath(VisualEffectPath);
             if (existing != null)
@@ -143,21 +160,44 @@ namespace RCCom.EditorTools
                 }
 
                 EnsureOwned(visualEffect, VisualGeneratedLabel, VisualEffectPath);
+                created = false;
                 return visualEffect;
             }
 
-            var created = ScriptableObject.CreateInstance<RangePulseVisualEffect>();
-            AssetDatabase.CreateAsset(created, VisualEffectPath);
-            AssetDatabase.SetLabels(created, new[] { VisualGeneratedLabel });
-            return created;
+            var instance = ScriptableObject.CreateInstance<RangePulseVisualEffect>();
+            AssetDatabase.CreateAsset(instance, VisualEffectPath);
+            AssetDatabase.SetLabels(instance, new[] { VisualGeneratedLabel });
+            created = true;
+            return instance;
         }
 
-        private static void ConfigureVisualEffect(
-            RangePulseVisualEffect visualEffect,
-            Material material)
+        /// <summary>
+        /// Material 참조는 밸런싱 값이 아니라 배선이므로, 기존 에셋이어도 매번 재확인해
+        /// 끊어져 있으면 다시 연결한다. 이미 올바르게 연결돼 있으면 손대지 않는다(불필요한
+        /// dirty 마킹 방지).
+        /// </summary>
+        private static void ConnectMaterial(RangePulseVisualEffect visualEffect, Material material)
         {
             var serializedEffect = new SerializedObject(visualEffect);
-            serializedEffect.FindProperty("material").objectReferenceValue = material;
+            SerializedProperty materialProperty = serializedEffect.FindProperty("material");
+            if (materialProperty.objectReferenceValue == material)
+            {
+                return;
+            }
+
+            materialProperty.objectReferenceValue = material;
+            serializedEffect.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(visualEffect);
+        }
+
+        /// <summary>
+        /// 색상·주기 등 표현 밸런싱 값의 초기 기본값. 에셋을 이번 실행에서 새로 만들었을 때만
+        /// 호출한다 — 이미 있는 에셋에 매번 다시 쓰면 기획자가 인스펙터에서 바꿔 둔 값을 이
+        /// 메뉴를 재실행할 때마다 되돌리게 된다.
+        /// </summary>
+        private static void ConfigureVisualEffectDefaults(RangePulseVisualEffect visualEffect)
+        {
+            var serializedEffect = new SerializedObject(visualEffect);
             serializedEffect.FindProperty("auraColor").colorValue =
                 new Color(0.12f, 0.82f, 1.35f, 0.9f);
             serializedEffect.FindProperty("pulseDuration").floatValue = 0.85f;

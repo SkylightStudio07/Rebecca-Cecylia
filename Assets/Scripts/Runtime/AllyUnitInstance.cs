@@ -301,6 +301,22 @@ namespace RCCom.Runtime
         }
 
         /// <summary>
+        /// 지속 수리(힐) 효과가 사용하는 회복 진입점. maxHealth를 넘지 않게 캡핑만 하고 별도
+        /// 이벤트는 두지 않는다 — 아군은 아직 체력바 UI가 없어 TakeDamage의 Damaged처럼 View가
+        /// 구독할 대상이 없기 때문이다(필요해지면 그때 Healed 이벤트를 추가한다).
+        /// </summary>
+        public void Heal(float amount)
+        {
+            if (!_isSpawned || IsDead || amount <= 0f)
+            {
+                return;
+            }
+
+            float maxHealth = Data != null ? Data.maxHealth : CurrentHealth;
+            CurrentHealth = Mathf.Min(maxHealth, CurrentHealth + amount);
+        }
+
+        /// <summary>
         /// 짧은 지속시간 버프를 적용한다. 공급 유닛과 효과를 키로 삼아 같은 오라의 매 프레임
         /// 갱신은 한 항목만 연장하고, 서로 다른 오라는 기존 아군 버프 규칙대로 곱연산 중첩한다.
         /// SO에는 상태를 두지 않아 여러 드론이 같은 효과 에셋을 안전하게 공유할 수 있다.

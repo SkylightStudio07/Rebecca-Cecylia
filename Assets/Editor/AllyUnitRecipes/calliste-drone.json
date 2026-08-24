@@ -21,12 +21,12 @@
         "unitId": "calliste-drone",
         "displayName": "서포트 드론",
         "deployCost": 40,
-        "maxHealth": 10.0,
-        "moveSpeed": 1.0,
-        "attackDamage": 200.0,
+        "maxHealth": 5.0,
+        "moveSpeed": 2.0,
+        "attackDamage": 0.0,
         "attackInterval": 1.0,
-        "attackRange": 10.0,
-        "detectionRange": 50.0,
+        "attackRange": 5.0,
+        "detectionRange": 5.0,
         "projectileSpeed": 8.0
     }
 }

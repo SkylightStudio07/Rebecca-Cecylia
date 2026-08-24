@@ -1,0 +1,32 @@
+{
+    "unitId": "racing-pitcrew",
+    "catalogOrder": 6,
+    "displayName": "피트크루 로버",
+    "spritePath": "Assets/Art/AllyUnits/pit-crew-rover.png",
+    "tint": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+    },
+    "spriteForwardOffsetDegrees": -90.0,
+    "effectPaths": [
+        "Assets/Data/Effects/Unit/PitCrewRepairAuraEffect.asset"
+    ],
+    "visualEffectPaths": [
+        "Assets/Data/Effects/Unit/Visual/PitcrewBuffEffect.asset"
+    ],
+    "remoteContent": false,
+    "data": {
+        "unitId": "racing-pitcrew",
+        "displayName": "피트크루 로버",
+        "deployCost": 40,
+        "maxHealth": 15.0,
+        "moveSpeed": 8.0,
+        "attackDamage": 2.0,
+        "attackInterval": 1.0,
+        "attackRange": 4.0,
+        "detectionRange": 4.0,
+        "projectileSpeed": 8.0
+    }
+}

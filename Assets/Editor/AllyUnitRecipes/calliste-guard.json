@@ -13,17 +13,18 @@
     "effectPaths": [
         "Assets/Data/Effects/Unit/BasicAttackEffect.asset"
     ],
+    "visualEffectPaths": [],
     "remoteContent": false,
     "data": {
         "unitId": "calliste-guard",
         "displayName": "중장갑 센티넬",
         "deployCost": 60,
         "maxHealth": 50.0,
-        "moveSpeed": 0.949999988079071,
+        "moveSpeed": 0.800000011920929,
         "attackDamage": 10.0,
         "attackInterval": 1.5,
-        "attackRange": 0.0,
-        "detectionRange": 0.0,
+        "attackRange": 5.0,
+        "detectionRange": 5.0,
         "projectileSpeed": 8.0
     }
 }
