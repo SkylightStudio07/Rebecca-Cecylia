@@ -35,6 +35,7 @@ MonoBehaviour:
   towerRoster: {fileID: 11400000, guid: 1c49281e14e119b4186e15d065cbea4a, type: 2}
   cardRoster: {fileID: 11400000, guid: 07d372ee6bf5a6f44acfab9eb7220c00, type: 2}
   allyUnitRoster: {fileID: 11400000, guid: 50d7bf583d36f1d4a8196513232c2abc, type: 2}
+  upgradeTracks: {fileID: 11400000, guid: 5c6aaff9a3a289f4498e7600dfbcf4fa, type: 2}
   dialogueSet: {fileID: 11400000, guid: fdbb1937e2f15cd42ae93ff4ff20f1ac, type: 2}
   unlockType: 1
   requiredBestWave: 2

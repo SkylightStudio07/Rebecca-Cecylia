@@ -1,0 +1,87 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7f0ec232f1c62a2469a491525378f217, type: 3}
+  m_Name: OperatorUpgradeTrackSet
+  m_EditorClassIdentifier: Assembly-CSharp::RCCom.Definitions.Operator.OperatorUpgradeTrackSet
+  tracks:
+  - trackId: aurora.vulnerable-multiplier
+    displayName: "\uCDE8\uC57D \uB514\uBC84\uD504 \uC99D\uD3ED"
+    category: 0
+    targetKind: 9
+    targetUnitId: aurora-debuff-drone
+    maxLevel: 8
+    perLevelDelta: 0.03125
+    isInteger: 0
+    hasMinValue: 0
+    minValue: 0
+    hasMaxValue: 0
+    maxValue: 0
+  - trackId: aurora.slow-strength
+    displayName: "\uAC10\uC18D \uAC15\uD654"
+    category: 0
+    targetKind: 11
+    targetUnitId: aurora-slow-drone
+    maxLevel: 8
+    perLevelDelta: -0.021875
+    isInteger: 0
+    hasMinValue: 1
+    minValue: 0
+    hasMaxValue: 0
+    maxValue: 0
+  - trackId: aurora.drone-mobility
+    displayName: "\uB4DC\uB860 \uC21C\uCC30 \uAE30\uB3D9\uC131"
+    category: 0
+    targetKind: 3
+    targetUnitId: aurora-debuff-drone;aurora-slow-drone
+    maxLevel: 8
+    perLevelDelta: 0.125
+    isInteger: 0
+    hasMinValue: 0
+    minValue: 0
+    hasMaxValue: 0
+    maxValue: 0
+  - trackId: aurora.vulnerable-refresh
+    displayName: "\uB514\uBC84\uD504 \uC7AC\uC801\uC6A9 \uC720\uC608 \uC5F0\uC7A5"
+    category: 1
+    targetKind: 10
+    targetUnitId: aurora-debuff-drone
+    maxLevel: 8
+    perLevelDelta: 0.0625
+    isInteger: 0
+    hasMinValue: 0
+    minValue: 0
+    hasMaxValue: 0
+    maxValue: 0
+  - trackId: aurora.drone-armor-debuff
+    displayName: "\uC57D\uD654 \uB4DC\uB860 \uC7A5\uAC11 \uAC15\uD654"
+    category: 1
+    targetKind: 0
+    targetUnitId: aurora-debuff-drone
+    maxLevel: 8
+    perLevelDelta: 4
+    isInteger: 0
+    hasMinValue: 0
+    minValue: 0
+    hasMaxValue: 0
+    maxValue: 0
+  - trackId: aurora.drone-armor-slow
+    displayName: "\uAC10\uC18D \uB4DC\uB860 \uC7A5\uAC11 \uAC15\uD654"
+    category: 1
+    targetKind: 0
+    targetUnitId: aurora-slow-drone
+    maxLevel: 8
+    perLevelDelta: 5
+    isInteger: 0
+    hasMinValue: 0
+    minValue: 0
+    hasMaxValue: 0
+    maxValue: 0

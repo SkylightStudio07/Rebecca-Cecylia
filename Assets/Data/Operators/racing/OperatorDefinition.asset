@@ -17,6 +17,10 @@ MonoBehaviour:
   playStyleDescription: "\uB808\uC774\uC2F1\uAC78 \uCEE8\uC149\uC758 \uCE90\uB9AD\uD130"
   selectionPortrait: {fileID: -5444712353710830913, guid: a13fbdb6118b92346afad784d8f984f9, type: 3}
   managementPortrait: {fileID: 4831207923975717834, guid: 86f456bec9ddbf940b3f7d082e6425a3, type: 3}
+  shopPortrait: {fileID: 0}
+  shopUpperBodyPortrait: {fileID: 0}
+  alternateName: 
+  shopDialogue: 
   playerData:
     maxHealth: 30
     moveSpeed: 5
@@ -31,6 +35,7 @@ MonoBehaviour:
   towerRoster: {fileID: 11400000, guid: f5430818b56e73b4dbaa6fc2f612ee9c, type: 2}
   cardRoster: {fileID: 11400000, guid: 86ebdae2e75527246bcb3c4f75de7c4a, type: 2}
   allyUnitRoster: {fileID: 11400000, guid: f632cec3e4bae5e4c94879e71341c868, type: 2}
+  upgradeTracks: {fileID: 11400000, guid: e06d3020e2e755947bdc2399a8d3af2d, type: 2}
   dialogueSet: {fileID: 11400000, guid: d74a91ffce3a8c64cbbbb348907d5cda, type: 2}
   unlockType: 3
   requiredBestWave: 0
