@@ -42,7 +42,9 @@ namespace RCCom.EditorTools
             "Assets/Data/Prefabs/VFX/LaserBeamView.prefab";
         public const string LaserBeamVisualEffectPath =
             "Assets/Data/Effects/Tower/Visual/LaserBeam_Pierce.asset";
-        public const string ExplosionSpritesFolder = "Assets/Art/VFX/explosion/Sprites";
+        public const string ExplosionSpriteSheetPath = "Assets/Art/VFX/explosion/sprite-explosion.png";
+        private const int ExplosionFrameCount = 20;
+        private const float ExplosionFrameRate = 24f;
         public const string DeathExplosionPrefabPath =
             "Assets/Data/Prefabs/VFX/DeathExplosion.prefab";
         public const string DeathKnockbackVisualEffectPath =
@@ -255,10 +257,11 @@ namespace RCCom.EditorTools
         }
 
         /// <summary>
-        /// 8프레임 폭발 스프라이트(Assets/Art/VFX/explosion/Sprites, 이미 임포트돼 있는 아트
-        /// 에셋 — 여기서 임포트 설정을 새로 건드리지 않는다)를 12fps SpriteFlipbook 프리팹으로
-        /// 묶는다. SaveOwnedPrefab이 BuilderPrefabMerge를 거치므로 frameRate/targetVisualSize를
-        /// 인스펙터에서 직접 튜닝해도 다음 Build 실행에서 구조가 안 바뀌는 한 보존된다.
+        /// 20프레임 폭발 스프라이트시트(Assets/Art/VFX/explosion/sprite-explosion.png, 이미
+        /// 임포트·슬라이싱돼 있는 아트 에셋 — 여기서 임포트 설정을 새로 건드리지 않는다)를
+        /// 24fps SpriteFlipbook 프리팹으로 묶는다. SaveOwnedPrefab이 BuilderPrefabMerge를
+        /// 거치므로 frameRate/targetVisualSize를 인스펙터에서 직접 튜닝해도 다음 Build 실행에서
+        /// 구조가 안 바뀌는 한 보존된다.
         /// </summary>
         private static GameObject BuildDeathExplosionPrefab()
         {
@@ -281,7 +284,7 @@ namespace RCCom.EditorTools
                     framesProperty.GetArrayElementAtIndex(i).objectReferenceValue = frames[i];
                 }
 
-                serializedFlipbook.FindProperty("frameRate").floatValue = 12f;
+                serializedFlipbook.FindProperty("frameRate").floatValue = ExplosionFrameRate;
                 serializedFlipbook.ApplyModifiedPropertiesWithoutUndo();
 
                 return SaveOwnedPrefab(root, DeathExplosionPrefabPath);
@@ -294,17 +297,20 @@ namespace RCCom.EditorTools
 
         private static Sprite[] LoadExplosionFrames()
         {
-            var frames = new Sprite[8];
-            for (int i = 1; i <= 8; i++)
+            // 스프라이트시트 하나에서 잘린 서브에셋들이라 이름으로 개별 로드한다(경로+서브에셋명).
+            UnityEngine.Object[] assets = AssetDatabase.LoadAllAssetsAtPath(ExplosionSpriteSheetPath);
+            var frames = new Sprite[ExplosionFrameCount];
+            for (int i = 0; i < frames.Length; i++)
             {
-                string path = $"{ExplosionSpritesFolder}/explosion-f{i}.png";
-                Sprite sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);
+                string name = $"sprite-explosion_{i}";
+                Sprite sprite = Array.Find(assets, asset => asset is Sprite && asset.name == name) as Sprite;
                 if (sprite == null)
                 {
-                    throw new InvalidOperationException($"폭발 플립북 프레임을 찾지 못했습니다: {path}");
+                    throw new InvalidOperationException(
+                        $"폭발 플립북 프레임을 찾지 못했습니다: {ExplosionSpriteSheetPath} [{name}]");
                 }
 
-                frames[i - 1] = sprite;
+                frames[i] = sprite;
             }
 
             return frames;
@@ -1127,9 +1133,10 @@ namespace RCCom.EditorTools
 
             var serializedFlipbook = new SerializedObject(deathFlipbook);
             SerializedProperty framesProperty = serializedFlipbook.FindProperty("frames");
-            if (framesProperty == null || framesProperty.arraySize != 8)
+            if (framesProperty == null || framesProperty.arraySize != ExplosionFrameCount)
             {
-                throw new InvalidOperationException("사망 폭발 플립북의 프레임 8장이 온전히 배선되지 않았습니다.");
+                throw new InvalidOperationException(
+                    $"사망 폭발 플립북의 프레임 {ExplosionFrameCount}장이 온전히 배선되지 않았습니다.");
             }
 
             for (int i = 0; i < framesProperty.arraySize; i++)
