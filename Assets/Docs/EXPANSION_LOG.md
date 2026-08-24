@@ -2159,3 +2159,55 @@ Project 뷰에서 직접 열어 밸런싱했다가 다음 Build 실행에서 조
   빠르거나 느리면 프리팹 인스펙터의 `frameRate`만 조정하면 됨 — 빌더 재실행해도 보존됨),
   2) 넉백 방향/거리/회전/틴트/유지시간이 기대한 느낌인지 확인. 안 맞으면 `DeathKnockback.asset`
   인스펙터에서 직접 조정 가능(코드 재배포 불필요, 빌더 재실행해도 보존).
+
+## 2026-08-24 — 아군 체력바 표시 + 사망 시 체력바 즉시 감춤(적/아군 공통)
+
+### 결정
+- **아군 체력바**: `EnemyView`가 쓰던 `EnemyHealthBar`를 `UnitHealthBar`로 이름만 일반화해
+  재사용했다. `.cs.meta`의 guid를 그대로 유지한 채 파일만 새로 써서(`EnemyHealthBar.cs` 삭제
+  + `UnitHealthBar.cs` 생성, 같은 guid) `EnemyView_Normal.prefab`의 기존 컴포넌트 참조가
+  끊기지 않게 했다 — Unity는 스크립트를 파일명이 아니라 `.meta`의 guid로 참조하므로 안전하다.
+  클래스 자체가 "배경+채움 스프라이트 2장, `SetHealthPercent`만 노출"하는 순수 렌더러라 적/아군
+  어느 쪽에도 특화된 로직이 없어 그대로 재사용 가능했다.
+  - `AllyUnitView`에 `healthBar`/`healthBarOffset` 필드 추가. 아군은 유닛 종류별로 SpriteFit
+    스케일이 달라(`EnemyView`는 고정 스케일 1이라 이 문제 자체가 없었음) 체력바를 그냥 자식으로
+    두면 부모 스케일을 그대로 물려받아 유닛마다 체력바 크기·위치가 들쭉날쭉해진다 —
+    `Bind()` 시점에 스케일 역보정(`1/scale`)을 1회 계산해 체력바의 `localScale`/`localPosition`에
+    적용한다(유닛 생존 동안 스케일이 안 바뀌므로 매 프레임 다시 계산할 필요 없음). 회전은
+    조준/이동 방향 추적으로 계속 바뀌므로, `EnemyView`와 동일하게 `UpdateHealthBar()`에서 매
+    프레임 `Quaternion.identity`로 상쇄한다.
+  - `AllyUnitViewPrefabBuilder.Build()`에 `HealthBar`(`Background`+`Fill`) 하이러키 생성을
+    추가했다. `EnemyView_Normal.prefab`의 체력바와 같은 스프라이트(`Assets/Art/UI/HP_Enemy_Bar.png`,
+    왼쪽 피벗이라 `Fill.localScale.x`로 자연스럽게 줄어듦)를 재사용해 시각적으로 통일했다.
+- **사망 시 체력바 감춤**: `EnemyView`/`AllyUnitView` 둘 다 `HandleDied()`에서 즉시
+  `healthBar.gameObject.SetActive(false)`를 호출한다. 감추지 않으면 넉백/회전 애니메이션(지난
+  턴에 추가한 사망 연출 고도화) 중에도 체력바가 그대로 붙어 있는데, `UpdateHealthBar()`(회전
+  상쇄 담당)가 사망 중엔 더 이상 안 불려서 체력바만 어색하게 계속 회전해 보였다.
+
+### 부수적으로 겪은 빌더 간 필드 충돌
+- `AllyUnitViewPrefabBuilder`가 구조 변경(이번 `HealthBar` 하이러키 추가)을 감지해
+  `BuilderPrefabMerge`의 재생성 경로를 탔는데, 이 빌더는 `CombatVfxAssetBuilder`가 소유한
+  필드(`deathExplosionPrefab`/`deathKnockbackVisual`)를 전혀 모른다 — `BuilderPrefabMerge`는
+  "구조가 바뀌면 Object Reference는 항상 새 배선만 쓴다"는 의도적 정책이라, 이 두 필드가
+  실제로 `fileID: 0`(null)으로 리셋되는 걸 직접 겪었다. `RCCom/Combat VFX/Build Projectile
+  And Hit Spark`를 재실행해 즉시 복구했고, 같은 일이 재발하지 않도록
+  `AllyUnitViewPrefabBuilder` 클래스 doc 주석에 이 순서 의존성("구조가 바뀌는 코드 변경 후엔
+  Combat VFX 빌더도 반드시 다시 실행")을 명시해 뒀다. 두 빌더를 하나로 합치거나 서로 호출하게
+  만드는 근본 해결은 이번 범위 밖으로 남겨둔다.
+- 검증 도중 `DeathKnockback.asset`이 지난 턴 이후 인스펙터에서 직접 튜닝돼 있는 걸 발견했다
+  (`knockbackDistance` 0.25→0.8, `knockbackDuration` 0.2→0.25, 회전각 15~30→8.1~13.3) —
+  빌더를 여러 번 재실행하는 동안 이 값들이 전혀 안 건드려진 것도 확인해, "최초 생성 시 1회만
+  기본값" 보호가 실전에서 정확히 의도대로 동작함을 재확인했다. 별도 커밋으로 그대로 반영.
+
+### 검증
+- `unity command recompile`/`recompile_status` — 컴파일 에러 0건.
+- `RCCom/Ally Units/Build Common View Prefab` + `RCCom/Combat VFX/Build Projectile And Hit
+  Spark` 순서로 실행 → 둘 다 검증 통과 로그, 에러/예외 0건. `git diff`로 `AllyUnitView.prefab`에
+  `HealthBar`/`Background`/`Fill` 3개 GameObject와 `healthBar`/`healthBarOffset` 필드만
+  추가됐고, `deathExplosionPrefab`/`deathKnockbackVisual`이 복구 후 원래 GUID 그대로인 것을
+  확인.
+
+### 사람이 할 일
+- 플레이 테스트로 아군 체력바가 유닛 종류(크기)에 상관없이 일정한 크기/위치로 보이는지,
+  사망 시 적/아군 둘 다 체력바가 즉시 사라지는지 확인. `healthBarOffset`(`AllyUnitView.prefab`
+  인스펙터, 기본 `(0, -1.3)`)로 위치 조정 가능.
