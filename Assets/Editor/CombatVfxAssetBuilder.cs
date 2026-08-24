@@ -23,6 +23,8 @@ namespace RCCom.EditorTools
             "Assets/Data/Prefabs/VFX/FakeProjectile.prefab";
         public const string HitSparkPrefabPath =
             "Assets/Data/Prefabs/VFX/ParticleBurst_HitSpark.prefab";
+        public const string HitSparkMaterialPath =
+            "Assets/Data/Prefabs/VFX/HitSpark_Additive.mat";
 
         private const string PrefabFolder = "Assets/Data/Prefabs/VFX";
         private const string GeneratedLabel = "RCCom.GeneratedCombatVfx";
@@ -135,15 +137,22 @@ namespace RCCom.EditorTools
             }
         }
 
+        /// <summary>
+        /// 원래 값(크기 0.04~0.11, 수명 0.1~0.2초, Alpha Blend 기본 머티리얼)이 실제 유닛 스케일
+        /// 대비 너무 작고 옅게 보인다는 피드백을 받아, FakeProjectile 스프라이트 실제 크기
+        /// (localScale 0.18 적용 후 약 0.46×0.92유닛, Sprite bounds/스케일로 직접 확인)를 기준
+        /// 삼아 재조정했다({{user}} 확인, 2026-08-24). Alpha Blend 기본 머티리얼도 흐릿하게
+        /// 보이는 원인 중 하나라 판단해 Additive 전용 머티리얼로 교체한다(§BuildHitSparkMaterial).
+        /// </summary>
         private static void ConfigureHitSpark(ParticleSystem particleSystem)
         {
             ParticleSystem.MainModule main = particleSystem.main;
-            main.duration = 0.2f;
+            main.duration = 0.3f;
             main.loop = false;
             main.playOnAwake = false;
-            main.startLifetime = new ParticleSystem.MinMaxCurve(0.1f, 0.2f);
-            main.startSpeed = new ParticleSystem.MinMaxCurve(1.6f, 3f);
-            main.startSize = new ParticleSystem.MinMaxCurve(0.04f, 0.11f);
+            main.startLifetime = new ParticleSystem.MinMaxCurve(0.18f, 0.3f);
+            main.startSpeed = new ParticleSystem.MinMaxCurve(2.4f, 4.2f);
+            main.startSize = new ParticleSystem.MinMaxCurve(0.16f, 0.32f);
             main.startRotation = new ParticleSystem.MinMaxCurve(0f, Mathf.PI * 2f);
             main.startColor = new ParticleSystem.MinMaxGradient(
                 new Color(1f, 0.18f, 0.02f, 1f),
@@ -158,7 +167,7 @@ namespace RCCom.EditorTools
             emission.rateOverTime = 0f;
             emission.SetBursts(new[]
             {
-                new ParticleSystem.Burst(0f, (short)8, (short)12)
+                new ParticleSystem.Burst(0f, (short)10, (short)16)
             });
 
             ParticleSystem.ShapeModule shape = particleSystem.shape;
@@ -192,18 +201,47 @@ namespace RCCom.EditorTools
 
             ParticleSystemRenderer renderer = particleSystem.GetComponent<ParticleSystemRenderer>();
             renderer.renderMode = ParticleSystemRenderMode.Stretch;
-            renderer.lengthScale = 1.8f;
-            renderer.velocityScale = 0.12f;
+            renderer.lengthScale = 1.4f;
+            renderer.velocityScale = 0.08f;
             renderer.sortingOrder = 7;
-            Material defaultParticleMaterial =
-                AssetDatabase.GetBuiltinExtraResource<Material>("Default-ParticleSystem.mat");
-            if (defaultParticleMaterial == null)
+            renderer.sharedMaterial = BuildHitSparkMaterial();
+            particleSystem.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        }
+
+        /// <summary>
+        /// 히트 스파크 전용 Additive 머티리얼. Unity 기본 파티클 머티리얼(Default-ParticleSystem.mat)은
+        /// Alpha Blend라 다른 스프라이트에 반투명하게 겹쳐 보이기만 하고 밝게 도드라지지 않는다 —
+        /// "타격 스파크"가 요구하는 번쩍임에는 Additive가 맞다. 새 셰이더를 작성하지 않고 엔진 내장
+        /// Legacy Particle 셰이더 + 내장 소프트 도트 텍스처만 조합한다(VFX_전투_연출_설계안.md §0-3:
+        /// 신규 셰이더 작성 금지 원칙 유지).
+        /// </summary>
+        private static Material BuildHitSparkMaterial()
+        {
+            EnsureOverwriteIsOwned(HitSparkMaterialPath);
+
+            Shader additiveShader = Shader.Find("Legacy Shaders/Particles/Additive");
+            if (additiveShader == null)
             {
-                throw new InvalidOperationException("Unity 기본 파티클 Material을 찾지 못했습니다.");
+                throw new InvalidOperationException(
+                    "Legacy Shaders/Particles/Additive 셰이더를 찾지 못했습니다.");
             }
 
-            renderer.sharedMaterial = defaultParticleMaterial;
-            particleSystem.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            Texture2D softDot = AssetDatabase.GetBuiltinExtraResource<Texture2D>("Default-Particle.psd");
+            if (softDot == null)
+            {
+                throw new InvalidOperationException("Unity 기본 파티클 텍스처를 찾지 못했습니다.");
+            }
+
+            var material = new Material(additiveShader) { name = "HitSpark_Additive" };
+            material.SetTexture("_MainTex", softDot);
+            material.SetColor("_TintColor", Color.white);
+
+            AssetDatabase.DeleteAsset(HitSparkMaterialPath);
+            AssetDatabase.CreateAsset(material, HitSparkMaterialPath);
+            AssetDatabase.SetLabels(material, new[] { GeneratedLabel });
+            EditorUtility.SetDirty(material);
+
+            return AssetDatabase.LoadAssetAtPath<Material>(HitSparkMaterialPath);
         }
 
         private static GameObject BuildFakeProjectilePrefab(GameObject hitSparkPrefab)
@@ -365,6 +403,16 @@ namespace RCCom.EditorTools
             {
                 throw new InvalidOperationException(
                     "ParticleBurst 히트 스파크 프리팹 설정이 올바르지 않습니다.");
+            }
+
+            ParticleSystemRenderer sparkRenderer =
+                hitSparkPrefab.GetComponent<ParticleSystemRenderer>();
+            if (sparkRenderer == null || sparkRenderer.sharedMaterial == null ||
+                sparkRenderer.sharedMaterial.shader.name != "Legacy Shaders/Particles/Additive" ||
+                particleSystem.main.startSize.constantMin < 0.15f)
+            {
+                throw new InvalidOperationException(
+                    "히트 스파크가 Additive 머티리얼/재조정된 크기로 배선되지 않았습니다.");
             }
 
             GameObject fakeProjectilePrefab =
