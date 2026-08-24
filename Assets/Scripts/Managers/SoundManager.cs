@@ -39,6 +39,12 @@ namespace RCCom.Managers
         [SerializeField] private AudioClip towerBuildClip;
         [SerializeField] private AudioClip towerDemolishClip;
 
+        [Header("공용 UI 사운드")]
+        [Tooltip("버튼 클릭과 키보드/패드 Submit에 공통으로 사용하는 선택음")]
+        [SerializeField] private AudioClip uiSelectClip;
+        [Tooltip("UI 선택음은 짧은 꼬리까지 들려야 하므로 전투 효과음과 별도 컷오프를 사용한다")]
+        [SerializeField] private float uiSelectCutoffDuration = 1f;
+
         [Header("타이틀 씬 전용 클립")]
         [SerializeField] private AudioClip titleClickClip;
         [SerializeField] private AudioClip mainMenuClickClip;
@@ -77,6 +83,7 @@ namespace RCCom.Managers
         private readonly List<AudioSource> _sfxSources = new();
         private readonly List<SfxTimer> _activeSfx = new();
         private int _lastBgmIndex = -1;
+        private int _lastUiSelectFrame = -1;
 
         private class SfxTimer
         {
@@ -188,7 +195,7 @@ namespace RCCom.Managers
 
         public void PlaySkill() => PlayEffect(skillClip);
 
-        public void PlayButtonClick() => PlayEffect(buttonClickClip);
+        public void PlayButtonClick() => PlayUiSelect();
 
         public void PlayTowerBuild() => PlayEffect(towerBuildClip);
 
@@ -196,11 +203,28 @@ namespace RCCom.Managers
 
         public void PlayTitleClick() => PlayEffect(titleClickClip);
 
-        public void PlayMainMenuClick() => PlayEffect(mainMenuClickClip);
+        public void PlayMainMenuClick() => PlayUiSelect();
 
-        public void PlaySettingsButtonClick() => PlayEffect(settingsButtonClickClip);
+        public void PlaySettingsButtonClick() => PlayUiSelect();
+
+        /// <summary>공용 UI 선택음 — 한 버튼에 명시적 호출과 공용 Emitter가 함께 있어도 한 번만 재생한다.</summary>
+        public void PlayUiSelect()
+        {
+            if (_lastUiSelectFrame == Time.frameCount)
+            {
+                return;
+            }
+
+            _lastUiSelectFrame = Time.frameCount;
+            PlayEffect(uiSelectClip, uiSelectCutoffDuration);
+        }
 
         private void PlayEffect(AudioClip clip)
+        {
+            PlayEffect(clip, effectCutoffDuration);
+        }
+
+        private void PlayEffect(AudioClip clip, float cutoffDuration)
         {
             if (clip == null)
             {
@@ -212,7 +236,9 @@ namespace RCCom.Managers
             source.volume = effectVolume;
             source.Play();
 
-            _activeSfx.Add(new SfxTimer { source = source, remaining = effectCutoffDuration });
+            // 클립보다 긴 타이머를 남겨 풀의 AudioSource가 불필요하게 점유되는 일을 막는다.
+            float duration = Mathf.Min(Mathf.Max(cutoffDuration, 0.01f), clip.length);
+            _activeSfx.Add(new SfxTimer { source = source, remaining = duration });
         }
 
         private AudioSource GetIdleSfxSource()
