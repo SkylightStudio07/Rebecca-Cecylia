@@ -25,6 +25,8 @@ namespace RCCom.EditorTools
             "Assets/Data/Prefabs/VFX/ParticleBurst_HitSpark.prefab";
         public const string HitSparkMaterialPath =
             "Assets/Data/Prefabs/VFX/HitSpark_Additive.mat";
+        public const string DeathBurstPrefabPath =
+            "Assets/Data/Prefabs/VFX/ParticleBurst_DeathBurst.prefab";
 
         private const string PrefabFolder = "Assets/Data/Prefabs/VFX";
         private const string GeneratedLabel = "RCCom.GeneratedCombatVfx";
@@ -38,6 +40,10 @@ namespace RCCom.EditorTools
             "Assets/Data/Effects/Tower/Poison Damage Effect.asset";
         private const string BasicAttackEffectPath =
             "Assets/Data/Effects/Unit/BasicAttackEffect.asset";
+        private const string EnemyViewPrefabPath =
+            "Assets/Data/Prefabs/EnemyView_Normal.prefab";
+        private const string AllyUnitViewPrefabPath =
+            "Assets/Data/Prefabs/AllyUnitView.prefab";
         private const string PlayerScenePath = "Assets/Scenes/DefenseScene.unity";
 
         [MenuItem("RCCom/Combat VFX/Build Projectile And Hit Spark")]
@@ -48,6 +54,7 @@ namespace RCCom.EditorTools
 
             GameObject hitSparkPrefab = BuildHitSparkPrefab();
             GameObject fakeProjectilePrefab = BuildFakeProjectilePrefab(hitSparkPrefab);
+            GameObject deathBurstPrefab = BuildDeathBurstPrefab();
             ConnectEffect<DamageEffect>(DamageEffectPath, fakeProjectilePrefab);
             ConnectEffect<SplashDamageEffect>(SplashDamageEffectPath, fakeProjectilePrefab);
             ConnectEffect<PierceDamageEffect>(PierceDamageEffectPath, fakeProjectilePrefab);
@@ -57,8 +64,11 @@ namespace RCCom.EditorTools
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
             ConnectPlayerController(fakeProjectilePrefab);
+            ConnectPrefabField<EnemyView>(EnemyViewPrefabPath, "deathParticlePrefab", deathBurstPrefab);
+            ConnectPrefabField<AllyUnitView>(AllyUnitViewPrefabPath, "deathParticlePrefab", deathBurstPrefab);
             Validate();
-            Debug.Log("[CombatVfxAssetBuilder] 투사체·히트 스파크 생성 및 네 공격 효과 + 아군 기본 공격 + 플레이어 배선 완료");
+            Debug.Log("[CombatVfxAssetBuilder] 투사체·히트 스파크·사망 버스트 생성 및 " +
+                      "네 공격 효과 + 아군 기본 공격 + 플레이어 + 적/아군 사망 연출 배선 완료");
         }
 
         private static void ConfigureProjectileSprite()
@@ -208,6 +218,151 @@ namespace RCCom.EditorTools
             particleSystem.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
         }
 
+        private static GameObject BuildDeathBurstPrefab()
+        {
+            EnsureOverwriteIsOwned(DeathBurstPrefabPath);
+            var root = new GameObject("ParticleBurst_DeathBurst");
+
+            try
+            {
+                ParticleSystem particleSystem = root.AddComponent<ParticleSystem>();
+                ConfigureDeathBurst(particleSystem);
+                root.AddComponent<ParticleBurst>();
+
+                GameObject prefab = SaveOwnedPrefab(root, DeathBurstPrefabPath);
+                return prefab;
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(root);
+            }
+        }
+
+        /// <summary>
+        /// 히트 스파크보다 크고·오래가고·중력으로 흩날리는 사망 전용 버스트. 같은 Additive
+        /// 머티리얼을 재사용해(BuildHitSparkMaterial) 머티리얼을 또 만들지 않는다. 색상은
+        /// 히트 스파크와 같은 팔레트를 써서 "피격→사망"이 같은 시각 언어로 읽히게 한다
+        /// (VFX_전투_연출_설계안.md §4).
+        /// </summary>
+        private static void ConfigureDeathBurst(ParticleSystem particleSystem)
+        {
+            ParticleSystem.MainModule main = particleSystem.main;
+            main.duration = 0.5f;
+            main.loop = false;
+            main.playOnAwake = false;
+            main.startLifetime = new ParticleSystem.MinMaxCurve(0.25f, 0.45f);
+            main.startSpeed = new ParticleSystem.MinMaxCurve(3f, 6f);
+            main.startSize = new ParticleSystem.MinMaxCurve(0.2f, 0.4f);
+            main.startRotation = new ParticleSystem.MinMaxCurve(0f, Mathf.PI * 2f);
+            main.startColor = new ParticleSystem.MinMaxGradient(
+                new Color(1f, 0.18f, 0.02f, 1f),
+                new Color(1f, 0.9f, 0.2f, 1f));
+            main.simulationSpace = ParticleSystemSimulationSpace.World;
+            main.scalingMode = ParticleSystemScalingMode.Hierarchy;
+            main.maxParticles = 32;
+            main.stopAction = ParticleSystemStopAction.None;
+            main.gravityModifier = 0.6f;
+
+            ParticleSystem.EmissionModule emission = particleSystem.emission;
+            emission.enabled = true;
+            emission.rateOverTime = 0f;
+            emission.SetBursts(new[]
+            {
+                new ParticleSystem.Burst(0f, (short)14, (short)22)
+            });
+
+            ParticleSystem.ShapeModule shape = particleSystem.shape;
+            shape.enabled = true;
+            shape.shapeType = ParticleSystemShapeType.Circle;
+            shape.radius = 0.1f;
+            shape.arc = 360f;
+
+            var lifetimeGradient = new Gradient();
+            lifetimeGradient.SetKeys(
+                new[]
+                {
+                    new GradientColorKey(new Color(1f, 0.95f, 0.35f), 0f),
+                    new GradientColorKey(new Color(1f, 0.12f, 0.01f), 1f)
+                },
+                new[]
+                {
+                    new GradientAlphaKey(1f, 0f),
+                    new GradientAlphaKey(0f, 1f)
+                });
+            ParticleSystem.ColorOverLifetimeModule colorOverLifetime =
+                particleSystem.colorOverLifetime;
+            colorOverLifetime.enabled = true;
+            colorOverLifetime.color = new ParticleSystem.MinMaxGradient(lifetimeGradient);
+
+            ParticleSystem.SizeOverLifetimeModule sizeOverLifetime =
+                particleSystem.sizeOverLifetime;
+            sizeOverLifetime.enabled = true;
+            sizeOverLifetime.size = new ParticleSystem.MinMaxCurve(
+                1f, AnimationCurve.Linear(0f, 1f, 1f, 0f));
+
+            ParticleSystemRenderer renderer = particleSystem.GetComponent<ParticleSystemRenderer>();
+            renderer.renderMode = ParticleSystemRenderMode.Billboard;
+            renderer.sortingOrder = 8;
+            renderer.sharedMaterial = BuildHitSparkMaterial();
+            particleSystem.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        }
+
+        /// <summary>
+        /// EnemyView/AllyUnitView처럼 SO가 아니라 프리팹 자체에 붙은 컴포넌트 필드를 배선할 때
+        /// 쓰는 범용 헬퍼. 씬이 아니라 프리팹 에셋이라 PrefabUtility.LoadPrefabContents로 안전하게
+        /// 연다(AGENTS.md §3-2: .prefab 텍스트 직접 편집 금지 — 반드시 에디터 API 경유).
+        /// </summary>
+        private static void ConnectPrefabField<TComponent>(string prefabPath, string fieldName, GameObject value)
+            where TComponent : Component
+        {
+            GameObject root = PrefabUtility.LoadPrefabContents(prefabPath);
+            try
+            {
+                TComponent component = root.GetComponent<TComponent>();
+                if (component == null)
+                {
+                    throw new InvalidOperationException(
+                        $"{prefabPath}에서 {typeof(TComponent).Name}을 찾지 못했습니다.");
+                }
+
+                var serialized = new SerializedObject(component);
+                SerializedProperty property = serialized.FindProperty(fieldName);
+                if (property == null)
+                {
+                    throw new InvalidOperationException(
+                        $"{typeof(TComponent).Name}에 {fieldName} 슬롯이 없습니다: {prefabPath}");
+                }
+
+                property.objectReferenceValue = value;
+                serialized.ApplyModifiedPropertiesWithoutUndo();
+                PrefabUtility.SaveAsPrefabAsset(root, prefabPath);
+            }
+            finally
+            {
+                PrefabUtility.UnloadPrefabContents(root);
+            }
+        }
+
+        private static void ValidatePrefabField<TComponent>(string prefabPath, string fieldName, GameObject expected)
+            where TComponent : Component
+        {
+            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+            TComponent component = prefab != null ? prefab.GetComponent<TComponent>() : null;
+            if (component == null)
+            {
+                throw new InvalidOperationException(
+                    $"{prefabPath}에서 {typeof(TComponent).Name}을 찾지 못했습니다.");
+            }
+
+            var serialized = new SerializedObject(component);
+            SerializedProperty property = serialized.FindProperty(fieldName);
+            if (property == null || property.objectReferenceValue != expected)
+            {
+                throw new InvalidOperationException(
+                    $"{prefabPath}의 {fieldName} 배선이 올바르지 않습니다.");
+            }
+        }
+
         /// <summary>
         /// 히트 스파크 전용 Additive 머티리얼. Unity 기본 파티클 머티리얼(Default-ParticleSystem.mat)은
         /// Alpha Blend라 다른 스프라이트에 반투명하게 겹쳐 보이기만 하고 밝게 도드라지지 않는다 —
@@ -232,16 +387,28 @@ namespace RCCom.EditorTools
                 throw new InvalidOperationException("Unity 기본 파티클 텍스처를 찾지 못했습니다.");
             }
 
-            var material = new Material(additiveShader) { name = "HitSpark_Additive" };
+            // 이 머티리얼은 히트 스파크·사망 버스트가 공유해 한 빌드 안에서 두 번 호출된다.
+            // Delete+CreateAsset로 매번 새로 만들면 먼저 저장된 프리팹(ParticleBurst_HitSpark)의
+            // sharedMaterial 참조가 삭제된 GUID를 가리키게 돼 끊어진다 — 기존 에셋을 찾으면
+            // 그 자리에서 속성만 갱신해 같은 GUID를 유지한다(SaveOwnedPrefab이 프리팹에 대해
+            // 하는 것과 같은 "제자리 갱신" 원칙).
+            Material material = AssetDatabase.LoadAssetAtPath<Material>(HitSparkMaterialPath);
+            if (material == null)
+            {
+                material = new Material(additiveShader) { name = "HitSpark_Additive" };
+                AssetDatabase.CreateAsset(material, HitSparkMaterialPath);
+                AssetDatabase.SetLabels(material, new[] { GeneratedLabel });
+            }
+            else
+            {
+                material.shader = additiveShader;
+            }
+
             material.SetTexture("_MainTex", softDot);
             material.SetColor("_TintColor", Color.white);
-
-            AssetDatabase.DeleteAsset(HitSparkMaterialPath);
-            AssetDatabase.CreateAsset(material, HitSparkMaterialPath);
-            AssetDatabase.SetLabels(material, new[] { GeneratedLabel });
             EditorUtility.SetDirty(material);
 
-            return AssetDatabase.LoadAssetAtPath<Material>(HitSparkMaterialPath);
+            return material;
         }
 
         private static GameObject BuildFakeProjectilePrefab(GameObject hitSparkPrefab)
@@ -443,7 +610,24 @@ namespace RCCom.EditorTools
             ValidateEffect<PoisonDamageEffect>(PoisonDamageEffectPath, fakeProjectilePrefab);
             ValidateEffect<BasicAttackEffect>(BasicAttackEffectPath, fakeProjectilePrefab);
             ValidatePlayerController(fakeProjectilePrefab);
-            Debug.Log("[CombatVfxAssetBuilder] 투사체·히트 스파크 에셋 검증 통과");
+
+            GameObject deathBurstPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(DeathBurstPrefabPath);
+            ParticleBurst deathBurst = deathBurstPrefab != null
+                ? deathBurstPrefab.GetComponent<ParticleBurst>()
+                : null;
+            ParticleSystem deathBurstParticleSystem = deathBurstPrefab != null
+                ? deathBurstPrefab.GetComponent<ParticleSystem>()
+                : null;
+            if (deathBurst == null || deathBurstParticleSystem == null ||
+                deathBurstParticleSystem.emission.burstCount < 1)
+            {
+                throw new InvalidOperationException("사망 버스트 프리팹 설정이 올바르지 않습니다.");
+            }
+
+            ValidatePrefabField<EnemyView>(EnemyViewPrefabPath, "deathParticlePrefab", deathBurstPrefab);
+            ValidatePrefabField<AllyUnitView>(AllyUnitViewPrefabPath, "deathParticlePrefab", deathBurstPrefab);
+
+            Debug.Log("[CombatVfxAssetBuilder] 투사체·히트 스파크·사망 버스트 에셋 검증 통과");
         }
 
         private static void ValidatePlayerController(GameObject expectedPrefab)

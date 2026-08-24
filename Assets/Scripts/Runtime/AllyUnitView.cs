@@ -19,21 +19,32 @@ namespace RCCom.Runtime
         [SerializeField] private Color hitFlashColor = Color.red;
         [SerializeField] private float hitFlashDuration = 0.1f;
 
+        [Header("사망 연출")]
+        [Tooltip("사망 시 재생할 파티클 버스트(ParticleBurst) 프리팹. 비워두면 페이드만 재생된다.")]
+        [SerializeField] private GameObject deathParticlePrefab;
+        [Tooltip("사망 실루엣이 서서히 사라지는 데 걸리는 시간(초). EnemyView와 동일한 원칙 " +
+                 "(VFX_전투_연출_설계안.md §4) — 새 셰이더 없이 색상 알파만 조작한다.")]
+        [SerializeField] private float deathFadeDuration = 0.3f;
+
         [Header("회전 보간 (0 = 즉시 회전, 기존 동작)")]
         [Tooltip("목표 방향을 따라잡는 시간 상수(초). 0이면 기존처럼 즉시 스냅한다. 0.08~0.15 권장 — " +
                  "클수록 부드럽지만 코너에서 방향이 더 밀리고 조준도 함께 굼떠진다.")]
         [SerializeField] private float turnSmoothTime = 0f;
 
         private SpriteRenderer _spriteRenderer;
+        private Collider2D _collider;
         private Color _baseColor;
         private float _hitFlashRemaining;
         private bool _hasFacing;
+        private bool _isDying;
+        private float _deathFadeRemaining;
         private List<IAllyUnitVisualRuntime> _visualRuntimes;
         public AllyUnitInstance Instance { get; private set; }
 
         private void Awake()
         {
             _spriteRenderer = GetComponent<SpriteRenderer>();
+            _collider = GetComponent<Collider2D>();
             _baseColor = _spriteRenderer.color;
         }
 
@@ -56,6 +67,15 @@ namespace RCCom.Runtime
             Instance.Damaged += HandleDamaged;
             Instance.Died += HandleDied;
             transform.position = Instance.Position;
+
+            // 재사용을 대비한 방어적 초기화 — 지금은 사망 시 실제로 Destroy까지 가지만,
+            // 향후 풀링이 추가되더라도 이전 개체의 사망 페이드 상태가 새 개체에 새어나가지 않게.
+            _isDying = false;
+            _deathFadeRemaining = 0f;
+            if (_collider != null)
+            {
+                _collider.enabled = true;
+            }
 
             _baseColor = Instance.Definition.tint;
             _spriteRenderer.color = _baseColor;
@@ -106,6 +126,12 @@ namespace RCCom.Runtime
         {
             if (Instance == null)
             {
+                return;
+            }
+
+            if (_isDying)
+            {
+                TickDeathFade();
                 return;
             }
 
@@ -248,9 +274,42 @@ namespace RCCom.Runtime
             _spriteRenderer.color = hitFlashColor;
         }
 
+        /// <summary>
+        /// 즉시 Destroy하는 대신 Collider2D부터 꺼서(있다면) 짧게 알파 페이드아웃한 뒤 파괴한다.
+        /// EnemyView와 동일한 트레이드오프 — 완전한 단색 실루엣 고정은 셰이더 없이는 못 만들어서
+        /// 의도적으로 포기했다(VFX_전투_연출_설계안.md §4).
+        /// </summary>
         private void HandleDied()
         {
-            Destroy(gameObject);
+            if (_isDying)
+            {
+                return;
+            }
+
+            _isDying = true;
+            _deathFadeRemaining = Mathf.Max(0f, deathFadeDuration);
+            if (_collider != null)
+            {
+                _collider.enabled = false;
+            }
+
+            // 사망한 유닛이 오라 버프 등을 계속 발산하면 안 되므로 스프라이트보다 먼저 끈다.
+            DisposeVisualEffects();
+            ParticleBurst.Spawn(deathParticlePrefab, transform.position);
+        }
+
+        private void TickDeathFade()
+        {
+            _deathFadeRemaining -= Time.deltaTime;
+            float alpha = deathFadeDuration > 0f ? Mathf.Clamp01(_deathFadeRemaining / deathFadeDuration) : 0f;
+            Color color = _baseColor;
+            color.a = alpha;
+            _spriteRenderer.color = color;
+
+            if (_deathFadeRemaining <= 0f)
+            {
+                Destroy(gameObject);
+            }
         }
     }
 }

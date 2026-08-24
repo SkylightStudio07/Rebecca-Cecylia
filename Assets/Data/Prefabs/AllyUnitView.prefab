@@ -107,4 +107,6 @@ MonoBehaviour:
   targetVisualSize: 2
   hitFlashColor: {r: 1, g: 0, b: 0, a: 1}
   hitFlashDuration: 0.1
+  deathParticlePrefab: {fileID: 2993197373419359902, guid: 3fdcad316f1ac33458382a1b6be26e93, type: 3}
+  deathFadeDuration: 0.3
   turnSmoothTime: 0.1
