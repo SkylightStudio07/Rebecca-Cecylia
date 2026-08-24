@@ -1645,3 +1645,37 @@ Phase 0 자동화 경로를 실제로 열고, 이후 오퍼레이터별 원격 �
 ### 사람이 할 일
 - 없음 — 배선까지 이번 턴에 자동으로 완료했다. 플레이 테스트로 최종 눈으로 확인하고 싶다면
   해도 되지만 필수는 아니다.
+
+## 2026-08-24 — 아군 기본 공격: 원거리 유닛만 FakeProjectile 적용
+
+### 요청
+- {{user}}: 아군 기본 공격 중 원거리 유닛만 투사체 연출을 내보내고, 근접(컨택트 레인지 기반)
+  공격은 현행(연출 없는 즉발 타격)을 유지하고 싶다. `attackRange`가 `ContactRange`보다 작으면
+  `ContactRange`로 보정된다는 것까지 이미 알고 있었음.
+
+### 결정
+- `AllyUnitInstance.EffectiveAttackRange`(`Mathf.Max(Data.attackRange, ContactRange)`)를 근거로,
+  `BasicAttackEffect.OnAttack`에서 `ctx.self.Data.attackRange > ctx.self.ContactRange`일 때만
+  `FakeProjectile.Spawn(...)`을 재생하도록 분기했다. 이 조건이 거짓이면(=attackRange가
+  ContactRange로 보정되는 근접 유닛) 데미지만 적용하고 연출은 그대로 없음 — 요청대로 현행 유지.
+  `target.TakeDamage(...)` 호출 위치·순서는 바꾸지 않았다.
+- `CombatVfxAssetBuilder`에 `BasicAttackEffect.asset` 배선을 추가하고 직접 실행해, 다른 공격
+  효과들과 동일한 공용 `FakeProjectile` 프리팹을 연결했다.
+
+### 검증
+- Unity 6000.3.13f1 Pipeline `recompile` → `recompile_status`로 에러 0건 확인.
+- `unity command menu`로 빌더를 재실행해 `[CombatVfxAssetBuilder] ... 아군 기본 공격 ... 배선 완료`
+  로그와 검증 통과, error/exception 0건을 확인했다. 실행 전후 열린 씬도 `TitleScene` 하나로
+  동일해 부수적인 씬 변경이 없음을 확인했다(이번엔 `DefenseScene`을 열 필요가 없었다).
+- 실제 `AllyUnitDefinition.asset` 데이터로 분기 결과를 확인했다: `calliste-drone`/`calliste-guard`
+  (attackRange 5), `cassia-vanguard`(6), `racing-pitcrew`(4), `test-guard`(1.1), `test-rifleman`(3.8)는
+  전부 기본 `ContactRange`(0.75)보다 커서 투사체가 나가고, `cassia-guard`/`racing-heavy`
+  (attackRange 0)는 근접으로 남아 현행 그대로임을 코드 레벨로 확인했다.
+
+### 의도적으로 하지 않은 것
+- `ContactRange` 자체나 `EffectiveAttackRange` 계산 로직은 건드리지 않았다 — 이번 요청은
+  연출 분기만 필요했다.
+- 판정(`TakeDamage`) 순서·타이밍은 그대로다.
+
+### 사람이 할 일
+- 없음.
