@@ -105,13 +105,25 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RCCom.Runtime.SpriteFlipbook
   frames:
-  - {fileID: -3790392847773331395, guid: e60ddd4f150d84e47bbfe9d0024ac6ad, type: 3}
-  - {fileID: 8167820941058397827, guid: 0ae76e4e7620de34e9319596e20fa21b, type: 3}
-  - {fileID: -2739157298637621570, guid: 4810b970c7102354aae0cd5eb9e00164, type: 3}
-  - {fileID: -8280224312481194092, guid: cb08f005fa154a8429662709d3d4a98d, type: 3}
-  - {fileID: -3895542655852872578, guid: b6cbdd9513438c041a20ba3266509c36, type: 3}
-  - {fileID: 1604230735445845599, guid: a1d6a76c4d313cb46991ec9ceeb589e8, type: 3}
-  - {fileID: -6023623711843450726, guid: 34111ab9faa13ee49b42aa163418a2fc, type: 3}
-  - {fileID: 701092577592418919, guid: c4a4e77e69994ca44b0135e83b64acac, type: 3}
-  frameRate: 12
-  targetVisualSize: 1.5
+  - {fileID: 6167610064275067965, guid: 6c9a2802b758fc64b8a251f5be6ffef6, type: 3}
+  - {fileID: -7804004352785475981, guid: 6c9a2802b758fc64b8a251f5be6ffef6, type: 3}
+  - {fileID: 4178669332757273732, guid: 6c9a2802b758fc64b8a251f5be6ffef6, type: 3}
+  - {fileID: 7384345883696061592, guid: 6c9a2802b758fc64b8a251f5be6ffef6, type: 3}
+  - {fileID: 9079859981921188529, guid: 6c9a2802b758fc64b8a251f5be6ffef6, type: 3}
+  - {fileID: -435316707215393667, guid: 6c9a2802b758fc64b8a251f5be6ffef6, type: 3}
+  - {fileID: -7321769757559384167, guid: 6c9a2802b758fc64b8a251f5be6ffef6, type: 3}
+  - {fileID: 4563865051625315797, guid: 6c9a2802b758fc64b8a251f5be6ffef6, type: 3}
+  - {fileID: 122217182602362647, guid: 6c9a2802b758fc64b8a251f5be6ffef6, type: 3}
+  - {fileID: -764096428709931528, guid: 6c9a2802b758fc64b8a251f5be6ffef6, type: 3}
+  - {fileID: 7947536784770226545, guid: 6c9a2802b758fc64b8a251f5be6ffef6, type: 3}
+  - {fileID: -3704765984455002957, guid: 6c9a2802b758fc64b8a251f5be6ffef6, type: 3}
+  - {fileID: -3962670551517235145, guid: 6c9a2802b758fc64b8a251f5be6ffef6, type: 3}
+  - {fileID: -6066667972864938163, guid: 6c9a2802b758fc64b8a251f5be6ffef6, type: 3}
+  - {fileID: 6325737884987570532, guid: 6c9a2802b758fc64b8a251f5be6ffef6, type: 3}
+  - {fileID: -2842169563561182060, guid: 6c9a2802b758fc64b8a251f5be6ffef6, type: 3}
+  - {fileID: 331060568144127427, guid: 6c9a2802b758fc64b8a251f5be6ffef6, type: 3}
+  - {fileID: 5739532880708775759, guid: 6c9a2802b758fc64b8a251f5be6ffef6, type: 3}
+  - {fileID: 6302834317568123491, guid: 6c9a2802b758fc64b8a251f5be6ffef6, type: 3}
+  - {fileID: 4231786794589764328, guid: 6c9a2802b758fc64b8a251f5be6ffef6, type: 3}
+  frameRate: 24
+  targetVisualSize: 1.75
