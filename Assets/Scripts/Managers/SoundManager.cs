@@ -84,6 +84,9 @@ namespace RCCom.Managers
         private readonly List<SfxTimer> _activeSfx = new();
         private int _lastBgmIndex = -1;
         private int _lastUiSelectFrame = -1;
+        private AudioClip _resumeBgmClip;
+        private float _resumeBgmTime;
+        private bool _hasTemporaryBgm;
 
         private class SfxTimer
         {
@@ -135,7 +138,7 @@ namespace RCCom.Managers
             // 자체가 멈춰서(0.5초가 절대 안 지나서) 원본 클립 끝(최대 2초)까지 그대로 재생돼버림.
             TickSfxCutoff();
 
-            if (bgmSource != null && bgmPlaylist != null && bgmPlaylist.Length > 0 && !bgmSource.isPlaying)
+            if (!_hasTemporaryBgm && bgmSource != null && bgmPlaylist != null && bgmPlaylist.Length > 0 && !bgmSource.isPlaying)
             {
                 PlayNextBgm();
             }
@@ -170,7 +173,67 @@ namespace RCCom.Managers
             }
 
             _lastBgmIndex = index;
+            bgmSource.loop = false;
             bgmSource.clip = bgmPlaylist[index];
+            bgmSource.Play();
+        }
+
+        /// <summary>
+        /// 현재 BGM의 재생 위치를 보존하고 화면 전용 BGM을 반복 재생한다.
+        /// 로딩 연출 뒤에 호출하면 화면과 음악 전환 시점을 일치시킬 수 있다.
+        /// </summary>
+        public void PlayTemporaryLoopingBgm(AudioClip clip)
+        {
+            if (bgmSource == null || clip == null)
+            {
+                return;
+            }
+
+            if (_hasTemporaryBgm && bgmSource.clip == clip)
+            {
+                return;
+            }
+
+            // 임시 BGM 안에서 다시 전환하더라도 최초 로비곡의 복귀 지점을 덮어쓰지 않는다.
+            if (!_hasTemporaryBgm)
+            {
+                _resumeBgmClip = bgmSource.clip;
+                _resumeBgmTime = bgmSource.isPlaying ? bgmSource.time : 0f;
+            }
+
+            _hasTemporaryBgm = true;
+            bgmSource.Stop();
+            bgmSource.clip = clip;
+            bgmSource.loop = true;
+            bgmSource.time = 0f;
+            bgmSource.Play();
+        }
+
+        /// <summary>화면 전용 반복 BGM을 끝내고 진입 전 로비곡의 재생 위치로 복귀한다.</summary>
+        public void RestoreBgmAfterTemporaryLoop()
+        {
+            if (!_hasTemporaryBgm || bgmSource == null)
+            {
+                return;
+            }
+
+            AudioClip resumeClip = _resumeBgmClip;
+            float resumeTime = _resumeBgmTime;
+            _hasTemporaryBgm = false;
+            _resumeBgmClip = null;
+            _resumeBgmTime = 0f;
+
+            bgmSource.Stop();
+            bgmSource.loop = false;
+
+            if (resumeClip == null)
+            {
+                PlayNextBgm();
+                return;
+            }
+
+            bgmSource.clip = resumeClip;
+            bgmSource.time = Mathf.Clamp(resumeTime, 0f, Mathf.Max(0f, resumeClip.length - 0.01f));
             bgmSource.Play();
         }
 

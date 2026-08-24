@@ -15491,6 +15491,7 @@ MonoBehaviour:
   recruitEntryButton: {fileID: 1786468631}
   recruitOperatorButton: {fileID: 231462228}
   backButton: {fileID: 164582647}
+  shopBgmClip: {fileID: 8300000, guid: 6dce36376e21b44448dfaa8fbe9ba153, type: 3}
 --- !u!1 &1015164446
 GameObject:
   m_ObjectHideFlags: 0
