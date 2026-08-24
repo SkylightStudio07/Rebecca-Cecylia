@@ -2211,3 +2211,44 @@ Project 뷰에서 직접 열어 밸런싱했다가 다음 Build 실행에서 조
 - 플레이 테스트로 아군 체력바가 유닛 종류(크기)에 상관없이 일정한 크기/위치로 보이는지,
   사망 시 적/아군 둘 다 체력바가 즉시 사라지는지 확인. `healthBarOffset`(`AllyUnitView.prefab`
   인스펙터, 기본 `(0, -1.3)`)로 위치 조정 가능.
+
+## 2026-08-24 — 사망 넉백 방향을 공격받은 반대 방향으로 (랜덤 → 실제 발신 위치 기반)
+
+### 결정
+- "폭발하여 밀려나는" 넉백이 지금까지 랜덤 방향이었는데, 실제로는 공격받은 반대 방향이 더
+  자연스럽다는 지적을 받았다. 정확한 방향을 구하려면 "누가 때렸는지 위치"가 필요한데
+  `TakeDamage(float amount)`엔 그 정보가 아예 없었다.
+- 값싼 근사(예: `EnemyInstance.CurrentTarget`으로 대체)도 검토했지만 기각했다 —
+  `CurrentTarget`은 "적이 지금 물고 있는 아군"이지 자신을 죽이는 주체가 아니다. 적이 죽는
+  가장 흔한 경우(타워 사격)에는 애초에 `CurrentTarget`이 그 타워와 무관해서, 근사가 오히려
+  대다수 케이스에서 틀린 방향을 가리키게 된다. 그래서 복잡도가 늘더라도 `IDamageable` 계약
+  자체를 확장하는 정공법을 택했다({{user}} 확인).
+- `IDamageable.TakeDamage(float amount, Vector2? sourcePosition = null)` — 선택 인자라
+  기존 구현/호출부 전부와 하위 호환. 구현체 4곳(`EnemyInstance`/`AllyUnitInstance`/
+  `PlayerController`/`BaseController`) 시그니처 갱신 — Player/Base는 넉백 연출이 없어 인자를
+  받기만 하고 안 쓴다.
+- `EnemyInstance`/`AllyUnitInstance`에 `LastDamageSourcePosition` 추가 — 매 `TakeDamage`
+  호출마다 갱신하되, 소스 없는 호출(독 틱 등)은 이전 값을 덮어쓰지 않는다 — 죽는 순간까지
+  마지막으로 "실제 때린" 주체의 위치를 기억하는 게 더 낫다는 판단. `Died` 이벤트 시그니처는
+  그대로 두고 View가 사망 처리 시점에 이 값을 직접 읽는다.
+- 호출부 9곳에 발신 위치를 추가했다: 타워 5곳(`DamageEffect`/`PierceDamageEffect`/
+  `PoisonDamageEffect`/`SplashDamageEffect` 주공격 = `ctx.self.Position`), **스플래시 2차
+  피해자만 예외로 `target.position`(폭발 지점)을 쓴다** — 타워가 아니라 충격파 링/그을림
+  자국의 중심에서 밀려나야 이미 있는 시각효과(폭발)와 넉백 방향이 자연스럽게 맞아떨어지기
+  때문. 아군 기본공격/플레이어 공격·스킬 = 각자 자신의 `Position`. 적 접촉 피해
+  (`ContactDamageEffect`) = `ctx.self.position`.
+- `DeathKnockbackSequencer.Begin()`에 `attackerPosition` 선택 인자 추가,
+  `ResolveKnockbackDirection()` 신설 — 값이 있으면 공격받은 반대 방향, 없거나(소스를 한 번도
+  못 받아본 채 죽은 경우) 공격자와 정확히 같은 위치(접촉 판정 등, 방향이 수학적으로 정의되지
+  않음)면 기존처럼 랜덤 방향으로 대체한다.
+
+### 검증
+- `unity command recompile`/`recompile_status` — 컴파일 에러 0건(인터페이스 변경이라 구현체
+  4곳 전부 확인).
+- `RCCom/Combat VFX/Validate...` + `RCCom/Ally Units/Validate...` 둘 다 재실행 — 검증 통과,
+  에러/예외 0건. 순수 코드 로직 변경이라 `git status`에 `.prefab`/`.asset` 변경이 하나도
+  없는 것도 확인(프리팹 재생성 불필요).
+
+### 사람이 할 일
+- 플레이 테스트로 적/아군이 죽을 때 실제로 공격 주체(타워/유닛/플레이어) 반대쪽으로 밀려나는지
+  확인. 스플래시 2차 피해자는 폭발 중심 기준으로 사방으로 퍼지듯 밀려나야 정상이다.
