@@ -30,5 +30,91 @@
     "requiredBestWave": 2,
     "unlockType": 1,
     "purchasePrice": 0,
-    "requiredStageId": ""
+    "requiredStageId": "",
+    "upgradeTracks": [
+        {
+            "trackId": "aurora.vulnerable-multiplier",
+            "displayName": "취약 디버프 증폭",
+            "category": 0,
+            "targetKind": 9,
+            "targetUnitId": "aurora-debuff-drone",
+            "maxLevel": 8,
+            "perLevelDelta": 0.03125,
+            "isInteger": false,
+            "hasMinValue": false,
+            "minValue": 0.0,
+            "hasMaxValue": false,
+            "maxValue": 0.0
+        },
+        {
+            "trackId": "aurora.slow-strength",
+            "displayName": "감속 강화",
+            "category": 0,
+            "targetKind": 11,
+            "targetUnitId": "aurora-slow-drone",
+            "maxLevel": 8,
+            "perLevelDelta": -0.021875,
+            "isInteger": false,
+            "hasMinValue": true,
+            "minValue": 0.0,
+            "hasMaxValue": false,
+            "maxValue": 0.0
+        },
+        {
+            "trackId": "aurora.drone-mobility",
+            "displayName": "드론 순찰 기동성",
+            "category": 0,
+            "targetKind": 3,
+            "targetUnitId": "aurora-debuff-drone;aurora-slow-drone",
+            "maxLevel": 8,
+            "perLevelDelta": 0.125,
+            "isInteger": false,
+            "hasMinValue": false,
+            "minValue": 0.0,
+            "hasMaxValue": false,
+            "maxValue": 0.0
+        },
+        {
+            "trackId": "aurora.vulnerable-refresh",
+            "displayName": "디버프 재적용 유예 연장",
+            "category": 1,
+            "targetKind": 10,
+            "targetUnitId": "aurora-debuff-drone",
+            "maxLevel": 8,
+            "perLevelDelta": 0.0625,
+            "isInteger": false,
+            "hasMinValue": false,
+            "minValue": 0.0,
+            "hasMaxValue": false,
+            "maxValue": 0.0
+        },
+        {
+            "trackId": "aurora.drone-armor-debuff",
+            "displayName": "약화 드론 장갑 강화",
+            "category": 1,
+            "targetKind": 0,
+            "targetUnitId": "aurora-debuff-drone",
+            "maxLevel": 8,
+            "perLevelDelta": 4.0,
+            "isInteger": false,
+            "hasMinValue": false,
+            "minValue": 0.0,
+            "hasMaxValue": false,
+            "maxValue": 0.0
+        },
+        {
+            "trackId": "aurora.drone-armor-slow",
+            "displayName": "감속 드론 장갑 강화",
+            "category": 1,
+            "targetKind": 0,
+            "targetUnitId": "aurora-slow-drone",
+            "maxLevel": 8,
+            "perLevelDelta": 5.0,
+            "isInteger": false,
+            "hasMinValue": false,
+            "minValue": 0.0,
+            "hasMaxValue": false,
+            "maxValue": 0.0
+        }
+    ]
 }

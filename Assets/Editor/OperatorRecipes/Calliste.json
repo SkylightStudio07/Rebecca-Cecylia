@@ -30,5 +30,77 @@
     "requiredBestWave": 0,
     "unlockType": 2,
     "purchasePrice": 100,
-    "requiredStageId": ""
+    "requiredStageId": "",
+    "upgradeTracks": [
+        {
+            "trackId": "calliste.cp-recovery",
+            "displayName": "CP 회복 가속",
+            "category": 0,
+            "targetKind": 7,
+            "targetUnitId": "",
+            "maxLevel": 8,
+            "perLevelDelta": 0.2,
+            "isInteger": false,
+            "hasMinValue": false,
+            "minValue": 0.0,
+            "hasMaxValue": false,
+            "maxValue": 0.0
+        },
+        {
+            "trackId": "calliste.cp-cap",
+            "displayName": "CP 상한 확장",
+            "category": 0,
+            "targetKind": 6,
+            "targetUnitId": "",
+            "maxLevel": 8,
+            "perLevelDelta": 6.25,
+            "isInteger": true,
+            "hasMinValue": false,
+            "minValue": 0.0,
+            "hasMaxValue": false,
+            "maxValue": 0.0
+        },
+        {
+            "trackId": "calliste.relay-multiplier",
+            "displayName": "전술 드론 버프 증폭",
+            "category": 0,
+            "targetKind": 8,
+            "targetUnitId": "calliste-drone",
+            "maxLevel": 8,
+            "perLevelDelta": 0.03125,
+            "isInteger": false,
+            "hasMinValue": false,
+            "minValue": 0.0,
+            "hasMaxValue": false,
+            "maxValue": 0.0
+        },
+        {
+            "trackId": "calliste.drone-mobility",
+            "displayName": "서포트 드론 기동성",
+            "category": 1,
+            "targetKind": 3,
+            "targetUnitId": "calliste-drone",
+            "maxLevel": 8,
+            "perLevelDelta": 0.1,
+            "isInteger": false,
+            "hasMinValue": false,
+            "minValue": 0.0,
+            "hasMaxValue": false,
+            "maxValue": 0.0
+        },
+        {
+            "trackId": "calliste.guard-armor",
+            "displayName": "중장갑 센티넬 요새화",
+            "category": 1,
+            "targetKind": 0,
+            "targetUnitId": "calliste-guard",
+            "maxLevel": 8,
+            "perLevelDelta": 3.0,
+            "isInteger": false,
+            "hasMinValue": false,
+            "minValue": 0.0,
+            "hasMaxValue": false,
+            "maxValue": 0.0
+        }
+    ]
 }

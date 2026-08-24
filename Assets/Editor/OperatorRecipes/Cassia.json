@@ -26,5 +26,77 @@
     "requiredBestWave": 0,
     "unlockType": 0,
     "purchasePrice": 0,
-    "requiredStageId": ""
+    "requiredStageId": "",
+    "upgradeTracks": [
+        {
+            "trackId": "cassia.guard-armor",
+            "displayName": "방호 요원 장갑 강화",
+            "category": 0,
+            "targetKind": 0,
+            "targetUnitId": "cassia-guard",
+            "maxLevel": 8,
+            "perLevelDelta": 3.2,
+            "isInteger": false,
+            "hasMinValue": false,
+            "minValue": 0.0,
+            "hasMaxValue": false,
+            "maxValue": 0.0
+        },
+        {
+            "trackId": "cassia.vanguard-damage",
+            "displayName": "전진 사수 화력 강화",
+            "category": 0,
+            "targetKind": 1,
+            "targetUnitId": "cassia-vanguard",
+            "maxLevel": 8,
+            "perLevelDelta": 0.3,
+            "isInteger": false,
+            "hasMinValue": false,
+            "minValue": 0.0,
+            "hasMaxValue": false,
+            "maxValue": 0.0
+        },
+        {
+            "trackId": "cassia.starting-cp",
+            "displayName": "초기 CP 지급",
+            "category": 0,
+            "targetKind": 5,
+            "targetUnitId": "",
+            "maxLevel": 8,
+            "perLevelDelta": 3.0,
+            "isInteger": true,
+            "hasMinValue": false,
+            "minValue": 0.0,
+            "hasMaxValue": false,
+            "maxValue": 0.0
+        },
+        {
+            "trackId": "cassia.vanguard-range",
+            "displayName": "전진 사수 사거리 연장",
+            "category": 1,
+            "targetKind": 2,
+            "targetUnitId": "cassia-vanguard",
+            "maxLevel": 8,
+            "perLevelDelta": 0.3,
+            "isInteger": false,
+            "hasMinValue": false,
+            "minValue": 0.0,
+            "hasMaxValue": false,
+            "maxValue": 0.0
+        },
+        {
+            "trackId": "cassia.guard-deploy-cost",
+            "displayName": "방호 요원 배치 비용 절감",
+            "category": 1,
+            "targetKind": 4,
+            "targetUnitId": "cassia-guard",
+            "maxLevel": 8,
+            "perLevelDelta": -0.875,
+            "isInteger": true,
+            "hasMinValue": true,
+            "minValue": 1.0,
+            "hasMaxValue": false,
+            "maxValue": 0.0
+        }
+    ]
 }

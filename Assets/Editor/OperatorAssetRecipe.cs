@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using RCCom.Data;
 using RCCom.Definitions.Operator;
 
@@ -33,5 +34,8 @@ namespace RCCom.EditorTools
         public OperatorUnlockType unlockType;
         public int purchasePrice;
         public string requiredStageId;
+
+        /// <summary>오퍼레이터 영구 강화 트랙 목록. 상점 UI가 없어도 비어 있으면 그대로 미강화로 동작한다.</summary>
+        public List<OperatorUpgradeTrack> upgradeTracks = new();
     }
 }

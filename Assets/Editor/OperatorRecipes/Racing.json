@@ -26,5 +26,77 @@
     "requiredBestWave": 0,
     "unlockType": 3,
     "purchasePrice": 0,
-    "requiredStageId": "ch1-02"
+    "requiredStageId": "ch1-02",
+    "upgradeTracks": [
+        {
+            "trackId": "racing.repair-rate",
+            "displayName": "피트스톱 수리력",
+            "category": 0,
+            "targetKind": 12,
+            "targetUnitId": "racing-pitcrew",
+            "maxLevel": 8,
+            "perLevelDelta": 0.2,
+            "isInteger": false,
+            "hasMinValue": false,
+            "minValue": 0.0,
+            "hasMaxValue": false,
+            "maxValue": 0.0
+        },
+        {
+            "trackId": "racing.pit-stop-multiplier",
+            "displayName": "정지 피트스톱 배율",
+            "category": 0,
+            "targetKind": 13,
+            "targetUnitId": "racing-pitcrew",
+            "maxLevel": 8,
+            "perLevelDelta": 0.1,
+            "isInteger": false,
+            "hasMinValue": false,
+            "minValue": 0.0,
+            "hasMaxValue": false,
+            "maxValue": 0.0
+        },
+        {
+            "trackId": "racing.heavy-armor",
+            "displayName": "헤비 페이스카 차단선 보강",
+            "category": 0,
+            "targetKind": 0,
+            "targetUnitId": "racing-heavy",
+            "maxLevel": 8,
+            "perLevelDelta": 4.5,
+            "isInteger": false,
+            "hasMinValue": false,
+            "minValue": 0.0,
+            "hasMaxValue": false,
+            "maxValue": 0.0
+        },
+        {
+            "trackId": "racing.heavy-mobility",
+            "displayName": "헤비 페이스카 기동성",
+            "category": 1,
+            "targetKind": 3,
+            "targetUnitId": "racing-heavy",
+            "maxLevel": 8,
+            "perLevelDelta": 0.15,
+            "isInteger": false,
+            "hasMinValue": false,
+            "minValue": 0.0,
+            "hasMaxValue": false,
+            "maxValue": 0.0
+        },
+        {
+            "trackId": "racing.heavy-deploy-cost",
+            "displayName": "헤비 페이스카 배치 비용 절감",
+            "category": 1,
+            "targetKind": 4,
+            "targetUnitId": "racing-heavy",
+            "maxLevel": 8,
+            "perLevelDelta": -1.875,
+            "isInteger": true,
+            "hasMinValue": true,
+            "minValue": 1.0,
+            "hasMaxValue": false,
+            "maxValue": 0.0
+        }
+    ]
 }

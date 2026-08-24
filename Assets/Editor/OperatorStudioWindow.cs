@@ -59,6 +59,7 @@ namespace RCCom.EditorTools
             Identity,
             Loadout,
             Dialogue,
+            Upgrades,
             Package,
         }
 
@@ -164,7 +165,7 @@ namespace RCCom.EditorTools
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
             _tabIndex = GUILayout.Toolbar(
                 _tabIndex,
-                new[] { "Identity", "Loadout", "Dialogue", "Package" },
+                new[] { "Identity", "Loadout", "Dialogue", "Upgrades", "Package" },
                 EditorStyles.toolbarButton);
             EditorGUILayout.EndHorizontal();
 
@@ -179,6 +180,9 @@ namespace RCCom.EditorTools
                     break;
                 case StudioTab.Dialogue:
                     DrawDialogueTab();
+                    break;
+                case StudioTab.Upgrades:
+                    DrawUpgradesTab();
                     break;
                 case StudioTab.Package:
                     DrawPackageTab();
@@ -287,6 +291,83 @@ namespace RCCom.EditorTools
                 "이 탭에서 지정한 Roster는 원본 풀입니다. 오퍼레이터별 복제본은 Build 시 자동 생성되며, 생성물은 직접 편집하지 않습니다.",
                 MessageType.None);
             GUILayout.Space(8);
+            DrawSaveButton();
+        }
+
+        private void DrawUpgradesTab()
+        {
+            GUILayout.Label("Upgrade Tracks", EditorStyles.boldLabel);
+            EditorGUILayout.HelpBox(
+                "재화 소비·상점 UI는 아직 없습니다. 여기서는 트랙 정의만 편집하고, 실제 레벨은 " +
+                "PlayerProfile.operatorUpgrades에 저장돼 전투 진입 시 자동으로 가산됩니다. Lv0 기준값은 " +
+                "따로 입력하지 않습니다 — 실제 유닛/효과 에셋의 현재 값을 기준선으로 매 레벨 " +
+                "perLevelDelta만큼 더합니다.",
+                MessageType.Info);
+
+            _recipe.upgradeTracks ??= new List<OperatorUpgradeTrack>();
+            int removeIndex = -1;
+            for (int i = 0; i < _recipe.upgradeTracks.Count; i++)
+            {
+                OperatorUpgradeTrack track = _recipe.upgradeTracks[i];
+                if (track == null)
+                {
+                    _recipe.upgradeTracks[i] = track = new OperatorUpgradeTrack();
+                }
+
+                EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+                EditorGUILayout.BeginHorizontal();
+                GUILayout.Label($"Track {i + 1}", EditorStyles.boldLabel, GUILayout.Width(60));
+                GUILayout.FlexibleSpace();
+                if (GUILayout.Button("Remove", GUILayout.Width(62)))
+                {
+                    removeIndex = i;
+                }
+
+                EditorGUILayout.EndHorizontal();
+
+                track.trackId = EditorGUILayout.TextField("Track ID", track.trackId ?? string.Empty);
+                track.displayName = EditorGUILayout.TextField("Display Name", track.displayName ?? string.Empty);
+                track.category = (OperatorUpgradeCategory)EditorGUILayout.EnumPopup("Category", track.category);
+                track.targetKind = (OperatorUpgradeTargetKind)EditorGUILayout.EnumPopup(
+                    "Target Kind", track.targetKind);
+                track.targetUnitId = EditorGUILayout.TextField(
+                    "Target Unit ID(s)", track.targetUnitId ?? string.Empty);
+                track.maxLevel = Mathf.Max(1, EditorGUILayout.IntField("Max Level", track.maxLevel));
+                track.perLevelDelta = EditorGUILayout.FloatField("Per-Level Delta", track.perLevelDelta);
+                track.isInteger = EditorGUILayout.ToggleLeft("Integer Field", track.isInteger);
+
+                EditorGUILayout.BeginHorizontal();
+                track.hasMinValue = EditorGUILayout.ToggleLeft("Min", track.hasMinValue, GUILayout.Width(50));
+                using (new EditorGUI.DisabledGroupScope(!track.hasMinValue))
+                {
+                    track.minValue = EditorGUILayout.FloatField(track.minValue);
+                }
+
+                track.hasMaxValue = EditorGUILayout.ToggleLeft("Max", track.hasMaxValue, GUILayout.Width(50));
+                using (new EditorGUI.DisabledGroupScope(!track.hasMaxValue))
+                {
+                    track.maxValue = EditorGUILayout.FloatField(track.maxValue);
+                }
+
+                EditorGUILayout.EndHorizontal();
+                EditorGUILayout.EndVertical();
+            }
+
+            if (removeIndex >= 0)
+            {
+                _recipe.upgradeTracks.RemoveAt(removeIndex);
+            }
+
+            GUILayout.Space(6);
+            if (GUILayout.Button("+ Add Track", GUILayout.Height(26)))
+            {
+                _recipe.upgradeTracks.Add(new OperatorUpgradeTrack
+                {
+                    trackId = $"{_recipe.operatorId}.new-track-{_recipe.upgradeTracks.Count + 1}",
+                });
+            }
+
+            GUILayout.Space(12);
             DrawSaveButton();
         }
 

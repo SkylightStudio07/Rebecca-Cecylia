@@ -163,6 +163,13 @@ namespace RCCom.EditorTools
                     changedAssets);
             }
 
+            OperatorUpgradeTrackSet upgradeTrackSet = GetOrCreateOwnedAsset<OperatorUpgradeTrackSet>(
+                $"{operatorFolder}/OperatorUpgradeTrackSet.asset", changedAssets);
+            ApplyIfChanged(
+                upgradeTrackSet,
+                asset => asset.tracks = CloneUpgradeTracks(recipe.upgradeTracks),
+                changedAssets);
+
             OperatorDefinition definition = GetOrCreateOwnedAsset<OperatorDefinition>(
                 $"{operatorFolder}/OperatorDefinition.asset", changedAssets);
             ApplyIfChanged(definition, asset =>
@@ -181,6 +188,7 @@ namespace RCCom.EditorTools
                 asset.towerRoster = towerRoster;
                 asset.cardRoster = cardRoster;
                 asset.allyUnitRoster = allyUnitRoster;
+                asset.upgradeTracks = upgradeTrackSet;
                 asset.dialogueSet = dialogueSet;
                 asset.unlockType = recipe.unlockType;
                 asset.requiredBestWave = recipe.requiredBestWave;
@@ -318,6 +326,65 @@ namespace RCCom.EditorTools
             {
                 throw new InvalidOperationException($"스테이지 보상 Stage ID가 비어 있습니다: {recipePath}");
             }
+
+            if (recipe.upgradeTracks != null)
+            {
+                var trackIds = new HashSet<string>(StringComparer.Ordinal);
+                foreach (OperatorUpgradeTrack track in recipe.upgradeTracks)
+                {
+                    if (track == null || string.IsNullOrWhiteSpace(track.trackId))
+                    {
+                        throw new InvalidOperationException($"강화 트랙 trackId가 비어 있습니다: {recipePath}");
+                    }
+
+                    if (!trackIds.Add(track.trackId))
+                    {
+                        throw new InvalidOperationException(
+                            $"강화 트랙 trackId가 중복됩니다: {track.trackId} ({recipePath})");
+                    }
+
+                    if (track.maxLevel < 1)
+                    {
+                        throw new InvalidOperationException(
+                            $"강화 트랙 maxLevel은 1 이상이어야 합니다: {track.trackId} ({recipePath})");
+                    }
+                }
+            }
+        }
+
+        private static List<OperatorUpgradeTrack> CloneUpgradeTracks(List<OperatorUpgradeTrack> source)
+        {
+            var clone = new List<OperatorUpgradeTrack>();
+            if (source == null)
+            {
+                return clone;
+            }
+
+            foreach (OperatorUpgradeTrack track in source)
+            {
+                if (track == null)
+                {
+                    continue;
+                }
+
+                clone.Add(new OperatorUpgradeTrack
+                {
+                    trackId = track.trackId,
+                    displayName = track.displayName,
+                    category = track.category,
+                    targetKind = track.targetKind,
+                    targetUnitId = track.targetUnitId,
+                    maxLevel = track.maxLevel,
+                    perLevelDelta = track.perLevelDelta,
+                    isInteger = track.isInteger,
+                    hasMinValue = track.hasMinValue,
+                    minValue = track.minValue,
+                    hasMaxValue = track.hasMaxValue,
+                    maxValue = track.maxValue,
+                });
+            }
+
+            return clone;
         }
 
         private static void EnsureFolder(string folderPath)
