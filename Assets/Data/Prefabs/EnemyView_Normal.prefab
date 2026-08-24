@@ -172,6 +172,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RCCom.Runtime.EnemyView
   hitFlashColor: {r: 1, g: 0, b: 0, a: 1}
   hitFlashDuration: 0.1
+  deathExplosionPrefab: {fileID: 3256780356078912711, guid: e52604786b1702c4a87b532f90f024da, type: 3}
+  deathKnockbackVisual: {fileID: 11400000, guid: 876d796d4d4c7a24f97e2d01bd3c203f, type: 2}
   healthBar: {fileID: 5783486534490285849}
   turnSmoothTime: 0.1
 --- !u!1 &6592273245750616418

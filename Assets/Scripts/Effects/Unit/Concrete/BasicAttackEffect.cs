@@ -10,6 +10,10 @@ namespace RCCom.Effects.Unit.Concrete
     [CreateAssetMenu(menuName = "RCCom/Ally Unit/Effects/Basic Attack Effect")]
     public class BasicAttackEffect : AllyUnitEffectBase
     {
+        [Tooltip("원거리 유닛(attackRange가 ContactRange보다 큰 경우)에만 재생하는 가짜 투사체. " +
+                 "attackRange가 ContactRange 이하로 보정되는 근접 유닛은 지금처럼 연출 없이 즉발 타격을 유지한다.")]
+        [SerializeField] private GameObject fakeProjectilePrefab;
+
         public override void OnAttack(AllyUnitContext ctx, EnemyInstance target)
         {
             if (ctx == null || ctx.self == null || ctx.self.Data == null ||
@@ -18,7 +22,16 @@ namespace RCCom.Effects.Unit.Concrete
                 return;
             }
 
-            target.TakeDamage(ctx.self.Data.attackDamage);
+            target.TakeDamage(ctx.self.Data.attackDamage, ctx.self.Position);
+
+            // 근접 유닛은 EffectiveAttackRange가 ContactRange로 보정돼 attackRange보다 커지므로
+            // (AllyUnitInstance.EffectiveAttackRange), attackRange가 ContactRange를 실제로 넘는
+            // 유닛만 "진짜 원거리"로 보고 투사체를 띄운다. 근접 유닛은 현행(연출 없는 즉발 타격)을
+            // 그대로 유지한다 — {{user}} 확인.
+            if (ctx.self.Data.attackRange > ctx.self.ContactRange)
+            {
+                FakeProjectile.Spawn(fakeProjectilePrefab, ctx.self.Position, target.position, ctx.self.Data);
+            }
         }
     }
 }

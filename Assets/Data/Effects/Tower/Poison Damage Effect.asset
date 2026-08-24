@@ -14,4 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RCCom.Effects.Tower.Concrete.PoisonDamageEffect
   poisonDamagePerSecond: 3
   poisonDuration: 3
-  attackFlashPrefab: {fileID: 6050871853458803644, guid: 739798fd337901747aaab13810473089, type: 3}
+  fakeProjectilePrefab: {fileID: 6302134341187759493, guid: 49e7cc62646cd804da79a8c0732e2abf, type: 3}

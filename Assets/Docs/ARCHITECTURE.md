@@ -764,7 +764,7 @@ Play 모드에서 스탯강화 카드를 몇 개 뽑은 뒤 정지 → 원본 `T
 
 ### 코드 구현 완료
 - `Runtime/EnemyHealthBar.cs`(신규): UI Canvas 없이 `SpriteRenderer` 2개(배경+채움)만으로 구성 — `SetHealthPercent(percent)`가 채움 스프라이트의 `localScale.x`를 퍼센트로 조절하고, 만피(1.0) 또는 사망(0) 상태면 자동으로 `gameObject.SetActive(false)`. 채움 스프라이트는 **Pivot이 왼쪽(Left)** 이어야 오른쪽부터 줄어드는 자연스러운 바가 됨.
-- `EnemyView`에 `healthBar`(선택) 필드 추가, `LateUpdate()`에서 `Instance.currentHealth / Instance.Data.maxHealth`로 매 프레임 갱신.
+- `EnemyView`에 `healthBar`(선택) 필드 추가, `Bind()` 시점의 배율 적용 완료 체력을 최대 체력으로 보존하고 `LateUpdate()`에서 현재 체력 비율을 매 프레임 갱신. Definition 원본 `maxHealth`를 직접 분모로 쓰면 웨이브/스테이지 체력 배율 적용 적이 첫 피격 뒤에도 100% 이상으로 Clamp되어 체력바가 숨는 문제가 있어 런타임 기준값을 사용한다.
 - **회전 상쇄 처리**: `EnemyView`가 이동방향으로 자기 자신(루트)을 매 프레임 회전시키는데, 체력바를 그 자식으로 두면 회전을 그대로 물려받아 같이 빙글빙글 돈다. `UpdateHealthBar()`가 `healthBar.transform.rotation = Quaternion.identity`로 매 프레임 되돌려 항상 수평 유지 — 이 처리가 자기 회전을 설정한 "다음 줄"에서 실행되므로(같은 LateUpdate 메서드 안, 실행 순서가 코드 순서로 보장됨) 스크립트 간 실행 순서 경쟁 없이 항상 정확히 상쇄됨.
 
 ### 씬 세팅 필요

@@ -36,7 +36,7 @@ namespace RCCom.Runtime
         [Tooltip("플레이어가 벗어나면 안 되는 영역 (배경 크기와 맞춘 BoxCollider2D — CameraFollow의 Bounds와 같은 오브젝트를 드래그하면 됨)")]
         [SerializeField] private Collider2D levelBounds;
 
-        [SerializeField] private GameObject attackFlashPrefab;
+        [SerializeField] private GameObject fakeProjectilePrefab;
 
         [Tooltip("스프라이트만 담은 자식 오브젝트가 있으면 여기 연결 — 회전이 몸통 Collider2D에 영향을 안 주게 됨. 비워두면 이 오브젝트(루트) 자체를 회전시킴.")]
         [SerializeField] private Transform spriteTransform;
@@ -237,8 +237,8 @@ namespace RCCom.Runtime
                 return;
             }
 
-            target.TakeDamage(data.attackDamage);
-            AttackFlash.Spawn(attackFlashPrefab, transform.position, target.position);
+            target.TakeDamage(data.attackDamage, transform.position);
+            FakeProjectile.Spawn(fakeProjectilePrefab, transform.position, target.position, data);
 
             if (SoundManager.Instance != null)
             {
@@ -300,11 +300,15 @@ namespace RCCom.Runtime
         private void FireSkillPulse()
         {
             float sqrSkillRange = data.skillRange * data.skillRange;
-            foreach (EnemyInstance enemy in _enemiesInRange)
+            // PierceDamageEffect/SplashDamageEffect와 같은 이유(TakeDamage → 즉사 →
+            // EnemyView.HandleDied()의 콜라이더 비활성화 → OnTriggerExit2D 동기 발생)로
+            // _enemiesInRange 원본을 직접 순회하면 열거 도중 리스트가 바뀌어 예외가 난다.
+            var targets = new List<EnemyInstance>(_enemiesInRange);
+            foreach (EnemyInstance enemy in targets)
             {
                 if ((enemy.position - (Vector2)transform.position).sqrMagnitude <= sqrSkillRange)
                 {
-                    enemy.TakeDamage(data.skillDamage);
+                    enemy.TakeDamage(data.skillDamage, transform.position);
                 }
             }
         }
@@ -329,7 +333,7 @@ namespace RCCom.Runtime
             }
         }
 
-        public void TakeDamage(float amount)
+        public void TakeDamage(float amount, Vector2? sourcePosition = null)
         {
             if (_invulnerabilityRemaining > 0f || _isDead)
             {

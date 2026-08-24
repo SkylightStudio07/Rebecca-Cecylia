@@ -13697,7 +13697,7 @@ MonoBehaviour:
   moveAction: {fileID: -1680190386980627800, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
   attackRangeTrigger: {fileID: 1864900208}
   levelBounds: {fileID: 1689790903}
-  attackFlashPrefab: {fileID: 6050871853458803644, guid: 77d2647ec915fca4c985f64bde091800, type: 3}
+  fakeProjectilePrefab: {fileID: 6302134341187759493, guid: 49e7cc62646cd804da79a8c0732e2abf, type: 3}
   spriteTransform: {fileID: 2118582302}
   spriteForwardOffsetDegrees: -90
   skillBurstCount: 4
