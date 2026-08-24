@@ -1,0 +1,30 @@
+{
+    "unitId": "aurora-debuff-drone",
+    "catalogOrder": 8,
+    "displayName": "중장갑 약화 드론",
+    "spritePath": "Assets/Art/AllyUnits/tactical-relay-drone-self-destruct.png",
+    "tint": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+    },
+    "spriteForwardOffsetDegrees": 0.0,
+    "effectPaths": [],
+    "visualEffectPaths": [
+        "Assets/Data/Effects/Unit/Visual/RangeAuraYellow.asset"
+    ],
+    "remoteContent": false,
+    "data": {
+        "unitId": "aurora-debuff-drone",
+        "displayName": "중장갑 약화 드론",
+        "deployCost": 60,
+        "maxHealth": 60.0,
+        "moveSpeed": 2.5,
+        "attackDamage": 0.0,
+        "attackInterval": 10.0,
+        "attackRange": 6.0,
+        "detectionRange": 6.0,
+        "projectileSpeed": 8.0
+    }
+}

@@ -14,7 +14,7 @@
         "Assets/Data/Effects/Unit/PitCrewRepairAuraEffect.asset"
     ],
     "visualEffectPaths": [
-        "Assets/Data/Effects/Unit/Visual/PitcrewBuffEffect.asset"
+        "Assets/Data/Effects/Unit/Visual/RangeAuraGreen.asset"
     ],
     "remoteContent": false,
     "data": {

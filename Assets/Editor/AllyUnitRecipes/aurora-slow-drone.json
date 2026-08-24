@@ -1,0 +1,30 @@
+{
+    "unitId": "aurora-slow-drone",
+    "catalogOrder": 9,
+    "displayName": "중장갑 감속 드론",
+    "spritePath": "Assets/Art/AllyUnits/heavy-armored-sentinel 1.png",
+    "tint": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+    },
+    "spriteForwardOffsetDegrees": 0.0,
+    "effectPaths": [],
+    "visualEffectPaths": [
+        "Assets/Data/Effects/Unit/Visual/RangeAuraWhite.asset"
+    ],
+    "remoteContent": false,
+    "data": {
+        "unitId": "aurora-slow-drone",
+        "displayName": "중장갑 감속 드론",
+        "deployCost": 60,
+        "maxHealth": 60.0,
+        "moveSpeed": 2.5,
+        "attackDamage": 0.0,
+        "attackInterval": 10.0,
+        "attackRange": 12.0,
+        "detectionRange": 12.0,
+        "projectileSpeed": 8.0
+    }
+}
