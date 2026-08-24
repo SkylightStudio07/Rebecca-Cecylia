@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using RCCom.Effects.Tower.Concrete;
 using RCCom.Effects.Unit.Concrete;
 using RCCom.Runtime;
@@ -27,7 +28,14 @@ namespace RCCom.EditorTools
             "Assets/Data/Prefabs/VFX/HitSpark_Additive.mat";
         public const string DeathBurstPrefabPath =
             "Assets/Data/Prefabs/VFX/ParticleBurst_DeathBurst.prefab";
+        public const string ShockwaveRingPrefabPath =
+            "Assets/Data/Prefabs/VFX/ShockwaveRing.prefab";
+        public const string ScorchDecalPrefabPath =
+            "Assets/Data/Prefabs/VFX/ScorchDecal.prefab";
+        public const string ScorchTexturePath = "Assets/Art/VFX/scorch-decal.png";
 
+        private const string RangePulseAuraMaterialPath =
+            "Assets/Data/Effects/Unit/Visual/RangePulseAura.mat";
         private const string PrefabFolder = "Assets/Data/Prefabs/VFX";
         private const string GeneratedLabel = "RCCom.GeneratedCombatVfx";
         private const string DamageEffectPath =
@@ -55,11 +63,14 @@ namespace RCCom.EditorTools
             GameObject hitSparkPrefab = BuildHitSparkPrefab();
             GameObject fakeProjectilePrefab = BuildFakeProjectilePrefab(hitSparkPrefab);
             GameObject deathBurstPrefab = BuildDeathBurstPrefab();
+            GameObject shockwaveRingPrefab = BuildShockwaveRingPrefab();
+            GameObject scorchDecalPrefab = BuildScorchDecalPrefab();
             ConnectEffect<DamageEffect>(DamageEffectPath, fakeProjectilePrefab);
-            ConnectEffect<SplashDamageEffect>(SplashDamageEffectPath, fakeProjectilePrefab);
             ConnectEffect<PierceDamageEffect>(PierceDamageEffectPath, fakeProjectilePrefab);
             ConnectEffect<PoisonDamageEffect>(PoisonDamageEffectPath, fakeProjectilePrefab);
             ConnectEffect<BasicAttackEffect>(BasicAttackEffectPath, fakeProjectilePrefab);
+            ConnectSplashEffect(
+                fakeProjectilePrefab, deathBurstPrefab, shockwaveRingPrefab, scorchDecalPrefab);
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
@@ -67,8 +78,46 @@ namespace RCCom.EditorTools
             ConnectPrefabField<EnemyView>(EnemyViewPrefabPath, "deathParticlePrefab", deathBurstPrefab);
             ConnectPrefabField<AllyUnitView>(AllyUnitViewPrefabPath, "deathParticlePrefab", deathBurstPrefab);
             Validate();
-            Debug.Log("[CombatVfxAssetBuilder] 투사체·히트 스파크·사망 버스트 생성 및 " +
-                      "네 공격 효과 + 아군 기본 공격 + 플레이어 + 적/아군 사망 연출 배선 완료");
+            Debug.Log("[CombatVfxAssetBuilder] 투사체·히트 스파크·사망 버스트·충격파 링·그을림 자국 생성 및 " +
+                      "네 공격 효과 + 스플래시 착탄 연출 + 아군 기본 공격 + 플레이어 + 적/아군 사망 연출 배선 완료");
+        }
+
+        /// <summary>
+        /// SplashDamageEffect만 fakeProjectilePrefab 외에 착탄 연출 3종(폭발 버스트/충격파 링/
+        /// 그을림 자국) 슬롯을 추가로 갖고 있어 공용 ConnectEffect&lt;TEffect&gt;로 못 묶는다.
+        /// </summary>
+        private static void ConnectSplashEffect(
+            GameObject fakeProjectilePrefab,
+            GameObject explosionBurstPrefab,
+            GameObject shockwaveRingPrefab,
+            GameObject scorchDecalPrefab)
+        {
+            var effect = AssetDatabase.LoadAssetAtPath<SplashDamageEffect>(SplashDamageEffectPath);
+            if (effect == null)
+            {
+                throw new InvalidOperationException(
+                    $"배선할 공격 효과 SO를 찾지 못했습니다: {SplashDamageEffectPath}");
+            }
+
+            var serializedEffect = new SerializedObject(effect);
+            SetObjectReference(serializedEffect, "fakeProjectilePrefab", fakeProjectilePrefab);
+            SetObjectReference(serializedEffect, "explosionBurstPrefab", explosionBurstPrefab);
+            SetObjectReference(serializedEffect, "shockwaveRingPrefab", shockwaveRingPrefab);
+            SetObjectReference(serializedEffect, "scorchDecalPrefab", scorchDecalPrefab);
+            serializedEffect.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(effect);
+        }
+
+        private static void SetObjectReference(SerializedObject serializedObject, string propertyName, UnityEngine.Object value)
+        {
+            SerializedProperty property = serializedObject.FindProperty(propertyName);
+            if (property == null)
+            {
+                throw new InvalidOperationException(
+                    $"{serializedObject.targetObject.GetType().Name}에 {propertyName} 슬롯이 없습니다.");
+            }
+
+            property.objectReferenceValue = value;
         }
 
         private static void ConfigureProjectileSprite()
@@ -305,6 +354,132 @@ namespace RCCom.EditorTools
             renderer.sortingOrder = 8;
             renderer.sharedMaterial = BuildHitSparkMaterial();
             particleSystem.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        }
+
+        /// <summary>
+        /// 스플래시 착탄 충격파 링. 새 셰이더/머티리얼을 만들지 않고 아군 오라 파동에 이미 쓰이는
+        /// RangePulseAura.shader 머티리얼을 그대로 참조한다(설계안 §3-③, §1 — "이미 있는 인프라
+        /// 재사용" 원칙). Quad 프리미티브의 기본 Collider는 필요 없어 제거한다.
+        /// </summary>
+        private static GameObject BuildShockwaveRingPrefab()
+        {
+            EnsureOverwriteIsOwned(ShockwaveRingPrefabPath);
+            GameObject root = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            root.name = "ShockwaveRing";
+
+            try
+            {
+                Collider collider = root.GetComponent<Collider>();
+                if (collider != null)
+                {
+                    UnityEngine.Object.DestroyImmediate(collider);
+                }
+
+                Material rangePulseMaterial =
+                    AssetDatabase.LoadAssetAtPath<Material>(RangePulseAuraMaterialPath);
+                if (rangePulseMaterial == null)
+                {
+                    throw new InvalidOperationException(
+                        $"기존 RangePulseAura 머티리얼을 찾지 못했습니다: {RangePulseAuraMaterialPath}");
+                }
+
+                MeshRenderer renderer = root.GetComponent<MeshRenderer>();
+                renderer.sharedMaterial = rangePulseMaterial;
+                // 캐릭터 스프라이트(기본 정렬순서 0)보다 아래, 즉 바닥에 깔린 것처럼 보이게 한다.
+                renderer.sortingOrder = -1;
+                renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                renderer.receiveShadows = false;
+                renderer.lightProbeUsage = UnityEngine.Rendering.LightProbeUsage.Off;
+                renderer.reflectionProbeUsage = UnityEngine.Rendering.ReflectionProbeUsage.Off;
+
+                root.AddComponent<ShockwaveRing>();
+
+                return SaveOwnedPrefab(root, ShockwaveRingPrefabPath);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(root);
+            }
+        }
+
+        private static GameObject BuildScorchDecalPrefab()
+        {
+            EnsureOverwriteIsOwned(ScorchDecalPrefabPath);
+            ConfigureScorchSprite();
+            Sprite scorchSprite = AssetDatabase.LoadAssetAtPath<Sprite>(ScorchTexturePath);
+            if (scorchSprite == null)
+            {
+                throw new InvalidOperationException($"그을림 자국 Sprite를 찾을 수 없습니다: {ScorchTexturePath}");
+            }
+
+            var root = new GameObject("ScorchDecal");
+            try
+            {
+                SpriteRenderer renderer = root.AddComponent<SpriteRenderer>();
+                renderer.sprite = scorchSprite;
+                // 충격파 링(-1)보다도 더 아래 — 바닥에 눌러 붙은 자국이라 링 밑에서 은은하게 보여야 한다.
+                renderer.sortingOrder = -2;
+
+                root.AddComponent<ScorchDecal>();
+
+                return SaveOwnedPrefab(root, ScorchDecalPrefabPath);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(root);
+            }
+        }
+
+        /// <summary>
+        /// 그을림 자국용 소프트 원형 그라디언트 텍스처를 절차적으로 생성한다. 생성형 모델로
+        /// 만든 정식 아트로 나중에 교체 가능하도록 평범한 PNG 임포트 경로를 그대로 쓴다
+        /// (Sprite.Create로 만든 런타임 전용 스프라이트는 프리팹에 저장되지 않아 이 방식을
+        /// 쓰지 않았다).
+        /// </summary>
+        private static void ConfigureScorchSprite()
+        {
+            const int size = 64;
+            var texture = new Texture2D(size, size, TextureFormat.RGBA32, false);
+            var scorchColor = new Color(0.08f, 0.05f, 0.04f);
+            var center = new Vector2((size - 1) * 0.5f, (size - 1) * 0.5f);
+            float maxDistance = center.magnitude;
+
+            for (int y = 0; y < size; y++)
+            {
+                for (int x = 0; x < size; x++)
+                {
+                    float distance = Vector2.Distance(new Vector2(x, y), center) / maxDistance;
+                    float alpha = Mathf.Clamp01(1f - Mathf.SmoothStep(0f, 1f, distance));
+                    texture.SetPixel(x, y, new Color(scorchColor.r, scorchColor.g, scorchColor.b, alpha));
+                }
+            }
+
+            texture.Apply();
+            byte[] pngBytes = texture.EncodeToPNG();
+            UnityEngine.Object.DestroyImmediate(texture);
+
+            string fullPath = Path.Combine(Application.dataPath, ScorchTexturePath.Substring("Assets/".Length));
+            Directory.CreateDirectory(Path.GetDirectoryName(fullPath) ?? Application.dataPath);
+            File.WriteAllBytes(fullPath, pngBytes);
+            AssetDatabase.ImportAsset(ScorchTexturePath, ImportAssetOptions.ForceUpdate);
+
+            if (AssetImporter.GetAtPath(ScorchTexturePath) is not TextureImporter importer)
+            {
+                throw new InvalidOperationException(
+                    $"그을림 자국 이미지를 TextureImporter로 열 수 없습니다: {ScorchTexturePath}");
+            }
+
+            importer.textureType = TextureImporterType.Sprite;
+            importer.spriteImportMode = SpriteImportMode.Single;
+            importer.spritePixelsPerUnit = size;
+            importer.alphaSource = TextureImporterAlphaSource.FromInput;
+            importer.alphaIsTransparency = true;
+            importer.mipmapEnabled = false;
+            importer.wrapMode = TextureWrapMode.Clamp;
+            importer.filterMode = FilterMode.Bilinear;
+            // 절차적으로 대칭 생성한 텍스처라 기본 피벗(0.5, 0.5)이 이미 중심과 일치한다 —
+            // ConfigureProjectileSprite처럼 SpriteEditorDataProvider로 피벗을 옮길 필요가 없다.
+            importer.SaveAndReimport();
         }
 
         /// <summary>
@@ -605,7 +780,6 @@ namespace RCCom.EditorTools
             }
 
             ValidateEffect<DamageEffect>(DamageEffectPath, fakeProjectilePrefab);
-            ValidateEffect<SplashDamageEffect>(SplashDamageEffectPath, fakeProjectilePrefab);
             ValidateEffect<PierceDamageEffect>(PierceDamageEffectPath, fakeProjectilePrefab);
             ValidateEffect<PoisonDamageEffect>(PoisonDamageEffectPath, fakeProjectilePrefab);
             ValidateEffect<BasicAttackEffect>(BasicAttackEffectPath, fakeProjectilePrefab);
@@ -627,7 +801,59 @@ namespace RCCom.EditorTools
             ValidatePrefabField<EnemyView>(EnemyViewPrefabPath, "deathParticlePrefab", deathBurstPrefab);
             ValidatePrefabField<AllyUnitView>(AllyUnitViewPrefabPath, "deathParticlePrefab", deathBurstPrefab);
 
-            Debug.Log("[CombatVfxAssetBuilder] 투사체·히트 스파크·사망 버스트 에셋 검증 통과");
+            GameObject shockwaveRingPrefab =
+                AssetDatabase.LoadAssetAtPath<GameObject>(ShockwaveRingPrefabPath);
+            if (shockwaveRingPrefab == null ||
+                shockwaveRingPrefab.GetComponent<ShockwaveRing>() == null ||
+                shockwaveRingPrefab.GetComponent<MeshRenderer>()?.sharedMaterial == null ||
+                shockwaveRingPrefab.GetComponent<MeshRenderer>().sharedMaterial.shader.name !=
+                    "RCCom/Unit Visuals/Range Pulse Aura")
+            {
+                throw new InvalidOperationException("충격파 링 프리팹 설정이 올바르지 않습니다.");
+            }
+
+            GameObject scorchDecalPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(ScorchDecalPrefabPath);
+            SpriteRenderer scorchRenderer = scorchDecalPrefab != null
+                ? scorchDecalPrefab.GetComponent<SpriteRenderer>()
+                : null;
+            if (scorchDecalPrefab == null || scorchDecalPrefab.GetComponent<ScorchDecal>() == null ||
+                scorchRenderer == null || scorchRenderer.sprite == null)
+            {
+                throw new InvalidOperationException("그을림 자국 프리팹 설정이 올바르지 않습니다.");
+            }
+
+            ValidateSplashEffect(fakeProjectilePrefab, deathBurstPrefab, shockwaveRingPrefab, scorchDecalPrefab);
+
+            Debug.Log("[CombatVfxAssetBuilder] 투사체·히트 스파크·사망 버스트·충격파 링·그을림 자국 에셋 검증 통과");
+        }
+
+        private static void ValidateSplashEffect(
+            GameObject fakeProjectilePrefab,
+            GameObject explosionBurstPrefab,
+            GameObject shockwaveRingPrefab,
+            GameObject scorchDecalPrefab)
+        {
+            var effect = AssetDatabase.LoadAssetAtPath<SplashDamageEffect>(SplashDamageEffectPath);
+            if (effect == null)
+            {
+                throw new InvalidOperationException($"공격 효과 SO가 없습니다: {SplashDamageEffectPath}");
+            }
+
+            var serializedEffect = new SerializedObject(effect);
+            CheckObjectReference(serializedEffect, "fakeProjectilePrefab", fakeProjectilePrefab);
+            CheckObjectReference(serializedEffect, "explosionBurstPrefab", explosionBurstPrefab);
+            CheckObjectReference(serializedEffect, "shockwaveRingPrefab", shockwaveRingPrefab);
+            CheckObjectReference(serializedEffect, "scorchDecalPrefab", scorchDecalPrefab);
+        }
+
+        private static void CheckObjectReference(SerializedObject serializedObject, string propertyName, UnityEngine.Object expected)
+        {
+            SerializedProperty property = serializedObject.FindProperty(propertyName);
+            if (property == null || property.objectReferenceValue != expected)
+            {
+                throw new InvalidOperationException(
+                    $"{serializedObject.targetObject.GetType().Name}의 {propertyName} 배선이 올바르지 않습니다.");
+            }
         }
 
         private static void ValidatePlayerController(GameObject expectedPrefab)

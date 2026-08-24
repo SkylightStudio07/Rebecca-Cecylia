@@ -30,6 +30,7 @@ namespace RCCom.Runtime
         private Vector3 _to;
         private float _remainingTravelTime;
         private float _travelDuration;
+        private float _lobHeight;
         private bool _isActive;
 
         private void Awake()
@@ -49,7 +50,15 @@ namespace RCCom.Runtime
             float progress = _travelDuration > 0f
                 ? 1f - Mathf.Clamp01(_remainingTravelTime / _travelDuration)
                 : 1f;
-            transform.position = Vector3.Lerp(_from, _to, progress);
+
+            Vector3 groundPosition = Vector3.Lerp(_from, _to, progress);
+            // 포물선 낙하 연출(설계안 §3-③): y(t) = Lerp(y0,y1,t) + 4h·t(1-t). _lobHeight가 0이면
+            // (직선 공격) 항상 0을 더하는 셈이라 기존 직선 투사체 동작과 완전히 동일하다. 이
+            // 프로젝트는 정통 탑다운(월드 Y가 지면 축)이라 실제 3D 높이가 아니라 스프라이트만
+            // 위로 띄우는 흔한 2D 트릭이다 — ParticleBurst.Spawn(_to)는 아래에서 이 오프셋과
+            // 무관한 실제 착탄 좌표를 그대로 쓴다.
+            float arc = 4f * _lobHeight * progress * (1f - progress);
+            transform.position = groundPosition + new Vector3(0f, arc, 0f);
 
             if (_remainingTravelTime > 0f)
             {
@@ -62,10 +71,11 @@ namespace RCCom.Runtime
             Deactivate();
         }
 
-        private void Play(Vector3 from, Vector3 to, float projectileSpeed)
+        private void Play(Vector3 from, Vector3 to, float projectileSpeed, float lobHeight)
         {
             _from = from;
             _to = to;
+            _lobHeight = lobHeight;
             _travelDuration = CalculateTravelDuration(from, to, projectileSpeed);
             _remainingTravelTime = _travelDuration;
             transform.SetPositionAndRotation(from, CalculateRotation(from, to));
@@ -119,12 +129,22 @@ namespace RCCom.Runtime
         /// </summary>
         public static void Spawn(GameObject prefab, Vector3 from, Vector3 to, float projectileSpeed)
         {
+            Spawn(prefab, from, to, projectileSpeed, 0f);
+        }
+
+        /// <summary>
+        /// 스플래시 폭발탄처럼 포물선으로 낙하하는 투사체용 진입점(설계안 §3-③). lobHeight는
+        /// 궤적 정점의 높이(월드 단위) — 0이면 기존 직선 투사체와 완전히 동일하게 동작한다.
+        /// </summary>
+        public static void Spawn(
+            GameObject prefab, Vector3 from, Vector3 to, float projectileSpeed, float lobHeight)
+        {
             if (prefab == null)
             {
                 return;
             }
 
-            GetOrCreate(prefab).Play(from, to, projectileSpeed);
+            GetOrCreate(prefab).Play(from, to, projectileSpeed, lobHeight);
         }
 
         private float CalculateTravelDuration(Vector3 from, Vector3 to, float projectileSpeed)
