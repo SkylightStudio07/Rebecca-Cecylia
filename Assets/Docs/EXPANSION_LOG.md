@@ -1959,3 +1959,82 @@ Phase 0 자동화 경로를 실제로 열고, 이후 오퍼레이터별 원격 �
 ### 사람이 할 일
 - 플레이 테스트로 충격파 링/그을림 자국이 이제 실제로 화면에 보이는지, 부식 타워가 도트
   피해를 내는지 확인.
+
+## 2026-08-24 — 다수 적 순회 예외 3건 수정 + 충격파 링 SO 분리 + 전투 VFX 5단계(레이저 빔)
+
+### 결정 1: "Collection was modified" 예외 3곳 수정
+- 지난 항목에서 목격한 `PierceDamageEffect.OnTick`의 `InvalidOperationException: Collection
+  was modified`를 계기로 같은 패턴(`foreach (EnemyInstance enemy in <원본 activeEnemies 리스트>)`
+  안에서 `enemy.TakeDamage()` 호출)을 전체 grep해 `SplashDamageEffect.OnTick`,
+  `PlayerController.FireSkillPulse`(플레이어 스킬 AoE) 두 곳에서 동일 패턴을 추가로 발견했다.
+  `TakeDamage()`가 즉사시키면 `EnemyView.HandleDied()`가 콜라이더를 끄는데 이 시점에
+  `OnTriggerExit2D`가 동기 발생해, 지금 순회 중인 바로 그 `TowerInstance._enemiesInRange`/
+  `PlayerController._enemiesInRange`에서 죽은 적이 동기적으로 빠진다 — 원본 리스트를 직접
+  순회하면 예외가 난다. 세 곳 모두 순회 전 `List<EnemyInstance>` 스냅샷을 떠서 원본 대신
+  순회하도록 수정(`WaveManager.TickEnemies()`가 이미 역순 인덱스 루프로 같은 문제를 피하고
+  있던 것과 같은 근본 원인, 다른 해법).
+
+### 결정 2: 충격파 링 시각값을 데이터 SO로 분리 (사용자 지적 반영)
+- "충격파 링 색을 빨간색으로 바꾸려면 어디서 바꿔야 하지?"라는 질문에 답하는 과정에서, 아군
+  사거리 오라 파동(`RangePulseVisualEffect`)은 색/스트로크/글로우/글로시/불투명도/주기를
+  전부 SO 필드로 노출해 코드 안 건드리고 에셋만 갈아 끼우면 되는데, `ShockwaveRing`은 같은
+  `RangePulseAura.shader`를 쓰면서도 이 값들을 코드/빌더에 하드코딩해뒀다는 지적을 받았다 —
+  이미 확립된 패턴을 따르지 않은 실수였다.
+- `ShockwaveRingVisualEffect` SO 신규(`Assets/Scripts/Runtime/Visuals`). `AllyUnitVisualEffectBase`는
+  상속하지 않는다 — 그쪽은 유닛 하나에 상시 붙어 반복 재생되는 오라 전용 `IAllyUnitVisualRuntime`
+  훅 계층이라, 위치 기반 원샷인 `ShockwaveRing`이 낄 이유가 없는 순수 데이터 SO로 별도로 뒀다.
+  기본 색은 빨간색 계열(스플래시 폭발 테마).
+- **빌더 재실행이 개발자/디자이너의 인스펙터 조정값을 덮어쓰면 안 된다는 추가 지적**을 반영해,
+  `BuildShockwaveRingVisualEffect()`는 프리팹류(`EnsureOverwriteIsOwned`로 매번 완전히
+  재생성되는 플러밍 에셋)와 달리 **이미 에셋이 있으면 값을 절대 건드리지 않는다** — 최초 생성
+  시 1회만 기본값을 심는다. 색을 실제로 파란색으로 바꾼 뒤 빌더를 재실행해 값이 보존되는지
+  직접 검증(원래 빨간색으로 되돌림).
+
+### 결정 3: 전투 VFX 5단계 — 관통 사격 2-Layer 레이저 빔 (설계안 §3-②, §7 마지막 단계)
+- 설계안이 유일하게 "신규 셰이더 필요"로 지정한 마지막 단계. 지금까지 `PierceDamageEffect`는
+  임시로 `FakeProjectile`(작은 투사체 스프라이트)을 대신 쏘고 있었는데, "일직선 상 모든 적을
+  동시에 때리는" 관통 판정을 표현하기엔 부적합해 제대로 된 빔으로 교체했다.
+- `Assets/Shaders/Tower/LaserBeam.shader` 신규 — `RangePulseAura.shader`와 같은 구조(URP
+  HLSLPROGRAM + `Core.hlsl` + `CBUFFER_START(UnityPerMaterial)`)를 그대로 따른다. 텍스처 없이
+  해시 기반 1D 노이즈로 UV 스크롤 에너지 흐름을 표현(새 텍스처 에셋 불필요, 설계안 §0-2 유지).
+  `LineRenderer` 기본 UV(y=0.5가 중심선)만으로 폭 방향 소프트 페이드 처리.
+- `LaserBeamView.cs` 신규 — Inner Core(얇고 밝은 백색)/Outer Glow(넓고 반투명, 보라 테마색)
+  두 자식 `LineRenderer`로 구성, 같은 셰이더/머티리얼을 `MaterialPropertyBlock`으로 레이어별
+  다르게 먹인다. 발사 직후 폭 150%→100% 팬치 애니메이션은 셰이더가 아니라 잔여시간 기반으로
+  절차적 계산(`AttackFlash.lifetime`과 동일한 방식, 설계안 §3-② 명시). 다중 `LineRenderer`
+  요구 조건이 단일 `LineRenderer` 전제인 `AttackFlash`와 책임이 달라 별도 클래스로 새로 짰고,
+  풀링 패턴(prefab별 static `Dictionary<GameObject, Queue<T>>`)만 동일하게 따랐다.
+- `LaserBeamVisualEffect` SO 신규 — `ShockwaveRingVisualEffect`와 같은 이유·같은 "최초 생성 시
+  1회만 기본값" 원칙을 처음부터 적용(결정 2의 교훈을 새 SO에도 바로 반영).
+- `PierceDamageEffect.cs`: `fakeProjectilePrefab` 필드/호출을 `laserBeamPrefab`+
+  `laserBeamVisual`로 교체. 원뿔각 판정(`beamHalfAngleDegrees`) 로직은 완전히 그대로 — 순수
+  연출 교체만.
+- `CombatVfxAssetBuilder`: `PierceDamageEffect`가 필드 구성이 달라져 공용
+  `ConnectEffect<TEffect>`(`fakeProjectilePrefab` 이름 하드코딩)로 못 묶어 `SplashDamageEffect`
+  처럼 `ConnectPierceEffect`/`ValidatePierceEffect` 전용 함수로 분리.
+
+### 결정 4: GameManager 재시작 정리 목록 누락 보완
+- 검증 도중 `ShockwaveRing`/`ScorchDecal`(4단계)이 애초에 `GameManager.ClearPool()`의
+  재시작 정리 목록(`AttackFlash`/`FakeProjectile`/`ParticleBurst`)에 등록되지 않았던 걸
+  발견했다 — 씬 재로드 시 풀 안 인스턴스는 파괴되는데 static 대기열은 안 비워져 다음 Spawn이
+  죽은 참조를 Dequeue할 수 있는 상태였다. 이번에 만든 `LaserBeamView`와 함께 세 개 모두 등록.
+
+### 검증
+- `unity command recompile`/`recompile_status`로 각 변경 단계마다 컴파일 에러 0건 확인.
+- `RCCom/Combat VFX/Build Projectile And Hit Spark` 실행 → 콘솔에 에러/예외 0건, 검증 통과
+  로그 확인.
+- `git diff`로 각 커밋의 변경분이 의도한 범위와 정확히 일치하는지 확인(`Pierce Damage
+  Effect.asset`이 `fakeProjectilePrefab` 삭제 + `laserBeamPrefab`/`laserBeamVisual` 추가
+  딱 그만큼만 바뀜 등).
+- 오버라이트 방지 로직은 실제로 값을 바꾼 뒤 빌더를 재실행해 보존되는지 직접
+  검증(`ShockwaveRingVisualEffect`/`LaserBeamVisualEffect` 둘 다).
+
+### 사람이 할 일
+- 플레이 테스트로: 1) 관통 타워가 이제 흰색 코어 + 보라색 글로우 2-레이어 빔으로 보이는지,
+  발사 직후 폭이 살짝 부풀었다 가라앉는 팬치感이 느껴지는지. 2) 관통/스플래시/플레이어 스킬로
+  다수 적을 동시에 처치해도 더 이상 콘솔에 예외가 안 뜨는지.
+- 레이저 빔 색(보라)/두께/노이즈 속도가 마음에 안 들면 `LaserBeam_Pierce.asset` 인스펙터에서
+  직접 조정 — 코드 재배포 불필요, 빌더를 다시 돌려도 값이 보존된다.
+- 설계안 §7 구현 순서 5단계가 모두 끝났다 — 남은 건 §4에서 의도적으로 보류한 "완전한 단색
+  실루엣 페이드"(셰이더 신설 필요, 이번 결정 §0-2에 따라 보류 유지) 같은 트레이드오프 재검토
+  뿐, 신규 단계는 없다.
