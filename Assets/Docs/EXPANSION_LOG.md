@@ -1679,3 +1679,80 @@ Phase 0 자동화 경로를 실제로 열고, 이후 오퍼레이터별 원격 �
 
 ### 사람이 할 일
 - 없음.
+
+## 2026-08-24 — 웨이브 체력 배율 적용 적의 체력바 첫 피격 표시 복구
+
+### 문제와 원인
+- {{user}}가 현재 전투 VFX 브랜치에서 기본 포탑에 맞은 적의 체력바가 활성화되지 않는 회귀를
+  발견했다. `git diff main...HEAD`를 먼저 대조한 결과, 기본 포탑 변경은 기존
+  `AttackFlash.Spawn`을 `FakeProjectile.Spawn`으로 교체한 연출 한 줄뿐이었고
+  `target.TakeDamage(...)`, `EnemyInstance.Damaged`, `EnemyView` 체력바 갱신 경로는 유지돼 있었다.
+- 라이브 Unity 콘솔에서 기본 포탑의 10 피해 직후 `남은 체력 34.8/32`를 확인했다. 실제 스폰
+  체력은 `WaveManager`의 웨이브/스테이지 배율로 44.8까지 증가했지만, `EnemyView`는 여전히
+  `EnemyInstance.currentHealth / EnemyData.maxHealth`를 사용했다. 따라서 첫 피격 후에도 계산값이
+  1보다 커서 `EnemyHealthBar`가 1로 Clamp한 뒤 만피로 판단해 계속 숨겼다.
+
+### 결정
+- `EnemyView.Bind()`는 `EnemyInstance.Spawn()`과 체력 배율 적용이 모두 끝난 다음 호출되므로,
+  이 시점의 `currentHealth`를 `_boundMaxHealth`로 보존하고 체력바 분모로 사용한다. 전투 판정이나
+  Definition 원본을 수정하지 않고 View의 표시 기준만 실제 런타임 최대 체력과 일치시키는 최소
+  변경이다.
+- 별도 적 매니저나 런타임 데이터 복제는 추가하지 않았다. 현재 최대 체력은 스폰 직후 한 번만
+  확정되며 이후 변경되지 않으므로, View 바인딩 시 캡처가 기존 흐름과 가장 작은 결합을 만든다.
+
+### 검증
+- Unity 6000.3.13f1 Pipeline 재컴파일과 콘솔 error/exception 확인.
+- 배율 적용 체력 44.8 기준으로 첫 10 피해 후 표시 비율이 `34.8 / 44.8 < 1`이 되어 체력바가
+  즉시 활성화되고, 배율 1 미만인 스테이지에서도 스폰 시 만피가 100%로 유지되는 경로를 확인.
+
+### 사람이 할 일
+- 없음.
+
+## 2026-08-24 — 히트 스파크 크기/수명/머티리얼 재조정
+
+### 요청
+- {{user}}: 히트 스파크가 너무 미미하고 바로 사라지는 느낌인데, 기분탓인지 실제 설정값 문제인지
+  검증해서 고쳐달라.
+
+### 검증 — 기분탓이 아니었다
+- Unity eval로 실제 배선된 값을 직접 읽었다. `ParticleBurst_HitSpark.prefab`의
+  `startSize`는 0.04~0.11, `startLifetime`은 0.1~0.2초였다.
+- 같은 방식으로 `FakeProjectile.prefab`의 실제 표시 크기를 쟀다: 스프라이트 원본 바운즈
+  2.56×5.12(PPU 100), `localScale` 0.18 적용 후 약 0.46×0.92유닛. 즉 스파크가 자기가 따라붙는
+  투사체보다 4~5배나 작았고, 수명도 투사체 비행 시간(0.05~0.1초)과 비슷하거나 더 짧아 눈에
+  들어오기도 전에 다 줄어들며 사라지는 구조였다.
+- 렌더러 머티리얼도 `Default-ParticleSystem.mat`(Alpha Blend)라 다른 스프라이트에 반투명하게
+  겹치기만 하고 밝게 도드라지지 않는 것도 추가 원인으로 확인했다.
+
+### 결정
+- `CombatVfxAssetBuilder.ConfigureHitSpark()`의 수치를 투사체 실측 크기 기준으로 올렸다:
+  `startSize` 0.16~0.32, `startLifetime` 0.18~0.3초, `startSpeed` 2.4~4.2, 버스트 10~16개.
+  `renderer.lengthScale`/`velocityScale`은 커진 크기에 맞춰 1.8→1.4, 0.12→0.08로 낮춰 스트릭이
+  과하게 길게 늘어지지 않게 균형을 맞췄다.
+- `Default-ParticleSystem.mat`는 Unity가 전역 공유하는 내장 리소스라 직접 수정하면 다른 곳에도
+  영향을 주므로, 히트 스파크 전용 Additive 머티리얼(`HitSpark_Additive.mat`)을 새로 만들어
+  교체했다. 새 셰이더는 작성하지 않고 엔진 내장 `Legacy Shaders/Particles/Additive` 셰이더 +
+  내장 소프트 도트 텍스처(`Default-Particle.psd`)만 조합했다(`VFX_전투_연출_설계안.md` §0-3:
+  신규 셰이더 작성 금지 원칙 유지). 색상 자체는 기존 `colorOverLifetime` 그라디언트(주홍→노랑)를
+  그대로 쓰고, 머티리얼은 흰색 틴트로 얹기만 한다.
+- `CombatVfxAssetBuilder`에 `BuildHitSparkMaterial()`을 추가하고 `Validate()`에도 머티리얼
+  셰이더 이름·최소 크기 검사를 추가해, 다음에 이 빌더를 재실행해도 같은 설정이 재현되게 했다.
+
+### 의도적으로 하지 않은 것
+- 파티클 이미터 반경(shape.radius 0.04)이나 색상 그라디언트는 건드리지 않았다 — 문제는 크기·수명·
+  밝기였지 확산 패턴이 아니었다.
+- `ParticleBurst.cs`(풀링/재생 종료 감지 로직)는 검증만 하고 수정하지 않았다 — `IsAlive(true)`
+  폴링이 정상 동작해 조기 반납 같은 버그는 없었다.
+
+### 검증
+- Unity 6000.3.13f1 Pipeline `recompile` → `recompile_status`로 에러 0건 확인.
+- `unity command menu --path "RCCom/Combat VFX/Build Projectile And Hit Spark"` 재실행 →
+  콘솔에서 검증 통과 로그, error/exception 0건(빌더 자체 기준) 확인.
+
+### 사람이 할 일
+- 플레이 테스트로 최종 크기·밝기가 취향에 맞는지 확인. 더 키우거나 줄이고 싶으면
+  `ConfigureHitSpark()`의 `startSize`/`startSpeed`만 조정하고 빌더를 재실행하면 된다.
+
+### 참고
+- 같은 시점에 다른 세션이 이 저장소에서 병행 작업 중이었다(위 "웨이브 체력 배율..." 항목,
+  `EnemyView.cs`/`ARCHITECTURE.md` 등 변경). 이번 커밋은 히트 스파크 관련 파일만 포함했다.
