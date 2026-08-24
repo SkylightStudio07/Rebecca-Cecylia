@@ -47,9 +47,13 @@ namespace RCCom.Runtime.Visuals
 
         /// <summary>
         /// 사망 확정 순간 1회 호출. config가 null이면(아직 SO를 안 꽂았으면) 기본값으로 진행한다 —
-        /// 시각 효과 미배치가 사망 처리 자체를 막으면 안 된다는 원칙과 같은 이유.
+        /// 시각 효과 미배치가 사망 처리 자체를 막으면 안 된다는 원칙과 같은 이유. attackerPosition은
+        /// EnemyInstance/AllyUnitInstance.LastDamageSourcePosition — 있으면 그 반대 방향으로,
+        /// 없거나(독 틱처럼 소스가 한 번도 안 알려진 경우) 공격자와 완전히 같은 위치면(근접 접촉
+        /// 판정 등, 방향이 정의되지 않음) 랜덤 방향으로 대체한다.
         /// </summary>
-        public void Begin(Vector3 startPosition, Color baseColor, DeathKnockbackVisualEffect config)
+        public void Begin(
+            Vector3 startPosition, Color baseColor, DeathKnockbackVisualEffect config, Vector2? attackerPosition = null)
         {
             _startPosition = startPosition;
             _baseColor = baseColor;
@@ -65,12 +69,7 @@ namespace RCCom.Runtime.Visuals
             _holdDuration = config != null ? config.HoldDuration : DefaultHoldDuration;
             _fadeOutDuration = config != null ? config.FadeOutDuration : DefaultFadeOutDuration;
 
-            // "바깥으로" 밀려나는 방향 — 폭발이 유닛 자기 자신의 위치에서 터지는 것이라 별도
-            // 기준점이 없으니 랜덤 각도를 쓴다(여러 개체가 동시에 죽어도 전부 같은 방향으로
-            // 밀리지 않게).
-            float randomAngle = Random.Range(0f, Mathf.PI * 2f);
-            Vector3 direction = new(Mathf.Cos(randomAngle), Mathf.Sin(randomAngle), 0f);
-            _targetPosition = _startPosition + direction * distance;
+            _targetPosition = _startPosition + ResolveKnockbackDirection(attackerPosition) * distance;
 
             float rotationMagnitude = Random.Range(minDegrees, maxDegrees);
             _targetRotationDegrees = Random.value < 0.5f ? -rotationMagnitude : rotationMagnitude;
@@ -114,6 +113,29 @@ namespace RCCom.Runtime.Visuals
             {
                 Advance();
             }
+        }
+
+        /// <summary>
+        /// 공격받은 반대 방향(attackerPosition → startPosition 연장선)을 우선 쓴다 — {{user}}
+        /// 요청("공격받은 방향 반대로 밀려나는 게 더 자연스럽다"), 2026-08-24. 공격자 위치를
+        /// 모르거나(소스 없는 피해만 받다 죽은 경우) 정확히 같은 위치(접촉 판정 등, 방향
+        /// 미정의)면 랜덤 각도로 대체 — 여러 개체가 동시에 죽어도 전부 같은 방향으로 밀리지
+        /// 않는 부수 효과도 있다.
+        /// </summary>
+        private Vector3 ResolveKnockbackDirection(Vector2? attackerPosition)
+        {
+            if (attackerPosition.HasValue)
+            {
+                Vector2 awayFromAttacker = (Vector2)_startPosition - attackerPosition.Value;
+                if (awayFromAttacker.sqrMagnitude > 0.0001f)
+                {
+                    Vector2 normalized = awayFromAttacker.normalized;
+                    return new Vector3(normalized.x, normalized.y, 0f);
+                }
+            }
+
+            float randomAngle = Random.Range(0f, Mathf.PI * 2f);
+            return new Vector3(Mathf.Cos(randomAngle), Mathf.Sin(randomAngle), 0f);
         }
 
         private void Advance()

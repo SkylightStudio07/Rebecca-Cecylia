@@ -59,7 +59,7 @@ namespace RCCom.Effects.Tower.Concrete
 
                 if (Vector2.Angle(beamDirection, toEnemy) <= beamHalfAngleDegrees)
                 {
-                    enemy.TakeDamage(damage);
+                    enemy.TakeDamage(damage, ctx.self.Position);
                 }
             }
 

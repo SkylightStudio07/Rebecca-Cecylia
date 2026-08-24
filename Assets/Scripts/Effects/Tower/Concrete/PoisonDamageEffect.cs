@@ -38,7 +38,7 @@ namespace RCCom.Effects.Tower.Concrete
                 return;
             }
 
-            target.TakeDamage(TowerDamageMath.CalculateDamage(ctx.self, data.damage));
+            target.TakeDamage(TowerDamageMath.CalculateDamage(ctx.self, data.damage), ctx.self.Position);
             target.ApplyPoison(poisonDamagePerSecond, poisonDuration);
             FakeProjectile.Spawn(fakeProjectilePrefab, ctx.self.Position, target.position);
 

@@ -53,7 +53,7 @@ namespace RCCom.Effects.Tower.Concrete
             }
 
             float damage = TowerDamageMath.CalculateDamage(ctx.self, data.damage);
-            target.TakeDamage(damage);
+            target.TakeDamage(damage, ctx.self.Position);
             FakeProjectile.Spawn(fakeProjectilePrefab, ctx.self.Position, target.position, 0f, lobHeight);
 
             // 착탄 연출 3종은 판정과 완전히 분리된 순수 시각 효과라 투사체의 실제 비행 시간
@@ -84,7 +84,10 @@ namespace RCCom.Effects.Tower.Concrete
 
                 if ((enemy.position - target.position).sqrMagnitude <= splashRadiusSqr)
                 {
-                    enemy.TakeDamage(splashDamage);
+                    // 스플래시 2차 피해자는 타워가 아니라 폭발 지점(target.position, 충격파
+                    // 링/그을림 자국의 중심)에서 밀려나야 자연스럽다 — 넉백 방향이 실제
+                    // 시각효과(폭발 중심)와 일치한다.
+                    enemy.TakeDamage(splashDamage, target.position);
                 }
             }
 

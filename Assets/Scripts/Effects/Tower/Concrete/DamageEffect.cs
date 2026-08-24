@@ -36,7 +36,7 @@ namespace RCCom.Effects.Tower.Concrete
                 return;
             }
 
-            target.TakeDamage(TowerDamageMath.CalculateDamage(ctx.self, data.damage));
+            target.TakeDamage(TowerDamageMath.CalculateDamage(ctx.self, data.damage), ctx.self.Position);
             FakeProjectile.Spawn(fakeProjectilePrefab, ctx.self.Position, target.position);
 
             if (SoundManager.Instance != null)

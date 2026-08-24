@@ -237,7 +237,7 @@ namespace RCCom.Runtime
                 return;
             }
 
-            target.TakeDamage(data.attackDamage);
+            target.TakeDamage(data.attackDamage, transform.position);
             FakeProjectile.Spawn(fakeProjectilePrefab, transform.position, target.position, data);
 
             if (SoundManager.Instance != null)
@@ -308,7 +308,7 @@ namespace RCCom.Runtime
             {
                 if ((enemy.position - (Vector2)transform.position).sqrMagnitude <= sqrSkillRange)
                 {
-                    enemy.TakeDamage(data.skillDamage);
+                    enemy.TakeDamage(data.skillDamage, transform.position);
                 }
             }
         }
@@ -333,7 +333,7 @@ namespace RCCom.Runtime
             }
         }
 
-        public void TakeDamage(float amount)
+        public void TakeDamage(float amount, Vector2? sourcePosition = null)
         {
             if (_invulnerabilityRemaining > 0f || _isDead)
             {

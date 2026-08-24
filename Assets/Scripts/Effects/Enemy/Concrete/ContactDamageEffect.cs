@@ -17,7 +17,7 @@ namespace RCCom.Effects.Enemy.Concrete
     {
         public override void OnDealContactDamage(EnemyContext ctx, IDamageable target)
         {
-            target.TakeDamage(ctx.self.Data.contactDamage);
+            target.TakeDamage(ctx.self.Data.contactDamage, ctx.self.position);
         }
     }
 }

@@ -42,7 +42,7 @@ namespace RCCom.Runtime
             }
         }
 
-        public void TakeDamage(float amount)
+        public void TakeDamage(float amount, Vector2? sourcePosition = null)
         {
             if (CurrentHealth <= 0f)
             {
