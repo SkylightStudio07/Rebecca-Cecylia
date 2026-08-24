@@ -1819,3 +1819,65 @@ Phase 0 자동화 경로를 실제로 열고, 이후 오퍼레이터별 원격 �
 
 ### 사람이 할 일
 - 플레이 테스트로 사망 페이드 타이밍(0.3초)과 사망 버스트 크기가 체감상 적절한지 확인.
+
+## 2026-08-24 — 전투 VFX 4단계: 스플래시 포물선 투사체 + 충격파 링 + 그을림 자국
+
+### 결정
+- `FakeProjectile.cs`에 `lobHeight` 파라미터를 추가해 `y(t) = Lerp(y0,y1,t) + 4h·t(1-t)`
+  포물선 낙하를 구현했다(설계안 §3-③ 공식 그대로). `lobHeight = 0`이면 기존 직선 투사체와
+  100% 동일한 경로를 타므로, 이미 이 클래스를 쓰고 있던 4개 호출부(`DamageEffect`/
+  `PierceDamageEffect`/`PoisonDamageEffect`/`BasicAttackEffect`/`PlayerController`)는 손대지
+  않았다 — `SplashDamageEffect`만 새 오버로드로 `lobHeight`를 넘긴다.
+- 이 프로젝트는 정통 탑다운(월드 Y가 지면 축)이라 실제 3D 높이 개념이 없다. 흔한 2D 트릭대로
+  스프라이트의 렌더 위치만 위로 띄우고, `ParticleBurst.Spawn(_to)`(착탄 파티클)는 이 오프셋과
+  무관하게 실제 착탄 좌표(`_to`)를 그대로 쓰게 해서 이펙트가 스프라이트를 따라 붕 뜨는 일이
+  없게 했다.
+- `ShockwaveRing.cs` 신규 — 착탄 지점에서 한 번만 재생되고 풀에 반납되는 원샷 컴포넌트.
+  **새 셰이더/머티리얼을 만들지 않고 아군 오라 파동(`RangePulseVisualEffect`)에 이미 쓰이는
+  `RangePulseAura.shader`의 머티리얼(`Assets/Data/Effects/Unit/Visual/RangePulseAura.mat`)을
+  그대로 재사용**한다 — `MaterialPropertyBlock`으로 인스턴스별 `_Progress`를 따로 먹이는
+  방식이라(`RangePulseVisualRuntime`이 이미 증명한 패턴) 여러 충격파 링이 동시에 떠 있어도
+  서로 값이 섞이지 않는다. 다만 `RangePulseVisualRuntime` 자체는 유닛 하나에 상시 붙어
+  무한 반복 재생되는 "오라"용이라 그대로 재사용은 못 하고, `AttackFlash.cs`와 같은
+  prefab별 static 풀 패턴으로 새로 짰다(이전 턴에 미리 문서화해둔 계획 그대로).
+- `ScorchDecal.cs` 신규 — 바닥 그을림 자국. 셰이더 없이 `SpriteRenderer` 알파 페이드만 쓴다.
+  스프라이트는 절차적으로 생성한 64×64 소프트 원형 그라디언트 PNG
+  (`Assets/Art/VFX/scorch-decal.png`)를 정식 텍스처 임포트 경로로 저장했다 —
+  `Sprite.Create`로 만드는 런타임 전용 스프라이트는 프리팹 저장 시 참조가 유실될 위험이 있어
+  피했고(사망 버스트 재사용 실수를 겪은 직후라 이런 직렬화 함정을 더 경계하게 됨), 나중에
+  생성형 아트로 그대로 교체할 수 있게 평범한 PNG 파일 형태를 유지했다.
+- `SplashDamageEffect.cs`: 착탄 즉시(=`target.TakeDamage`와 같은 순간) `explosionBurstPrefab`
+  (사망 버스트 프리팹을 그대로 재사용 — 새 파티클 프리팹을 또 안 만듦)/`shockwaveRingPrefab`/
+  `scorchDecalPrefab`을 함께 재생한다.
+
+### 착탄 타이밍에 대한 트레이드오프 (의도적으로 하지 않은 것)
+- 착탄 연출 3종은 투사체의 실제 비행 시간(0.05~0.2초)을 기다리지 않고 판정과 같은 순간
+  재생한다 — `AttackFlash` 시절부터 이 효과 클래스가 유지해온 "명중 즉시 연출" 타이밍과
+  동일한 관례를 그대로 따랐다. `FakeProjectile` 자체의 `hitSparkPrefab`(작은 스파크)만
+  기존처럼 실제 도착 시점에 맞춰 지연 재생된다. 완벽한 동기화(폭발/링/자국을 투사체 도착에
+  맞춰 지연)보다 구현 단순성을 택한 트레이드오프다 — `lobHeight`로 궤적이 눈에 띄게 되면서
+  이 어긋남이 체감될 수 있다. 플레이 테스트로 어색하면 다음 턴에 `FakeProjectile`에 "도착 시
+  콜백"(추가 프리팹 파라미터 또는 이벤트) 개념을 넣는 방향으로 재검토한다.
+
+### CombatVfxAssetBuilder 확장
+- `BuildShockwaveRingPrefab()` — `PrimitiveType.Quad`에서 기본 Collider만 제거하고
+  `RangePulseAura.mat`을 그대로 참조. `BuildScorchDecalPrefab()`/`ConfigureScorchSprite()` —
+  절차적 텍스처 생성 후 `ConfigureProjectileSprite()`와 같은 표준 Sprite 임포트 경로 재사용
+  (대칭 생성이라 피벗 재조정 단계는 생략).
+- `SplashDamageEffect`만 다른 효과들과 배선 슬롯 구성이 달라(착탄 연출 3종 추가) 공용
+  `ConnectEffect<TEffect>`로 못 묶고 `ConnectSplashEffect`/`ValidateSplashEffect`를 따로 뒀다.
+
+### 검증
+- Unity 6000.3.13f1 Pipeline `recompile` → `recompile_status`로 에러 0건 확인(코드 수정 직후,
+  빌더 확장 후 각각).
+- `unity command menu --path "RCCom/Combat VFX/Build Projectile And Hit Spark"` 실행 →
+  `[CombatVfxAssetBuilder] ... 충격파 링·그을림 자국 생성 및 ... 배선 완료` 로그, error/exception
+  0건 확인.
+- `git diff`로 `Splash Damage Effect.asset`이 딱 4개 필드(`lobHeight`/`explosionBurstPrefab`/
+  `shockwaveRingPrefab`/`scorchDecalPrefab`) 추가뿐이고, `explosionBurstPrefab`이 사망 버스트와
+  동일 GUID를 가리켜(재사용 의도대로) 새 파티클 에셋이 중복 생성되지 않았음을 확인했다.
+
+### 사람이 할 일
+- 플레이 테스트로 포물선 궤적 체감, 충격파 링 확산 속도, 그을림 자국 절차적 텍스처가
+  실제로 봐줄 만한지 확인. 그을림 자국은 placeholder이니 정식 생성형 아트로 교체를 고려.
+- 착탄 연출 타이밍(위 트레이드오프 항목)이 어색하면 알려줄 것 — 다음 턴에 재검토.
