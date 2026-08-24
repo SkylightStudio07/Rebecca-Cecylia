@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using RCCom.Runtime.Visuals;
 using UnityEngine;
 
 namespace RCCom.Runtime
@@ -10,19 +11,27 @@ namespace RCCom.Runtime
     /// 성격이 달라 그대로 재사용할 수 없었다 — 이쪽은 위치 기반 원샷이라 AttackFlash.cs와 같은
     /// prefab별 static 풀링 패턴을 따른다. 셰이더/머티리얼은 새로 만들지 않고 기존
     /// RangePulseAura.shader 머티리얼을 MaterialPropertyBlock으로 공유한다(같은 머티리얼을
-    /// 여러 인스턴스가 서로 다른 _Progress로 동시에 그릴 수 있는 이유는 RangePulseVisualRuntime과
+    /// 여러 인스턴스가 서로 다른 값으로 동시에 그릴 수 있는 이유는 RangePulseVisualRuntime과
     /// 동일 — 프로퍼티를 머티리얼이 아니라 렌더러별 블록에 저장하기 때문).
+    ///
+    /// 색/스트로크/글로우/글로시/불투명도/확산 시간은 <see cref="ShockwaveRingVisualEffect"/> SO에서
+    /// 읽어와 <see cref="RangePulseVisualRuntime.ApplyStaticProperties"/>와 같은 방식으로 인스턴스별
+    /// property block에 덮어쓴다 — 코드나 프리팹이 아니라 SO 에셋 하나만 갈아 끼워도 색이
+    /// 바뀌어야 한다는, 아군 오라 파동이 이미 확립해둔 "데이터 기반 SO" 원칙을 그대로 따른다.
     /// </summary>
     [RequireComponent(typeof(MeshRenderer))]
     public class ShockwaveRing : MonoBehaviour
     {
+        private static readonly int ColorId = Shader.PropertyToID("_Color");
         private static readonly int ProgressId = Shader.PropertyToID("_Progress");
+        private static readonly int StrokeWidthId = Shader.PropertyToID("_StrokeWidth");
+        private static readonly int GlowIntensityId = Shader.PropertyToID("_GlowIntensity");
+        private static readonly int GlossIntensityId = Shader.PropertyToID("_GlossIntensity");
+        private static readonly int OpacityId = Shader.PropertyToID("_Opacity");
 
         private const float MinimumPlayDuration = 0.15f;
         private const float MaximumPlayDuration = 0.2f;
-
-        [Tooltip("링이 반경 끝까지 확산하는 데 걸리는 시간(초). 0.15~0.2초로 제한된다.")]
-        [SerializeField, Min(MinimumPlayDuration)] private float playDuration = 0.18f;
+        private const float DefaultPlayDuration = 0.18f;
 
         // AttackFlash/FakeProjectile/ParticleBurst와 같은 이유로 prefab별 풀을 분리한다.
         private static readonly Dictionary<GameObject, Queue<ShockwaveRing>> _availablePool = new();
@@ -63,17 +72,29 @@ namespace RCCom.Runtime
             }
         }
 
-        private void Play(Vector3 position, float radius)
+        private void Play(Vector3 position, float radius, ShockwaveRingVisualEffect visualEffect)
         {
             transform.position = position;
             float diameter = Mathf.Max(0.01f, radius) * 2f;
             transform.localScale = new Vector3(diameter, diameter, 1f);
 
-            _duration = Mathf.Clamp(playDuration, MinimumPlayDuration, MaximumPlayDuration);
+            float requestedDuration = visualEffect != null ? visualEffect.ExpandDuration : DefaultPlayDuration;
+            _duration = Mathf.Clamp(requestedDuration, MinimumPlayDuration, MaximumPlayDuration);
             _remaining = _duration;
 
             _renderer.GetPropertyBlock(_properties);
             _properties.SetFloat(ProgressId, 0f);
+            // visualEffect가 없으면(=아직 SO를 안 꽂았으면) 머티리얼 원본 기본값 그대로 둔다 —
+            // 프리팹/SO 미배치가 공격 로직을 막으면 안 된다는 원칙과 같은 이유로, 색 미지정도
+            // "그냥 기본값으로 보인다"는 안전한 실패로만 처리한다.
+            if (visualEffect != null)
+            {
+                _properties.SetColor(ColorId, visualEffect.Color);
+                _properties.SetFloat(StrokeWidthId, visualEffect.StrokeWidth);
+                _properties.SetFloat(GlowIntensityId, visualEffect.GlowIntensity);
+                _properties.SetFloat(GlossIntensityId, visualEffect.GlossIntensity);
+                _properties.SetFloat(OpacityId, visualEffect.Opacity);
+            }
             _renderer.SetPropertyBlock(_properties);
 
             _renderer.enabled = true;
@@ -99,15 +120,19 @@ namespace RCCom.Runtime
             queue.Enqueue(this);
         }
 
-        /// <summary>prefab을 아직 안 만들었으면 조용히 무시 — 시각 효과 미배치가 공격 로직을 막으면 안 된다.</summary>
-        public static void Spawn(GameObject prefab, Vector3 position, float radius)
+        /// <summary>
+        /// prefab을 아직 안 만들었으면 조용히 무시 — 시각 효과 미배치가 공격 로직을 막으면 안 된다.
+        /// visualEffect도 같은 이유로 선택 인자다(null이면 머티리얼 기본값으로 재생).
+        /// </summary>
+        public static void Spawn(
+            GameObject prefab, Vector3 position, float radius, ShockwaveRingVisualEffect visualEffect = null)
         {
             if (prefab == null)
             {
                 return;
             }
 
-            GetOrCreate(prefab).Play(position, radius);
+            GetOrCreate(prefab).Play(position, radius, visualEffect);
         }
 
         private static ShockwaveRing GetOrCreate(GameObject prefab)

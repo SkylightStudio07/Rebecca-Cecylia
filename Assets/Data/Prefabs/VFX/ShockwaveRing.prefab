@@ -103,4 +103,3 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b9ee8a33cecb6d242a9c2d2830c5f6a4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RCCom.Runtime.ShockwaveRing
-  playDuration: 0.18

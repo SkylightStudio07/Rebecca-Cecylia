@@ -3,6 +3,7 @@ using System.IO;
 using RCCom.Effects.Tower.Concrete;
 using RCCom.Effects.Unit.Concrete;
 using RCCom.Runtime;
+using RCCom.Runtime.Visuals;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEditor.U2D.Sprites;
@@ -33,6 +34,8 @@ namespace RCCom.EditorTools
         public const string ScorchDecalPrefabPath =
             "Assets/Data/Prefabs/VFX/ScorchDecal.prefab";
         public const string ScorchTexturePath = "Assets/Art/VFX/scorch-decal.png";
+        public const string ShockwaveRingVisualEffectPath =
+            "Assets/Data/Effects/Tower/Visual/ShockwaveRing_Splash.asset";
 
         private const string RangePulseAuraMaterialPath =
             "Assets/Data/Effects/Unit/Visual/RangePulseAura.mat";
@@ -65,12 +68,13 @@ namespace RCCom.EditorTools
             GameObject deathBurstPrefab = BuildDeathBurstPrefab();
             GameObject shockwaveRingPrefab = BuildShockwaveRingPrefab();
             GameObject scorchDecalPrefab = BuildScorchDecalPrefab();
+            ShockwaveRingVisualEffect shockwaveVisual = BuildShockwaveRingVisualEffect();
             ConnectEffect<DamageEffect>(DamageEffectPath, fakeProjectilePrefab);
             ConnectEffect<PierceDamageEffect>(PierceDamageEffectPath, fakeProjectilePrefab);
             ConnectEffect<PoisonDamageEffect>(PoisonDamageEffectPath, fakeProjectilePrefab);
             ConnectEffect<BasicAttackEffect>(BasicAttackEffectPath, fakeProjectilePrefab);
             ConnectSplashEffect(
-                fakeProjectilePrefab, deathBurstPrefab, shockwaveRingPrefab, scorchDecalPrefab);
+                fakeProjectilePrefab, deathBurstPrefab, shockwaveRingPrefab, scorchDecalPrefab, shockwaveVisual);
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
@@ -90,7 +94,8 @@ namespace RCCom.EditorTools
             GameObject fakeProjectilePrefab,
             GameObject explosionBurstPrefab,
             GameObject shockwaveRingPrefab,
-            GameObject scorchDecalPrefab)
+            GameObject scorchDecalPrefab,
+            ShockwaveRingVisualEffect shockwaveVisual)
         {
             var effect = AssetDatabase.LoadAssetAtPath<SplashDamageEffect>(SplashDamageEffectPath);
             if (effect == null)
@@ -104,8 +109,43 @@ namespace RCCom.EditorTools
             SetObjectReference(serializedEffect, "explosionBurstPrefab", explosionBurstPrefab);
             SetObjectReference(serializedEffect, "shockwaveRingPrefab", shockwaveRingPrefab);
             SetObjectReference(serializedEffect, "scorchDecalPrefab", scorchDecalPrefab);
+            SetObjectReference(serializedEffect, "shockwaveVisual", shockwaveVisual);
             serializedEffect.ApplyModifiedPropertiesWithoutUndo();
             EditorUtility.SetDirty(effect);
+        }
+
+        /// <summary>
+        /// 충격파 링의 색/스트로크/글로우/글로시/불투명도/확산 시간을 담는 SO. 아군 사거리
+        /// 오라(RangePulseVisualEffect)가 이미 확립한 "데이터 기반 SO" 패턴을 그대로 따른다 —
+        /// 이 SO를 두는 이유 자체가 "코드/빌더 대신 인스펙터에서 값을 조정할 수 있게"이므로,
+        /// 프리팹류(BuildHitSparkPrefab 등, EnsureOverwriteIsOwned로 매번 완전히 재생성됨)와는
+        /// 달리 **이미 에셋이 있으면 값을 절대 건드리지 않는다** — 최초 생성 시 1회만 기본값을
+        /// 심고, 그 다음부터는 개발자/디자이너가 인스펙터에서 바꾼 값을 그대로 존중한다. 빌더를
+        /// 다시 돌려도 튜닝값이 덮어씌워지면 안 된다는 지적을 반영({{user}}, 2026-08-24).
+        /// 기본 색은 빨간색 계열(스플래시 폭발 테마).
+        /// </summary>
+        private static ShockwaveRingVisualEffect BuildShockwaveRingVisualEffect()
+        {
+            var asset = AssetDatabase.LoadAssetAtPath<ShockwaveRingVisualEffect>(ShockwaveRingVisualEffectPath);
+            if (asset != null)
+            {
+                return asset;
+            }
+
+            EnsureFolder(Path.GetDirectoryName(ShockwaveRingVisualEffectPath)?.Replace('\\', '/'));
+
+            asset = ScriptableObject.CreateInstance<ShockwaveRingVisualEffect>();
+            var serializedAsset = new SerializedObject(asset);
+            serializedAsset.FindProperty("color").colorValue = new Color(1f, 0.28f, 0.12f, 0.9f);
+            serializedAsset.FindProperty("expandDuration").floatValue = 0.18f;
+            serializedAsset.FindProperty("strokeWidth").floatValue = 0.02f;
+            serializedAsset.FindProperty("glowIntensity").floatValue = 1.1f;
+            serializedAsset.FindProperty("glossIntensity").floatValue = 0.3f;
+            serializedAsset.FindProperty("opacity").floatValue = 0.9f;
+            serializedAsset.ApplyModifiedPropertiesWithoutUndo();
+
+            AssetDatabase.CreateAsset(asset, ShockwaveRingVisualEffectPath);
+            return asset;
         }
 
         private static void SetObjectReference(SerializedObject serializedObject, string propertyName, UnityEngine.Object value)
@@ -826,7 +866,16 @@ namespace RCCom.EditorTools
                 throw new InvalidOperationException("그을림 자국 프리팹 설정이 올바르지 않습니다.");
             }
 
-            ValidateSplashEffect(fakeProjectilePrefab, deathBurstPrefab, shockwaveRingPrefab, scorchDecalPrefab);
+            var shockwaveVisual =
+                AssetDatabase.LoadAssetAtPath<ShockwaveRingVisualEffect>(ShockwaveRingVisualEffectPath);
+            if (shockwaveVisual == null)
+            {
+                throw new InvalidOperationException(
+                    $"충격파 링 시각 SO가 없습니다: {ShockwaveRingVisualEffectPath}");
+            }
+
+            ValidateSplashEffect(
+                fakeProjectilePrefab, deathBurstPrefab, shockwaveRingPrefab, scorchDecalPrefab, shockwaveVisual);
 
             Debug.Log("[CombatVfxAssetBuilder] 투사체·히트 스파크·사망 버스트·충격파 링·그을림 자국 에셋 검증 통과");
         }
@@ -835,7 +884,8 @@ namespace RCCom.EditorTools
             GameObject fakeProjectilePrefab,
             GameObject explosionBurstPrefab,
             GameObject shockwaveRingPrefab,
-            GameObject scorchDecalPrefab)
+            GameObject scorchDecalPrefab,
+            ShockwaveRingVisualEffect shockwaveVisual)
         {
             var effect = AssetDatabase.LoadAssetAtPath<SplashDamageEffect>(SplashDamageEffectPath);
             if (effect == null)
@@ -848,6 +898,7 @@ namespace RCCom.EditorTools
             CheckObjectReference(serializedEffect, "explosionBurstPrefab", explosionBurstPrefab);
             CheckObjectReference(serializedEffect, "shockwaveRingPrefab", shockwaveRingPrefab);
             CheckObjectReference(serializedEffect, "scorchDecalPrefab", scorchDecalPrefab);
+            CheckObjectReference(serializedEffect, "shockwaveVisual", shockwaveVisual);
         }
 
         private static void CheckObjectReference(SerializedObject serializedObject, string propertyName, UnityEngine.Object expected)

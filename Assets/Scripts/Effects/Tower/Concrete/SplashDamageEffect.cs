@@ -4,6 +4,7 @@ using RCCom.Data;
 using RCCom.Effects.Tower;
 using RCCom.Managers;
 using RCCom.Runtime;
+using RCCom.Runtime.Visuals;
 using UnityEngine;
 
 namespace RCCom.Effects.Tower.Concrete
@@ -27,6 +28,8 @@ namespace RCCom.Effects.Tower.Concrete
         [SerializeField] private GameObject explosionBurstPrefab;
         [Tooltip("착탄 순간 splashRadius까지 확산하는 충격파 링(ShockwaveRing).")]
         [SerializeField] private GameObject shockwaveRingPrefab;
+        [Tooltip("충격파 링의 색/스트로크/글로우/불투명도/확산 시간 — 코드가 아니라 이 SO를 갈아 끼워 조정한다.")]
+        [SerializeField] private ShockwaveRingVisualEffect shockwaveVisual;
         [Tooltip("착탄 지점에 잠깐 남는 바닥 그을림 자국(ScorchDecal).")]
         [SerializeField] private GameObject scorchDecalPrefab;
 
@@ -57,7 +60,7 @@ namespace RCCom.Effects.Tower.Concrete
             // (0.05~0.2초)을 기다리지 않고 이 시점에 바로 재생한다 — AttackFlash 시절부터 이
             // 효과 클래스가 유지해온 "명중 즉시 연출" 타이밍과 동일하다.
             ParticleBurst.Spawn(explosionBurstPrefab, target.position);
-            ShockwaveRing.Spawn(shockwaveRingPrefab, target.position, splashRadius);
+            ShockwaveRing.Spawn(shockwaveRingPrefab, target.position, splashRadius, shockwaveVisual);
             ScorchDecal.Spawn(scorchDecalPrefab, target.position, splashRadius);
 
             if (SoundManager.Instance != null)
