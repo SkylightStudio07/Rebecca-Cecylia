@@ -303,7 +303,7 @@ Assets/Editor/                (아직 없음 — 네가 만들 에디터 자동�
 - 기준 태그 `nexon-final`이 넥슨 최종 커밋(`4803059`)에 부착됨
 - **Addressables 패키지 설치 및 설정 완료** — 적/아군/오퍼레이터를 종류별 전용 그룹으로 패키징한다.
 - **`Assets/Editor/BuildScript.cs`와 에셋 검증/스튜디오 도구가 존재** — `unity build --target WebGL --execute-method BuildScript.BuildWebGL` 경로를 사용한다.
-- WebGL Addressables 사전 검증 완료. 최종 플레이어 빌드는 코드를 변경한 작업 단위의 마지막 검증으로 실행한다.
+- WebGL Addressables 사전 검증 완료. **플레이어 빌드는 임의 실행하지 않는다.** 검증은 회귀 테스트와 컴파일 오류 없음 확인으로 수행한다.
 - 개발 환경은 **Windows** — 셸 따옴표 처리에 주의(§3-3), 경로에 공백이 있으면 인용할 것
 
 ### 시작할 때 먼저 확인하면 좋은 것
