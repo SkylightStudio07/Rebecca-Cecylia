@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using RCCom.Core;
 using RCCom.Data;
 using RCCom.Effects.Tower;
@@ -67,7 +68,11 @@ namespace RCCom.Effects.Tower.Concrete
             float splashDamage = damage * splashDamageMultiplier;
             float splashRadiusSqr = splashRadius * splashRadius;
 
-            foreach (EnemyInstance enemy in ctx.activeEnemies)
+            // PierceDamageEffect와 동일한 이유(TakeDamage → 즉사 → 콜라이더 비활성화 →
+            // OnTriggerExit2D 동기 발생)로 ctx.activeEnemies 원본을 직접 순회하면 열거 도중
+            // 리스트가 바뀌어 예외가 난다 — 스냅샷을 떠서 순회한다.
+            var splashTargets = new List<EnemyInstance>(ctx.activeEnemies);
+            foreach (EnemyInstance enemy in splashTargets)
             {
                 if (enemy == target)
                 {

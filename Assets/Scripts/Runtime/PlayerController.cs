@@ -300,7 +300,11 @@ namespace RCCom.Runtime
         private void FireSkillPulse()
         {
             float sqrSkillRange = data.skillRange * data.skillRange;
-            foreach (EnemyInstance enemy in _enemiesInRange)
+            // PierceDamageEffect/SplashDamageEffect와 같은 이유(TakeDamage → 즉사 →
+            // EnemyView.HandleDied()의 콜라이더 비활성화 → OnTriggerExit2D 동기 발생)로
+            // _enemiesInRange 원본을 직접 순회하면 열거 도중 리스트가 바뀌어 예외가 난다.
+            var targets = new List<EnemyInstance>(_enemiesInRange);
+            foreach (EnemyInstance enemy in targets)
             {
                 if ((enemy.position - (Vector2)transform.position).sqrMagnitude <= sqrSkillRange)
                 {

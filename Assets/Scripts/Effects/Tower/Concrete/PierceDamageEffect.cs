@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using RCCom.Core;
 using RCCom.Data;
 using RCCom.Effects.Tower;
@@ -40,7 +41,12 @@ namespace RCCom.Effects.Tower.Concrete
             Vector2 beamDirection = (nearest.position - ctx.self.Position).normalized;
             float damage = TowerDamageMath.CalculateDamage(ctx.self, data.damage);
 
-            foreach (EnemyInstance enemy in ctx.activeEnemies)
+            // ctx.activeEnemies는 TowerInstance._enemiesInRange를 그대로 참조한다 — 이 루프 중
+            // enemy.TakeDamage()가 즉사시키면 EnemyView.HandleDied()가 콜라이더를 끄면서
+            // OnTriggerExit2D가 동기 발생해 같은 프레임에 그 리스트에서 항목이 빠질 수 있다.
+            // 원본을 직접 순회하면 "Collection was modified" 예외가 나므로 스냅샷을 떠서 돈다.
+            var targets = new List<EnemyInstance>(ctx.activeEnemies);
+            foreach (EnemyInstance enemy in targets)
             {
                 Vector2 toEnemy = enemy.position - ctx.self.Position;
                 if (toEnemy.magnitude > data.attackRange)
