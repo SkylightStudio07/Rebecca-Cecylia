@@ -112,6 +112,8 @@ namespace RCCom.Managers
 
             GlobalTowerAuraRegistry.Auras.Clear();
             AttackFlash.ClearPool();
+            FakeProjectile.ClearPool();
+            ParticleBurst.ClearPool();
             // 아군 유닛 경로 진행도 캐시(참조 비교 기반)도 같은 이유로 명시적 초기화 대상이다.
             AllyUnitTargeting.ResetPathCache();
         }

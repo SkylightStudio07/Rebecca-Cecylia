@@ -15,6 +15,7 @@ namespace RCCom.Effects.Tower.Concrete
     public class DamageEffect : TowerEffectBase
     {
         [SerializeField] private GameObject attackFlashPrefab;
+        [SerializeField] private GameObject fakeProjectilePrefab;
 
         public override void OnTick(TowerContext ctx)
         {
@@ -37,6 +38,7 @@ namespace RCCom.Effects.Tower.Concrete
 
             target.TakeDamage(TowerDamageMath.CalculateDamage(ctx.self, data.damage));
             AttackFlash.Spawn(attackFlashPrefab, ctx.self.Position, target.position);
+            FakeProjectile.Spawn(fakeProjectilePrefab, ctx.self.Position, target.position);
 
             if (SoundManager.Instance != null)
             {
