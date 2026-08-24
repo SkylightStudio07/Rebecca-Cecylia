@@ -20,6 +20,7 @@ namespace RCCom.EditorTools
         public Color tint = Color.white;
         public float spriteForwardOffsetDegrees;
         public List<string> effectPaths = new();
+        public List<string> visualEffectPaths = new();
         public bool remoteContent;
         public AllyUnitData data = new();
     }

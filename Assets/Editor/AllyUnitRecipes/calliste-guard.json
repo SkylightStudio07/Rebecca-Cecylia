@@ -1,0 +1,30 @@
+{
+    "unitId": "calliste-guard",
+    "catalogOrder": 0,
+    "displayName": "중장갑 센티넬",
+    "spritePath": "Assets/Art/AllyUnits/heavy-armored-sentinel.png",
+    "tint": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+    },
+    "spriteForwardOffsetDegrees": 90.0,
+    "effectPaths": [
+        "Assets/Data/Effects/Unit/BasicAttackEffect.asset"
+    ],
+    "visualEffectPaths": [],
+    "remoteContent": false,
+    "data": {
+        "unitId": "calliste-guard",
+        "displayName": "중장갑 센티넬",
+        "deployCost": 60,
+        "maxHealth": 50.0,
+        "moveSpeed": 0.800000011920929,
+        "attackDamage": 10.0,
+        "attackInterval": 1.5,
+        "attackRange": 5.0,
+        "detectionRange": 5.0,
+        "projectileSpeed": 8.0
+    }
+}

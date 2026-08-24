@@ -1500,3 +1500,42 @@ Phase 0 자동화 경로를 실제로 열고, 이후 오퍼레이터별 원격 �
 - 아군 레시피/Definition/Catalog/Addressables 검증 통과(레시피 4개, 경고 0건), 오퍼레이터 검증 통과(기존 미등록 타워 경고 1건).
 - Foundation 계약, Stage/Chapter UI 배선, WebGL Addressables 사전 검증 통과.
 - Roster 5개를 Unity `ForceReserializeAssets`로 현재 스키마에 재직렬화해 이전 Definition 참조를 제거했다.
+
+## 2026-08-24 — Calliste 전술 중계 드론 오라
+
+### 결정
+- 서포트 드론은 타워가 아니라 `AllyUnitDefinition`으로 조립되는 Calliste 아군 유닛이므로 `TacticalRelayAuraEffect : AllyUnitEffectBase`로 구현했다. 드론의 `attackRange`를 오라 반경으로 재사용해 별도 범위 필드를 중복 소유하지 않는다.
+- 효과 SO는 매 틱 사거리 안의 다른 살아 있는 아군에게 이동 속도 1.2배·공격 속도 1.2배·0.2초 지속 버프를 갱신한다. 범위 이탈 뒤에는 갱신이 끊기고 런타임 인스턴스의 만료 시각으로 자연 해제된다.
+- 임시 배율 상태는 `AllyUnitInstance`에 `(공급 유닛, 효과 SO)`별로 보관한다. 같은 드론의 매 프레임 갱신은 항목을 늘리지 않고 만료만 연장하며, 서로 다른 드론은 기존 아군 오라의 의도와 같이 곱연산 중첩된다. 공유 SO에는 런타임 상태를 두지 않는다.
+- 공격 속도는 공격 직후 인터벌을 한 번 나누는 대신 현재 쿨다운의 감소 속도에 배율을 적용한다. 그래야 오라 진입 즉시 빨라지고 이탈 즉시 원래 속도로 돌아오며, 이미 줄인 쿨다운이 범위 밖에서도 남는 스냅샷 문제를 피할 수 있다.
+- `TacticalRelayAuraEffectBuilder`가 공용 효과 SO를 고정 기본값으로 생성하고 `calliste-drone.json`을 통해 Definition을 다시 빌드한다. 신규 유닛은 이 효과 에셋 경로를 레시피에 조립하기만 하면 같은 동작을 재사용할 수 있다.
+
+### 의도적으로 하지 않은 것
+- 드론 전용 `AllyUnitInstance` 파생 클래스, MonoBehaviour, Manager를 만들지 않았다. 기존 공용 유닛 인스턴스·View·배치 흐름을 그대로 사용한다.
+- 드론 자신에게는 오라를 적용하지 않았다. 자기 강화가 허용되면 단독 배치에서도 지원 유닛의 이동·공격 보정이 생겨 “주변 아군 지원” 역할과 달라지기 때문이다.
+- `AllyUnitData`에 별도 auraRange를 추가하지 않았다. 기획에서 지정한 `attackRange`가 이미 이 유닛의 효과 범위를 표현하며, 필드를 추가하면 레시피·Studio·검증기·카탈로그 스키마까지 같은 의미가 중복된다.
+
+### 검증
+- Unity 6000.3.13f1 Pipeline 재컴파일 결과 `completed`, `failed=false`, `errors=[]`를 확인했다.
+- `AllyUnitCombatVerifier`를 23개 시나리오로 확장해 사거리 안/밖 판정, 자기 제외, 이동 속도 적용, 0.2초 갱신 중단 후 만료, 현재 공격 쿨다운의 공속 배율 적용을 검증했다.
+- Unity Editor API로 생성된 효과 SO의 직렬화 값을 이동 1.2·공격 1.2·지속 0.2로 확인하고, Calliste 드론 Definition의 첫 효과 참조가 해당 SO를 가리키는지 확인했다.
+
+## 2026-08-24 — 아군 유닛 범용 오라 비주얼 훅
+
+### 결정
+- 게임 규칙을 실행하는 `AllyUnitEffectBase`와 표현만 담당하는 `AllyUnitVisualEffectBase`를 분리했다. 버프 판정이 없어도 사거리 표시를 재사용할 수 있고, 힐·디버프 드론이 같은 범위 표현에 서로 다른 색과 주기만 조립할 수 있게 하기 위함이다.
+- 비주얼 SO는 Material·HDR 색상·파동 시간·간격·선 두께·글로우·광택·불투명도만 보유한다. 애니메이션 진행도와 생성된 Renderer는 `AllyUnitView`가 소유하는 `IAllyUnitVisualRuntime`에 두어 공유 SO의 무상태 계약을 유지했다.
+- 범위 원은 View의 자식으로 두지 않고 독립 월드 공간 Quad로 생성한다. View 루트에는 스프라이트 맞춤 스케일과 진행 방향 회전이 적용되므로 자식으로 두면 원이 타원으로 찌그러지거나 함께 회전할 수 있기 때문이다. Quad의 지름은 매 프레임 실제 `attackRange × 2`와 동기화한다.
+- `RangePulseAura.shader`는 중심에서 최대 반경까지 이동하는 얇은 스트로크, 넓고 약한 외곽 글로우, 방향성 흰색 하이라이트를 합성한다. 모든 인스턴스는 공용 Material을 공유하고 색상·진행도는 `MaterialPropertyBlock`으로 전달해 유닛별 Material 복제를 피했다.
+- 아군 레시피에 `visualEffectPaths`를 추가하고 Builder·Validator·Migrator·Ally Unit Studio를 함께 확장했다. 칼리스테 드론은 청록색 버프 SO를 연결했으며, 이후 힐은 녹색, 디버프는 적색/보라색 SO를 같은 슬롯에 조립하면 된다.
+
+### 의도적으로 하지 않은 것
+- 별도 비주얼 Manager나 오라 전용 MonoBehaviour를 만들지 않았다. 효과 수명은 이미 유닛 View 수명과 같으므로 View가 런타임 표현 객체를 생성·Tick·해제하는 편이 소유 관계가 명확하다.
+- 버프/힐/디버프 종류 enum을 런타임에 넣어 색상을 분기하지 않았다. 의미와 색상을 코드에 묶으면 새 지원 타입마다 분기가 늘어나므로, 시각 차이는 비주얼 SO 에셋 조립으로 남겼다.
+- WebGL 플레이어 전체 빌드는 실행하지 않았다. 이번 변경의 검증 대상은 C# 컴파일, URP 셰이더 임포트, 에셋 배선과 실제 렌더 결과이며 플레이어 패키징 회귀가 아니기 때문이다.
+
+### 검증
+- Unity 6000.3.13f1 Pipeline 재컴파일 결과 `completed`, `failed=false`, `errors=[]`를 확인했다.
+- 전술 중계 오라 Builder로 Shader·공용 Material·칼리스테 버프 비주얼 SO를 생성하고, 드론 Definition의 게임플레이 효과와 비주얼 효과 참조를 함께 검증했다.
+- 아군 에셋 검증 6개 레시피·경고 0건, 기존 전투 코어 23개 시나리오, 공용 View 프리팹 검증을 모두 통과했다.
+- Play Mode 임시 카메라에서 반경 10의 중간 파동을 실제 URP로 캡처해 얇은 청록 스트로크·외곽 글로우·하이라이트와 드론 중심 정렬을 확인했다. 프리뷰는 씬을 저장하지 않았고 생성한 캡처 에셋도 삭제했다.

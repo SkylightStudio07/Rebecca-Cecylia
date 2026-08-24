@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: AllyUnit-racing-pitcrew-Local
+  m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
+  m_GroupName: AllyUnit-racing-pitcrew-Local
+  m_GUID: c82adb93e26935449bca3d8aaa3bb7ee
+  m_SerializeEntries:
+  - m_GUID: af662892c8b975c4bad5e2a161f6d880
+    m_Address: ally-unit/racing-pitcrew
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ally-unit-definition
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 2afb846ca87b5fb4d915c11291554efd, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 74443c9ca432fee46a32179c3553c5b7, type: 2}
+    - {fileID: 11400000, guid: ad914a482ce3955479162f88748de117, type: 2}

@@ -12,5 +12,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fca9777026a1fd74e807391fbe3be165, type: 3}
   m_Name: TestUnitCombatSettings
   m_EditorClassIdentifier: Assembly-CSharp::RCCom.Definitions.Unit.UnitCombatSettings
-  contactRange: 1.25
+  contactRange: 2
   separationMargin: 0.125

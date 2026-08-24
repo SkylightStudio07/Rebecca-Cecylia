@@ -30,6 +30,13 @@ namespace RCCom.Runtime
         private bool _hasReachedFinalWaitPoint;
         private IReadOnlyList<EnemyInstance> _lastEnemies = EmptyEnemies;
         private IReadOnlyList<AllyUnitInstance> _lastAllies = EmptyAllies;
+        private Dictionary<(AllyUnitInstance source, AllyUnitEffectBase effect), Vector2>
+            _statMultipliers;
+        private Dictionary<(AllyUnitInstance source, AllyUnitEffectBase effect), float>
+            _statMultiplierExpirations;
+        private List<(AllyUnitInstance source, AllyUnitEffectBase effect)>
+            _expiredStatMultiplierKeys;
+        private float _statMultiplierTime;
 
         public AllyUnitDefinition Definition { get; private set; }
         public AllyUnitData Data => Definition != null ? Definition.data : null;
@@ -114,6 +121,10 @@ namespace RCCom.Runtime
             State = AllyUnitState.Advancing;
             CurrentTarget = null;
             AttackCooldownRemaining = 0f;
+            _statMultipliers?.Clear();
+            _statMultiplierExpirations?.Clear();
+            _expiredStatMultiplierKeys?.Clear();
+            _statMultiplierTime = 0f;
             _contactRange = settings != null ? settings.ContactRange : DefaultContactRange;
             _separationMargin = settings != null ? settings.SeparationMargin : DefaultSeparationMargin;
             float totalPathLength = AllyUnitTargeting.CalculatePathLength(path);
@@ -156,6 +167,7 @@ namespace RCCom.Runtime
             _lastEnemies = activeEnemies ?? EmptyEnemies;
             _lastAllies = activeAllies ?? EmptyAllies;
 
+            TickStatMultipliers(Mathf.Max(0f, deltaTime));
             RefreshTargetAndState();
             TickAttack(Mathf.Max(0f, deltaTime));
             if (IsDead)
@@ -288,6 +300,50 @@ namespace RCCom.Runtime
             Died?.Invoke();
         }
 
+        /// <summary>
+        /// 지속 수리(힐) 효과가 사용하는 회복 진입점. maxHealth를 넘지 않게 캡핑만 하고 별도
+        /// 이벤트는 두지 않는다 — 아군은 아직 체력바 UI가 없어 TakeDamage의 Damaged처럼 View가
+        /// 구독할 대상이 없기 때문이다(필요해지면 그때 Healed 이벤트를 추가한다).
+        /// </summary>
+        public void Heal(float amount)
+        {
+            if (!_isSpawned || IsDead || amount <= 0f)
+            {
+                return;
+            }
+
+            float maxHealth = Data != null ? Data.maxHealth : CurrentHealth;
+            CurrentHealth = Mathf.Min(maxHealth, CurrentHealth + amount);
+        }
+
+        /// <summary>
+        /// 짧은 지속시간 버프를 적용한다. 공급 유닛과 효과를 키로 삼아 같은 오라의 매 프레임
+        /// 갱신은 한 항목만 연장하고, 서로 다른 오라는 기존 아군 버프 규칙대로 곱연산 중첩한다.
+        /// SO에는 상태를 두지 않아 여러 드론이 같은 효과 에셋을 안전하게 공유할 수 있다.
+        /// </summary>
+        public void ApplyStatMultipliers(
+            AllyUnitInstance source,
+            AllyUnitEffectBase effect,
+            float moveSpeedMultiplier,
+            float attackSpeedMultiplier,
+            float duration)
+        {
+            if (!_isSpawned || IsDead || duration <= 0f)
+            {
+                return;
+            }
+
+            var key = (source ?? this, effect);
+            _statMultipliers ??= new Dictionary<
+                (AllyUnitInstance source, AllyUnitEffectBase effect), Vector2>();
+            _statMultiplierExpirations ??= new Dictionary<
+                (AllyUnitInstance source, AllyUnitEffectBase effect), float>();
+            _statMultipliers[key] = new Vector2(
+                Mathf.Max(0.01f, moveSpeedMultiplier),
+                Mathf.Max(0.01f, attackSpeedMultiplier));
+            _statMultiplierExpirations[key] = _statMultiplierTime + duration;
+        }
+
         private void RefreshTargetAndState()
         {
             EnemyInstance attackTarget = AllyUnitTargeting.FindBestEnemy(this, _lastEnemies);
@@ -310,7 +366,9 @@ namespace RCCom.Runtime
                 return;
             }
 
-            AttackCooldownRemaining -= deltaTime;
+            // 남은 쿨다운 자체를 일회성으로 줄이면 오라 이탈 뒤에도 단축분이 남는다.
+            // 시간 진행 속도에 배율을 적용해 진입·이탈 시점부터 즉시 실제 공속이 바뀌게 한다.
+            AttackCooldownRemaining -= deltaTime * CalculateAttackSpeedMultiplier();
             if (AttackCooldownRemaining > 0f)
             {
                 return;
@@ -347,7 +405,9 @@ namespace RCCom.Runtime
                 return;
             }
 
-            float remainingDistance = Mathf.Min(Data.moveSpeed * deltaTime, distanceToWaitPoint);
+            float remainingDistance = Mathf.Min(
+                Data.moveSpeed * CalculateMoveSpeedMultiplier() * deltaTime,
+                distanceToWaitPoint);
             while (remainingDistance > 0.0001f && !_hasReachedFinalWaitPoint)
             {
                 if (_pathIndex < 0 || _pathIndex >= _path.Count)
@@ -402,6 +462,66 @@ namespace RCCom.Runtime
             }
 
             UpdateContactState();
+        }
+
+        private void TickStatMultipliers(float deltaTime)
+        {
+            _statMultiplierTime += deltaTime;
+            if (_statMultipliers == null || _statMultipliers.Count == 0)
+            {
+                return;
+            }
+
+            _expiredStatMultiplierKeys ??=
+                new List<(AllyUnitInstance source, AllyUnitEffectBase effect)>();
+            _expiredStatMultiplierKeys.Clear();
+            foreach (KeyValuePair<(AllyUnitInstance source, AllyUnitEffectBase effect), float> pair
+                     in _statMultiplierExpirations)
+            {
+                if (pair.Value <= _statMultiplierTime)
+                {
+                    _expiredStatMultiplierKeys.Add(pair.Key);
+                }
+            }
+
+            foreach ((AllyUnitInstance source, AllyUnitEffectBase effect) key
+                     in _expiredStatMultiplierKeys)
+            {
+                _statMultipliers.Remove(key);
+                _statMultiplierExpirations.Remove(key);
+            }
+        }
+
+        private float CalculateMoveSpeedMultiplier()
+        {
+            float multiplier = 1f;
+            if (_statMultipliers == null)
+            {
+                return multiplier;
+            }
+
+            foreach (Vector2 statMultiplier in _statMultipliers.Values)
+            {
+                multiplier *= statMultiplier.x;
+            }
+
+            return multiplier;
+        }
+
+        private float CalculateAttackSpeedMultiplier()
+        {
+            float multiplier = 1f;
+            if (_statMultipliers == null)
+            {
+                return multiplier;
+            }
+
+            foreach (Vector2 statMultiplier in _statMultipliers.Values)
+            {
+                multiplier *= statMultiplier.y;
+            }
+
+            return multiplier;
         }
 
         private float DistanceBeforeContact(Vector2 end)

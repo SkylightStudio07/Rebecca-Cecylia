@@ -22,8 +22,8 @@
         "moveSpeed": 1.5,
         "attackDamage": 3.0,
         "attackInterval": 0.800000011920929,
-        "attackRange": 4.5,
-        "detectionRange": 4.5,
+        "attackRange": 6.0,
+        "detectionRange": 6.0,
         "projectileSpeed": 8.0
     }
 }

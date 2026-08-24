@@ -46,8 +46,10 @@ namespace RCCom.EditorTools
                 VerifyGoalDamageAndReachedGoalOnce(temporaryObjects);
                 VerifyBasicAttackDamage(temporaryObjects);
                 VerifyEnemyContactDamageEffectPath(temporaryObjects);
+                VerifyTacticalRelayAuraRangeAndExpiration(temporaryObjects);
+                VerifyTemporaryAttackSpeedMultiplier(temporaryObjects);
 
-                Debug.Log("[AllyUnitCombatVerifier] 아군 유닛 전투 코어 21개 시나리오 검증 통과");
+                Debug.Log("[AllyUnitCombatVerifier] 아군 유닛 전투 코어 23개 시나리오 검증 통과");
             }
             finally
             {
@@ -508,6 +510,67 @@ namespace RCCom.EditorTools
             enemy.Tick(0f);
 
             AssertNear(unit.CurrentHealth, 93f, "적 공격이 기존 ContactDamageEffect 경로를 사용하지 않았습니다.");
+        }
+
+        private static void VerifyTacticalRelayAuraRangeAndExpiration(
+            List<UnityEngine.Object> temporaryObjects)
+        {
+            AllyUnitDefinition droneDefinition =
+                CreateAlly(temporaryObjects, 100f, 1f, 0f, 2f, false);
+            var aura = ScriptableObject.CreateInstance<TacticalRelayAuraEffect>();
+            temporaryObjects.Add(aura);
+            SetPrivateFloat(aura, "moveSpeedMultiplier", 2f);
+            SetPrivateFloat(aura, "attackSpeedMultiplier", 2f);
+            SetPrivateFloat(aura, "refreshDuration", 0.2f);
+            droneDefinition.effects.Add(aura);
+
+            AllyUnitDefinition allyDefinition =
+                CreateAlly(temporaryObjects, 100f, 1f, 0f, 1f, false);
+            var drone = new AllyUnitInstance();
+            var nearby = new AllyUnitInstance();
+            var distant = new AllyUnitInstance();
+            drone.Spawn(droneDefinition, new[] { new Vector2(0f, 0f), new Vector2(20f, 0f) });
+            nearby.Spawn(allyDefinition, new[] { new Vector2(0f, 0f), new Vector2(20f, 0f) });
+            distant.Spawn(allyDefinition, new[] { new Vector2(0f, 0f), new Vector2(24f, 0f) });
+
+            drone.Tick(0f, Array.Empty<EnemyInstance>(), new[] { nearby, drone, distant });
+            drone.Tick(0.1f, Array.Empty<EnemyInstance>(), new[] { drone });
+            nearby.Tick(0.1f, Array.Empty<EnemyInstance>(), new[] { nearby });
+            distant.Tick(0.1f, Array.Empty<EnemyInstance>(), new[] { distant });
+
+            AssertNear(drone.Position.x, 19.9f, "전술 중계 드론이 자신의 오라를 적용받았습니다.");
+            AssertNear(nearby.Position.x, 19.8f, "사거리 안 아군의 이동 속도 오라가 적용되지 않았습니다.");
+            AssertNear(distant.Position.x, 23.9f, "사거리 밖 아군에게 이동 속도 오라가 적용되었습니다.");
+
+            nearby.Tick(0.11f, Array.Empty<EnemyInstance>(), new[] { nearby });
+            AssertNear(nearby.Position.x, 19.69f, "오라 갱신 중단 뒤 이동 속도 버프가 자연 만료되지 않았습니다.");
+        }
+
+        private static void VerifyTemporaryAttackSpeedMultiplier(
+            List<UnityEngine.Object> temporaryObjects)
+        {
+            AllyUnitDefinition attackerDefinition =
+                CreateAlly(temporaryObjects, 100f, 0f, 5f, 3f, true);
+            AllyUnitDefinition sourceDefinition =
+                CreateAlly(temporaryObjects, 100f, 0f, 0f, 1f, false);
+            var aura = ScriptableObject.CreateInstance<TacticalRelayAuraEffect>();
+            temporaryObjects.Add(aura);
+
+            var path = new[] { new Vector2(0f, 0f), new Vector2(10f, 0f) };
+            var attacker = new AllyUnitInstance();
+            var source = new AllyUnitInstance();
+            attacker.Spawn(attackerDefinition, path);
+            source.Spawn(sourceDefinition, path);
+            EnemyDefinition enemyDefinition =
+                CreateEnemy(temporaryObjects, 100f, 0f, 0f, 0f, 1f, false);
+            EnemyInstance enemy = SpawnEnemy(enemyDefinition, path, new Vector2(8f, 0f));
+
+            attacker.Tick(0f, new[] { enemy }, new[] { attacker });
+            attacker.ApplyStatMultipliers(source, aura, 1f, 2f, 0.6f);
+            attacker.Tick(0.5f, new[] { enemy }, new[] { attacker });
+
+            AssertNear(enemy.currentHealth, 90f,
+                "임시 공격 속도 배율이 현재 공격 쿨다운의 진행 속도에 적용되지 않았습니다.");
         }
 
         private static UnitCombatSettings CreateSettings(

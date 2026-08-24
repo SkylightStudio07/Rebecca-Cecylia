@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a2662b906e76a244ba5a59ae4e877a4f, type: 3}
+  m_Name: AllyUnitDefinition
+  m_EditorClassIdentifier: Assembly-CSharp::RCCom.Definitions.Unit.AllyUnitDefinition
+  data:
+    unitId: calliste-drone
+    displayName: "\uC11C\uD3EC\uD2B8 \uB4DC\uB860"
+    deployCost: 40
+    maxHealth: 5
+    moveSpeed: 2
+    attackDamage: 0
+    attackInterval: 1
+    attackRange: 5
+    detectionRange: 5
+    projectileSpeed: 8
+  effects:
+  - {fileID: 11400000, guid: 7a2b57b438585b34bad32d4cd10998bc, type: 2}
+  visualEffects:
+  - {fileID: 11400000, guid: 7a1c62fa4f7fcf84e8959e0ce734c6e9, type: 2}
+  sprite: {fileID: -2236739543955786705, guid: a4e49e29c671100468f2165a179ea335, type: 3}
+  tint: {r: 1, g: 1, b: 1, a: 1}
+  spriteForwardOffsetDegrees: 45

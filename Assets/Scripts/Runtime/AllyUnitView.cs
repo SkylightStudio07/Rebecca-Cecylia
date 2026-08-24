@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Generic;
+using RCCom.Effects.UnitVisual;
+using RCCom.Runtime.Visuals;
 using UnityEngine;
 
 namespace RCCom.Runtime
@@ -25,6 +28,7 @@ namespace RCCom.Runtime
         private Color _baseColor;
         private float _hitFlashRemaining;
         private bool _hasFacing;
+        private List<IAllyUnitVisualRuntime> _visualRuntimes;
         public AllyUnitInstance Instance { get; private set; }
 
         private void Awake()
@@ -46,6 +50,8 @@ namespace RCCom.Runtime
                 Instance.Died -= HandleDied;
             }
 
+            DisposeVisualEffects();
+
             Instance = instance;
             Instance.Damaged += HandleDamaged;
             Instance.Died += HandleDied;
@@ -66,6 +72,8 @@ namespace RCCom.Runtime
                 float scale = SpriteFit.CalculateUniformScale(visualSprite, targetVisualSize);
                 transform.localScale = new Vector3(scale, scale, 1f);
             }
+
+            CreateVisualEffects();
         }
 
         private static Sprite GetFallbackSprite()
@@ -90,6 +98,8 @@ namespace RCCom.Runtime
                 Instance.Damaged -= HandleDamaged;
                 Instance.Died -= HandleDied;
             }
+
+            DisposeVisualEffects();
         }
 
         private void LateUpdate()
@@ -103,6 +113,67 @@ namespace RCCom.Runtime
             transform.position = position;
             UpdateFacing(position);
             TickHitFlash();
+            TickVisualEffects(Time.deltaTime);
+        }
+
+        private void CreateVisualEffects()
+        {
+            if (Instance.Definition.visualEffects == null ||
+                Instance.Definition.visualEffects.Count == 0)
+            {
+                return;
+            }
+
+            _visualRuntimes ??= new List<IAllyUnitVisualRuntime>();
+            var ctx = new AllyUnitVisualContext
+            {
+                view = this,
+                instance = Instance,
+                sortingLayerId = _spriteRenderer.sortingLayerID,
+                sortingOrder = _spriteRenderer.sortingOrder - 1,
+            };
+
+            foreach (AllyUnitVisualEffectBase visualEffect in Instance.Definition.visualEffects)
+            {
+                if (visualEffect == null)
+                {
+                    continue;
+                }
+
+                IAllyUnitVisualRuntime runtime = visualEffect.CreateRuntime(ctx);
+                if (runtime != null)
+                {
+                    _visualRuntimes.Add(runtime);
+                }
+            }
+        }
+
+        private void TickVisualEffects(float deltaTime)
+        {
+            if (_visualRuntimes == null)
+            {
+                return;
+            }
+
+            foreach (IAllyUnitVisualRuntime runtime in _visualRuntimes)
+            {
+                runtime.Tick(deltaTime);
+            }
+        }
+
+        private void DisposeVisualEffects()
+        {
+            if (_visualRuntimes == null)
+            {
+                return;
+            }
+
+            foreach (IAllyUnitVisualRuntime runtime in _visualRuntimes)
+            {
+                runtime.Dispose();
+            }
+
+            _visualRuntimes.Clear();
         }
 
         private void UpdateFacing(Vector2 position)

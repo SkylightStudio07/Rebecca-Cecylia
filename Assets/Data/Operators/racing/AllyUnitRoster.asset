@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: AllyUnitRoster
   m_EditorClassIdentifier: Assembly-CSharp::RCCom.Definitions.Unit.AllyUnitRoster
   unitIds:
-  - test-rifleman
-  - test-guard
+  - racing-heavy
+  - racing-pitcrew

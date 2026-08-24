@@ -6,6 +6,7 @@ using RCCom.Data;
 using RCCom.Definitions.Operator;
 using RCCom.Definitions.Unit;
 using RCCom.Effects.Unit;
+using RCCom.Effects.UnitVisual;
 using UnityEditor;
 using UnityEngine;
 
@@ -329,6 +330,8 @@ namespace RCCom.EditorTools
 
             GUILayout.Space(10f);
             DrawRecipeEffects();
+            GUILayout.Space(10f);
+            DrawRecipeVisualEffects();
             DrawUnitUsage(_selectedUnit);
 
             GUILayout.Space(12f);
@@ -403,6 +406,39 @@ namespace RCCom.EditorTools
             if (GUILayout.Button("+ Add Effect"))
             {
                 _recipe.effectPaths.Add(string.Empty);
+            }
+        }
+
+        private void DrawRecipeVisualEffects()
+        {
+            EnsureRecipeData();
+            GUILayout.Label(
+                $"Visual Effect Composition  /  {_recipe.visualEffectPaths.Count}",
+                EditorStyles.boldLabel);
+            EditorGUILayout.HelpBox(
+                "비주얼 SO에는 색상·주기·선 두께 같은 표현 데이터만 둡니다. " +
+                "애니메이션 진행도와 Renderer는 AllyUnitView의 런타임 객체가 소유합니다.",
+                MessageType.Info);
+
+            for (int i = 0; i < _recipe.visualEffectPaths.Count; i++)
+            {
+                EditorGUILayout.BeginHorizontal(EditorStyles.helpBox);
+                _recipe.visualEffectPaths[i] = DrawRecipeAssetPathField<AllyUnitVisualEffectBase>(
+                    $"Visual Effect {i + 1}",
+                    _recipe.visualEffectPaths[i]);
+                if (GUILayout.Button("Remove", GUILayout.Width(62f)))
+                {
+                    _recipe.visualEffectPaths.RemoveAt(i);
+                    EditorGUILayout.EndHorizontal();
+                    break;
+                }
+
+                EditorGUILayout.EndHorizontal();
+            }
+
+            if (GUILayout.Button("+ Add Visual Effect"))
+            {
+                _recipe.visualEffectPaths.Add(string.Empty);
             }
         }
 
@@ -981,6 +1017,21 @@ namespace RCCom.EditorTools
                 }
             }
 
+            if (definition.visualEffects == null)
+            {
+                issues.Add("Visual Effect 목록이 null입니다.");
+            }
+            else
+            {
+                for (int i = 0; i < definition.visualEffects.Count; i++)
+                {
+                    if (definition.visualEffects[i] == null)
+                    {
+                        issues.Add($"Visual Effect {i + 1}이 null입니다.");
+                    }
+                }
+            }
+
             return issues;
         }
 
@@ -1260,6 +1311,7 @@ namespace RCCom.EditorTools
                 displayName = unitId,
                 spriteForwardOffsetDegrees = 0f,
                 effectPaths = new List<string> { "Assets/Data/Effects/Unit/BasicAttackEffect.asset" },
+                visualEffectPaths = new List<string>(),
                 data = new AllyUnitData
                 {
                     unitId = unitId,
@@ -1533,6 +1585,7 @@ namespace RCCom.EditorTools
 
             _recipe.data ??= new AllyUnitData();
             _recipe.effectPaths ??= new List<string>();
+            _recipe.visualEffectPaths ??= new List<string>();
         }
 
         private void SwapRecipeEffects(int left, int right)

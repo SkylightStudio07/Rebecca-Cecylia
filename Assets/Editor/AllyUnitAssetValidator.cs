@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using RCCom.Definitions.Unit;
 using RCCom.Effects.Unit;
+using RCCom.Effects.UnitVisual;
+using RCCom.Effects.UnitVisual.Concrete;
 using UnityEditor;
 using UnityEditor.AddressableAssets;
 using UnityEditor.AddressableAssets.Settings;
@@ -152,6 +154,28 @@ namespace RCCom.EditorTools
                         }
                     }
                 }
+
+                if (definition.visualEffects == null)
+                {
+                    errors.Add($"아군 유닛 비주얼 효과 목록이 null입니다: {definitionPath}");
+                }
+                else
+                {
+                    foreach (AllyUnitVisualEffectBase visualEffect in definition.visualEffects)
+                    {
+                        if (visualEffect == null)
+                        {
+                            errors.Add($"아군 유닛 비주얼 효과 목록에 null 항목이 있습니다: {definitionPath}");
+                            break;
+                        }
+
+                        if (visualEffect is RangePulseVisualEffect rangePulse &&
+                            rangePulse.Material == null)
+                        {
+                            errors.Add($"범위 파동 비주얼 효과에 Material이 없습니다: {definitionPath}");
+                        }
+                    }
+                }
             }
         }
 
@@ -169,19 +193,33 @@ namespace RCCom.EditorTools
                         $"{recipe.spritePath} ({recipe.unitId})");
                 }
 
-                if (recipe.effectPaths == null)
+                if (recipe.effectPaths != null)
+                {
+                    foreach (string effectPath in recipe.effectPaths)
+                    {
+                        if (string.IsNullOrWhiteSpace(effectPath) ||
+                            AssetDatabase.LoadAssetAtPath<AllyUnitEffectBase>(effectPath) == null)
+                        {
+                            errors.Add(
+                                $"효과 경로가 실제 에셋을 가리키지 않습니다: " +
+                                $"{effectPath} ({recipe.unitId})");
+                        }
+                    }
+                }
+
+                if (recipe.visualEffectPaths == null)
                 {
                     continue;
                 }
 
-                foreach (string effectPath in recipe.effectPaths)
+                foreach (string visualEffectPath in recipe.visualEffectPaths)
                 {
-                    if (string.IsNullOrWhiteSpace(effectPath) ||
-                        AssetDatabase.LoadAssetAtPath<AllyUnitEffectBase>(effectPath) == null)
+                    if (string.IsNullOrWhiteSpace(visualEffectPath) ||
+                        AssetDatabase.LoadAssetAtPath<AllyUnitVisualEffectBase>(visualEffectPath) == null)
                     {
                         errors.Add(
-                            $"효과 경로가 실제 에셋을 가리키지 않습니다: " +
-                            $"{effectPath} ({recipe.unitId})");
+                            $"비주얼 효과 경로가 실제 에셋을 가리키지 않습니다: " +
+                            $"{visualEffectPath} ({recipe.unitId})");
                     }
                 }
             }
