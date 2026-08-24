@@ -1,0 +1,53 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fd578546f204cbc469b575f5e2be9761, type: 3}
+  m_Name: OperatorDefinition
+  m_EditorClassIdentifier: Assembly-CSharp::RCCom.Definitions.Operator.OperatorDefinition
+  operatorId: valentina
+  displayName: "\uBC1C\uB80C\uD2F0\uB098"
+  playStyleDescription: "\uBA54\uAC00\uCF54\uD504 \uD654\uD559 \uD3D0\uAE30\uBB3C
+    \uD2B9\uC218 \uCC98\uB9AC\uBC18 \uCD9C\uC2E0\uC758 \uD654\uD559\uACF5\uD559 \uD3ED\uD30C
+    \uC804\uBB38\uAC00"
+  selectionPortrait: {fileID: 21300000, guid: 20c5d73063fa94440b247815c6092002, type: 3}
+  managementPortrait: {fileID: 21300000, guid: 35830e648ffccc34792e68c5f2cc188b, type: 3}
+  shopPortrait: {fileID: 21300000, guid: 35830e648ffccc34792e68c5f2cc188b, type: 3}
+  shopUpperBodyPortrait: {fileID: 21300000, guid: 21815ddb252e79445b2ff223355fb5c0, type: 3}
+  shopUpperBodyPortraitDimmed: {fileID: 21300000, guid: 89a7756530a82de41ade782e1c214686, type: 3}
+  alternateName: Mad Scientist
+  shopDialogue: "\uC548\uC804 \uADDC\uC815? \uADF8\uB7F0 \uAC74 \uC2E4\uD5D8\uC2E4
+    \uCC45\uC0C1\uC5D0\uB098 \uAF42\uC544\uB450\uB77C\uACE0."
+  playerData:
+    maxHealth: 30
+    moveSpeed: 5
+    hitInvulnerabilityDuration: 0
+    attackDamage: 5
+    attackRange: 4
+    attackInterval: 1
+    projectileSpeed: 1
+    skillCooldown: 12
+    skillRange: 5
+    skillDamage: 5
+  towerRoster: {fileID: 11400000, guid: 5b8639d2cab036042b0c0a0b8ec80591, type: 2}
+  cardRoster: {fileID: 11400000, guid: aa5fb98f5262d3b4d8185f4fa4add667, type: 2}
+  allyUnitRoster: {fileID: 11400000, guid: b2b5d0e7fc3c85e429b0632a8c1b3abc, type: 2}
+  upgradeTracks: {fileID: 11400000, guid: dc6b5a46585bfd649a072dc0435de62a, type: 2}
+  dialogueSet: {fileID: 11400000, guid: 61495ff24b3ef6545b6ca5a2e212b425, type: 2}
+  unlockType: 0
+  requiredBestWave: 0
+  purchasePrice: 0
+  requiredStageId: 
+  unlockConditions:
+  - type: 2
+    requiredBestWave: 0
+    purchasePrice: 500
+    requiredStageId: 
+  unlockRewardPortrait: {fileID: 21300000, guid: 3239bfbf8ddfeec45b5e18e8b183cac2, type: 3}
