@@ -1756,3 +1756,66 @@ Phase 0 자동화 경로를 실제로 열고, 이후 오퍼레이터별 원격 �
 ### 참고
 - 같은 시점에 다른 세션이 이 저장소에서 병행 작업 중이었다(위 "웨이브 체력 배율..." 항목,
   `EnemyView.cs`/`ARCHITECTURE.md` 등 변경). 이번 커밋은 히트 스파크 관련 파일만 포함했다.
+
+## 2026-08-24 — 전투 VFX 3단계: 적/아군 사망 연출 (즉시 Destroy → 페이드 + 파티클)
+
+### 결정
+- `EnemyView`/`AllyUnitView`의 `Died` 핸들러가 즉시 `Destroy(gameObject)`하던 것을, `Collider2D`
+  비활성화 → `ParticleBurst` 사망 버스트 재생 → `deathFadeDuration`(기본 0.3초) 동안 알파
+  페이드아웃 → `Destroy`로 바꿨다. 기존 `TickHitFlash`와 같은 "잔여시간 필드 + `LateUpdate`
+  감산" 스타일을 그대로 따랐고 코루틴은 쓰지 않았다.
+- `EnemyView`는 기존에 `Died`와 `ReachedGoal`을 같은 `HandleRemoved`로 묶어 처리했는데, 분리했다
+  (`HandleDied` / `HandleReachedGoal`). 거점 도달은 처치가 아니라서(`EnemyInstance.cs` 주석: "처치
+  보상은 Died에서만") 페이드 없이 기존처럼 즉시 사라져야 한다.
+- `AllyUnitView`는 스프라이트 페이드 시작 전에 `DisposeVisualEffects()`를 먼저 호출한다 — 죽은
+  유닛이 오라 버프(`RangePulseVisualEffect` 등)를 페이드 동안 계속 발산하면 안 되기 때문.
+- 두 View 모두 `Bind()`에서 사망 상태(`_isDying`/`_deathFadeRemaining`/Collider2D enabled/알파)를
+  방어적으로 리셋한다 — 지금은 사망 시 실제로 `Destroy`까지 가서 재사용되지 않지만, 향후 View
+  풀링이 추가돼도 이전 개체의 페이드 상태가 새 개체로 새지 않게.
+- 설계안 §0-2 결정(ProjectBloodmoon 실루엣 셰이더 이식 파기)을 그대로 지켰다 — 완전한 단색
+  실루엣 고정은 셰이더 없이는 불가능해서 포기했고, 대신 파티클 버스트 타이밍과 페이드 속도로
+  시인성을 보완한다는 트레이드오프를 코드 주석에도 남겼다.
+
+### 사망 버스트 프리팹
+- `CombatVfxAssetBuilder`에 `BuildDeathBurstPrefab()`을 추가했다. 히트 스파크와 같은 Additive
+  머티리얼(`HitSpark_Additive.mat`)을 공유하되, 크기(0.2~0.4)·수명(0.25~0.45초)·버스트 수(14~22)를
+  키우고 `gravityModifier 0.6`으로 파편이 흩날리며 떨어지게 했다. 렌더 모드도 히트 스파크의
+  Stretch(스트릭) 대신 Billboard(원형 산개)로 바꿔 "피격"과 "사망"이 다른 인상으로 읽히게 했다.
+- `EnemyView`/`AllyUnitView`는 SO가 아니라 프리팹 자체에 필드가 있어 기존 `ConnectEffect<TEffect>`
+  패턴(SO 전용)을 못 썼다. `PrefabUtility.LoadPrefabContents`로 프리팹을 열어 컴포넌트 필드를
+  `SerializedObject`로 갱신하고 `SaveAsPrefabAsset`으로 저장하는 범용 `ConnectPrefabField<TComponent>`
+  /`ValidatePrefabField<TComponent>`를 새로 만들어 `EnemyView_Normal.prefab`/`AllyUnitView.prefab`에
+  배선했다.
+
+### 버그 발견 및 수정: 머티리얼 공유 시 Delete+CreateAsset이 기존 참조를 끊음
+- 사망 버스트가 히트 스파크와 같은 `BuildHitSparkMaterial()`을 다시 호출하게 되면서, 한 번의
+  빌드 실행 안에서 이 메서드가 두 번 불렸다. 기존 구현은 매 호출마다
+  `AssetDatabase.DeleteAsset` → `CreateAsset`으로 같은 경로에 머티리얼을 새로 만들었는데, 이러면
+  먼저 저장된 `ParticleBurst_HitSpark.prefab`의 `sharedMaterial` 참조(첫 호출 때의 GUID)가 두
+  번째 호출에서 삭제된 GUID를 가리키게 돼 끊어진다.
+- `Validate()`의 "Additive 머티리얼 배선" 검사가 정확히 이 상태를 잡아 `InvalidOperationException`을
+  던졌다 — 검증 코드가 실제로 회귀를 잡아낸 사례라 기록해둔다.
+- 기존 에셋이 있으면 delete 없이 그 자리에서 shader/텍스처/색만 갱신하도록 고쳐 멱등하게
+  만들었다(`SaveOwnedPrefab`이 프리팹에 대해 이미 하고 있던 "제자리 갱신" 원칙을 머티리얼에도
+  동일 적용). 수정 후 재실행해 히트 스파크·사망 버스트 양쪽 모두 같은 머티리얼 GUID를 공유하는
+  상태로 정상 배선됨을 확인했다.
+
+### 의도적으로 하지 않은 것
+- ProjectBloodmoon 실루엣 셰이더는 여전히 이식하지 않는다(설계안 §0-1/§0-2에서 파기 확정).
+- §3-③(스플래시 충격파 링), §3-②(관통 레이저 빔)는 이번 범위가 아니다 — 설계안 §7 순서대로
+  다음 턴에 진행 예정.
+
+### 검증
+- Unity 6000.3.13f1 Pipeline `recompile` → `recompile_status`로 에러 0건 확인(코드 수정 직후,
+  빌더 확장 후 각각).
+- `unity command menu --path "RCCom/Combat VFX/Build Projectile And Hit Spark"`를 두 번 실행했다
+  — 1차 실행에서 위 머티리얼 버그로 `Validate()`가 실패하는 것을 확인했고, 수정 후 2차 실행에서
+  `[CombatVfxAssetBuilder] 투사체·히트 스파크·사망 버스트 에셋 검증 통과` 로그와 함께 성공을
+  확인했다.
+- `git status`/`git diff`로 `EnemyView_Normal.prefab`/`AllyUnitView.prefab`이 딱 두 필드
+  (`deathParticlePrefab`/`deathFadeDuration`) 추가뿐임을, `ParticleBurst_HitSpark.prefab`/
+  `HitSpark_Additive.mat`이 최종적으로 이전 커밋과 diff 없음(=참조가 안전하게 복구됐음)을
+  확인했다.
+
+### 사람이 할 일
+- 플레이 테스트로 사망 페이드 타이밍(0.3초)과 사망 버스트 크기가 체감상 적절한지 확인.
