@@ -310,6 +310,16 @@ namespace RCCom.EditorTools
                 SaveCurrentRecipe();
                 BuildAll();
             }
+
+            GUILayout.Space(18f);
+            EditorGUILayout.HelpBox(
+                "삭제는 레시피·Definition·Roster·Catalog·Addressables 그룹을 함께 정리합니다. " +
+                "원본 스프라이트는 재사용할 수 있도록 보존합니다.",
+                MessageType.Warning);
+            if (GUILayout.Button("Delete Selected Enemy...", GUILayout.Height(28f)))
+            {
+                DeleteSelectedEnemy();
+            }
         }
 
         private void DrawSaveButton()
@@ -535,6 +545,37 @@ namespace RCCom.EditorTools
             {
                 Debug.LogException(exception);
                 EditorUtility.DisplayDialog("Enemy Build", exception.Message, "확인");
+            }
+        }
+
+        private void DeleteSelectedEnemy()
+        {
+            if (_recipe == null || string.IsNullOrWhiteSpace(_recipe.enemyId))
+            {
+                return;
+            }
+
+            string enemyId = _recipe.enemyId;
+            if (!EditorUtility.DisplayDialog(
+                    "적 삭제",
+                    $"{enemyId}의 레시피와 모든 자동 생성물을 삭제합니다.\n" +
+                    "스테이지에서 사용 중이면 삭제가 중단되며 원본 스프라이트는 보존됩니다.",
+                    "삭제",
+                    "취소"))
+            {
+                return;
+            }
+
+            try
+            {
+                EnemyAssetDeletionService.Delete(enemyId);
+                RefreshRecipes(null);
+                EditorUtility.DisplayDialog("적 삭제", $"삭제 완료: {enemyId}", "확인");
+            }
+            catch (Exception exception)
+            {
+                Debug.LogException(exception);
+                EditorUtility.DisplayDialog("적 삭제 실패", exception.Message, "확인");
             }
         }
 

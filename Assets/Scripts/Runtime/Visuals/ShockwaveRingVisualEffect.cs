@@ -3,7 +3,7 @@ using UnityEngine;
 namespace RCCom.Runtime.Visuals
 {
     /// <summary>
-    /// 위치 기반 원샷 충격파 링(<see cref="ShockwaveRing"/>)의 시각 튜닝값을 담는 데이터 SO.
+    /// 위치 기반 원샷 파장 링(<see cref="ShockwaveRing"/>)의 시각 튜닝값을 담는 데이터 SO.
     ///
     /// 아군 사거리 오라 파동(<see cref="RangePulseVisualEffect"/>)이 색/스트로크/글로우/글로시/
     /// 불투명도/주기를 전부 SO 필드로 노출해 코드를 안 건드리고 에셋만 갈아 끼워 버프·힐·디버프
@@ -19,7 +19,7 @@ namespace RCCom.Runtime.Visuals
     public class ShockwaveRingVisualEffect : ScriptableObject
     {
         [SerializeField, ColorUsage(true, true)] private Color color = new(1f, 0.28f, 0.12f, 0.9f);
-        [Tooltip("링이 반경 끝까지 확산하는 데 걸리는 시간(초). ShockwaveRing이 0.15~0.2초로 다시 clamp한다.")]
+        [Tooltip("링이 반경 끝까지 확산하는 데 걸리는 시간(초). ShockwaveRing이 0.15~1초로 다시 clamp한다.")]
         [SerializeField, Min(0.05f)] private float expandDuration = 0.18f;
         [SerializeField, Range(0.002f, 0.08f)] private float strokeWidth = 0.02f;
         [SerializeField, Range(0f, 2f)] private float glowIntensity = 1.1f;

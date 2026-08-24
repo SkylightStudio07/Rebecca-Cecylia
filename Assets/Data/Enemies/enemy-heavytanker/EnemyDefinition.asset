@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7cbaa565849af794b9483d1ec95c15bb, type: 3}
+  m_Name: EnemyDefinition
+  m_EditorClassIdentifier: Assembly-CSharp::RCCom.Definitions.Enemy.EnemyDefinition
+  data:
+    enemyId: enemy-heavytanker
+    displayName: "\uD5E4\uBE44\uD0F1\uCEE4"
+    kind: 7
+    maxHealth: 55
+    moveSpeed: 1
+    contactDamage: 9
+    attackRange: 0
+    attackInterval: 1
+    waveCost: 4
+    minWave: 1
+    goldReward: 45
+    expReward: 18
+  effects:
+  - {fileID: 11400000, guid: c3295b86412ca9f44b94b3a2f89ede1f, type: 2}
+  sprite: {fileID: -1391284571477560243, guid: d820ffd77b80d7c4ba84d593ef65a38f, type: 3}
+  spriteForwardOffsetDegrees: -90

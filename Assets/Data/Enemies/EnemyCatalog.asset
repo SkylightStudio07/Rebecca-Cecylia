@@ -43,3 +43,33 @@ MonoBehaviour:
     goldReward: 35
     expReward: 12
     previewSprite: {fileID: 21300000, guid: 585cfc7e8b2b5374bbac76bc81d52951, type: 3}
+  - enemyId: enemy-heal
+    displayName: "\uD790\uB7EC"
+    kind: 6
+    address: enemy/enemy-heal
+    remoteContent: 0
+    waveCost: 3
+    minWave: 1
+    goldReward: 10
+    expReward: 5
+    previewSprite: {fileID: 7275587250928016836, guid: 3403034e858f08346b86584ce57b4147, type: 3}
+  - enemyId: enemy-explode
+    displayName: "\uC790\uD3ED"
+    kind: 5
+    address: enemy/enemy-explode
+    remoteContent: 0
+    waveCost: 3
+    minWave: 1
+    goldReward: 10
+    expReward: 5
+    previewSprite: {fileID: -6474883903819434044, guid: ce5a3bb8aa10ccb4496f938a4eede15f, type: 3}
+  - enemyId: enemy-heavytanker
+    displayName: "\uD5E4\uBE44\uD0F1\uCEE4"
+    kind: 7
+    address: enemy/enemy-heavytanker
+    remoteContent: 0
+    waveCost: 4
+    minWave: 1
+    goldReward: 45
+    expReward: 18
+    previewSprite: {fileID: -1391284571477560243, guid: d820ffd77b80d7c4ba84d593ef65a38f, type: 3}

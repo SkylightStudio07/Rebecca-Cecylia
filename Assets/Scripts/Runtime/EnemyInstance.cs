@@ -21,6 +21,7 @@ namespace RCCom.Runtime
         public Vector2 position;
         public float currentHealth;
 
+        private readonly Dictionary<IEnemyEffect, float> _effectCooldowns = new();
         private IReadOnlyList<Vector2> _path;
         private IDamageable _goal;
         private int _pathIndex;
@@ -69,6 +70,7 @@ namespace RCCom.Runtime
         public bool IsDead => _isDead;
         public bool HasReachedGoal => _hasReachedGoal;
         public bool IsAlive => _isSpawned && !_isDead && !_hasReachedGoal;
+        public float MaxHealth { get; private set; }
         public AllyUnitInstance CurrentTarget => _currentTarget;
         public float AttackCooldownRemaining => _attackCooldownRemaining;
 
@@ -97,7 +99,8 @@ namespace RCCom.Runtime
         /// </summary>
         public void Spawn(IReadOnlyList<Vector2> path, IDamageable goal)
         {
-            currentHealth = Data.maxHealth;
+            MaxHealth = Mathf.Max(0f, Data.maxHealth);
+            currentHealth = MaxHealth;
             _path = path;
             _goal = goal;
             _pathIndex = 0;
@@ -106,6 +109,7 @@ namespace RCCom.Runtime
             _currentTarget = null;
             _currentMovementTarget = null;
             _attackCooldownRemaining = 0f;
+            _effectCooldowns.Clear();
             _isSpawned = true;
 
             EnemyContext ctx = MakeContext(0f);
@@ -119,7 +123,9 @@ namespace RCCom.Runtime
         /// 같은 프레임의 아군 후보 제시 단계가 끝난 뒤 호출한다. 적은 전체 아군 목록을 알 수 없으므로
         /// 통합 컨트롤러가 모든 아군의 OfferAttackCandidates를 먼저 실행해야 첫 조우 이동도 접촉선에서 제한된다.
         /// </summary>
-        public void Tick(float deltaTime)
+        public void Tick(
+            float deltaTime,
+            IReadOnlyList<EnemyInstance> activeEnemies = null)
         {
             if (!IsAlive)
             {
@@ -162,11 +168,62 @@ namespace RCCom.Runtime
                 return;
             }
 
-            EnemyContext ctx = MakeContext(deltaTime);
+            EnemyContext ctx = MakeContext(deltaTime, activeEnemies);
             foreach (IEnemyEffect effect in definition.effects)
             {
                 effect.OnTick(ctx);
             }
+        }
+
+        /// <summary>
+        /// 웨이브 체력 배율은 현재 체력뿐 아니라 회복 상한에도 같은 값으로 적용해야 한다.
+        /// Definition 원본은 건드리지 않고 이 런타임 인스턴스의 상한만 갱신한다.
+        /// </summary>
+        public void ApplyHealthMultiplier(float multiplier)
+        {
+            float safeMultiplier = Mathf.Max(0f, multiplier);
+            MaxHealth *= safeMultiplier;
+            currentHealth *= safeMultiplier;
+        }
+
+        /// <summary>회복 Effect가 사용하는 진입점. 웨이브 배율이 적용된 런타임 최대 체력을 넘지 않는다.</summary>
+        public void Heal(float amount)
+        {
+            if (!IsAlive || amount <= 0f)
+            {
+                return;
+            }
+
+            currentHealth = Mathf.Min(MaxHealth, currentHealth + amount);
+        }
+
+        /// <summary>
+        /// 공유 SO에 쿨다운 상태를 저장하지 않도록 Effect별 남은 시간을 인스턴스가 소유한다.
+        /// 첫 발동도 interval만큼 기다리며, 프레임 초과분은 다음 주기에 이월한다.
+        /// </summary>
+        public bool TryConsumeEffectInterval(IEnemyEffect effect, float deltaTime, float interval)
+        {
+            if (effect == null || !IsAlive)
+            {
+                return false;
+            }
+
+            float safeInterval = Mathf.Max(0.0001f, interval);
+            if (!_effectCooldowns.TryGetValue(effect, out float remaining))
+            {
+                remaining = safeInterval;
+            }
+
+            remaining -= Mathf.Max(0f, deltaTime);
+            if (remaining > 0f)
+            {
+                _effectCooldowns[effect] = remaining;
+                return false;
+            }
+
+            float overshoot = -remaining;
+            _effectCooldowns[effect] = safeInterval - overshoot % safeInterval;
+            return true;
         }
 
         /// <summary>
@@ -326,11 +383,7 @@ namespace RCCom.Runtime
 
                 if (_pathIndex >= _path.Count)
                 {
-                    _hasReachedGoal = true;
-                    _currentTarget = null;
-                    _currentMovementTarget = null;
-                    DealContactDamageTo(_goal);
-                    ReachedGoal?.Invoke();
+                    ResolveGoalContact();
                 }
                 return;
             }
@@ -361,12 +414,26 @@ namespace RCCom.Runtime
 
             if (_pathIndex >= _path.Count)
             {
-                _hasReachedGoal = true;
-                _currentTarget = null;
-                _currentMovementTarget = null;
-                DealContactDamageTo(_goal);
-                ReachedGoal?.Invoke();
+                ResolveGoalContact();
             }
+        }
+
+        private void ResolveGoalContact()
+        {
+            _currentTarget = null;
+            _currentMovementTarget = null;
+
+            // 접촉 효과가 자폭처럼 자신을 죽일 수 있도록 도달 완료 플래그보다 효과를 먼저
+            // 실행한다. 효과가 사망시켰다면 Died 경로가 View/목록 정리를 이미 소유하므로
+            // ReachedGoal을 중복 발생시키지 않는다.
+            DealContactDamageTo(_goal);
+            if (!IsAlive)
+            {
+                return;
+            }
+
+            _hasReachedGoal = true;
+            ReachedGoal?.Invoke();
         }
 
         public void DealContactDamageTo(IDamageable target)
@@ -400,22 +467,42 @@ namespace RCCom.Runtime
             amount *= _vulnerableMultiplier;
             currentHealth -= amount;
             Damaged?.Invoke(amount);
-            Debug.Log($"[EnemyDebug] {Data.displayName} 피격 -{amount} (남은 체력 {currentHealth}/{Data.maxHealth})"); // TODO: 확인 끝나면 삭제
+            Debug.Log($"[EnemyDebug] {Data.displayName} 피격 -{amount} (남은 체력 {currentHealth}/{MaxHealth})"); // TODO: 확인 끝나면 삭제
 
             if (currentHealth <= 0f)
             {
-                _isDead = true;
-                _currentTarget = null;
-                _currentMovementTarget = null;
-
-                EnemyContext ctx = MakeContext(0f);
-                foreach (IEnemyEffect effect in definition.effects)
-                {
-                    effect.OnDeath(ctx);
-                }
-
-                Died?.Invoke();
+                Die();
             }
+        }
+
+        /// <summary>
+        /// 자폭·즉사 효과처럼 현재 체력과 무관하게 사망시킨다. 효과가 직접 내부 플래그와
+        /// 이벤트를 만지지 않게 일반 피해와 같은 단일 사망 경로를 사용한다.
+        /// </summary>
+        public void KillImmediately()
+        {
+            if (!IsAlive)
+            {
+                return;
+            }
+
+            currentHealth = 0f;
+            Die();
+        }
+
+        private void Die()
+        {
+            _isDead = true;
+            _currentTarget = null;
+            _currentMovementTarget = null;
+
+            EnemyContext ctx = MakeContext(0f);
+            foreach (IEnemyEffect effect in definition.effects)
+            {
+                effect.OnDeath(ctx);
+            }
+
+            Died?.Invoke();
         }
 
         private void RefreshCurrentTarget()
@@ -543,10 +630,13 @@ namespace RCCom.Runtime
             return Mathf.Max(configuredRange, target.ContactRange);
         }
 
-        private EnemyContext MakeContext(float deltaTime) => new()
+        private EnemyContext MakeContext(
+            float deltaTime,
+            IReadOnlyList<EnemyInstance> activeEnemies = null) => new()
         {
             self = this,
             deltaTime = deltaTime,
+            activeEnemies = activeEnemies,
         };
     }
 }

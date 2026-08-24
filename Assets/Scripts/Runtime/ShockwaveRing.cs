@@ -5,7 +5,7 @@ using UnityEngine;
 namespace RCCom.Runtime
 {
     /// <summary>
-    /// 스플래시 착탄 지점에서 한 번만 재생되고 풀에 반납되는 원샷 충격파 링(설계안 §3-③).
+    /// 스플래시 착탄이나 힐러 회복 지점에서 한 번만 재생되고 풀에 반납되는 공용 원샷 파장 링.
     /// 아군 유닛 하나에 계속 붙어 자기 사거리 기준으로 무한 반복 재생되는
     /// <see cref="Visuals.RangePulseVisualRuntime"/>(상시 오라, 유닛 생존 동안 파괴되지 않음)와는
     /// 성격이 달라 그대로 재사용할 수 없었다 — 이쪽은 위치 기반 원샷이라 AttackFlash.cs와 같은
@@ -30,7 +30,7 @@ namespace RCCom.Runtime
         private static readonly int OpacityId = Shader.PropertyToID("_Opacity");
 
         private const float MinimumPlayDuration = 0.15f;
-        private const float MaximumPlayDuration = 0.2f;
+        private const float MaximumPlayDuration = 1f;
         private const float DefaultPlayDuration = 0.18f;
 
         // AttackFlash/FakeProjectile/ParticleBurst와 같은 이유로 prefab별 풀을 분리한다.

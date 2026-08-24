@@ -1,0 +1,25 @@
+{
+    "enemyId": "enemy-heal",
+    "catalogOrder": 4,
+    "displayName": "힐러",
+    "spritePath": "Assets/Art/Enemies/healer.png",
+    "spriteForwardOffsetDegrees": -90.0,
+    "effectPaths": [
+        "Assets/Data/Effects/Enemy_HealNearbyEnemiesEffect.asset"
+    ],
+    "remoteContent": false,
+    "data": {
+        "enemyId": "enemy-heal",
+        "displayName": "힐러",
+        "kind": 6,
+        "maxHealth": 50.0,
+        "moveSpeed": 3.0,
+        "contactDamage": 0.0,
+        "attackRange": 3.0,
+        "attackInterval": 1.5,
+        "waveCost": 3.0,
+        "minWave": 1,
+        "goldReward": 10,
+        "expReward": 5
+    }
+}

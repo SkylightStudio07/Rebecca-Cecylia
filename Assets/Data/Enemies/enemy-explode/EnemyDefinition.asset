@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7cbaa565849af794b9483d1ec95c15bb, type: 3}
+  m_Name: EnemyDefinition
+  m_EditorClassIdentifier: Assembly-CSharp::RCCom.Definitions.Enemy.EnemyDefinition
+  data:
+    enemyId: enemy-explode
+    displayName: "\uC790\uD3ED"
+    kind: 5
+    maxHealth: 25
+    moveSpeed: 5
+    contactDamage: 12
+    attackRange: 0
+    attackInterval: 1
+    waveCost: 3
+    minWave: 1
+    goldReward: 10
+    expReward: 5
+  effects:
+  - {fileID: 11400000, guid: c3295b86412ca9f44b94b3a2f89ede1f, type: 2}
+  - {fileID: 11400000, guid: 4e5c41bc234b44246a57bd256658e480, type: 2}
+  sprite: {fileID: -6474883903819434044, guid: ce5a3bb8aa10ccb4496f938a4eede15f, type: 3}
+  spriteForwardOffsetDegrees: -90

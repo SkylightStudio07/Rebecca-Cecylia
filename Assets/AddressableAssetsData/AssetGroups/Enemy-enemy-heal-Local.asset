@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: Enemy-enemy-heal-Local
+  m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
+  m_GroupName: Enemy-enemy-heal-Local
+  m_GUID: c4e26f5a0c4a61b4dadbb5b72e4474bb
+  m_SerializeEntries:
+  - m_GUID: ba8efc668b960d242ae27be670e9d929
+    m_Address: enemy/enemy-heal
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - enemy-definition
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 2afb846ca87b5fb4d915c11291554efd, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 2ab4e6ee7576e7e419267fa6c7726a58, type: 2}
+    - {fileID: 11400000, guid: f075feb5751d2944491c1925c19e1262, type: 2}
