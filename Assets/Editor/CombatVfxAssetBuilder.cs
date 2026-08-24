@@ -385,8 +385,10 @@ namespace RCCom.EditorTools
 
                 MeshRenderer renderer = root.GetComponent<MeshRenderer>();
                 renderer.sharedMaterial = rangePulseMaterial;
-                // 캐릭터 스프라이트(기본 정렬순서 0)보다 아래, 즉 바닥에 깔린 것처럼 보이게 한다.
-                renderer.sortingOrder = -1;
+                // 지면 타일맵(DefenseScene의 Ground Tilemap, 같은 Default 레이어에 sortingOrder 0)
+                // 위에 그려져야 보인다 — 음수로 두면 지면에 완전히 가려져 아예 안 보인다(실전 확인됨).
+                // 그을림 자국(1)보다는 위, 캐릭터 스프라이트/히트 스파크(7)/사망 버스트(8)보다는 아래.
+                renderer.sortingOrder = 2;
                 renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
                 renderer.receiveShadows = false;
                 renderer.lightProbeUsage = UnityEngine.Rendering.LightProbeUsage.Off;
@@ -417,8 +419,10 @@ namespace RCCom.EditorTools
             {
                 SpriteRenderer renderer = root.AddComponent<SpriteRenderer>();
                 renderer.sprite = scorchSprite;
-                // 충격파 링(-1)보다도 더 아래 — 바닥에 눌러 붙은 자국이라 링 밑에서 은은하게 보여야 한다.
-                renderer.sortingOrder = -2;
+                // 지면 타일맵(sortingOrder 0)보다는 위, 충격파 링(2)보다는 아래 — 바닥에 눌러 붙은
+                // 자국이라 링 밑에서 은은하게 보여야 한다. 지면과 같은 레이어인데 음수를 주면
+                // 지면에 완전히 가려져 아예 안 보인다(실전 확인됨 — 애초의 실수).
+                renderer.sortingOrder = 1;
 
                 root.AddComponent<ScorchDecal>();
 
