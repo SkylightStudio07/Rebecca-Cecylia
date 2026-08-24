@@ -1,5 +1,6 @@
 using System;
 using RCCom.Effects.Tower.Concrete;
+using RCCom.Effects.Unit.Concrete;
 using RCCom.Runtime;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -33,6 +34,8 @@ namespace RCCom.EditorTools
             "Assets/Data/Effects/Tower/Pierce Damage Effect.asset";
         private const string PoisonDamageEffectPath =
             "Assets/Data/Effects/Tower/Poison Damage Effect.asset";
+        private const string BasicAttackEffectPath =
+            "Assets/Data/Effects/Unit/BasicAttackEffect.asset";
         private const string PlayerScenePath = "Assets/Scenes/DefenseScene.unity";
 
         [MenuItem("RCCom/Combat VFX/Build Projectile And Hit Spark")]
@@ -47,12 +50,13 @@ namespace RCCom.EditorTools
             ConnectEffect<SplashDamageEffect>(SplashDamageEffectPath, fakeProjectilePrefab);
             ConnectEffect<PierceDamageEffect>(PierceDamageEffectPath, fakeProjectilePrefab);
             ConnectEffect<PoisonDamageEffect>(PoisonDamageEffectPath, fakeProjectilePrefab);
+            ConnectEffect<BasicAttackEffect>(BasicAttackEffectPath, fakeProjectilePrefab);
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
             ConnectPlayerController(fakeProjectilePrefab);
             Validate();
-            Debug.Log("[CombatVfxAssetBuilder] 투사체·히트 스파크 생성 및 네 공격 효과 + 플레이어 배선 완료");
+            Debug.Log("[CombatVfxAssetBuilder] 투사체·히트 스파크 생성 및 네 공격 효과 + 아군 기본 공격 + 플레이어 배선 완료");
         }
 
         private static void ConfigureProjectileSprite()
@@ -389,6 +393,7 @@ namespace RCCom.EditorTools
             ValidateEffect<SplashDamageEffect>(SplashDamageEffectPath, fakeProjectilePrefab);
             ValidateEffect<PierceDamageEffect>(PierceDamageEffectPath, fakeProjectilePrefab);
             ValidateEffect<PoisonDamageEffect>(PoisonDamageEffectPath, fakeProjectilePrefab);
+            ValidateEffect<BasicAttackEffect>(BasicAttackEffectPath, fakeProjectilePrefab);
             ValidatePlayerController(fakeProjectilePrefab);
             Debug.Log("[CombatVfxAssetBuilder] 투사체·히트 스파크 에셋 검증 통과");
         }
