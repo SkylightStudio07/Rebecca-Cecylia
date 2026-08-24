@@ -1920,3 +1920,42 @@ Phase 0 자동화 경로를 실제로 열고, 이후 오퍼레이터별 원격 �
   그을림 자국)를 내는지 확인.
 - `PierceDamageEffect.OnTick`의 "Collection was modified" 예외 — 관통 타워가 다수의 적을 동시에
   잡을 때 재현되는지, 재현된다면 우선순위 낮은 별도 버그 수정 턴으로 처리할지 판단 필요.
+
+## 2026-08-24 — 스플래시 충격파 링/그을림 자국 sortingOrder 수정 + "부식" 타워 배선 오류 수정
+
+### 결정 1: 충격파 링/그을림 자국이 지면에 완전히 가려져 있던 sortingOrder 버그
+- 스플래시 타워 배선을 고친 뒤 실제 플레이 테스트 결과: 곡사 투사체는 날아가는데 착탄 지점의
+  충격파 링이 안 보인다는 보고. `ShockwaveRing.prefab`(`sortingOrder = -1`)과
+  `ScorchDecal.prefab`(`sortingOrder = -2`)이 "0보다 아래로 두면 바닥에 깔린 것처럼 보이겠지"라는
+  가정으로 만들어졌는데, 실제로는 `DefenseScene`의 지면 Tilemap 자체가 같은 `Default` 레이어에
+  `sortingOrder = 0`으로 이미 깔려 있어서 — 그보다 낮은 음수 값은 지면 "아래"로 들어가 지면에
+  완전히 가려진다. 재생은 정상적으로 되고 있었고 순수하게 화면에 안 보이기만 한 문제였다.
+- `CombatVfxAssetBuilder.cs`에서 `ScorchDecal = 1`, `ShockwaveRing = 2`로 수정(지면(0) 위,
+  캐릭터 스프라이트/히트 스파크(7)/사망 버스트(8) 아래) 후 빌더 메뉴 재실행으로 두 프리팹에
+  반영. 코드 수정 후 빌더를 통해 프리팹에 반영하는 절차라 `.prefab` 텍스트를 직접 만지지
+  않았다.
+
+### 결정 2: "부식" 타워도 스플래시와 동일한 Day3 배선 오류였다
+- 플레이 중이던 사용자 요청으로 다른 타워들의 `effects` 슬롯을 읽기 전용으로 점검한 결과,
+  `Poison.asset`(towerId 7, "부식")도 스플래시와 정확히 같은 패턴으로 `Poison Damage
+  Effect.asset`이 아니라 `DamageEffect_Default`를 참조하고 있었다(Day3 커밋 `e848607`부터).
+  `Poison Damage Effect.asset`도 프로젝트 전체에서 참조하는 곳이 없는 고아 에셋이었다 — 부식
+  타워는 지금까지 도트 피해 없이 그냥 단일 타격만 하고 있었다는 뜻.
+  (참고로 Rapid/Sniper/일반 공격은 원래도 `DamageEffect_Default`가 맞고, 관통 사격은 이미
+  `Pierce Damage Effect.asset`에 정상적으로 연결돼 있어 이 두 타워만의 문제였다.)
+- `Splash.asset` 때와 동일하게 `unity command eval_file`로 `SerializedObject` 경유 교체(텍스트
+  직접 편집 아님).
+
+### 검증
+- `unity command recompile`/`recompile_status`로 `CombatVfxAssetBuilder.cs` 수정 후 컴파일
+  에러 0건 확인 → `RCCom/Combat VFX/Build Projectile And Hit Spark` 재실행 →
+  `[CombatVfxAssetBuilder] ... 검증 통과` 로그, error/exception 0건 확인.
+- `git diff`로 `ShockwaveRing.prefab`/`ScorchDecal.prefab`이 각각 `m_SortingOrder` 한 줄만
+  바뀌었음을 확인.
+- `unity command eval_file`로 `Poison.asset`의 `effects` 필드 교체 전후 값을 콘솔 로그로 직접
+  확인(`DamageEffect_Default` → `Poison Damage Effect`), `git diff`로 변경분이 그 한 줄뿐임을
+  확인 후 커밋.
+
+### 사람이 할 일
+- 플레이 테스트로 충격파 링/그을림 자국이 이제 실제로 화면에 보이는지, 부식 타워가 도트
+  피해를 내는지 확인.
