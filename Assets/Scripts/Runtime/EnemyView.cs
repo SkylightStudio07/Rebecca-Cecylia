@@ -34,7 +34,7 @@ namespace RCCom.Runtime
         [SerializeField] private DeathKnockbackVisualEffect deathKnockbackVisual;
 
         [Tooltip("자식 오브젝트로 둔 체력바(선택) — 회전은 EnemyView가 이동방향으로 매 프레임 돌리므로, 자식이면 그대로 두면 같이 돌아가 버려 여기서 역회전으로 상쇄한다")]
-        [SerializeField] private EnemyHealthBar healthBar;
+        [SerializeField] private UnitHealthBar healthBar;
 
         [Header("회전 보간 (0 = 즉시 회전, 기존 동작)")]
         [Tooltip("목표 방향을 따라잡는 시간 상수(초). 0이면 기존처럼 즉시 스냅한다. 0.08~0.15 권장 — " +
@@ -226,6 +226,14 @@ namespace RCCom.Runtime
             if (_collider != null)
             {
                 _collider.enabled = false;
+            }
+
+            // 죽는 순간 즉시 감춘다 — 안 감추면 넉백/회전 중에도 그대로 붙어 있다가(HealthBar는
+            // UpdateHealthBar가 더 이상 안 불려서 마지막 수치에 얼어붙은 채로) 회전만 안 따라와
+            // 어색해 보인다.
+            if (healthBar != null)
+            {
+                healthBar.gameObject.SetActive(false);
             }
 
             SpriteFlipbook.Spawn(deathExplosionPrefab, transform.position);

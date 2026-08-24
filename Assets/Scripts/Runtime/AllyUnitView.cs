@@ -19,6 +19,15 @@ namespace RCCom.Runtime
         [SerializeField] private Color hitFlashColor = Color.red;
         [SerializeField] private float hitFlashDuration = 0.1f;
 
+        [Header("체력바")]
+        [Tooltip("자식 오브젝트로 둔 체력바(선택). EnemyView와 같은 UnitHealthBar를 재사용한다.")]
+        [SerializeField] private UnitHealthBar healthBar;
+        [Tooltip("체력바 위치 — 유닛 스프라이트 기준 월드 단위 오프셋. 아군은 유닛별로 " +
+                 "SpriteFit 스케일이 달라(EnemyView는 고정 스케일 1이라 이 보정이 필요 없었음) " +
+                 "이 오프셋을 스케일 역보정해서 적용한다 — 유닛 크기와 무관하게 항상 같은 " +
+                 "간격으로 보이게 하기 위함.")]
+        [SerializeField] private Vector2 healthBarOffset = new(0f, -1.3f);
+
         [Header("사망 연출")]
         [Tooltip("사망 시 재생할 폭발 플립북(SpriteFlipbook, Assets/Art/VFX/explosion) 프리팹. 비워두면 넉백/페이드만 재생된다.")]
         [SerializeField] private GameObject deathExplosionPrefab;
@@ -77,6 +86,11 @@ namespace RCCom.Runtime
                 _collider.enabled = true;
             }
 
+            if (healthBar != null)
+            {
+                healthBar.gameObject.SetActive(true);
+            }
+
             _baseColor = Instance.Definition.tint;
             _spriteRenderer.color = _baseColor;
 
@@ -91,6 +105,19 @@ namespace RCCom.Runtime
                 _spriteRenderer.sprite = visualSprite;
                 float scale = SpriteFit.CalculateUniformScale(visualSprite, targetVisualSize);
                 transform.localScale = new Vector3(scale, scale, 1f);
+
+                if (healthBar != null)
+                {
+                    // 체력바가 자식이라 부모(이 오브젝트) 스케일을 그대로 물려받는데, 유닛마다
+                    // scale이 달라 그대로 두면 체력바 크기/오프셋도 유닛마다 들쭉날쭉해진다.
+                    // 역보정해서 항상 같은 월드 크기·오프셋으로 보이게 한다. 유닛 생존 동안
+                    // scale이 안 바뀌므로 Bind() 시점에 한 번만 계산하면 된다(회전은 계속
+                    // 바뀌므로 UpdateHealthBar에서 매 프레임 상쇄).
+                    float inverseScale = scale != 0f ? 1f / scale : 1f;
+                    healthBar.transform.localScale = new Vector3(inverseScale, inverseScale, 1f);
+                    healthBar.transform.localPosition = new Vector3(
+                        healthBarOffset.x * inverseScale, healthBarOffset.y * inverseScale, 0f);
+                }
             }
 
             CreateVisualEffects();
@@ -139,7 +166,25 @@ namespace RCCom.Runtime
             transform.position = position;
             UpdateFacing(position);
             TickHitFlash();
+            UpdateHealthBar();
             TickVisualEffects(Time.deltaTime);
+        }
+
+        /// <summary>
+        /// healthBar가 자식 오브젝트라 위치는 자동으로 따라오지만, 이 오브젝트의 회전(이동/조준
+        /// 추적)까지 그대로 물려받으면 체력바가 같이 빙글빙글 돌아버린다 — EnemyView와 같은
+        /// 이유로 매 프레임 월드 회전을 identity로 되돌린다. 스케일/오프셋 보정은 Bind()에서
+        /// 한 번만 하면 되므로(유닛 생존 동안 안 바뀜) 여기서는 회전과 수치만 갱신한다.
+        /// </summary>
+        private void UpdateHealthBar()
+        {
+            if (healthBar == null)
+            {
+                return;
+            }
+
+            healthBar.transform.rotation = Quaternion.identity;
+            healthBar.SetHealthPercent(Instance.CurrentHealth / Mathf.Max(Instance.Data.maxHealth, Mathf.Epsilon));
         }
 
         private void CreateVisualEffects()
@@ -291,6 +336,11 @@ namespace RCCom.Runtime
             if (_collider != null)
             {
                 _collider.enabled = false;
+            }
+
+            if (healthBar != null)
+            {
+                healthBar.gameObject.SetActive(false);
             }
 
             // 사망한 유닛이 오라 버프 등을 계속 발산하면 안 되므로 스프라이트보다 먼저 끈다.
