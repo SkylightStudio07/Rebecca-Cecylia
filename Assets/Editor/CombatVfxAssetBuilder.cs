@@ -36,6 +36,12 @@ namespace RCCom.EditorTools
         public const string ScorchTexturePath = "Assets/Art/VFX/scorch-decal.png";
         public const string ShockwaveRingVisualEffectPath =
             "Assets/Data/Effects/Tower/Visual/ShockwaveRing_Splash.asset";
+        public const string LaserBeamMaterialPath =
+            "Assets/Data/Prefabs/VFX/LaserBeam.mat";
+        public const string LaserBeamPrefabPath =
+            "Assets/Data/Prefabs/VFX/LaserBeamView.prefab";
+        public const string LaserBeamVisualEffectPath =
+            "Assets/Data/Effects/Tower/Visual/LaserBeam_Pierce.asset";
 
         private const string RangePulseAuraMaterialPath =
             "Assets/Data/Effects/Unit/Visual/RangePulseAura.mat";
@@ -69,12 +75,14 @@ namespace RCCom.EditorTools
             GameObject shockwaveRingPrefab = BuildShockwaveRingPrefab();
             GameObject scorchDecalPrefab = BuildScorchDecalPrefab();
             ShockwaveRingVisualEffect shockwaveVisual = BuildShockwaveRingVisualEffect();
+            GameObject laserBeamPrefab = BuildLaserBeamPrefab();
+            LaserBeamVisualEffect laserBeamVisual = BuildLaserBeamVisualEffect();
             ConnectEffect<DamageEffect>(DamageEffectPath, fakeProjectilePrefab);
-            ConnectEffect<PierceDamageEffect>(PierceDamageEffectPath, fakeProjectilePrefab);
             ConnectEffect<PoisonDamageEffect>(PoisonDamageEffectPath, fakeProjectilePrefab);
             ConnectEffect<BasicAttackEffect>(BasicAttackEffectPath, fakeProjectilePrefab);
             ConnectSplashEffect(
                 fakeProjectilePrefab, deathBurstPrefab, shockwaveRingPrefab, scorchDecalPrefab, shockwaveVisual);
+            ConnectPierceEffect(laserBeamPrefab, laserBeamVisual);
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
@@ -82,8 +90,9 @@ namespace RCCom.EditorTools
             ConnectPrefabField<EnemyView>(EnemyViewPrefabPath, "deathParticlePrefab", deathBurstPrefab);
             ConnectPrefabField<AllyUnitView>(AllyUnitViewPrefabPath, "deathParticlePrefab", deathBurstPrefab);
             Validate();
-            Debug.Log("[CombatVfxAssetBuilder] 투사체·히트 스파크·사망 버스트·충격파 링·그을림 자국 생성 및 " +
-                      "네 공격 효과 + 스플래시 착탄 연출 + 아군 기본 공격 + 플레이어 + 적/아군 사망 연출 배선 완료");
+            Debug.Log("[CombatVfxAssetBuilder] 투사체·히트 스파크·사망 버스트·충격파 링·그을림 자국·레이저 빔 생성 및 " +
+                      "네 공격 효과 + 스플래시 착탄 연출 + 관통 빔 연출 + 아군 기본 공격 + 플레이어 + " +
+                      "적/아군 사망 연출 배선 완료");
         }
 
         /// <summary>
@@ -110,6 +119,27 @@ namespace RCCom.EditorTools
             SetObjectReference(serializedEffect, "shockwaveRingPrefab", shockwaveRingPrefab);
             SetObjectReference(serializedEffect, "scorchDecalPrefab", scorchDecalPrefab);
             SetObjectReference(serializedEffect, "shockwaveVisual", shockwaveVisual);
+            serializedEffect.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(effect);
+        }
+
+        /// <summary>
+        /// PierceDamageEffect는 §3-② 도입 이후 fakeProjectilePrefab이 아니라 laserBeamPrefab/
+        /// laserBeamVisual 두 슬롯을 갖는다 — 공용 ConnectEffect&lt;TEffect&gt;(fakeProjectilePrefab
+        /// 이름을 하드코딩)로 못 묶어 ConnectSplashEffect와 같은 이유로 따로 둔다.
+        /// </summary>
+        private static void ConnectPierceEffect(GameObject laserBeamPrefab, LaserBeamVisualEffect laserBeamVisual)
+        {
+            var effect = AssetDatabase.LoadAssetAtPath<PierceDamageEffect>(PierceDamageEffectPath);
+            if (effect == null)
+            {
+                throw new InvalidOperationException(
+                    $"배선할 공격 효과 SO를 찾지 못했습니다: {PierceDamageEffectPath}");
+            }
+
+            var serializedEffect = new SerializedObject(effect);
+            SetObjectReference(serializedEffect, "laserBeamPrefab", laserBeamPrefab);
+            SetObjectReference(serializedEffect, "laserBeamVisual", laserBeamVisual);
             serializedEffect.ApplyModifiedPropertiesWithoutUndo();
             EditorUtility.SetDirty(effect);
         }
@@ -146,6 +176,129 @@ namespace RCCom.EditorTools
 
             AssetDatabase.CreateAsset(asset, ShockwaveRingVisualEffectPath);
             return asset;
+        }
+
+        /// <summary>
+        /// 관통 사격 타워 2-Layer 빔(설계안 §3-②)의 색/폭/글로우/노이즈/지속시간을 담는 SO.
+        /// ShockwaveRingVisualEffect와 같은 이유로 이미 에셋이 있으면 값을 절대 건드리지 않는다 —
+        /// 최초 생성 시 1회만 기본값(보라색 계열 에너지 빔)을 심는다.
+        /// </summary>
+        private static LaserBeamVisualEffect BuildLaserBeamVisualEffect()
+        {
+            var asset = AssetDatabase.LoadAssetAtPath<LaserBeamVisualEffect>(LaserBeamVisualEffectPath);
+            if (asset != null)
+            {
+                return asset;
+            }
+
+            EnsureFolder(Path.GetDirectoryName(LaserBeamVisualEffectPath)?.Replace('\\', '/'));
+
+            asset = ScriptableObject.CreateInstance<LaserBeamVisualEffect>();
+            var serializedAsset = new SerializedObject(asset);
+            serializedAsset.FindProperty("innerColor").colorValue = new Color(2.4f, 2.4f, 2.7f, 1f);
+            serializedAsset.FindProperty("innerWidth").floatValue = 0.06f;
+            serializedAsset.FindProperty("innerGlowIntensity").floatValue = 1.4f;
+            serializedAsset.FindProperty("outerColor").colorValue = new Color(0.75f, 0.3f, 1.35f, 0.55f);
+            serializedAsset.FindProperty("outerWidth").floatValue = 0.28f;
+            serializedAsset.FindProperty("outerGlowIntensity").floatValue = 1.1f;
+            serializedAsset.FindProperty("softEdge").floatValue = 0.4f;
+            serializedAsset.FindProperty("noiseScale").floatValue = 6f;
+            serializedAsset.FindProperty("scrollSpeed").floatValue = 3.5f;
+            serializedAsset.FindProperty("lifetime").floatValue = 0.22f;
+            serializedAsset.FindProperty("pinchStartMultiplier").floatValue = 1.5f;
+            serializedAsset.FindProperty("pinchDuration").floatValue = 0.08f;
+            serializedAsset.ApplyModifiedPropertiesWithoutUndo();
+
+            AssetDatabase.CreateAsset(asset, LaserBeamVisualEffectPath);
+            return asset;
+        }
+
+        /// <summary>
+        /// Inner Core/Outer Glow가 공유하는 머티리얼. BuildHitSparkMaterial()과 같은 이유로
+        /// 이미 있으면 delete+recreate 하지 않고 제자리에서 셰이더만 갱신한다(참조 유지).
+        /// </summary>
+        private static Material BuildLaserBeamMaterial()
+        {
+            EnsureOverwriteIsOwned(LaserBeamMaterialPath);
+
+            Shader laserShader = Shader.Find("RCCom/Tower Visuals/Laser Beam");
+            if (laserShader == null)
+            {
+                throw new InvalidOperationException("RCCom/Tower Visuals/Laser Beam 셰이더를 찾지 못했습니다.");
+            }
+
+            Material material = AssetDatabase.LoadAssetAtPath<Material>(LaserBeamMaterialPath);
+            if (material == null)
+            {
+                material = new Material(laserShader) { name = "LaserBeam" };
+                AssetDatabase.CreateAsset(material, LaserBeamMaterialPath);
+                AssetDatabase.SetLabels(material, new[] { GeneratedLabel });
+            }
+            else
+            {
+                material.shader = laserShader;
+            }
+
+            EditorUtility.SetDirty(material);
+            return material;
+        }
+
+        /// <summary>
+        /// Inner Core + Outer Glow 두 자식 LineRenderer를 가진 원샷 빔 프리팹(설계안 §3-②).
+        /// 색/폭 등 값은 여기서 굽지 않는다 — LaserBeamView가 매 Spawn 시 LaserBeamVisualEffect
+        /// SO에서 읽어 MaterialPropertyBlock으로 덮어쓴다.
+        /// </summary>
+        private static GameObject BuildLaserBeamPrefab()
+        {
+            EnsureOverwriteIsOwned(LaserBeamPrefabPath);
+            Material laserMaterial = BuildLaserBeamMaterial();
+
+            var root = new GameObject("LaserBeamView");
+            try
+            {
+                LineRenderer inner = BuildLaserBeamLayer(root.transform, "InnerCore", laserMaterial, sortingOrder: 7);
+                LineRenderer outer = BuildLaserBeamLayer(root.transform, "OuterGlow", laserMaterial, sortingOrder: 6);
+
+                LaserBeamView view = root.AddComponent<LaserBeamView>();
+                var serializedView = new SerializedObject(view);
+                SetObjectReference(serializedView, "innerCore", inner);
+                SetObjectReference(serializedView, "outerGlow", outer);
+                serializedView.ApplyModifiedPropertiesWithoutUndo();
+
+                return SaveOwnedPrefab(root, LaserBeamPrefabPath);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(root);
+            }
+        }
+
+        private static LineRenderer BuildLaserBeamLayer(
+            Transform parent, string name, Material material, int sortingOrder)
+        {
+            var child = new GameObject(name);
+            child.transform.SetParent(parent, false);
+
+            LineRenderer line = child.AddComponent<LineRenderer>();
+            line.sharedMaterial = material;
+            line.useWorldSpace = true;
+            line.positionCount = 2;
+            line.numCapVertices = 4;
+            line.numCornerVertices = 0;
+            line.alignment = LineAlignment.View;
+            line.textureMode = LineTextureMode.Stretch;
+            line.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            line.receiveShadows = false;
+            line.lightProbeUsage = UnityEngine.Rendering.LightProbeUsage.Off;
+            line.reflectionProbeUsage = UnityEngine.Rendering.ReflectionProbeUsage.Off;
+            line.sortingOrder = sortingOrder;
+            line.enabled = false;
+
+            AnimationCurve flatWidth = AnimationCurve.Constant(0f, 1f, 1f);
+            line.widthCurve = flatWidth;
+            line.widthMultiplier = 1f;
+
+            return line;
         }
 
         private static void SetObjectReference(SerializedObject serializedObject, string propertyName, UnityEngine.Object value)
@@ -824,7 +977,6 @@ namespace RCCom.EditorTools
             }
 
             ValidateEffect<DamageEffect>(DamageEffectPath, fakeProjectilePrefab);
-            ValidateEffect<PierceDamageEffect>(PierceDamageEffectPath, fakeProjectilePrefab);
             ValidateEffect<PoisonDamageEffect>(PoisonDamageEffectPath, fakeProjectilePrefab);
             ValidateEffect<BasicAttackEffect>(BasicAttackEffectPath, fakeProjectilePrefab);
             ValidatePlayerController(fakeProjectilePrefab);
@@ -877,7 +1029,52 @@ namespace RCCom.EditorTools
             ValidateSplashEffect(
                 fakeProjectilePrefab, deathBurstPrefab, shockwaveRingPrefab, scorchDecalPrefab, shockwaveVisual);
 
-            Debug.Log("[CombatVfxAssetBuilder] 투사체·히트 스파크·사망 버스트·충격파 링·그을림 자국 에셋 검증 통과");
+            GameObject laserBeamPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(LaserBeamPrefabPath);
+            LaserBeamView laserBeamView = laserBeamPrefab != null
+                ? laserBeamPrefab.GetComponent<LaserBeamView>()
+                : null;
+            Transform innerTransform = laserBeamPrefab != null ? laserBeamPrefab.transform.Find("InnerCore") : null;
+            Transform outerTransform = laserBeamPrefab != null ? laserBeamPrefab.transform.Find("OuterGlow") : null;
+            LineRenderer innerLine = innerTransform != null ? innerTransform.GetComponent<LineRenderer>() : null;
+            LineRenderer outerLine = outerTransform != null ? outerTransform.GetComponent<LineRenderer>() : null;
+            if (laserBeamView == null || innerLine == null || outerLine == null ||
+                innerLine.sharedMaterial == null || outerLine.sharedMaterial == null ||
+                innerLine.sharedMaterial.shader.name != "RCCom/Tower Visuals/Laser Beam" ||
+                outerLine.sharedMaterial.shader.name != "RCCom/Tower Visuals/Laser Beam")
+            {
+                throw new InvalidOperationException("레이저 빔 프리팹 설정이 올바르지 않습니다.");
+            }
+
+            var serializedLaserView = new SerializedObject(laserBeamView);
+            if (serializedLaserView.FindProperty("innerCore").objectReferenceValue != innerLine ||
+                serializedLaserView.FindProperty("outerGlow").objectReferenceValue != outerLine)
+            {
+                throw new InvalidOperationException("LaserBeamView의 innerCore/outerGlow 슬롯이 끊어져 있습니다.");
+            }
+
+            var laserBeamVisual =
+                AssetDatabase.LoadAssetAtPath<LaserBeamVisualEffect>(LaserBeamVisualEffectPath);
+            if (laserBeamVisual == null)
+            {
+                throw new InvalidOperationException($"레이저 빔 시각 SO가 없습니다: {LaserBeamVisualEffectPath}");
+            }
+
+            ValidatePierceEffect(laserBeamPrefab, laserBeamVisual);
+
+            Debug.Log("[CombatVfxAssetBuilder] 투사체·히트 스파크·사망 버스트·충격파 링·그을림 자국·레이저 빔 에셋 검증 통과");
+        }
+
+        private static void ValidatePierceEffect(GameObject laserBeamPrefab, LaserBeamVisualEffect laserBeamVisual)
+        {
+            var effect = AssetDatabase.LoadAssetAtPath<PierceDamageEffect>(PierceDamageEffectPath);
+            if (effect == null)
+            {
+                throw new InvalidOperationException($"공격 효과 SO가 없습니다: {PierceDamageEffectPath}");
+            }
+
+            var serializedEffect = new SerializedObject(effect);
+            CheckObjectReference(serializedEffect, "laserBeamPrefab", laserBeamPrefab);
+            CheckObjectReference(serializedEffect, "laserBeamVisual", laserBeamVisual);
         }
 
         private static void ValidateSplashEffect(

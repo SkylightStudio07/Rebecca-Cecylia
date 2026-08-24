@@ -4,6 +4,7 @@ using RCCom.Data;
 using RCCom.Effects.Tower;
 using RCCom.Managers;
 using RCCom.Runtime;
+using RCCom.Runtime.Visuals;
 using UnityEngine;
 
 namespace RCCom.Effects.Tower.Concrete
@@ -17,7 +18,9 @@ namespace RCCom.Effects.Tower.Concrete
     public class PierceDamageEffect : TowerEffectBase
     {
         [SerializeField] private float beamHalfAngleDegrees = 10f;
-        [SerializeField] private GameObject fakeProjectilePrefab;
+        [Tooltip("설계안 §3-② — Inner Core + Outer Glow 2-Layer 빔. 이전엔 임시로 FakeProjectile을 썼다.")]
+        [SerializeField] private GameObject laserBeamPrefab;
+        [SerializeField] private LaserBeamVisualEffect laserBeamVisual;
 
         public override void OnTick(TowerContext ctx)
         {
@@ -61,7 +64,7 @@ namespace RCCom.Effects.Tower.Concrete
             }
 
             Vector3 beamEnd = ctx.self.Position + beamDirection * data.attackRange;
-            FakeProjectile.Spawn(fakeProjectilePrefab, ctx.self.Position, beamEnd);
+            LaserBeamView.Spawn(laserBeamPrefab, ctx.self.Position, beamEnd, laserBeamVisual);
 
             if (SoundManager.Instance != null)
             {

@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0712665cd6ac6cf40ad2cfb8ced564a1, type: 3}
+  m_Name: LaserBeam_Pierce
+  m_EditorClassIdentifier: Assembly-CSharp::RCCom.Runtime.Visuals.LaserBeamVisualEffect
+  innerColor: {r: 2.4, g: 2.4, b: 2.7, a: 1}
+  innerWidth: 0.06
+  innerGlowIntensity: 1.4
+  outerColor: {r: 0.75, g: 0.3, b: 1.35, a: 0.55}
+  outerWidth: 0.28
+  outerGlowIntensity: 1.1
+  softEdge: 0.4
+  noiseScale: 6
+  scrollSpeed: 3.5
+  lifetime: 0.22
+  pinchStartMultiplier: 1.5
+  pinchDuration: 0.08
