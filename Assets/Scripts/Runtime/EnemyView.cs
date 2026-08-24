@@ -37,6 +37,7 @@ namespace RCCom.Runtime
         private Color _baseColor;
         private float _hitFlashRemaining;
         private bool _hasFacing;
+        private float _boundMaxHealth;
 
         public EnemyInstance Instance { get; private set; }
 
@@ -49,6 +50,10 @@ namespace RCCom.Runtime
         public void Bind(EnemyInstance instance)
         {
             Instance = instance;
+            // WaveManager가 웨이브/스테이지 체력 배율을 적용한 뒤 View를 Bind한다. 원본
+            // Definition의 maxHealth를 분모로 쓰면 배율로 늘어난 체력이 100%를 초과해,
+            // 실제로 피해를 받아도 체력바가 한동안 만피로 Clamp되어 숨겨진다.
+            _boundMaxHealth = Mathf.Max(instance.currentHealth, Mathf.Epsilon);
             Instance.Died += HandleRemoved;
             Instance.ReachedGoal += HandleRemoved;
             Instance.Damaged += HandleDamaged;
@@ -94,7 +99,7 @@ namespace RCCom.Runtime
             }
 
             healthBar.transform.rotation = Quaternion.identity;
-            healthBar.SetHealthPercent(Instance.currentHealth / Instance.Data.maxHealth);
+            healthBar.SetHealthPercent(Instance.currentHealth / _boundMaxHealth);
         }
 
         /// <summary>
