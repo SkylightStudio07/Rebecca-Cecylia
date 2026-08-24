@@ -28,6 +28,7 @@ namespace RCCom.EditorTools
         private enum StudioTab
         {
             Identity,
+            Map,
             Waves,
             Rewards,
             Publish,
@@ -106,7 +107,7 @@ namespace RCCom.EditorTools
             EditorGUILayout.BeginVertical();
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
             _tabIndex = GUILayout.Toolbar(_tabIndex,
-                new[] { "Identity", "Waves", "Rewards", "Publish" }, EditorStyles.toolbarButton);
+                new[] { "Identity", "Map", "Waves", "Rewards", "Publish" }, EditorStyles.toolbarButton);
             EditorGUILayout.EndHorizontal();
 
             _serializedStage.Update();
@@ -115,6 +116,9 @@ namespace RCCom.EditorTools
             {
                 case StudioTab.Identity:
                     DrawIdentityTab();
+                    break;
+                case StudioTab.Map:
+                    DrawMapTab();
                     break;
                 case StudioTab.Waves:
                     DrawWavesTab();
@@ -154,7 +158,48 @@ namespace RCCom.EditorTools
             GUILayout.Label("Mission Briefing", EditorStyles.boldLabel);
             DrawProperty("description", "Description", true);
             DrawProperty("descriptionBackground", "Description Background");
-            DrawBackgroundPreview();
+            DrawSpritePreview("descriptionBackground", 3.2f);
+            DrawSaveButton();
+        }
+
+        private void DrawMapTab()
+        {
+            GUILayout.Label("Battlefield Authoring", EditorStyles.boldLabel);
+            EditorGUILayout.HelpBox(
+                "첫 Route Point는 적 생성점, 마지막 점은 거점 및 아군 출격점입니다. " +
+                "좌표는 Test Scene에서 배치한 뒤 Capture하는 방식을 권장합니다.",
+                MessageType.Info);
+
+            DrawProperty("battleBackground", "Battle Background");
+            DrawProperty("battleBackgroundPosition", "Background Position");
+            DrawProperty("battleBackgroundScale", "Background Scale");
+            DrawSpritePreview("battleBackground", 2.2f);
+
+            GUILayout.Space(12f);
+            DrawProperty("pathSmoothness", "Path Smoothness");
+            DrawProperty("maxPointSpacing", "Max Point Spacing");
+            DrawProperty("routePoints", "Route Points", true);
+
+            GUILayout.Space(12f);
+            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+            GUILayout.Label("DefenseScene Route Workspace", EditorStyles.boldLabel);
+            if (GUILayout.Button("Open Test Scene & Load Selected Stage", GUILayout.Height(32f)))
+            {
+                SaveCurrent(false);
+                StageRouteAuthoringTool.OpenAndLoad(_stage);
+            }
+            if (GUILayout.Button("Reload Selected Stage Into Test Scene", GUILayout.Height(28f)))
+            {
+                SaveCurrent(false);
+                StageRouteAuthoringTool.LoadIntoOpenTestScene(_stage);
+            }
+            if (GUILayout.Button("Capture Test Scene Into Selected Stage", GUILayout.Height(32f)))
+            {
+                StageRouteAuthoringTool.CaptureFromOpenTestScene(_stage);
+                _serializedStage.Update();
+                Repaint();
+            }
+            EditorGUILayout.EndVertical();
             DrawSaveButton();
         }
 
@@ -317,14 +362,14 @@ namespace RCCom.EditorTools
             if (GUILayout.Button("Save & Rebuild Stage Catalog", GUILayout.Height(34f))) { SaveCurrent(true); }
         }
 
-        private void DrawBackgroundPreview()
+        private void DrawSpritePreview(string propertyName, float aspect)
         {
-            Sprite sprite = _serializedStage.FindProperty("descriptionBackground").objectReferenceValue as Sprite;
+            Sprite sprite = _serializedStage.FindProperty(propertyName).objectReferenceValue as Sprite;
             if (sprite == null) { return; }
             Texture2D preview = AssetPreview.GetAssetPreview(sprite) ?? AssetPreview.GetMiniThumbnail(sprite);
             if (preview == null) { return; }
 
-            Rect rect = GUILayoutUtility.GetAspectRect(3.2f, GUILayout.MaxHeight(170f));
+            Rect rect = GUILayoutUtility.GetAspectRect(aspect, GUILayout.MaxHeight(220f));
             EditorGUI.DrawPreviewTexture(rect, preview, null, ScaleMode.ScaleToFit);
         }
 

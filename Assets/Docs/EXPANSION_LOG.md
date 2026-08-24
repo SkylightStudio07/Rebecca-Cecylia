@@ -1614,3 +1614,35 @@ Phase 0 자동화 경로를 실제로 열고, 이후 오퍼레이터별 원격 �
 - 정산된 귀환 대사 종류는 메모리에 보존해 다음 오퍼레이터 클릭에서 기존 참전/비참전 대사가 그대로 출력된다. 디버그처럼 이미 열린 로비에서 귀환을 예약한 경우에는 클릭 시 정산하는 기존 폴백도 유지한다.
 - 알림에는 요청 보상량이 아니라 100 상한 적용 후의 실제 증가량만 표시한다. 이미 최대 친밀도라 증가량이 0이면 귀환 예약은 소비하되 잘못된 상승 알림은 띄우지 않는다.
 - 토스트 애니메이션은 `Time.unscaledDeltaTime` 기반 수동 타이머로 처리하고 입력을 차단하지 않는다. 별도 매니저나 영속 알림 상태는 만들지 않았다.
+
+## 2026-08-25 — Stage Studio 전투 배경·경로 제작 작업대
+
+### 결정
+- `StageDefinition`이 선택 화면의 `descriptionBackground`와 별도로 전투용 `battleBackground`, 위치·크기, `routePoints`, 곡선 보간 설정을 소유한다. 첫 점은 적 생성점, 마지막 점은 거점 및 아군 출격점으로 고정해 별도 랠리 좌표와 경로 끝이 어긋나는 상태를 만들지 않는다.
+- 스테이지마다 DefenseScene을 복제해 런타임 콘텐츠로 사용하지 않는다. `StageRouteTestScene` 한 장만 제작 작업대로 두고, Scene View에서 옮긴 Transform 좌표를 최종 제작 원본인 `StageDefinition`으로 캡처한다.
+- `MapManager`는 스테이지 모드에서 `StageDefinition.routePoints`와 전투 배경을 우선 적용하고, 엔드리스 모드에서는 기존 씬 Transform 경로를 유지한다. 적·아군은 계속 공용 `MapManager.Waypoints`만 소비하므로 전투 인스턴스 코드는 변경하지 않았다.
+- 테스트 씬의 경로 표시는 MonoBehaviour를 붙이지 않고 Editor의 Scene View 콜백으로 그린다. 테스트용 시각화가 플레이어 빌드와 씬 직렬화 계약에 들어가지 않게 하기 위함이다.
+
+### 제작 도구
+- Stage Studio에 `Map` 탭을 추가해 전투 배경, 위치·크기, 경로 보간값과 좌표 목록을 편집한다.
+- `Open Test Scene & Load Selected Stage`는 공용 DefenseScene 복사본에 선택 스테이지의 배경과 경로 점을 생성한다. `Capture Test Scene Into Selected Stage`는 Scene View에서 수정한 좌표·배경 Transform·보간값을 SO에 되돌려 저장한다.
+- 기존 DefenseScene의 9개 웨이포인트를 CH1 7개 StageDefinition의 초기 경로로 이관했다. 런타임 DefenseScene에는 스테이지 배경을 표시할 공용 SpriteRenderer 하나만 추가했다.
+
+### 검증
+- Unity 6000.3.13f1 재컴파일 결과 `failed=false`, `errors=[]`를 확인했다.
+- 1-1의 9개 경로 점을 테스트 씬에 로드한 뒤 다시 Definition으로 캡처하는 왕복을 확인했다.
+- Stage Validator는 7개 스테이지에서 오류 0건을 확인했다. 아직 제작되지 않은 설명 배경·전투 배경·보상은 각 스테이지별 경고로 유지한다.
+- Play Mode와 플레이어 빌드는 실행하지 않았다. 이번 검증은 Edit Mode 에셋 왕복, 씬 배선, 컴파일과 데이터 검증 범위다.
+
+## 2026-08-25 — 오로라(Aurora) 대사 스크립트 및 상황별 표정 스프라이트 바인딩
+
+### 결정
+- 오로라(Aurora)의 천재 해커/전자전 스페셜리스트 컨셉에 맞춰 전체 18개 상황 슬롯(로비 상호작용, 귀환, 호감도 5단계 터치, 전투 개시, 스킬 발동, 거점 피격, 플레이어 일반/위기 피격, 건설 실패 2종, 패배 2종)의 대사 스크립트를 완성했다.
+- `Assets/Art/Character Standing Arts/오로라/레베카/`의 감정별 스탠딩 스프라이트(`smile-1`, `curious-1`, `annoyed-1/2/3`, `happy smile`, `smug`, `flustered-1`, `blushing shyly-1/2/3`, `fidgeting shyly`, `aroused-1` 등)와 전투 치비 포트레잇(`chibby_portrait_1~12.png`)을 각 대사의 감정에 맞춰 1:1로 매핑했다.
+- 자동화 빌더 `AuroraDialogueBuilder`를 추가해 `RCCom/Operators/Build Aurora Dialogue` 메뉴로 언제든 `OperatorDialogueSet.asset`을 멱등하게 재생성·갱신할 수 있게 했다.
+- `Aurora.json` 레시피에 `playStyleDescription`, `alternateName`("Cyber Hacker"), `shopDialogue`를 함께 동기화했다.
+
+### 의도적으로 하지 않은 것
+- 기존 타워/카드/유닛 SO나 다른 오퍼레이터의 대사 데이터를 임의로 수정하지 않았다.
+- 불필요한 C# 클래스 분기를 만들지 않고 기존 `OperatorDialogueSet` 및 `OperatorDialogueEntry` 직렬화 구조를 그대로 따랐다.
+

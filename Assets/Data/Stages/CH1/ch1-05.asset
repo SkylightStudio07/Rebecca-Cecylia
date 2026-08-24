@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e7a6450cc7b31154896bf3f88cba6b7d, type: 3}
   m_Name: ch1-05
   m_EditorClassIdentifier: Assembly-CSharp::RCCom.Definitions.Stage.StageDefinition
-  schemaVersion: 1
+  schemaVersion: 2
   stageId: ch1-05
   chapterId: ch1
   displayName: 1-5
@@ -23,6 +23,21 @@ MonoBehaviour:
   description: "\uCC55\uD130 1\uC758 \uB9C8\uC9C0\uB9C9 \uBC29\uC5B4\uC120\uC744
     \uC9C0\uD0A4\uC2ED\uC2DC\uC624."
   descriptionBackground: {fileID: 0}
+  battleBackground: {fileID: 0}
+  battleBackgroundPosition: {x: 0, y: 0}
+  battleBackgroundScale: {x: 1, y: 1}
+  routePoints:
+  - {x: -16.62, y: -3.63}
+  - {x: -12.81, y: 1.11}
+  - {x: -8.8, y: 4.65}
+  - {x: -4.29, y: 0.17}
+  - {x: -0.29, y: -4.13}
+  - {x: 3.63, y: 0.61}
+  - {x: 7.49, y: 5.11}
+  - {x: 12.16, y: 0.04}
+  - {x: 15.47, y: -2.78}
+  pathSmoothness: 1
+  maxPointSpacing: 0.25
   rewards: []
   waves:
   - displayName: WAVE 01

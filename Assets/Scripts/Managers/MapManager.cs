@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using RCCom.Core;
 using RCCom.Data;
 using RCCom.Definitions.Tower;
+using RCCom.Definitions.Stage;
 using RCCom.Runtime;
 using UnityEngine;
 using UnityEngine.Tilemaps;
@@ -28,6 +29,13 @@ namespace RCCom.Managers
 
         [Header("적 이동 경로 (그리드 무관, 자유 좌표 — 씬에 배치한 오브젝트 순서대로)")]
         [SerializeField] private Transform[] waypoints;
+
+        [Header("스테이지 전장 배경 (StageDefinition에서 Sprite와 Transform 주입)")]
+        [SerializeField] private SpriteRenderer battleBackgroundRenderer;
+#if UNITY_EDITOR
+        [Tooltip("StageRouteTestScene에서만 사용한다. 플레이어 빌드에는 포함되지 않는다.")]
+        [SerializeField] private StageDefinition editorPreviewStage;
+#endif
 
         [Header("경로 곡선 보간 (0 = 기존 직선 유지, 1 = 최대 부드러움)")]
         [Tooltip("0이면 웨이포인트 배열을 그대로 사용한다(완전 하위호환). 0보다 크면 구심 Catmull-Rom 곡선을 " +
@@ -65,7 +73,18 @@ namespace RCCom.Managers
 
         private void Awake()
         {
-            if (waypoints == null || waypoints.Length == 0)
+            StageDefinition stage = BattleSession.IsStageMode ? BattleSession.SelectedStage : null;
+#if UNITY_EDITOR
+            if (stage == null && editorPreviewStage != null)
+            {
+                // 테스트 씬은 로비의 BattleSession을 거치지 않으므로 명시적 프리뷰 Stage를 사용한다.
+                stage = editorPreviewStage;
+            }
+#endif
+            ApplyStageBackground(stage);
+
+            bool useStageRoute = stage != null && stage.routePoints != null && stage.routePoints.Count >= 2;
+            if (!useStageRoute && (waypoints == null || waypoints.Length == 0))
             {
                 _waypointPositions = Array.Empty<Vector2>();
                 Debug.LogError("[Map] waypoints가 비어 있음 — 적/아군 이동 경로를 만들 수 없다.");
@@ -74,25 +93,63 @@ namespace RCCom.Managers
 
             // 인스펙터에서 슬롯을 비워둔 실수를 여기서 걸러낸다. 그대로 두면 waypoints[i].position이
             // NRE를 던지므로, null 슬롯은 건너뛰고 로그로 알린 뒤 나머지로 경로를 만든다.
-            List<Vector2> rawPoints = new List<Vector2>(waypoints.Length);
-            for (int i = 0; i < waypoints.Length; i++)
+            int capacity = useStageRoute ? stage.routePoints.Count : waypoints.Length;
+            List<Vector2> rawPoints = new List<Vector2>(capacity);
+            if (useStageRoute)
             {
-                if (waypoints[i] == null)
+                rawPoints.AddRange(stage.routePoints);
+            }
+            else
+            {
+                for (int i = 0; i < waypoints.Length; i++)
                 {
-                    Debug.LogError($"[Map] waypoints[{i}] 슬롯이 비어 있음 — 건너뜀.");
-                    continue;
-                }
+                    if (waypoints[i] == null)
+                    {
+                        Debug.LogError($"[Map] waypoints[{i}] 슬롯이 비어 있음 — 건너뜀.");
+                        continue;
+                    }
 
-                rawPoints.Add(waypoints[i].position);
+                    rawPoints.Add(waypoints[i].position);
+                }
             }
 
             // Awake에서 1회만 베이킹하고 이후 불변으로 캐싱한다 — 매 프레임 재계산하지 않는다.
             // (AllyUnitTargeting의 정적 캐시가 "같은 리스트 인스턴스가 제자리에서 변형되지
             // 않는다"를 전제하므로, 이 불변성은 성능 최적화 이상의 의미를 가진다.)
-            _waypointPositions = PathSmoothing.GenerateSmoothPath(rawPoints, pathSmoothness, maxPointSpacing);
+            float smoothness = useStageRoute ? stage.pathSmoothness : pathSmoothness;
+            float spacing = useStageRoute ? stage.maxPointSpacing : maxPointSpacing;
+            _waypointPositions = PathSmoothing.GenerateSmoothPath(rawPoints, smoothness, spacing);
 
             Debug.Log($"[Map] 경로 베이킹: 제어점 {rawPoints.Count}개 → 정점 {_waypointPositions.Length}개 " +
-                      $"(smoothness {pathSmoothness}, spacing {maxPointSpacing})");
+                      $"(smoothness {smoothness}, spacing {spacing}, source {(useStageRoute ? "stage" : "scene")})");
+        }
+
+        private void ApplyStageBackground(StageDefinition stage)
+        {
+            if (battleBackgroundRenderer == null)
+            {
+                return;
+            }
+
+            bool hasBackground = stage != null && stage.battleBackground != null;
+            battleBackgroundRenderer.enabled = hasBackground;
+            if (!hasBackground)
+            {
+                battleBackgroundRenderer.sprite = null;
+                return;
+            }
+
+            battleBackgroundRenderer.sprite = stage.battleBackground;
+            Transform backgroundTransform = battleBackgroundRenderer.transform;
+            float z = backgroundTransform.position.z;
+            backgroundTransform.position = new Vector3(
+                stage.battleBackgroundPosition.x,
+                stage.battleBackgroundPosition.y,
+                z);
+            backgroundTransform.localScale = new Vector3(
+                stage.battleBackgroundScale.x,
+                stage.battleBackgroundScale.y,
+                1f);
         }
 
         /// <summary>
