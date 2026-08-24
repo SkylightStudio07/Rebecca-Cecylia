@@ -1539,3 +1539,28 @@ Phase 0 자동화 경로를 실제로 열고, 이후 오퍼레이터별 원격 �
 - 전술 중계 오라 Builder로 Shader·공용 Material·칼리스테 버프 비주얼 SO를 생성하고, 드론 Definition의 게임플레이 효과와 비주얼 효과 참조를 함께 검증했다.
 - 아군 에셋 검증 6개 레시피·경고 0건, 기존 전투 코어 23개 시나리오, 공용 View 프리팹 검증을 모두 통과했다.
 - Play Mode 임시 카메라에서 반경 10의 중간 파동을 실제 URP로 캡처해 얇은 청록 스트로크·외곽 글로우·하이라이트와 드론 중심 정렬을 확인했다. 프리뷰는 씬을 저장하지 않았고 생성한 캡처 에셋도 삭제했다.
+
+## 2026-08-24 — 전투 VFX 강화 1단계: FakeProjectile + ParticleBurst
+
+### 결정
+- `Assets/Scripts/Runtime/FakeProjectile.cs`, `Assets/Scripts/Runtime/ParticleBurst.cs`를 신규 작성했다. 둘 다 `AttackFlash.cs`와 동일한 prefab별 static `Dictionary<GameObject, Queue<T>>` 풀링 패턴을 그대로 따른다.
+- `DamageEffect`/`SplashDamageEffect`/`PierceDamageEffect`는 기존처럼 `target.TakeDamage(...)`를 즉시 호출한 직후, `AttackFlash.Spawn` 옆줄에 `FakeProjectile.Spawn`을 순수 연출로만 추가했다. 투사체 이동 시간(0.05~0.1초, `PlayerData`/`AllyUnitData`의 `projectileSpeed` 기반, 속도 데이터가 없는 호출부는 프리팹의 0.08초 기본값)은 데미지 적용 타이밍에 전혀 영향을 주지 않는다 — 세 효과 모두 프리팹 슬롯(`fakeProjectilePrefab`)만 추가했다.
+- `ParticleSystem`은 이 코드베이스에 처음 도입되는 기법이라(설계안 §5) `AttackFlash`의 풀 패턴을 그대로 쓰지 않고, 반납 전 `Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear)`을 호출해 잔여 파티클을 비운 뒤 큐에 넣도록 별도 구현했다. 재생 종료 감지는 고정 lifetime 필드 대신 `ParticleSystem.IsAlive(true)` 폴링으로 처리해, 프리팹별로 다른 버스트/랜덤 lifetime 구성이 붙어도 정확한 반납 시점을 잡는다.
+- `FakeProjectile`은 도착 시 `ParticleBurst.Spawn(hitSparkPrefab, _to)`로 히트 스파크를 트리거한다 — 이번 턴엔 이 하나만 소비.
+- `GameManager.Awake()`의 세션 캐시 초기화 목록에 `FakeProjectile.ClearPool()`, `ParticleBurst.ClearPool()`을 `AttackFlash.ClearPool()` 옆에 추가했다 — Retry 시 죽은 풀 참조로 인한 `MissingReferenceException`을 막기 위한 기존 패턴과 동일한 이유다.
+- 투사체 이동은 설계안 §3-①에 명시된 대로 잔여시간 감산 + `Vector3.Lerp` 그대로 구현했다. 미감(이징) 관점에서 별도 검토했으나, 0.05~0.1초의 짧은 직선 이동에 이징을 넣는 건 설계안이 명시적으로 지정하지 않았고 이 속도대에서는 체감 차이가 거의 없어 그대로 두었다 — 이징이 실제로 의미 있는 구간은 §3-③ 충격파 링(OutQuad 확산, 설계안에 이미 명시)이며 그건 다음 턴 스코프다.
+
+### 의도적으로 하지 않은 것
+- `EnemyView.cs`/`AllyUnitView.cs`의 히트플래시(`TickHitFlash`) 로직은 건드리지 않았다(설계안 §0-2에서 확정).
+- `ProjectBloodmoon` 코드/셰이더는 참고하지 않았다(설계안 §1에서 파기).
+- 새 셰이더는 작성하지 않았다 — 이번 두 컴포넌트는 스프라이트(`FakeProjectile`)와 파티클(`ParticleBurst`)만으로 충분하다.
+- 데미지 계산/타겟팅 로직(`EnemyTargeting.cs`, `TowerDamageMath.cs`)은 변경하지 않았다.
+- 폭발 파편/사망 버스트(§4, §3-③ 잔여)는 이번 턴 스코프가 아니라 다루지 않았다 — `ParticleBurst`는 이미 범용으로 설계돼 다음 턴에 프리팹만 추가하면 재사용 가능하다.
+
+### 검증
+- Unity 6000.3.13f1 Pipeline `recompile` 결과 `up_to_date`(에러 0건), `get_console_logs`에도 컴파일 에러 없음을 확인했다.
+- `fakeProjectilePrefab`/`hitSparkPrefab` 슬롯이 비어 있어도(아직 프리팹 미배치) `FakeProjectile.Spawn`/`ParticleBurst.Spawn`이 조용히 무시하고 반환하는 null 체크를 `AttackFlash.Spawn`과 동일하게 구현해, 기존 전투 루프가 영향받지 않음을 코드 레벨로 확인했다.
+
+### 사람이 할 일
+- 투사체 스프라이트(생성형 모델로 제작 예정, 알파 포함 단일 탄환) 최종 승인 및 임포트.
+- `FakeProjectile`/`ParticleBurst` 프리팹 제작(Shuriken 기본 Circle/Cone 셰이프로 시작) 후 `DamageEffect`/`SplashDamageEffect`/`PierceDamageEffect`의 `fakeProjectilePrefab` 슬롯과 `FakeProjectile`의 `hitSparkPrefab` 슬롯에 인스펙터로 연결.
