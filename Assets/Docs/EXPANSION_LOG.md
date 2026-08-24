@@ -1539,3 +1539,769 @@ Phase 0 자동화 경로를 실제로 열고, 이후 오퍼레이터별 원격 �
 - 전술 중계 오라 Builder로 Shader·공용 Material·칼리스테 버프 비주얼 SO를 생성하고, 드론 Definition의 게임플레이 효과와 비주얼 효과 참조를 함께 검증했다.
 - 아군 에셋 검증 6개 레시피·경고 0건, 기존 전투 코어 23개 시나리오, 공용 View 프리팹 검증을 모두 통과했다.
 - Play Mode 임시 카메라에서 반경 10의 중간 파동을 실제 URP로 캡처해 얇은 청록 스트로크·외곽 글로우·하이라이트와 드론 중심 정렬을 확인했다. 프리뷰는 씬을 저장하지 않았고 생성한 캡처 에셋도 삭제했다.
+
+## 2026-08-24 — 전투 VFX 강화 1단계: FakeProjectile + ParticleBurst
+
+### 결정
+- `Assets/Scripts/Runtime/FakeProjectile.cs`, `Assets/Scripts/Runtime/ParticleBurst.cs`를 신규 작성했다. 둘 다 `AttackFlash.cs`와 동일한 prefab별 static `Dictionary<GameObject, Queue<T>>` 풀링 패턴을 그대로 따른다.
+- `DamageEffect`/`SplashDamageEffect`/`PierceDamageEffect`는 기존처럼 `target.TakeDamage(...)`를 즉시 호출한 직후, `AttackFlash.Spawn` 옆줄에 `FakeProjectile.Spawn`을 순수 연출로만 추가했다. 투사체 이동 시간(0.05~0.1초, `PlayerData`/`AllyUnitData`의 `projectileSpeed` 기반, 속도 데이터가 없는 호출부는 프리팹의 0.08초 기본값)은 데미지 적용 타이밍에 전혀 영향을 주지 않는다 — 세 효과 모두 프리팹 슬롯(`fakeProjectilePrefab`)만 추가했다.
+- `ParticleSystem`은 이 코드베이스에 처음 도입되는 기법이라(설계안 §5) `AttackFlash`의 풀 패턴을 그대로 쓰지 않고, 반납 전 `Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear)`을 호출해 잔여 파티클을 비운 뒤 큐에 넣도록 별도 구현했다. 재생 종료 감지는 고정 lifetime 필드 대신 `ParticleSystem.IsAlive(true)` 폴링으로 처리해, 프리팹별로 다른 버스트/랜덤 lifetime 구성이 붙어도 정확한 반납 시점을 잡는다.
+- `FakeProjectile`은 도착 시 `ParticleBurst.Spawn(hitSparkPrefab, _to)`로 히트 스파크를 트리거한다 — 이번 턴엔 이 하나만 소비.
+- `GameManager.Awake()`의 세션 캐시 초기화 목록에 `FakeProjectile.ClearPool()`, `ParticleBurst.ClearPool()`을 `AttackFlash.ClearPool()` 옆에 추가했다 — Retry 시 죽은 풀 참조로 인한 `MissingReferenceException`을 막기 위한 기존 패턴과 동일한 이유다.
+- 투사체 이동은 설계안 §3-①에 명시된 대로 잔여시간 감산 + `Vector3.Lerp` 그대로 구현했다. 미감(이징) 관점에서 별도 검토했으나, 0.05~0.1초의 짧은 직선 이동에 이징을 넣는 건 설계안이 명시적으로 지정하지 않았고 이 속도대에서는 체감 차이가 거의 없어 그대로 두었다 — 이징이 실제로 의미 있는 구간은 §3-③ 충격파 링(OutQuad 확산, 설계안에 이미 명시)이며 그건 다음 턴 스코프다.
+
+### 의도적으로 하지 않은 것
+- `EnemyView.cs`/`AllyUnitView.cs`의 히트플래시(`TickHitFlash`) 로직은 건드리지 않았다(설계안 §0-2에서 확정).
+- `ProjectBloodmoon` 코드/셰이더는 참고하지 않았다(설계안 §1에서 파기).
+- 새 셰이더는 작성하지 않았다 — 이번 두 컴포넌트는 스프라이트(`FakeProjectile`)와 파티클(`ParticleBurst`)만으로 충분하다.
+- 데미지 계산/타겟팅 로직(`EnemyTargeting.cs`, `TowerDamageMath.cs`)은 변경하지 않았다.
+- 폭발 파편/사망 버스트(§4, §3-③ 잔여)는 이번 턴 스코프가 아니라 다루지 않았다 — `ParticleBurst`는 이미 범용으로 설계돼 다음 턴에 프리팹만 추가하면 재사용 가능하다.
+
+### 검증
+- Unity 6000.3.13f1 Pipeline `recompile` 결과 `up_to_date`(에러 0건), `get_console_logs`에도 컴파일 에러 없음을 확인했다.
+- `fakeProjectilePrefab`/`hitSparkPrefab` 슬롯이 비어 있어도(아직 프리팹 미배치) `FakeProjectile.Spawn`/`ParticleBurst.Spawn`이 조용히 무시하고 반환하는 null 체크를 `AttackFlash.Spawn`과 동일하게 구현해, 기존 전투 루프가 영향받지 않음을 코드 레벨로 확인했다.
+
+### 사람이 할 일
+- 투사체 스프라이트(생성형 모델로 제작 예정, 알파 포함 단일 탄환) 최종 승인 및 임포트.
+- `FakeProjectile`/`ParticleBurst` 프리팹 제작(Shuriken 기본 Circle/Cone 셰이프로 시작) 후 `DamageEffect`/`SplashDamageEffect`/`PierceDamageEffect`의 `fakeProjectilePrefab` 슬롯과 `FakeProjectile`의 `hitSparkPrefab` 슬롯에 인스펙터로 연결.
+
+## 2026-08-24 — 전투 VFX 아트·프리팹 배선 완료
+
+### 결정과 근거
+- 기존 공격 타워 아트의 검정 금속·주홍 발광·굵은 실루엣을 참조해 위쪽을 향한 공용 에너지 볼트 한 장을 생성했다. `detail_level 1`로 미세 노이즈와 작은 흠집을 제거해 0.05~0.1초만 보이는 작은 투사체에서도 중심의 밝은 코어와 외곽 형태가 먼저 읽히게 했다.
+- 생성 원본은 순수 그린 크로마키 배경으로 만들고 Codex 기본 이미지 생성 폴더에서만 알파 제거·녹색 스필 제거·256×512 축소를 수행했다. 프로젝트에는 완성된 `Assets/Art/VFX/fake-projectile-orange.png`만 반입해 크로마키 중간 산출물이 아트 폴더에 섞이지 않게 했다.
+- `CombatVfxAssetBuilder`가 Sprite Editor data provider의 `EditPivot` capability를 확인한 뒤 중앙 피벗을 적용하고, `FakeProjectile`/`ParticleBurst_HitSpark` 공용 프리팹을 생성해 세 공격 효과 SO에 동일한 투사체 프리팹을 연결한다. 효과별 프리팹 복제 대신 슬롯 조립을 유지한 이유는 신규 오퍼레이터가 같은 전투 코드를 그대로 쓰면서 비주얼만 데이터로 교체할 수 있어야 하기 때문이다.
+- 히트 스파크는 Shuriken Circle 버스트(주홍→노랑, 짧은 수명, Stretch 렌더)로 만들고 `ParticleBurst`의 범용 풀을 그대로 사용했다. 별도 히트 스파크 C# 클래스나 새 셰이더는 만들지 않았다.
+- 실제 스프라이트 프리팹을 연결하면 풀 반납 뒤에도 렌더러가 켜져 탄환이 명중 지점에 남는 문제가 생기므로, `FakeProjectile`이 재생 시 `SpriteRenderer`를 켜고 반납 시 끄도록 최소 수정했다. 판정·이동 시간·풀 구조는 변경하지 않았다.
+
+### 의도적으로 하지 않은 것
+- 효과별 투사체 프리팹/스크립트를 만들지 않았다. 세 SO는 같은 공용 프리팹을 참조한다.
+- 플레이 테스트와 최종 비주얼 튜닝, WebGL Player 빌드는 이번 작업 범위에서 제외했다.
+
+### 검증
+- 최종 PNG는 256×512 RGBA이며 네 모서리 알파 0, 불투명도 16 이상 픽셀 중 녹색 우세가 20을 넘는 픽셀 0개로 크로마키·녹색 스필 제거를 확인했다.
+- `CombatVfxAssetBuilder.Validate()`가 스프라이트 임포트, 두 프리팹 구성, `hitSparkPrefab`, 세 효과 SO의 `fakeProjectilePrefab` 참조를 모두 확인하고 통과했다.
+- Unity 6000.3.13f1 Pipeline 재컴파일 결과 `up_to_date`, 실패 `false`, 신규 error/exception 0건을 확인했다. 요청에 따라 WebGL Player 빌드는 실행하지 않았다.
+
+### 사람이 할 일
+- 요청대로 플레이 테스트에서 투사체 크기·이동 가독성과 히트 스파크 밀도를 최종 비주얼 검수한다.
+
+## 2026-08-24 — 전투 VFX 1단계 후속 정리: AttackFlash 중첩 제거 + 플레이어/맹독 배선 누락 보완
+
+### 문제
+- `DamageEffect`/`SplashDamageEffect`/`PierceDamageEffect`가 `FakeProjectile`(신규 투사체) 도입 후에도
+  `AttackFlash.Spawn`(기존 사각형 LineRenderer)을 여전히 같이 호출하고 있어, 공격할 때마다 두 시각효과가
+  겹쳐 보였다({{user}} 발견).
+- 직전 턴 킥오프가 세 타워 효과만 예시로 짚어주는 바람에, 구조가 완전히 동일한
+  `PoisonDamageEffect.cs`(맹독 타워)가 `FakeProjectile` 배선에서 누락됐다 — 방치했으면 `AttackFlash` 제거
+  후 이 타워만 공격 시 시각효과가 전혀 없는 상태가 될 뻔했다.
+- `PlayerController.TryAutoAttack()`도 같은 이유로 누락돼 있었다. `PlayerData.projectileSpeed`를 쓰는
+  `FakeProjectile.Spawn(prefab, from, to, PlayerData)` 오버로드는 1단계에서 이미 만들어 뒀는데
+  호출부만 안 붙어 있었다.
+
+### 결정
+- `DamageEffect`/`SplashDamageEffect`/`PierceDamageEffect`/`PoisonDamageEffect` 네 파일 전부에서
+  `attackFlashPrefab` 필드와 `AttackFlash.Spawn(...)` 호출을 제거했다. `PoisonDamageEffect`에는
+  `DamageEffect`와 동일한 방식으로 `fakeProjectilePrefab` 필드 + `FakeProjectile.Spawn(...)`을 새로
+  추가했다 — `target.TakeDamage`/`target.ApplyPoison` 순서(판정)는 건드리지 않았다.
+- `PlayerController.cs`도 `attackFlashPrefab` → `fakeProjectilePrefab`로 교체하고,
+  `FakeProjectile.Spawn(fakeProjectilePrefab, transform.position, target.position, data)`를
+  `TakeDamage` 바로 다음 줄에 추가했다. `FakeProjectile.cs` 자체는 수정하지 않았다(오버로드가 이미 있었음).
+- `Assets/Editor/CombatVfxAssetBuilder.cs`를 확장해 이번 배선도 재현 가능하게 만들었다:
+  - `ConnectEffect<PoisonDamageEffect>`를 기존 세 효과 옆에 추가.
+  - `PlayerController`는 SO/프리팹이 아니라 `DefenseScene.unity`에 직접 배치된 씬 오브젝트라, 기존
+    `ConnectEffect<TEffect>` 패턴을 그대로 못 써서 `ConnectPlayerController(prefab)`을 새로 작성했다 —
+    씬을 열어(원래 열려 있지 않았다면 추가로 열고) `PlayerController`를 찾아 `SerializedObject`로 필드를
+    바꾼 뒤 저장하고, 원래 안 열려 있던 씬이면 다시 닫아 에디터가 작업 중이던 씬(TitleScene)을
+    조용히 바꿔버리지 않게 했다. `Validate()`에도 `ValidatePlayerController`를 대응 추가.
+- 이 메뉴(`RCCom/Combat VFX/Build Projectile And Hit Spark`)를 직접 재실행해 네 SO + 플레이어 씬
+  오브젝트 배선을 실제로 갱신했다(손으로 인스펙터를 만지지 않음, AGENTS.md §3-2 원칙).
+
+### 의도적으로 하지 않은 것
+- `AttackFlash.cs` 클래스 자체는 삭제하지 않았다. 정리 후 `Assets/Scripts` 전체에서
+  `AttackFlash.Spawn` 호출이 0건임을 grep으로 확인했지만(`GameManager.ClearPool()` 호출만 남음),
+  이 프리팹을 참조하는 다른 프리팹/씬이 더 있을 수 있어 스크립트를 지우면 `Missing Script`로
+  깨질 위험이 있다. 삭제는 별도 검토가 필요한 작업으로 남겨둔다.
+- 아군 유닛 기본 공격(`Assets/Scripts/Effects/Unit/Concrete/BasicAttackEffect.cs`)에는 여전히
+  아무 시각효과가 없다. `AllyUnitData` 오버로드도 이미 있어 붙이기는 쉽지만, 이번 요청 범위(플레이어)
+  밖이라 손대지 않았다.
+- §3-②(레이저 빔), §3-③(충격파 링), §4(사망 페이드)는 이번 정리와 무관해 손대지 않았다.
+
+### 검증
+- Unity 6000.3.13f1 Pipeline `recompile` → `recompile_status`로 에러 0건 확인(코드 수정 직후,
+  에디터 툴 확장 직후 각각 별도로 재확인).
+- `unity command menu --path "RCCom/Combat VFX/Build Projectile And Hit Spark"` 실행 후 콘솔에서
+  `[CombatVfxAssetBuilder] 투사체·히트 스파크 생성 및 네 공격 효과 + 플레이어 배선 완료`와
+  `검증 통과` 로그, error/exception 0건을 확인했다.
+- `unity command list_open_scenes`로 실행 전후 열린 씬이 `TitleScene` 하나로 동일함을 확인해
+  `ConnectPlayerController`의 씬 원복 로직이 의도대로 동작함을 검증했다.
+- `git diff`로 각 `.asset`/씬 변경분이 `attackFlashPrefab → fakeProjectilePrefab` 필드 교체 한 줄
+  (씬은 관련 라인 2줄)뿐임을 직접 확인했다. 단, `DefenseScene.unity`에는 무관한 부수 diff가 하나 더
+  있었다 — `GameResultUI`의 `baseCommodityReward`/`commodityPerCompletedMinute`/`maxCommodityTimeBonus`
+  필드가 이번에 처음 직렬화됐다. 코드엔 이미 있던 필드인데 스크립트 추가 이후 씬이 한 번도
+  재저장되지 않아 빠져 있던 것으로 보이며(`SaveScene` 호출의 부수효과), 값은 전부 코드 쪽 기본값과
+  같고 이번 작업의 로직 변경과는 무관하다.
+
+### 사람이 할 일
+- 없음 — 배선까지 이번 턴에 자동으로 완료했다. 플레이 테스트로 최종 눈으로 확인하고 싶다면
+  해도 되지만 필수는 아니다.
+
+## 2026-08-24 — 아군 기본 공격: 원거리 유닛만 FakeProjectile 적용
+
+### 요청
+- {{user}}: 아군 기본 공격 중 원거리 유닛만 투사체 연출을 내보내고, 근접(컨택트 레인지 기반)
+  공격은 현행(연출 없는 즉발 타격)을 유지하고 싶다. `attackRange`가 `ContactRange`보다 작으면
+  `ContactRange`로 보정된다는 것까지 이미 알고 있었음.
+
+### 결정
+- `AllyUnitInstance.EffectiveAttackRange`(`Mathf.Max(Data.attackRange, ContactRange)`)를 근거로,
+  `BasicAttackEffect.OnAttack`에서 `ctx.self.Data.attackRange > ctx.self.ContactRange`일 때만
+  `FakeProjectile.Spawn(...)`을 재생하도록 분기했다. 이 조건이 거짓이면(=attackRange가
+  ContactRange로 보정되는 근접 유닛) 데미지만 적용하고 연출은 그대로 없음 — 요청대로 현행 유지.
+  `target.TakeDamage(...)` 호출 위치·순서는 바꾸지 않았다.
+- `CombatVfxAssetBuilder`에 `BasicAttackEffect.asset` 배선을 추가하고 직접 실행해, 다른 공격
+  효과들과 동일한 공용 `FakeProjectile` 프리팹을 연결했다.
+
+### 검증
+- Unity 6000.3.13f1 Pipeline `recompile` → `recompile_status`로 에러 0건 확인.
+- `unity command menu`로 빌더를 재실행해 `[CombatVfxAssetBuilder] ... 아군 기본 공격 ... 배선 완료`
+  로그와 검증 통과, error/exception 0건을 확인했다. 실행 전후 열린 씬도 `TitleScene` 하나로
+  동일해 부수적인 씬 변경이 없음을 확인했다(이번엔 `DefenseScene`을 열 필요가 없었다).
+- 실제 `AllyUnitDefinition.asset` 데이터로 분기 결과를 확인했다: `calliste-drone`/`calliste-guard`
+  (attackRange 5), `cassia-vanguard`(6), `racing-pitcrew`(4), `test-guard`(1.1), `test-rifleman`(3.8)는
+  전부 기본 `ContactRange`(0.75)보다 커서 투사체가 나가고, `cassia-guard`/`racing-heavy`
+  (attackRange 0)는 근접으로 남아 현행 그대로임을 코드 레벨로 확인했다.
+
+### 의도적으로 하지 않은 것
+- `ContactRange` 자체나 `EffectiveAttackRange` 계산 로직은 건드리지 않았다 — 이번 요청은
+  연출 분기만 필요했다.
+- 판정(`TakeDamage`) 순서·타이밍은 그대로다.
+
+### 사람이 할 일
+- 없음.
+
+## 2026-08-24 — 웨이브 체력 배율 적용 적의 체력바 첫 피격 표시 복구
+
+### 문제와 원인
+- {{user}}가 현재 전투 VFX 브랜치에서 기본 포탑에 맞은 적의 체력바가 활성화되지 않는 회귀를
+  발견했다. `git diff main...HEAD`를 먼저 대조한 결과, 기본 포탑 변경은 기존
+  `AttackFlash.Spawn`을 `FakeProjectile.Spawn`으로 교체한 연출 한 줄뿐이었고
+  `target.TakeDamage(...)`, `EnemyInstance.Damaged`, `EnemyView` 체력바 갱신 경로는 유지돼 있었다.
+- 라이브 Unity 콘솔에서 기본 포탑의 10 피해 직후 `남은 체력 34.8/32`를 확인했다. 실제 스폰
+  체력은 `WaveManager`의 웨이브/스테이지 배율로 44.8까지 증가했지만, `EnemyView`는 여전히
+  `EnemyInstance.currentHealth / EnemyData.maxHealth`를 사용했다. 따라서 첫 피격 후에도 계산값이
+  1보다 커서 `EnemyHealthBar`가 1로 Clamp한 뒤 만피로 판단해 계속 숨겼다.
+
+### 결정
+- `EnemyView.Bind()`는 `EnemyInstance.Spawn()`과 체력 배율 적용이 모두 끝난 다음 호출되므로,
+  이 시점의 `currentHealth`를 `_boundMaxHealth`로 보존하고 체력바 분모로 사용한다. 전투 판정이나
+  Definition 원본을 수정하지 않고 View의 표시 기준만 실제 런타임 최대 체력과 일치시키는 최소
+  변경이다.
+- 별도 적 매니저나 런타임 데이터 복제는 추가하지 않았다. 현재 최대 체력은 스폰 직후 한 번만
+  확정되며 이후 변경되지 않으므로, View 바인딩 시 캡처가 기존 흐름과 가장 작은 결합을 만든다.
+
+### 검증
+- Unity 6000.3.13f1 Pipeline 재컴파일과 콘솔 error/exception 확인.
+- 배율 적용 체력 44.8 기준으로 첫 10 피해 후 표시 비율이 `34.8 / 44.8 < 1`이 되어 체력바가
+  즉시 활성화되고, 배율 1 미만인 스테이지에서도 스폰 시 만피가 100%로 유지되는 경로를 확인.
+
+### 사람이 할 일
+- 없음.
+
+## 2026-08-24 — 히트 스파크 크기/수명/머티리얼 재조정
+
+### 요청
+- {{user}}: 히트 스파크가 너무 미미하고 바로 사라지는 느낌인데, 기분탓인지 실제 설정값 문제인지
+  검증해서 고쳐달라.
+
+### 검증 — 기분탓이 아니었다
+- Unity eval로 실제 배선된 값을 직접 읽었다. `ParticleBurst_HitSpark.prefab`의
+  `startSize`는 0.04~0.11, `startLifetime`은 0.1~0.2초였다.
+- 같은 방식으로 `FakeProjectile.prefab`의 실제 표시 크기를 쟀다: 스프라이트 원본 바운즈
+  2.56×5.12(PPU 100), `localScale` 0.18 적용 후 약 0.46×0.92유닛. 즉 스파크가 자기가 따라붙는
+  투사체보다 4~5배나 작았고, 수명도 투사체 비행 시간(0.05~0.1초)과 비슷하거나 더 짧아 눈에
+  들어오기도 전에 다 줄어들며 사라지는 구조였다.
+- 렌더러 머티리얼도 `Default-ParticleSystem.mat`(Alpha Blend)라 다른 스프라이트에 반투명하게
+  겹치기만 하고 밝게 도드라지지 않는 것도 추가 원인으로 확인했다.
+
+### 결정
+- `CombatVfxAssetBuilder.ConfigureHitSpark()`의 수치를 투사체 실측 크기 기준으로 올렸다:
+  `startSize` 0.16~0.32, `startLifetime` 0.18~0.3초, `startSpeed` 2.4~4.2, 버스트 10~16개.
+  `renderer.lengthScale`/`velocityScale`은 커진 크기에 맞춰 1.8→1.4, 0.12→0.08로 낮춰 스트릭이
+  과하게 길게 늘어지지 않게 균형을 맞췄다.
+- `Default-ParticleSystem.mat`는 Unity가 전역 공유하는 내장 리소스라 직접 수정하면 다른 곳에도
+  영향을 주므로, 히트 스파크 전용 Additive 머티리얼(`HitSpark_Additive.mat`)을 새로 만들어
+  교체했다. 새 셰이더는 작성하지 않고 엔진 내장 `Legacy Shaders/Particles/Additive` 셰이더 +
+  내장 소프트 도트 텍스처(`Default-Particle.psd`)만 조합했다(`VFX_전투_연출_설계안.md` §0-3:
+  신규 셰이더 작성 금지 원칙 유지). 색상 자체는 기존 `colorOverLifetime` 그라디언트(주홍→노랑)를
+  그대로 쓰고, 머티리얼은 흰색 틴트로 얹기만 한다.
+- `CombatVfxAssetBuilder`에 `BuildHitSparkMaterial()`을 추가하고 `Validate()`에도 머티리얼
+  셰이더 이름·최소 크기 검사를 추가해, 다음에 이 빌더를 재실행해도 같은 설정이 재현되게 했다.
+
+### 의도적으로 하지 않은 것
+- 파티클 이미터 반경(shape.radius 0.04)이나 색상 그라디언트는 건드리지 않았다 — 문제는 크기·수명·
+  밝기였지 확산 패턴이 아니었다.
+- `ParticleBurst.cs`(풀링/재생 종료 감지 로직)는 검증만 하고 수정하지 않았다 — `IsAlive(true)`
+  폴링이 정상 동작해 조기 반납 같은 버그는 없었다.
+
+### 검증
+- Unity 6000.3.13f1 Pipeline `recompile` → `recompile_status`로 에러 0건 확인.
+- `unity command menu --path "RCCom/Combat VFX/Build Projectile And Hit Spark"` 재실행 →
+  콘솔에서 검증 통과 로그, error/exception 0건(빌더 자체 기준) 확인.
+
+### 사람이 할 일
+- 플레이 테스트로 최종 크기·밝기가 취향에 맞는지 확인. 더 키우거나 줄이고 싶으면
+  `ConfigureHitSpark()`의 `startSize`/`startSpeed`만 조정하고 빌더를 재실행하면 된다.
+
+### 참고
+- 같은 시점에 다른 세션이 이 저장소에서 병행 작업 중이었다(위 "웨이브 체력 배율..." 항목,
+  `EnemyView.cs`/`ARCHITECTURE.md` 등 변경). 이번 커밋은 히트 스파크 관련 파일만 포함했다.
+
+## 2026-08-24 — 전투 VFX 3단계: 적/아군 사망 연출 (즉시 Destroy → 페이드 + 파티클)
+
+### 결정
+- `EnemyView`/`AllyUnitView`의 `Died` 핸들러가 즉시 `Destroy(gameObject)`하던 것을, `Collider2D`
+  비활성화 → `ParticleBurst` 사망 버스트 재생 → `deathFadeDuration`(기본 0.3초) 동안 알파
+  페이드아웃 → `Destroy`로 바꿨다. 기존 `TickHitFlash`와 같은 "잔여시간 필드 + `LateUpdate`
+  감산" 스타일을 그대로 따랐고 코루틴은 쓰지 않았다.
+- `EnemyView`는 기존에 `Died`와 `ReachedGoal`을 같은 `HandleRemoved`로 묶어 처리했는데, 분리했다
+  (`HandleDied` / `HandleReachedGoal`). 거점 도달은 처치가 아니라서(`EnemyInstance.cs` 주석: "처치
+  보상은 Died에서만") 페이드 없이 기존처럼 즉시 사라져야 한다.
+- `AllyUnitView`는 스프라이트 페이드 시작 전에 `DisposeVisualEffects()`를 먼저 호출한다 — 죽은
+  유닛이 오라 버프(`RangePulseVisualEffect` 등)를 페이드 동안 계속 발산하면 안 되기 때문.
+- 두 View 모두 `Bind()`에서 사망 상태(`_isDying`/`_deathFadeRemaining`/Collider2D enabled/알파)를
+  방어적으로 리셋한다 — 지금은 사망 시 실제로 `Destroy`까지 가서 재사용되지 않지만, 향후 View
+  풀링이 추가돼도 이전 개체의 페이드 상태가 새 개체로 새지 않게.
+- 설계안 §0-2 결정(ProjectBloodmoon 실루엣 셰이더 이식 파기)을 그대로 지켰다 — 완전한 단색
+  실루엣 고정은 셰이더 없이는 불가능해서 포기했고, 대신 파티클 버스트 타이밍과 페이드 속도로
+  시인성을 보완한다는 트레이드오프를 코드 주석에도 남겼다.
+
+### 사망 버스트 프리팹
+- `CombatVfxAssetBuilder`에 `BuildDeathBurstPrefab()`을 추가했다. 히트 스파크와 같은 Additive
+  머티리얼(`HitSpark_Additive.mat`)을 공유하되, 크기(0.2~0.4)·수명(0.25~0.45초)·버스트 수(14~22)를
+  키우고 `gravityModifier 0.6`으로 파편이 흩날리며 떨어지게 했다. 렌더 모드도 히트 스파크의
+  Stretch(스트릭) 대신 Billboard(원형 산개)로 바꿔 "피격"과 "사망"이 다른 인상으로 읽히게 했다.
+- `EnemyView`/`AllyUnitView`는 SO가 아니라 프리팹 자체에 필드가 있어 기존 `ConnectEffect<TEffect>`
+  패턴(SO 전용)을 못 썼다. `PrefabUtility.LoadPrefabContents`로 프리팹을 열어 컴포넌트 필드를
+  `SerializedObject`로 갱신하고 `SaveAsPrefabAsset`으로 저장하는 범용 `ConnectPrefabField<TComponent>`
+  /`ValidatePrefabField<TComponent>`를 새로 만들어 `EnemyView_Normal.prefab`/`AllyUnitView.prefab`에
+  배선했다.
+
+### 버그 발견 및 수정: 머티리얼 공유 시 Delete+CreateAsset이 기존 참조를 끊음
+- 사망 버스트가 히트 스파크와 같은 `BuildHitSparkMaterial()`을 다시 호출하게 되면서, 한 번의
+  빌드 실행 안에서 이 메서드가 두 번 불렸다. 기존 구현은 매 호출마다
+  `AssetDatabase.DeleteAsset` → `CreateAsset`으로 같은 경로에 머티리얼을 새로 만들었는데, 이러면
+  먼저 저장된 `ParticleBurst_HitSpark.prefab`의 `sharedMaterial` 참조(첫 호출 때의 GUID)가 두
+  번째 호출에서 삭제된 GUID를 가리키게 돼 끊어진다.
+- `Validate()`의 "Additive 머티리얼 배선" 검사가 정확히 이 상태를 잡아 `InvalidOperationException`을
+  던졌다 — 검증 코드가 실제로 회귀를 잡아낸 사례라 기록해둔다.
+- 기존 에셋이 있으면 delete 없이 그 자리에서 shader/텍스처/색만 갱신하도록 고쳐 멱등하게
+  만들었다(`SaveOwnedPrefab`이 프리팹에 대해 이미 하고 있던 "제자리 갱신" 원칙을 머티리얼에도
+  동일 적용). 수정 후 재실행해 히트 스파크·사망 버스트 양쪽 모두 같은 머티리얼 GUID를 공유하는
+  상태로 정상 배선됨을 확인했다.
+
+### 의도적으로 하지 않은 것
+- ProjectBloodmoon 실루엣 셰이더는 여전히 이식하지 않는다(설계안 §0-1/§0-2에서 파기 확정).
+- §3-③(스플래시 충격파 링), §3-②(관통 레이저 빔)는 이번 범위가 아니다 — 설계안 §7 순서대로
+  다음 턴에 진행 예정.
+
+### 검증
+- Unity 6000.3.13f1 Pipeline `recompile` → `recompile_status`로 에러 0건 확인(코드 수정 직후,
+  빌더 확장 후 각각).
+- `unity command menu --path "RCCom/Combat VFX/Build Projectile And Hit Spark"`를 두 번 실행했다
+  — 1차 실행에서 위 머티리얼 버그로 `Validate()`가 실패하는 것을 확인했고, 수정 후 2차 실행에서
+  `[CombatVfxAssetBuilder] 투사체·히트 스파크·사망 버스트 에셋 검증 통과` 로그와 함께 성공을
+  확인했다.
+- `git status`/`git diff`로 `EnemyView_Normal.prefab`/`AllyUnitView.prefab`이 딱 두 필드
+  (`deathParticlePrefab`/`deathFadeDuration`) 추가뿐임을, `ParticleBurst_HitSpark.prefab`/
+  `HitSpark_Additive.mat`이 최종적으로 이전 커밋과 diff 없음(=참조가 안전하게 복구됐음)을
+  확인했다.
+
+### 사람이 할 일
+- 플레이 테스트로 사망 페이드 타이밍(0.3초)과 사망 버스트 크기가 체감상 적절한지 확인.
+
+## 2026-08-24 — 전투 VFX 4단계: 스플래시 포물선 투사체 + 충격파 링 + 그을림 자국
+
+### 결정
+- `FakeProjectile.cs`에 `lobHeight` 파라미터를 추가해 `y(t) = Lerp(y0,y1,t) + 4h·t(1-t)`
+  포물선 낙하를 구현했다(설계안 §3-③ 공식 그대로). `lobHeight = 0`이면 기존 직선 투사체와
+  100% 동일한 경로를 타므로, 이미 이 클래스를 쓰고 있던 4개 호출부(`DamageEffect`/
+  `PierceDamageEffect`/`PoisonDamageEffect`/`BasicAttackEffect`/`PlayerController`)는 손대지
+  않았다 — `SplashDamageEffect`만 새 오버로드로 `lobHeight`를 넘긴다.
+- 이 프로젝트는 정통 탑다운(월드 Y가 지면 축)이라 실제 3D 높이 개념이 없다. 흔한 2D 트릭대로
+  스프라이트의 렌더 위치만 위로 띄우고, `ParticleBurst.Spawn(_to)`(착탄 파티클)는 이 오프셋과
+  무관하게 실제 착탄 좌표(`_to`)를 그대로 쓰게 해서 이펙트가 스프라이트를 따라 붕 뜨는 일이
+  없게 했다.
+- `ShockwaveRing.cs` 신규 — 착탄 지점에서 한 번만 재생되고 풀에 반납되는 원샷 컴포넌트.
+  **새 셰이더/머티리얼을 만들지 않고 아군 오라 파동(`RangePulseVisualEffect`)에 이미 쓰이는
+  `RangePulseAura.shader`의 머티리얼(`Assets/Data/Effects/Unit/Visual/RangePulseAura.mat`)을
+  그대로 재사용**한다 — `MaterialPropertyBlock`으로 인스턴스별 `_Progress`를 따로 먹이는
+  방식이라(`RangePulseVisualRuntime`이 이미 증명한 패턴) 여러 충격파 링이 동시에 떠 있어도
+  서로 값이 섞이지 않는다. 다만 `RangePulseVisualRuntime` 자체는 유닛 하나에 상시 붙어
+  무한 반복 재생되는 "오라"용이라 그대로 재사용은 못 하고, `AttackFlash.cs`와 같은
+  prefab별 static 풀 패턴으로 새로 짰다(이전 턴에 미리 문서화해둔 계획 그대로).
+- `ScorchDecal.cs` 신규 — 바닥 그을림 자국. 셰이더 없이 `SpriteRenderer` 알파 페이드만 쓴다.
+  스프라이트는 절차적으로 생성한 64×64 소프트 원형 그라디언트 PNG
+  (`Assets/Art/VFX/scorch-decal.png`)를 정식 텍스처 임포트 경로로 저장했다 —
+  `Sprite.Create`로 만드는 런타임 전용 스프라이트는 프리팹 저장 시 참조가 유실될 위험이 있어
+  피했고(사망 버스트 재사용 실수를 겪은 직후라 이런 직렬화 함정을 더 경계하게 됨), 나중에
+  생성형 아트로 그대로 교체할 수 있게 평범한 PNG 파일 형태를 유지했다.
+- `SplashDamageEffect.cs`: 착탄 즉시(=`target.TakeDamage`와 같은 순간) `explosionBurstPrefab`
+  (사망 버스트 프리팹을 그대로 재사용 — 새 파티클 프리팹을 또 안 만듦)/`shockwaveRingPrefab`/
+  `scorchDecalPrefab`을 함께 재생한다.
+
+### 착탄 타이밍에 대한 트레이드오프 (의도적으로 하지 않은 것)
+- 착탄 연출 3종은 투사체의 실제 비행 시간(0.05~0.2초)을 기다리지 않고 판정과 같은 순간
+  재생한다 — `AttackFlash` 시절부터 이 효과 클래스가 유지해온 "명중 즉시 연출" 타이밍과
+  동일한 관례를 그대로 따랐다. `FakeProjectile` 자체의 `hitSparkPrefab`(작은 스파크)만
+  기존처럼 실제 도착 시점에 맞춰 지연 재생된다. 완벽한 동기화(폭발/링/자국을 투사체 도착에
+  맞춰 지연)보다 구현 단순성을 택한 트레이드오프다 — `lobHeight`로 궤적이 눈에 띄게 되면서
+  이 어긋남이 체감될 수 있다. 플레이 테스트로 어색하면 다음 턴에 `FakeProjectile`에 "도착 시
+  콜백"(추가 프리팹 파라미터 또는 이벤트) 개념을 넣는 방향으로 재검토한다.
+
+### CombatVfxAssetBuilder 확장
+- `BuildShockwaveRingPrefab()` — `PrimitiveType.Quad`에서 기본 Collider만 제거하고
+  `RangePulseAura.mat`을 그대로 참조. `BuildScorchDecalPrefab()`/`ConfigureScorchSprite()` —
+  절차적 텍스처 생성 후 `ConfigureProjectileSprite()`와 같은 표준 Sprite 임포트 경로 재사용
+  (대칭 생성이라 피벗 재조정 단계는 생략).
+- `SplashDamageEffect`만 다른 효과들과 배선 슬롯 구성이 달라(착탄 연출 3종 추가) 공용
+  `ConnectEffect<TEffect>`로 못 묶고 `ConnectSplashEffect`/`ValidateSplashEffect`를 따로 뒀다.
+
+### 검증
+- Unity 6000.3.13f1 Pipeline `recompile` → `recompile_status`로 에러 0건 확인(코드 수정 직후,
+  빌더 확장 후 각각).
+- `unity command menu --path "RCCom/Combat VFX/Build Projectile And Hit Spark"` 실행 →
+  `[CombatVfxAssetBuilder] ... 충격파 링·그을림 자국 생성 및 ... 배선 완료` 로그, error/exception
+  0건 확인.
+- `git diff`로 `Splash Damage Effect.asset`이 딱 4개 필드(`lobHeight`/`explosionBurstPrefab`/
+  `shockwaveRingPrefab`/`scorchDecalPrefab`) 추가뿐이고, `explosionBurstPrefab`이 사망 버스트와
+  동일 GUID를 가리켜(재사용 의도대로) 새 파티클 에셋이 중복 생성되지 않았음을 확인했다.
+
+### 사람이 할 일
+- 플레이 테스트로 포물선 궤적 체감, 충격파 링 확산 속도, 그을림 자국 절차적 텍스처가
+  실제로 봐줄 만한지 확인. 그을림 자국은 placeholder이니 정식 생성형 아트로 교체를 고려.
+- 착탄 연출 타이밍(위 트레이드오프 항목)이 어색하면 알려줄 것 — 다음 턴에 재검토.
+
+## 2026-08-24 — "스플래시" 타워가 스플래시 데미지를 낸 적이 없던 배선 오류 발견·수정
+
+### 결정
+- 4단계 VFX(스플래시 착탄 연출)를 붙였는데 플레이 테스트에서 전혀 보이지 않는다는 보고를 받고
+  역추적한 결과: `Assets/Data/Definition/Tower/Splash.asset`(towerId 6, displayName "스플래시")의
+  `effects` 슬롯이 **광역 피해를 주는 `SplashDamageEffect`가 아니라 단일 타겟
+  `DamageEffect_Default`를 참조**하고 있었다. `git log -p`로 추적하니 Day 3 커밋(`e848607`)에서
+  이 타워가 처음 만들어질 때부터 계속 이 상태였다 — 이번 VFX 브랜치가 만든 문제가 아니라, 스플래시
+  타워가 프로젝트 시작부터 한 번도 실제로 광역 피해를 낸 적이 없었다는 뜻이다. `Splash Damage
+  Effect.asset`은 어떤 타워 정의에서도 참조되지 않는 완전한 고아 에셋이었다(`grep -r`로 전체
+  `Assets/` 검색해 확인) — 그러니 4단계에서 아무리 정확하게 프리팹을 배선해도 게임에서 이
+  `OnTick`이 호출될 방법 자체가 없었다.
+- `effects[0]`을 `Splash Damage Effect.asset`으로 교체(`582d77f`). 데미지/사거리/공격주기는
+  `Splash.asset` 자체의 `data` 필드에 있고 이번 교체 대상인 `effects`와는 분리돼 있어 밸런스
+  수치는 영향받지 않는다.
+- 수정은 `.asset` 텍스트 직접 편집이 아니라 `unity command eval_file`로 Editor 안에서
+  `SerializedObject`를 통해 했다(이 저장소 관례).
+
+### 부수적으로 발견한 별개 버그 (이번 턴에서 손대지 않음)
+- 위 수정을 검증하는 과정에서 콘솔에 `InvalidOperationException: Collection was modified;
+  enumeration operation may not execute.`가 `PierceDamageEffect.OnTick`(줄 43,
+  `foreach (EnemyInstance enemy in ctx.activeEnemies) { ... enemy.TakeDamage(damage); }`)에서
+  발생하는 것을 목격했다. `git log -p`로 확인한 결과 이 foreach 루프는 이 효과가 처음 만들어질
+  때부터 그대로였고 이번 VFX 작업이 건드린 적 없는 코드라 — 이번 스코프의 회귀가 아니다. 관통
+  범위 내 적 중 하나가 `TakeDamage`로 죽으면서 `ctx.activeEnemies`(순회 중인 그 리스트)에서
+  동기적으로 제거되는 경로가 있으면 재현될 것으로 보인다. 별개 이슈라 이번 커밋에는 포함하지
+  않았고, 사람이 다음에 손볼 항목으로만 남겨둔다.
+
+### 검증
+- `unity command eval_file`로 `Splash.asset`의 `effects` 필드를 읽어 교체 전후 값을 콘솔 로그로
+  직접 확인(`DamageEffect_Default` → `Splash Damage Effect`).
+- `git diff`로 변경분이 정확히 그 한 줄(guid 교체)뿐임을 확인 후 커밋.
+
+### 사람이 할 일
+- 플레이 테스트로 스플래시 타워가 이제 실제로 광역 피해 + 4단계 VFX(포물선 투사체/충격파 링/
+  그을림 자국)를 내는지 확인.
+- `PierceDamageEffect.OnTick`의 "Collection was modified" 예외 — 관통 타워가 다수의 적을 동시에
+  잡을 때 재현되는지, 재현된다면 우선순위 낮은 별도 버그 수정 턴으로 처리할지 판단 필요.
+
+## 2026-08-24 — 스플래시 충격파 링/그을림 자국 sortingOrder 수정 + "부식" 타워 배선 오류 수정
+
+### 결정 1: 충격파 링/그을림 자국이 지면에 완전히 가려져 있던 sortingOrder 버그
+- 스플래시 타워 배선을 고친 뒤 실제 플레이 테스트 결과: 곡사 투사체는 날아가는데 착탄 지점의
+  충격파 링이 안 보인다는 보고. `ShockwaveRing.prefab`(`sortingOrder = -1`)과
+  `ScorchDecal.prefab`(`sortingOrder = -2`)이 "0보다 아래로 두면 바닥에 깔린 것처럼 보이겠지"라는
+  가정으로 만들어졌는데, 실제로는 `DefenseScene`의 지면 Tilemap 자체가 같은 `Default` 레이어에
+  `sortingOrder = 0`으로 이미 깔려 있어서 — 그보다 낮은 음수 값은 지면 "아래"로 들어가 지면에
+  완전히 가려진다. 재생은 정상적으로 되고 있었고 순수하게 화면에 안 보이기만 한 문제였다.
+- `CombatVfxAssetBuilder.cs`에서 `ScorchDecal = 1`, `ShockwaveRing = 2`로 수정(지면(0) 위,
+  캐릭터 스프라이트/히트 스파크(7)/사망 버스트(8) 아래) 후 빌더 메뉴 재실행으로 두 프리팹에
+  반영. 코드 수정 후 빌더를 통해 프리팹에 반영하는 절차라 `.prefab` 텍스트를 직접 만지지
+  않았다.
+
+### 결정 2: "부식" 타워도 스플래시와 동일한 Day3 배선 오류였다
+- 플레이 중이던 사용자 요청으로 다른 타워들의 `effects` 슬롯을 읽기 전용으로 점검한 결과,
+  `Poison.asset`(towerId 7, "부식")도 스플래시와 정확히 같은 패턴으로 `Poison Damage
+  Effect.asset`이 아니라 `DamageEffect_Default`를 참조하고 있었다(Day3 커밋 `e848607`부터).
+  `Poison Damage Effect.asset`도 프로젝트 전체에서 참조하는 곳이 없는 고아 에셋이었다 — 부식
+  타워는 지금까지 도트 피해 없이 그냥 단일 타격만 하고 있었다는 뜻.
+  (참고로 Rapid/Sniper/일반 공격은 원래도 `DamageEffect_Default`가 맞고, 관통 사격은 이미
+  `Pierce Damage Effect.asset`에 정상적으로 연결돼 있어 이 두 타워만의 문제였다.)
+- `Splash.asset` 때와 동일하게 `unity command eval_file`로 `SerializedObject` 경유 교체(텍스트
+  직접 편집 아님).
+
+### 검증
+- `unity command recompile`/`recompile_status`로 `CombatVfxAssetBuilder.cs` 수정 후 컴파일
+  에러 0건 확인 → `RCCom/Combat VFX/Build Projectile And Hit Spark` 재실행 →
+  `[CombatVfxAssetBuilder] ... 검증 통과` 로그, error/exception 0건 확인.
+- `git diff`로 `ShockwaveRing.prefab`/`ScorchDecal.prefab`이 각각 `m_SortingOrder` 한 줄만
+  바뀌었음을 확인.
+- `unity command eval_file`로 `Poison.asset`의 `effects` 필드 교체 전후 값을 콘솔 로그로 직접
+  확인(`DamageEffect_Default` → `Poison Damage Effect`), `git diff`로 변경분이 그 한 줄뿐임을
+  확인 후 커밋.
+
+### 사람이 할 일
+- 플레이 테스트로 충격파 링/그을림 자국이 이제 실제로 화면에 보이는지, 부식 타워가 도트
+  피해를 내는지 확인.
+
+## 2026-08-24 — 다수 적 순회 예외 3건 수정 + 충격파 링 SO 분리 + 전투 VFX 5단계(레이저 빔)
+
+### 결정 1: "Collection was modified" 예외 3곳 수정
+- 지난 항목에서 목격한 `PierceDamageEffect.OnTick`의 `InvalidOperationException: Collection
+  was modified`를 계기로 같은 패턴(`foreach (EnemyInstance enemy in <원본 activeEnemies 리스트>)`
+  안에서 `enemy.TakeDamage()` 호출)을 전체 grep해 `SplashDamageEffect.OnTick`,
+  `PlayerController.FireSkillPulse`(플레이어 스킬 AoE) 두 곳에서 동일 패턴을 추가로 발견했다.
+  `TakeDamage()`가 즉사시키면 `EnemyView.HandleDied()`가 콜라이더를 끄는데 이 시점에
+  `OnTriggerExit2D`가 동기 발생해, 지금 순회 중인 바로 그 `TowerInstance._enemiesInRange`/
+  `PlayerController._enemiesInRange`에서 죽은 적이 동기적으로 빠진다 — 원본 리스트를 직접
+  순회하면 예외가 난다. 세 곳 모두 순회 전 `List<EnemyInstance>` 스냅샷을 떠서 원본 대신
+  순회하도록 수정(`WaveManager.TickEnemies()`가 이미 역순 인덱스 루프로 같은 문제를 피하고
+  있던 것과 같은 근본 원인, 다른 해법).
+
+### 결정 2: 충격파 링 시각값을 데이터 SO로 분리 (사용자 지적 반영)
+- "충격파 링 색을 빨간색으로 바꾸려면 어디서 바꿔야 하지?"라는 질문에 답하는 과정에서, 아군
+  사거리 오라 파동(`RangePulseVisualEffect`)은 색/스트로크/글로우/글로시/불투명도/주기를
+  전부 SO 필드로 노출해 코드 안 건드리고 에셋만 갈아 끼우면 되는데, `ShockwaveRing`은 같은
+  `RangePulseAura.shader`를 쓰면서도 이 값들을 코드/빌더에 하드코딩해뒀다는 지적을 받았다 —
+  이미 확립된 패턴을 따르지 않은 실수였다.
+- `ShockwaveRingVisualEffect` SO 신규(`Assets/Scripts/Runtime/Visuals`). `AllyUnitVisualEffectBase`는
+  상속하지 않는다 — 그쪽은 유닛 하나에 상시 붙어 반복 재생되는 오라 전용 `IAllyUnitVisualRuntime`
+  훅 계층이라, 위치 기반 원샷인 `ShockwaveRing`이 낄 이유가 없는 순수 데이터 SO로 별도로 뒀다.
+  기본 색은 빨간색 계열(스플래시 폭발 테마).
+- **빌더 재실행이 개발자/디자이너의 인스펙터 조정값을 덮어쓰면 안 된다는 추가 지적**을 반영해,
+  `BuildShockwaveRingVisualEffect()`는 프리팹류(`EnsureOverwriteIsOwned`로 매번 완전히
+  재생성되는 플러밍 에셋)와 달리 **이미 에셋이 있으면 값을 절대 건드리지 않는다** — 최초 생성
+  시 1회만 기본값을 심는다. 색을 실제로 파란색으로 바꾼 뒤 빌더를 재실행해 값이 보존되는지
+  직접 검증(원래 빨간색으로 되돌림).
+
+### 결정 3: 전투 VFX 5단계 — 관통 사격 2-Layer 레이저 빔 (설계안 §3-②, §7 마지막 단계)
+- 설계안이 유일하게 "신규 셰이더 필요"로 지정한 마지막 단계. 지금까지 `PierceDamageEffect`는
+  임시로 `FakeProjectile`(작은 투사체 스프라이트)을 대신 쏘고 있었는데, "일직선 상 모든 적을
+  동시에 때리는" 관통 판정을 표현하기엔 부적합해 제대로 된 빔으로 교체했다.
+- `Assets/Shaders/Tower/LaserBeam.shader` 신규 — `RangePulseAura.shader`와 같은 구조(URP
+  HLSLPROGRAM + `Core.hlsl` + `CBUFFER_START(UnityPerMaterial)`)를 그대로 따른다. 텍스처 없이
+  해시 기반 1D 노이즈로 UV 스크롤 에너지 흐름을 표현(새 텍스처 에셋 불필요, 설계안 §0-2 유지).
+  `LineRenderer` 기본 UV(y=0.5가 중심선)만으로 폭 방향 소프트 페이드 처리.
+- `LaserBeamView.cs` 신규 — Inner Core(얇고 밝은 백색)/Outer Glow(넓고 반투명, 보라 테마색)
+  두 자식 `LineRenderer`로 구성, 같은 셰이더/머티리얼을 `MaterialPropertyBlock`으로 레이어별
+  다르게 먹인다. 발사 직후 폭 150%→100% 팬치 애니메이션은 셰이더가 아니라 잔여시간 기반으로
+  절차적 계산(`AttackFlash.lifetime`과 동일한 방식, 설계안 §3-② 명시). 다중 `LineRenderer`
+  요구 조건이 단일 `LineRenderer` 전제인 `AttackFlash`와 책임이 달라 별도 클래스로 새로 짰고,
+  풀링 패턴(prefab별 static `Dictionary<GameObject, Queue<T>>`)만 동일하게 따랐다.
+- `LaserBeamVisualEffect` SO 신규 — `ShockwaveRingVisualEffect`와 같은 이유·같은 "최초 생성 시
+  1회만 기본값" 원칙을 처음부터 적용(결정 2의 교훈을 새 SO에도 바로 반영).
+- `PierceDamageEffect.cs`: `fakeProjectilePrefab` 필드/호출을 `laserBeamPrefab`+
+  `laserBeamVisual`로 교체. 원뿔각 판정(`beamHalfAngleDegrees`) 로직은 완전히 그대로 — 순수
+  연출 교체만.
+- `CombatVfxAssetBuilder`: `PierceDamageEffect`가 필드 구성이 달라져 공용
+  `ConnectEffect<TEffect>`(`fakeProjectilePrefab` 이름 하드코딩)로 못 묶어 `SplashDamageEffect`
+  처럼 `ConnectPierceEffect`/`ValidatePierceEffect` 전용 함수로 분리.
+
+### 결정 4: GameManager 재시작 정리 목록 누락 보완
+- 검증 도중 `ShockwaveRing`/`ScorchDecal`(4단계)이 애초에 `GameManager.ClearPool()`의
+  재시작 정리 목록(`AttackFlash`/`FakeProjectile`/`ParticleBurst`)에 등록되지 않았던 걸
+  발견했다 — 씬 재로드 시 풀 안 인스턴스는 파괴되는데 static 대기열은 안 비워져 다음 Spawn이
+  죽은 참조를 Dequeue할 수 있는 상태였다. 이번에 만든 `LaserBeamView`와 함께 세 개 모두 등록.
+
+### 검증
+- `unity command recompile`/`recompile_status`로 각 변경 단계마다 컴파일 에러 0건 확인.
+- `RCCom/Combat VFX/Build Projectile And Hit Spark` 실행 → 콘솔에 에러/예외 0건, 검증 통과
+  로그 확인.
+- `git diff`로 각 커밋의 변경분이 의도한 범위와 정확히 일치하는지 확인(`Pierce Damage
+  Effect.asset`이 `fakeProjectilePrefab` 삭제 + `laserBeamPrefab`/`laserBeamVisual` 추가
+  딱 그만큼만 바뀜 등).
+- 오버라이트 방지 로직은 실제로 값을 바꾼 뒤 빌더를 재실행해 보존되는지 직접
+  검증(`ShockwaveRingVisualEffect`/`LaserBeamVisualEffect` 둘 다).
+
+### 사람이 할 일
+- 플레이 테스트로: 1) 관통 타워가 이제 흰색 코어 + 보라색 글로우 2-레이어 빔으로 보이는지,
+  발사 직후 폭이 살짝 부풀었다 가라앉는 팬치感이 느껴지는지. 2) 관통/스플래시/플레이어 스킬로
+  다수 적을 동시에 처치해도 더 이상 콘솔에 예외가 안 뜨는지.
+- 레이저 빔 색(보라)/두께/노이즈 속도가 마음에 안 들면 `LaserBeam_Pierce.asset` 인스펙터에서
+  직접 조정 — 코드 재배포 불필요, 빌더를 다시 돌려도 값이 보존된다.
+- 설계안 §7 구현 순서 5단계가 모두 끝났다 — 남은 건 §4에서 의도적으로 보류한 "완전한 단색
+  실루엣 페이드"(셰이더 신설 필요, 이번 결정 §0-2에 따라 보류 유지) 같은 트레이드오프 재검토
+  뿐, 신규 단계는 없다.
+
+## 2026-08-24 — Builder 패턴 전수조사: 스튜디오 밖에서 프리팹을 조용히 덮어쓰던 구멍 수정
+
+**맥락** — "레시피(스튜디오) → 빌더" 구조에서, 기획자가 스튜디오를 안 쓰고 생성된 프리팹/SO를
+Project 뷰에서 직접 열어 밸런싱했다가 다음 Build 실행에서 조용히 덮어써질 위험을 전수조사해
+달라는 요청. 조사 범위를 "스튜디오가 다루지 않는 에셋"으로 좁혀서 다시 보니(스튜디오 사용
+자체는 컨벤션으로 지켜진다고 가정), 데이터 SO/Material은 이미 결정 2·3에서 "최초 생성 시
+1회만 기본값, 이후엔 절대 안 건드림" 패턴이 적용돼 있었지만 **프리팹류만 예외**였다 —
+`CombatVfxAssetBuilder`의 프리팹 6종(`SaveOwnedPrefab` 경유)과 `AllyUnitViewPrefabBuilder`가
+스튜디오 자체가 없는 영역인데도 매 실행마다 무조건 처음부터 재생성했다.
+(`AllyUnitViewPrefabBuilder`는 한술 더 떠 다른 빌더가 다 갖고 있는 라벨 소유권 체크
+(`EnsureOverwriteIsOwned`)조차 빠져 있었다.)
+
+**결정** — `Assets/Editor/BuilderPrefabMerge.cs` 공용 헬퍼 신규:
+1. `HasSameShape` — 기존 프리팹과 이번에 빌더가 지을 구조(자식 이름 트리 + 컴포넌트 타입
+   구성)가 같으면 재생성 자체를 건너뛰고 기존 프리팹을 그대로 반환한다. 대부분의 재실행은
+   구조 변경이 없으므로 이 경로로 끝나 사람이 튜닝한 값을 전혀 안 건드린다.
+2. `CopyTunedValues` — 구조가 달라져(코드 변경으로 컴포넌트/자식 추가·제거) 재생성이
+   불가피할 때만, 이름이 일치하는 자식·컴포넌트에 한해 `SerializedProperty` 트리를 리프까지
+   내려가며 값 필드를 옛 프리팹에서 이식한다. Object/Managed Reference(배선)는 항상 이번에
+   새로 지은 값을 그대로 쓴다 — 구조 변경으로 새로 추가된 슬롯을 옛 배선으로 되돌리면 안
+   되기 때문. 리프 하나에서 예외가 나도(ParticleSystem 등 내부 직렬화가 특수한 컴포넌트
+   대비) 그 필드만 포기하고 나머지 이식은 계속한다.
+- `CombatVfxAssetBuilder.SaveOwnedPrefab`과 `AllyUnitViewPrefabBuilder.Build` 둘 다 이
+  헬퍼로 배선. 후자엔 누락돼 있던 `EnsureOverwriteIsOwned` 호출도 추가.
+
+**근거** — 프리팹은 SO처럼 "존재하면 절대 재생성 안 함"으로 못 간다 — 계층 구조 자체가
+바뀌는 코드 변경(새 파티클 서브에미터·새 LineRenderer 레이어 추가 등, 예: 이번 확장의
+관통 사격 2-Layer 레이저 빔)을 기존 프리팹에 반영할 방법이 없어지기 때문이다. "구조가
+같으면 스킵, 다르면 값만 이식 후 재생성"은 두 요구(코드 변경 전파 vs 사람 튜닝값 보존)를
+동시에 만족시킨다. 값 필드를 명시적으로 하나씩 나열하는 대신 리프까지 내려가는 일반화된
+`SerializedProperty` 순회를 쓴 이유는, 프리팹 6종 각각에 필드를 손으로 나열하면 새 필드가
+추가될 때마다 놓치기 쉽고, "Object Reference만 제외하고 나머지 값은 다 보존"이라는 규칙
+자체가 코드베이스가 데이터 SO에서 이미 쓰던 "배선 vs 밸런싱 값" 구분과 정확히 같기 때문.
+
+**의도적으로 하지 않은 것**
+- `AllyUnitVerticalSliceBuilder`의 `UnitDeployButton` 프리팹(테스트 수직 슬라이스 전용,
+  이미 `AllyUnitStudioWindow`에서 "재실행 시 초기화될 수 있음" 경고가 뜸)과, UI 화면
+  빌더들(`OperatorSelectionSetup`/`StageModeSelectionSetup` 등)은 이번 범위에서 뺐다 —
+  전자는 이미 부분적으로 경고가 있고, 후자는 초기 1회성 스캐폴딩인지 반복 재실행 대상인지
+  확인이 더 필요해서다.
+- default Inspector에 "이 에셋은 빌더가 관리합니다" 경고 배너를 띄우는 것(`Editor.
+  finishedDefaultHeaderGUI` 훅)은 이번엔 안 함 — 이번 수정으로 "스튜디오 밖 프리팹도 값이
+  보존된다"는 실질적 위험 자체는 없어졌으므로, 경고 UI는 후속 과제로 남긴다.
+- Enemy/Operator Definition류(스튜디오가 관리하는 영역)의 "빌더 소유 라벨은 있지만 재빌드
+  시 드리프트 감지는 안 함" 문제는 손대지 않았다 — 스튜디오 컨벤션이 지켜진다는 전제 하에는
+  범위 밖이라 판단.
+
+**검증**
+- `unity command recompile`/`recompile_status` → 컴파일 에러 0건.
+- `unity command menu`로 `RCCom/Ally Units/Build Common View Prefab`,
+  `RCCom/Combat VFX/Build Projectile And Hit Spark` 둘 다 라이브 에디터에서 직접 실행 —
+  콘솔에 프리팹 7종(AllyUnitView + VFX 6종) 전부 "구조 변경 없음, 기존 프리팹 값 보존" 로그,
+  에러/예외 0건, 최종 검증 통과 로그까지 확인.
+- 실행 후 `git status`로 `.prefab`/`.asset` 파일이 단 하나도 변경 목록에 없는 것을 확인 —
+  스킵 경로가 실제로 디스크에 아무것도 다시 쓰지 않음을 실증.
+
+**사람 액션** — 없음. 이번 프리팹 재생성 로직이 실제로 "값을 지키면서 이식"하는 경로를
+타는지는, 다음에 이 프리팹들 중 하나의 구조를 실제로 바꾸는 코드 변경(예: 새 컴포넌트 추가)이
+있을 때 콘솔의 "구조 변경을 감지해 프리팹을 재생성합니다" 경고 로그와 이식된 값이 기대대로
+보존되는지 눈으로 한 번 확인해 두면 좋다.
+
+## 2026-08-24 — 적/아군 사망 연출 고도화: 폭발 플립북 + 넉백/틴트/페이드
+
+### 결정
+- 3단계에서 만든 사망 연출(파티클 버스트 + 단순 알파 페이드)을 실제 요청 스펙대로 확장했다.
+- **폭발 이펙트**: `Assets/Art/VFX/explosion/Sprites`에 있는 8프레임 그림 애니메이션을
+  12fps 플립북으로 재생한다. `SpriteFlipbook.cs` 신규 — `AttackFlash.cs`와 같은 prefab별
+  static 풀링 패턴을 그대로 따르되, 이 코드베이스 첫 "실제 프레임 애니메이션 에셋" 재생
+  컴포넌트다(지금까지는 파티클/셰이더/lerp만 썼음). `ParticleBurst_DeathBurst`는 스플래시
+  착탄 폭발(`explosionBurstPrefab`)로는 계속 재사용되므로 그대로 뒀다 — 유닛 사망 쪽 배선만
+  `SpriteFlipbook` 기반 `DeathExplosion.prefab`으로 교체했다.
+- **넉백 연출**: 죽는 유닛 스프라이트가 반투명(알파 0.75)+어두운 틴트(밝기 55%)로 바뀌며
+  15~30도 랜덤 회전, 랜덤 바깥 방향으로 짧은 거리(0.25유닛)를 OutQuad 이징으로 밀려난 뒤,
+  그 자리에 1.25초 정지 유지하다가 0.35초에 걸쳐 페이드아웃한다.
+  - `DeathKnockbackSequencer.cs`(순수 C#, MonoBehaviour 아님) 신규 — Knockback→Hold→FadeOut
+    3단계 진행을 계산만 하고 `Position`/`RotationDegrees`/`TintColor`를 반환한다. 이전엔 이런
+    사망 연출 확장을 "EnemyView/AllyUnitView 두 파일에 동일 패턴으로 확장"해왔는데, 이번엔
+    상태 필드(시작/목표 위치, 목표 회전각, 틴트 색, 단계별 잔여시간 등)가 많이 늘어나 그대로
+    두 번 베껴 쓰기엔 중복이 부담스러워 계산 부분만 분리했다 — `RangePulseVisualRuntime`이
+    자기 SO(`RangePulseVisualEffect`)를 읽어 값만 반환하고 실제 렌더러 적용은 스스로 하는
+    구조와 동일한 결로, MonoBehaviour 의존 없이 순수 계산만 하는 클래스라 두 View가 각자
+    인스턴스를 들고 있다가 매 프레임 `Tick()`만 부르고 반환값을 자기 SpriteRenderer/Transform에
+    그대로 적용한다.
+  - `DeathKnockbackVisualEffect` SO 신규 — `ShockwaveRingVisualEffect`/`LaserBeamVisualEffect`와
+    같은 "데이터 기반 SO, 빌더 재실행에도 값 보존" 원칙을 그대로 따른다. `EnemyView`/
+    `AllyUnitView`가 SO 하나를 공유한다(둘 다 같은 연출이라 따로 둘 이유가 없음).
+  - "바깥으로" 밀려나는 방향은 랜덤 각도로 정한다 — 폭발이 유닛 자기 자신의 위치에서 터지는
+    연출이라 밀려날 기준점(공격자 위치 등)이 따로 없다. 여러 개체가 동시에 죽어도 전부 같은
+    방향으로 안 밀리는 효과도 겸한다.
+- `EnemyView`/`AllyUnitView`의 `deathParticlePrefab`+`deathFadeDuration` 필드를
+  `deathExplosionPrefab`+`deathKnockbackVisual`로 교체. `Collider2D` 비활성화 타이밍(사망
+  확정 즉시) 등 판정 관련 로직은 전혀 안 건드렸다 — 순수 연출 교체.
+- `CombatVfxAssetBuilder`: `BuildDeathExplosionPrefab()`(8프레임 로드 + `SpriteFlipbook` 배선,
+  이미 올바르게 임포트돼 있는 아트 에셋이라 임포트 설정은 안 건드림), `BuildDeathKnockbackVisualEffect()`
+  (최초 생성 시 1회만 기본값, 이후 빌더 재실행에도 값 보존) 추가. `ConnectPrefabField`/
+  `ValidatePrefabField`를 `GameObject` 전용에서 `UnityEngine.Object`로 넓혀 SO 참조도 같은
+  헬퍼로 배선할 수 있게 했다(새 오버로드를 안 만들어도 됨).
+
+### 부수 작업 — 동시 작업 세션의 완성된 변경을 발견하고 커밋
+- 이번 검증 도중 작업 트리에 다른 세션이 이미 완성해 둔 `BuilderPrefabMerge.cs`(프리팹
+  재생성 시 구조가 같으면 스킵, 다르면 값만 이식 — 데이터 SO 쪽에 적용했던 "빌더 재실행이
+  튜닝값을 안 덮어씀" 원칙을 프리팹에도 확장한 것)와 `AllyUnitViewPrefabBuilder.cs` 배선,
+  관련 EXPANSION_LOG 항목이 우연히 함께 있었다. 내가 작성한 코드는 아니지만 온전히 완성·
+  검증된 상태였고 이번 사망 폭발 프리팹도 그 보호를 자동으로 받게 되므로, 별도 커밋으로
+  먼저 반영한 뒤 이번 작업을 그 위에 얹었다.
+
+### 검증
+- `unity command recompile`/`recompile_status` — 컴파일 에러 0건(단계별로 여러 번 확인).
+- `RCCom/Combat VFX/Build Projectile And Hit Spark` 실행 → 콘솔에 에러/예외 0건, 새 프리팹/SO
+  포함 검증 통과 로그 확인. `BuilderPrefabMerge`가 기존 6종 프리팹 전부 "구조 변경 없음, 기존
+  프리팹 값 보존"으로 스킵하는 것도 확인(내 새 코드가 그 보호 로직과 충돌 없이 공존).
+- `git diff`로 `EnemyView_Normal.prefab`/`AllyUnitView.prefab`이 딱 두 필드(`deathExplosionPrefab`/
+  `deathKnockbackVisual`) 교체뿐임을, `DeathKnockback.asset`이 요청받은 수치(거리 0.25/각도
+  15~30/알파 0.75/밝기 0.55/유지 1.25/페이드 0.35) 그대로 저장됐음을 확인.
+
+### 사람이 할 일
+- 플레이 테스트로 적/아군이 죽을 때 1) 8프레임 폭발이 12fps로 제대로 재생되는지(너무
+  빠르거나 느리면 프리팹 인스펙터의 `frameRate`만 조정하면 됨 — 빌더 재실행해도 보존됨),
+  2) 넉백 방향/거리/회전/틴트/유지시간이 기대한 느낌인지 확인. 안 맞으면 `DeathKnockback.asset`
+  인스펙터에서 직접 조정 가능(코드 재배포 불필요, 빌더 재실행해도 보존).
+
+## 2026-08-24 — 아군 체력바 표시 + 사망 시 체력바 즉시 감춤(적/아군 공통)
+
+### 결정
+- **아군 체력바**: `EnemyView`가 쓰던 `EnemyHealthBar`를 `UnitHealthBar`로 이름만 일반화해
+  재사용했다. `.cs.meta`의 guid를 그대로 유지한 채 파일만 새로 써서(`EnemyHealthBar.cs` 삭제
+  + `UnitHealthBar.cs` 생성, 같은 guid) `EnemyView_Normal.prefab`의 기존 컴포넌트 참조가
+  끊기지 않게 했다 — Unity는 스크립트를 파일명이 아니라 `.meta`의 guid로 참조하므로 안전하다.
+  클래스 자체가 "배경+채움 스프라이트 2장, `SetHealthPercent`만 노출"하는 순수 렌더러라 적/아군
+  어느 쪽에도 특화된 로직이 없어 그대로 재사용 가능했다.
+  - `AllyUnitView`에 `healthBar`/`healthBarOffset` 필드 추가. 아군은 유닛 종류별로 SpriteFit
+    스케일이 달라(`EnemyView`는 고정 스케일 1이라 이 문제 자체가 없었음) 체력바를 그냥 자식으로
+    두면 부모 스케일을 그대로 물려받아 유닛마다 체력바 크기·위치가 들쭉날쭉해진다 —
+    `Bind()` 시점에 스케일 역보정(`1/scale`)을 1회 계산해 체력바의 `localScale`/`localPosition`에
+    적용한다(유닛 생존 동안 스케일이 안 바뀌므로 매 프레임 다시 계산할 필요 없음). 회전은
+    조준/이동 방향 추적으로 계속 바뀌므로, `EnemyView`와 동일하게 `UpdateHealthBar()`에서 매
+    프레임 `Quaternion.identity`로 상쇄한다.
+  - `AllyUnitViewPrefabBuilder.Build()`에 `HealthBar`(`Background`+`Fill`) 하이러키 생성을
+    추가했다. `EnemyView_Normal.prefab`의 체력바와 같은 스프라이트(`Assets/Art/UI/HP_Enemy_Bar.png`,
+    왼쪽 피벗이라 `Fill.localScale.x`로 자연스럽게 줄어듦)를 재사용해 시각적으로 통일했다.
+- **사망 시 체력바 감춤**: `EnemyView`/`AllyUnitView` 둘 다 `HandleDied()`에서 즉시
+  `healthBar.gameObject.SetActive(false)`를 호출한다. 감추지 않으면 넉백/회전 애니메이션(지난
+  턴에 추가한 사망 연출 고도화) 중에도 체력바가 그대로 붙어 있는데, `UpdateHealthBar()`(회전
+  상쇄 담당)가 사망 중엔 더 이상 안 불려서 체력바만 어색하게 계속 회전해 보였다.
+
+### 부수적으로 겪은 빌더 간 필드 충돌
+- `AllyUnitViewPrefabBuilder`가 구조 변경(이번 `HealthBar` 하이러키 추가)을 감지해
+  `BuilderPrefabMerge`의 재생성 경로를 탔는데, 이 빌더는 `CombatVfxAssetBuilder`가 소유한
+  필드(`deathExplosionPrefab`/`deathKnockbackVisual`)를 전혀 모른다 — `BuilderPrefabMerge`는
+  "구조가 바뀌면 Object Reference는 항상 새 배선만 쓴다"는 의도적 정책이라, 이 두 필드가
+  실제로 `fileID: 0`(null)으로 리셋되는 걸 직접 겪었다. `RCCom/Combat VFX/Build Projectile
+  And Hit Spark`를 재실행해 즉시 복구했고, 같은 일이 재발하지 않도록
+  `AllyUnitViewPrefabBuilder` 클래스 doc 주석에 이 순서 의존성("구조가 바뀌는 코드 변경 후엔
+  Combat VFX 빌더도 반드시 다시 실행")을 명시해 뒀다. 두 빌더를 하나로 합치거나 서로 호출하게
+  만드는 근본 해결은 이번 범위 밖으로 남겨둔다.
+- 검증 도중 `DeathKnockback.asset`이 지난 턴 이후 인스펙터에서 직접 튜닝돼 있는 걸 발견했다
+  (`knockbackDistance` 0.25→0.8, `knockbackDuration` 0.2→0.25, 회전각 15~30→8.1~13.3) —
+  빌더를 여러 번 재실행하는 동안 이 값들이 전혀 안 건드려진 것도 확인해, "최초 생성 시 1회만
+  기본값" 보호가 실전에서 정확히 의도대로 동작함을 재확인했다. 별도 커밋으로 그대로 반영.
+
+### 검증
+- `unity command recompile`/`recompile_status` — 컴파일 에러 0건.
+- `RCCom/Ally Units/Build Common View Prefab` + `RCCom/Combat VFX/Build Projectile And Hit
+  Spark` 순서로 실행 → 둘 다 검증 통과 로그, 에러/예외 0건. `git diff`로 `AllyUnitView.prefab`에
+  `HealthBar`/`Background`/`Fill` 3개 GameObject와 `healthBar`/`healthBarOffset` 필드만
+  추가됐고, `deathExplosionPrefab`/`deathKnockbackVisual`이 복구 후 원래 GUID 그대로인 것을
+  확인.
+
+### 사람이 할 일
+- 플레이 테스트로 아군 체력바가 유닛 종류(크기)에 상관없이 일정한 크기/위치로 보이는지,
+  사망 시 적/아군 둘 다 체력바가 즉시 사라지는지 확인. `healthBarOffset`(`AllyUnitView.prefab`
+  인스펙터, 기본 `(0, -1.3)`)로 위치 조정 가능.
+
+## 2026-08-24 — 사망 넉백 방향을 공격받은 반대 방향으로 (랜덤 → 실제 발신 위치 기반)
+
+### 결정
+- "폭발하여 밀려나는" 넉백이 지금까지 랜덤 방향이었는데, 실제로는 공격받은 반대 방향이 더
+  자연스럽다는 지적을 받았다. 정확한 방향을 구하려면 "누가 때렸는지 위치"가 필요한데
+  `TakeDamage(float amount)`엔 그 정보가 아예 없었다.
+- 값싼 근사(예: `EnemyInstance.CurrentTarget`으로 대체)도 검토했지만 기각했다 —
+  `CurrentTarget`은 "적이 지금 물고 있는 아군"이지 자신을 죽이는 주체가 아니다. 적이 죽는
+  가장 흔한 경우(타워 사격)에는 애초에 `CurrentTarget`이 그 타워와 무관해서, 근사가 오히려
+  대다수 케이스에서 틀린 방향을 가리키게 된다. 그래서 복잡도가 늘더라도 `IDamageable` 계약
+  자체를 확장하는 정공법을 택했다({{user}} 확인).
+- `IDamageable.TakeDamage(float amount, Vector2? sourcePosition = null)` — 선택 인자라
+  기존 구현/호출부 전부와 하위 호환. 구현체 4곳(`EnemyInstance`/`AllyUnitInstance`/
+  `PlayerController`/`BaseController`) 시그니처 갱신 — Player/Base는 넉백 연출이 없어 인자를
+  받기만 하고 안 쓴다.
+- `EnemyInstance`/`AllyUnitInstance`에 `LastDamageSourcePosition` 추가 — 매 `TakeDamage`
+  호출마다 갱신하되, 소스 없는 호출(독 틱 등)은 이전 값을 덮어쓰지 않는다 — 죽는 순간까지
+  마지막으로 "실제 때린" 주체의 위치를 기억하는 게 더 낫다는 판단. `Died` 이벤트 시그니처는
+  그대로 두고 View가 사망 처리 시점에 이 값을 직접 읽는다.
+- 호출부 9곳에 발신 위치를 추가했다: 타워 5곳(`DamageEffect`/`PierceDamageEffect`/
+  `PoisonDamageEffect`/`SplashDamageEffect` 주공격 = `ctx.self.Position`), **스플래시 2차
+  피해자만 예외로 `target.position`(폭발 지점)을 쓴다** — 타워가 아니라 충격파 링/그을림
+  자국의 중심에서 밀려나야 이미 있는 시각효과(폭발)와 넉백 방향이 자연스럽게 맞아떨어지기
+  때문. 아군 기본공격/플레이어 공격·스킬 = 각자 자신의 `Position`. 적 접촉 피해
+  (`ContactDamageEffect`) = `ctx.self.position`.
+- `DeathKnockbackSequencer.Begin()`에 `attackerPosition` 선택 인자 추가,
+  `ResolveKnockbackDirection()` 신설 — 값이 있으면 공격받은 반대 방향, 없거나(소스를 한 번도
+  못 받아본 채 죽은 경우) 공격자와 정확히 같은 위치(접촉 판정 등, 방향이 수학적으로 정의되지
+  않음)면 기존처럼 랜덤 방향으로 대체한다.
+
+### 검증
+- `unity command recompile`/`recompile_status` — 컴파일 에러 0건(인터페이스 변경이라 구현체
+  4곳 전부 확인).
+- `RCCom/Combat VFX/Validate...` + `RCCom/Ally Units/Validate...` 둘 다 재실행 — 검증 통과,
+  에러/예외 0건. 순수 코드 로직 변경이라 `git status`에 `.prefab`/`.asset` 변경이 하나도
+  없는 것도 확인(프리팹 재생성 불필요).
+
+### 사람이 할 일
+- 플레이 테스트로 적/아군이 죽을 때 실제로 공격 주체(타워/유닛/플레이어) 반대쪽으로 밀려나는지
+  확인. 스플래시 2차 피해자는 폭발 중심 기준으로 사방으로 퍼지듯 밀려나야 정상이다.
+
+## 2026-08-24 — 사망 넉백 회전이 0도로 스냅된 뒤 도는 버그 수정
+
+### 결정
+- "회전 적용이 이상하다"는 지적으로 확인해보니, `DeathKnockbackSequencer.Tick()`의 Knockback
+  단계가 `RotationDegrees = Lerp(0f, _targetRotationDegrees, eased)`로 항상 절대각 0에서
+  시작하고 있었다 — 죽는 순간 실제로 향하던 방향(예: 137도, 이동/조준 방향 추적 중이던 각)을
+  무시하고 화면상 0도(정면)로 순간 스냅된 뒤에야 목표각까지 살짝 도는 것처럼 보이는 버그였다.
+- `Begin()`에 `startRotationDegrees` 인자를 추가해 호출자(`EnemyView`/`AllyUnitView`)가 사망
+  순간의 실제 `transform.eulerAngles.z`를 넘기도록 했고, 목표각도 `그 값 + 랜덤 회전폭`으로
+  계산해 현재 방향에서 자연스럽게 이어서 도는 것으로 수정했다.
+
+### 검증
+- `unity command recompile`/`recompile_status` — 컴파일 에러 0건. 순수 코드 변경이라
+  `.prefab`/`.asset` 변경 없음.
+
+### 사람이 할 일
+- 플레이 테스트로 죽는 순간 유닛이 원래 향하던 방향에서 자연스럽게 이어서 도는지(정면으로
+  스냅되지 않는지) 확인.
+
+## 2026-08-24 — 아군 체력바가 위쪽을 볼 때 캐릭터 위로 튀는 버그 수정
+
+### 결정
+- {{user}}가 스크린샷 두 장(위쪽/아래쪽을 바라볼 때)으로 발견: 아군이 위쪽을 바라볼 때만
+  체력바가 캐릭터 위로 올라가고, 아래를 볼 땐 정상이었다. "적은 이런 현상이 없는데 무슨
+  차이지?"라는 질문을 받고 원인을 추적했다.
+- **원인**: `healthBar`가 자식 오브젝트라 로컬 좌표 오프셋(`healthBarOffset`)을 그대로 두면
+  부모(이 오브젝트)의 실제 회전이 그 오프셋에 곱해진 뒤에야 월드 위치가 계산된다. Bind()에서
+  `healthBar.transform.rotation = Quaternion.identity`로 회전만 되돌려도 위치 계산 자체(이미
+  부모 회전이 곱해진 로컬 오프셋)는 전혀 안 바뀐다 — `Transform.rotation` 세터는 위치엔
+  관여하지 않기 때문이다. 그래서 유닛이 180도 가까이 돌면 오프셋도 같이 뒤집혀 체력바가
+  반대쪽(위)에 나타났다.
+- **`EnemyView`가 왜 안 겪었는지**: 구조상 완전히 같은 패턴(자식 + 회전만 상쇄)인데도 문제가
+  없었던 건, 거기서는 오프셋이 `HealthBar` 자신이 아니라 `HealthBar`의 **자식**
+  (`Background`/`Fill`)에 있었기 때문이다 — `HealthBar` 자신의 회전을 identity로 되돌리면,
+  그 회전-보정된 `HealthBar`를 기준으로 자식들의 오프셋이 계산돼 우연히 문제가 없었다. 아군은
+  오프셋을 회전-보정 대상인 `healthBar` 자신의 로컬 위치에 직접 둬서 이 우연한 보호를 못
+  받았다 — 의도한 설계가 아니라 계층 구조상의 우연이었다는 뜻이라, `EnemyView`는 건드리지
+  않고(이미 정상 동작) `AllyUnitView`만 고쳤다.
+- **수정**: `healthBar` 위치/회전을 매 프레임 `SetPositionAndRotation`으로 월드 좌표 직접
+  계산해 못박는다(`Instance.Position + healthBarOffset`, 회전 identity) — 부모 회전과 완전히
+  무관해져 로컬 좌표 합성 문제 자체가 사라진다. 스케일 보정은 `SetPositionAndRotation`이 못
+  건드리는 부분이라 별도로 유지(`lossyScale` 역보정, 매 프레임). `Bind()`에서 하던 1회성
+  스케일/오프셋 계산은 제거하고 `UpdateHealthBar()`로 통합했다 — 매 프레임 재계산해도 비용이
+  무시할 만하고, 로직이 한 곳에 모여 지난번 버전보다 오히려 더 단순해졌다.
+
+### 검증
+- `unity command recompile`/`recompile_status` — 컴파일 에러 0건. 순수 코드 변경이라
+  `.prefab`/`.asset` 변경 없음.
+
+### 사람이 할 일
+- 플레이 테스트로 아군이 상/하/좌/우 어느 방향을 보든 체력바가 항상 캐릭터 아래 고정된
+  위치에 그대로 있는지 확인(스크린샷으로 지적받은 케이스가 실제로 해결됐는지).

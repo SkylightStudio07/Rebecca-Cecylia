@@ -52,6 +52,9 @@ namespace RCCom.Runtime
         public float SeparationMargin => _separationMargin;
         public float EffectiveAttackRange => Mathf.Max(Data != null ? Data.attackRange : 0f, _contactRange);
 
+        /// <summary>사망 넉백 연출용 — 가장 최근에 알려진 피해 발신 위치(AllyUnitView.HandleDied가 읽음).</summary>
+        public Vector2? LastDamageSourcePosition { get; private set; }
+
         /// <summary>
         /// 경로 시작점 0, 끝점 1인 연속 진행도. 아군은 끝점에서 시작해 값이 자연스럽게
         /// 감소하므로 적의 진행도와 같은 좌표계에서 전열을 비교할 수 있다.
@@ -273,11 +276,18 @@ namespace RCCom.Runtime
             }
         }
 
-        public void TakeDamage(float amount)
+        public void TakeDamage(float amount, Vector2? sourcePosition = null)
         {
             if (!_isSpawned || IsDead || amount <= 0f)
             {
                 return;
+            }
+
+            // 소스가 없는 호출은 이전에 알려진 발신 위치를 덮어쓰지 않는다 — EnemyInstance와
+            // 동일한 이유(마지막으로 "실제 때린" 주체의 위치를 죽는 순간까지 기억).
+            if (sourcePosition.HasValue)
+            {
+                LastDamageSourcePosition = sourcePosition;
             }
 
             CurrentHealth -= amount;

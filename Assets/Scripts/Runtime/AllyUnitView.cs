@@ -19,21 +19,41 @@ namespace RCCom.Runtime
         [SerializeField] private Color hitFlashColor = Color.red;
         [SerializeField] private float hitFlashDuration = 0.1f;
 
+        [Header("체력바")]
+        [Tooltip("자식 오브젝트로 둔 체력바(선택). EnemyView와 같은 UnitHealthBar를 재사용한다.")]
+        [SerializeField] private UnitHealthBar healthBar;
+        [Tooltip("체력바 위치 — 유닛 스프라이트 기준 월드 단위 오프셋. 아군은 유닛별로 " +
+                 "SpriteFit 스케일이 달라(EnemyView는 고정 스케일 1이라 이 보정이 필요 없었음) " +
+                 "이 오프셋을 스케일 역보정해서 적용한다 — 유닛 크기와 무관하게 항상 같은 " +
+                 "간격으로 보이게 하기 위함.")]
+        [SerializeField] private Vector2 healthBarOffset = new(0f, -1.3f);
+
+        [Header("사망 연출")]
+        [Tooltip("사망 시 재생할 폭발 플립북(SpriteFlipbook, Assets/Art/VFX/explosion) 프리팹. 비워두면 넉백/페이드만 재생된다.")]
+        [SerializeField] private GameObject deathExplosionPrefab;
+        [Tooltip("폭발에 밀려나며 회전+반투명+어두운 틴트 → 정지 유지 → 페이드아웃하는 연출의 튜닝값. " +
+                 "비워두면 DeathKnockbackSequencer의 기본값으로 재생된다. EnemyView와 SO를 공유한다.")]
+        [SerializeField] private DeathKnockbackVisualEffect deathKnockbackVisual;
+
         [Header("회전 보간 (0 = 즉시 회전, 기존 동작)")]
         [Tooltip("목표 방향을 따라잡는 시간 상수(초). 0이면 기존처럼 즉시 스냅한다. 0.08~0.15 권장 — " +
                  "클수록 부드럽지만 코너에서 방향이 더 밀리고 조준도 함께 굼떠진다.")]
         [SerializeField] private float turnSmoothTime = 0f;
 
         private SpriteRenderer _spriteRenderer;
+        private Collider2D _collider;
         private Color _baseColor;
         private float _hitFlashRemaining;
         private bool _hasFacing;
+        private bool _isDying;
+        private readonly DeathKnockbackSequencer _deathSequencer = new();
         private List<IAllyUnitVisualRuntime> _visualRuntimes;
         public AllyUnitInstance Instance { get; private set; }
 
         private void Awake()
         {
             _spriteRenderer = GetComponent<SpriteRenderer>();
+            _collider = GetComponent<Collider2D>();
             _baseColor = _spriteRenderer.color;
         }
 
@@ -56,6 +76,20 @@ namespace RCCom.Runtime
             Instance.Damaged += HandleDamaged;
             Instance.Died += HandleDied;
             transform.position = Instance.Position;
+
+            // 재사용을 대비한 방어적 초기화 — 지금은 사망 시 실제로 Destroy까지 가지만,
+            // 향후 풀링이 추가되더라도 이전 개체의 사망 연출 상태가 새 개체에 새어나가지 않게.
+            _isDying = false;
+            transform.rotation = Quaternion.identity;
+            if (_collider != null)
+            {
+                _collider.enabled = true;
+            }
+
+            if (healthBar != null)
+            {
+                healthBar.gameObject.SetActive(true);
+            }
 
             _baseColor = Instance.Definition.tint;
             _spriteRenderer.color = _baseColor;
@@ -109,11 +143,50 @@ namespace RCCom.Runtime
                 return;
             }
 
+            if (_isDying)
+            {
+                TickDeath();
+                return;
+            }
+
             Vector2 position = Instance.Position;
             transform.position = position;
             UpdateFacing(position);
             TickHitFlash();
+            UpdateHealthBar();
             TickVisualEffects(Time.deltaTime);
+        }
+
+        /// <summary>
+        /// healthBar는 프리팹상 이 오브젝트의 자식이지만, 위치/회전은 매 프레임 월드 좌표로
+        /// 직접 계산해 SetPositionAndRotation으로 못박는다 — 로컬 좌표로 오프셋을 두면 부모
+        /// 회전(이동/조준 추적)이 곱해져서, 유닛이 위를 보면 체력바가 반대로 튀어 오르는 버그가
+        /// 났었다({{user}} 스크린샷으로 발견, 2026-08-24: 회전만 identity로 되돌려도 "이미
+        /// 회전된 로컬 오프셋으로 계산된 위치" 자체는 못 되돌림 — Transform.rotation 세터는
+        /// 위치엔 전혀 관여하지 않기 때문). 월드 좌표로 직접 계산하면 부모 스케일/회전과
+        /// 완전히 무관해져 이 클래스 하나로 문제가 끝난다(EnemyView는 오프셋을 회전-보정된
+        /// HealthBar의 "손자"에 둬서 우연히 문제가 없었던 것 — 그 구조를 따라할 수도 있었지만
+        /// 이쪽이 훨씬 명시적이고 스케일 보정도 필요 없어져 더 단순하다).
+        /// </summary>
+        private void UpdateHealthBar()
+        {
+            if (healthBar == null)
+            {
+                return;
+            }
+
+            // 체력바가 자식이라 부모(이 오브젝트) 스케일을 그대로 물려받는데, 유닛마다 SpriteFit
+            // 스케일이 달라 그대로 두면 체력바 크기도 유닛마다 들쭉날쭉해진다 — 역보정해서 항상
+            // 같은 월드 크기로 보이게 한다(위치/회전과 달리 SetPositionAndRotation으로는 스케일을
+            // 못 건드리므로 별도로 처리).
+            Vector3 lossyScale = transform.lossyScale;
+            float inverseX = lossyScale.x != 0f ? 1f / lossyScale.x : 1f;
+            float inverseY = lossyScale.y != 0f ? 1f / lossyScale.y : 1f;
+            healthBar.transform.localScale = new Vector3(inverseX, inverseY, 1f);
+
+            Vector3 worldPosition = (Vector3)Instance.Position + new Vector3(healthBarOffset.x, healthBarOffset.y, 0f);
+            healthBar.transform.SetPositionAndRotation(worldPosition, Quaternion.identity);
+            healthBar.SetHealthPercent(Instance.CurrentHealth / Mathf.Max(Instance.Data.maxHealth, Mathf.Epsilon));
         }
 
         private void CreateVisualEffects()
@@ -248,9 +321,52 @@ namespace RCCom.Runtime
             _spriteRenderer.color = hitFlashColor;
         }
 
+        /// <summary>
+        /// 즉시 Destroy하는 대신 Collider2D부터 꺼서(있다면) 폭발 플립북을 재생하고, 스프라이트는
+        /// 넉백(밀려남+회전+반투명+어두운 틴트) → 정지 유지 → 페이드아웃 순으로 진행한 뒤
+        /// 파괴한다(DeathKnockbackSequencer, EnemyView와 동일 — 사망 연출 고도화). 완전한 단색
+        /// 실루엣 고정은 셰이더 없이는 못 만들어서 의도적으로 포기했다(VFX_전투_연출_설계안.md §4).
+        /// </summary>
         private void HandleDied()
         {
-            Destroy(gameObject);
+            if (_isDying)
+            {
+                return;
+            }
+
+            _isDying = true;
+            if (_collider != null)
+            {
+                _collider.enabled = false;
+            }
+
+            if (healthBar != null)
+            {
+                healthBar.gameObject.SetActive(false);
+            }
+
+            // 사망한 유닛이 오라 버프 등을 계속 발산하면 안 되므로 스프라이트보다 먼저 끈다.
+            DisposeVisualEffects();
+            SpriteFlipbook.Spawn(deathExplosionPrefab, transform.position);
+            _deathSequencer.Begin(
+                transform.position,
+                _baseColor,
+                deathKnockbackVisual,
+                Instance.LastDamageSourcePosition,
+                transform.eulerAngles.z);
+        }
+
+        private void TickDeath()
+        {
+            _deathSequencer.Tick(Time.deltaTime);
+            transform.position = _deathSequencer.Position;
+            transform.rotation = Quaternion.Euler(0f, 0f, _deathSequencer.RotationDegrees);
+            _spriteRenderer.color = _deathSequencer.TintColor;
+
+            if (_deathSequencer.IsFinished)
+            {
+                Destroy(gameObject);
+            }
         }
     }
 }

@@ -13,4 +13,5 @@ MonoBehaviour:
   m_Name: Pierce Damage Effect
   m_EditorClassIdentifier: Assembly-CSharp::RCCom.Effects.Tower.Concrete.PierceDamageEffect
   beamHalfAngleDegrees: 10
-  attackFlashPrefab: {fileID: 6050871853458803644, guid: 5406eebe6f97e3540b089e39b4f15ef4, type: 3}
+  laserBeamPrefab: {fileID: 3603092667416590185, guid: 3581f3ca444d96d4bbd75ebb2aad29c5, type: 3}
+  laserBeamVisual: {fileID: 11400000, guid: b268bb57fdb87c84e8950901c3304c1f, type: 2}

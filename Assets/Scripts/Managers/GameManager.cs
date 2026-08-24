@@ -112,6 +112,14 @@ namespace RCCom.Managers
 
             GlobalTowerAuraRegistry.Auras.Clear();
             AttackFlash.ClearPool();
+            FakeProjectile.ClearPool();
+            ParticleBurst.ClearPool();
+            // ShockwaveRing/ScorchDecal(전투 VFX 4단계)과 LaserBeamView(5단계)가 각각 도입될 때
+            // 여기 등록이 누락돼 있었다 — 같은 이유(씬 재로드로 풀 안 인스턴스는 파괴되는데 이
+            // static 대기열은 안 비워짐)로 나머지와 동일하게 등록.
+            ShockwaveRing.ClearPool();
+            ScorchDecal.ClearPool();
+            LaserBeamView.ClearPool();
             // 아군 유닛 경로 진행도 캐시(참조 비교 기반)도 같은 이유로 명시적 초기화 대상이다.
             AllyUnitTargeting.ResetPathCache();
         }

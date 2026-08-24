@@ -48,6 +48,13 @@ namespace RCCom.Runtime
         private float _vulnerableMultiplier = 1f;
         private float _vulnerableRemaining;
 
+        /// <summary>
+        /// 가장 최근 TakeDamage 호출이 넘긴 발신 위치. 사망 넉백 연출이 "공격받은 반대 방향"을
+        /// 계산할 때 쓴다 — 즉사가 아니어도 매번 갱신해서, 죽는 순간엔 항상 그 킬링블로를 날린
+        /// 주체의 위치를 가리키게 한다. 소스가 없는 호출(독 틱 등)은 이전 값을 덮어쓰지 않는다.
+        /// </summary>
+        private Vector2? _lastDamageSourcePosition;
+
         public event Action<float> Damaged;
         public event Action Died;
 
@@ -64,6 +71,9 @@ namespace RCCom.Runtime
         public bool IsAlive => _isSpawned && !_isDead && !_hasReachedGoal;
         public AllyUnitInstance CurrentTarget => _currentTarget;
         public float AttackCooldownRemaining => _attackCooldownRemaining;
+
+        /// <summary>사망 넉백 연출용 — 가장 최근에 알려진 피해 발신 위치(EnemyView.HandleDied가 읽음).</summary>
+        public Vector2? LastDamageSourcePosition => _lastDamageSourcePosition;
 
         /// <summary>경로 시작점 0, 끝점 1인 연속 진행도. 현재 선분 안의 이동량도 포함한다.</summary>
         public float PathProgress => AllyUnitTargeting.CalculatePathProgress(
@@ -373,11 +383,18 @@ namespace RCCom.Runtime
             }
         }
 
-        public void TakeDamage(float amount)
+        public void TakeDamage(float amount, Vector2? sourcePosition = null)
         {
             if (!IsAlive)
             {
                 return;
+            }
+
+            // 소스가 없는 호출(독 틱 등)은 이전에 알려진 발신 위치를 덮어쓰지 않는다 — 죽는
+            // 순간까지 마지막으로 "실제 때린" 주체의 위치를 기억하고 있는 게 더 낫다.
+            if (sourcePosition.HasValue)
+            {
+                _lastDamageSourcePosition = sourcePosition;
             }
 
             amount *= _vulnerableMultiplier;

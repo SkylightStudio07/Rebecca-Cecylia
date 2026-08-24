@@ -1,4 +1,5 @@
 using RCCom.Core;
+using RCCom.Runtime.Visuals;
 using UnityEngine;
 
 namespace RCCom.Runtime
@@ -25,8 +26,15 @@ namespace RCCom.Runtime
         [SerializeField] private Color hitFlashColor = Color.red;
         [SerializeField] private float hitFlashDuration = 0.1f;
 
+        [Header("사망 연출")]
+        [Tooltip("사망 시 재생할 폭발 플립북(SpriteFlipbook, Assets/Art/VFX/explosion) 프리팹. 비워두면 넉백/페이드만 재생된다.")]
+        [SerializeField] private GameObject deathExplosionPrefab;
+        [Tooltip("폭발에 밀려나며 회전+반투명+어두운 틴트 → 정지 유지 → 페이드아웃하는 연출의 튜닝값. " +
+                 "비워두면 DeathKnockbackSequencer의 기본값으로 재생된다.")]
+        [SerializeField] private DeathKnockbackVisualEffect deathKnockbackVisual;
+
         [Tooltip("자식 오브젝트로 둔 체력바(선택) — 회전은 EnemyView가 이동방향으로 매 프레임 돌리므로, 자식이면 그대로 두면 같이 돌아가 버려 여기서 역회전으로 상쇄한다")]
-        [SerializeField] private EnemyHealthBar healthBar;
+        [SerializeField] private UnitHealthBar healthBar;
 
         [Header("회전 보간 (0 = 즉시 회전, 기존 동작)")]
         [Tooltip("목표 방향을 따라잡는 시간 상수(초). 0이면 기존처럼 즉시 스냅한다. 0.08~0.15 권장 — " +
@@ -34,24 +42,46 @@ namespace RCCom.Runtime
         [SerializeField] private float turnSmoothTime = 0f;
 
         private SpriteRenderer _spriteRenderer;
+        private Collider2D _collider;
         private Color _baseColor;
         private float _hitFlashRemaining;
         private bool _hasFacing;
+        private float _boundMaxHealth;
+        private bool _isDying;
+        private readonly DeathKnockbackSequencer _deathSequencer = new();
 
         public EnemyInstance Instance { get; private set; }
 
         private void Awake()
         {
             _spriteRenderer = GetComponent<SpriteRenderer>();
+            _collider = GetComponent<Collider2D>();
             _baseColor = _spriteRenderer.color;
         }
 
         public void Bind(EnemyInstance instance)
         {
             Instance = instance;
-            Instance.Died += HandleRemoved;
-            Instance.ReachedGoal += HandleRemoved;
+            // WaveManager가 웨이브/스테이지 체력 배율을 적용한 뒤 View를 Bind한다. 원본
+            // Definition의 maxHealth를 분모로 쓰면 배율로 늘어난 체력이 100%를 초과해,
+            // 실제로 피해를 받아도 체력바가 한동안 만피로 Clamp되어 숨겨진다.
+            _boundMaxHealth = Mathf.Max(instance.currentHealth, Mathf.Epsilon);
+            Instance.Died += HandleDied;
+            Instance.ReachedGoal += HandleReachedGoal;
             Instance.Damaged += HandleDamaged;
+
+            // 재사용을 대비한 방어적 초기화 — 지금은 사망 시 실제로 Destroy까지 가지만,
+            // 향후 풀링이 추가되더라도 이전 개체의 사망 연출 상태가 새 개체에 새어나가지 않게.
+            _isDying = false;
+            transform.rotation = Quaternion.identity;
+            if (_collider != null)
+            {
+                _collider.enabled = true;
+            }
+
+            Color restoredColor = _baseColor;
+            restoredColor.a = 1f;
+            _spriteRenderer.color = restoredColor;
 
             if (instance.definition.sprite != null)
             {
@@ -63,14 +93,20 @@ namespace RCCom.Runtime
         {
             if (Instance != null)
             {
-                Instance.Died -= HandleRemoved;
-                Instance.ReachedGoal -= HandleRemoved;
+                Instance.Died -= HandleDied;
+                Instance.ReachedGoal -= HandleReachedGoal;
                 Instance.Damaged -= HandleDamaged;
             }
         }
 
         private void LateUpdate()
         {
+            if (_isDying)
+            {
+                TickDeath();
+                return;
+            }
+
             Vector2 currentPosition = Instance.position;
             UpdateFacing(currentPosition);
 
@@ -94,7 +130,7 @@ namespace RCCom.Runtime
             }
 
             healthBar.transform.rotation = Quaternion.identity;
-            healthBar.SetHealthPercent(Instance.currentHealth / Instance.Data.maxHealth);
+            healthBar.SetHealthPercent(Instance.currentHealth / _boundMaxHealth);
         }
 
         /// <summary>
@@ -171,9 +207,61 @@ namespace RCCom.Runtime
             }
         }
 
-        private void HandleRemoved()
+        /// <summary>
+        /// 즉시 Destroy하는 대신 Collider2D부터 꺼서(더 이상 판정에 관여하지 않도록) 폭발
+        /// 플립북을 재생하고, 스프라이트는 넉백(밀려남+회전+반투명+어두운 틴트) → 정지 유지 →
+        /// 페이드아웃 순으로 진행한 뒤 파괴한다(DeathKnockbackSequencer, 사망 연출 고도화).
+        /// 완전한 단색 실루엣 고정은 셰이더 없이는 못 만들어서(SpriteRenderer.color 곱연산으로는
+        /// 원본 명암이 계속 비쳐 보임) 의도적으로 포기했다(VFX_전투_연출_설계안.md §4 —
+        /// ProjectBloodmoon 실루엣 셰이더 이식 파기 결정에 따른 트레이드오프).
+        /// </summary>
+        private void HandleDied()
+        {
+            if (_isDying)
+            {
+                return;
+            }
+
+            _isDying = true;
+            if (_collider != null)
+            {
+                _collider.enabled = false;
+            }
+
+            // 죽는 순간 즉시 감춘다 — 안 감추면 넉백/회전 중에도 그대로 붙어 있다가(HealthBar는
+            // UpdateHealthBar가 더 이상 안 불려서 마지막 수치에 얼어붙은 채로) 회전만 안 따라와
+            // 어색해 보인다.
+            if (healthBar != null)
+            {
+                healthBar.gameObject.SetActive(false);
+            }
+
+            SpriteFlipbook.Spawn(deathExplosionPrefab, transform.position);
+            _deathSequencer.Begin(
+                transform.position,
+                _baseColor,
+                deathKnockbackVisual,
+                Instance.LastDamageSourcePosition,
+                transform.eulerAngles.z);
+        }
+
+        /// <summary>거점 도달로 인한 제거는 처치가 아니므로 넉백/페이드 없이 기존처럼 즉시 사라진다.</summary>
+        private void HandleReachedGoal()
         {
             Destroy(gameObject);
+        }
+
+        private void TickDeath()
+        {
+            _deathSequencer.Tick(Time.deltaTime);
+            transform.position = _deathSequencer.Position;
+            transform.rotation = Quaternion.Euler(0f, 0f, _deathSequencer.RotationDegrees);
+            _spriteRenderer.color = _deathSequencer.TintColor;
+
+            if (_deathSequencer.IsFinished)
+            {
+                Destroy(gameObject);
+            }
         }
     }
 }
