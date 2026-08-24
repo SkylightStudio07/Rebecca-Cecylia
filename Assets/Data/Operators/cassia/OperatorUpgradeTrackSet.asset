@@ -15,61 +15,125 @@ MonoBehaviour:
   tracks:
   - trackId: cassia.guard-armor
     displayName: "\uBC29\uD638 \uC694\uC6D0 \uC7A5\uAC11 \uAC15\uD654"
+    description: "\uBC29\uD638 \uC694\uC6D0\uC758 \uCD5C\uB300 \uCCB4\uB825\uC744
+      \uB192\uC785\uB2C8\uB2E4."
     category: 0
-    targetKind: 0
-    targetUnitId: cassia-guard
     maxLevel: 8
-    perLevelDelta: 3.2
-    isInteger: 0
-    hasMinValue: 0
-    minValue: 0
-    hasMaxValue: 0
-    maxValue: 0
+    levelCosts: 1400000023000000370000005000000078000000aa000000e600000022010000
+    requiredAffinityByLevel: 0000000000000000000000000000000000000000000000000000000000000000
+    modifiers:
+    - targetKind: 0
+      targetUnitId: cassia-guard
+      levelDeltas:
+      - 3.2
+      - 6.4
+      - 9.6
+      - 12.8
+      - 16
+      - 19.2
+      - 22.4
+      - 25.6
+      isInteger: 0
+      hasMinValue: 0
+      minValue: 0
+      hasMaxValue: 0
+      maxValue: 0
   - trackId: cassia.vanguard-damage
     displayName: "\uC804\uC9C4 \uC0AC\uC218 \uD654\uB825 \uAC15\uD654"
+    description: "\uC804\uC9C4 \uC0AC\uC218\uC758 \uACF5\uACA9\uB825\uC744 \uB192\uC785\uB2C8\uB2E4."
     category: 0
-    targetKind: 1
-    targetUnitId: cassia-vanguard
     maxLevel: 8
-    perLevelDelta: 0.3
-    isInteger: 0
-    hasMinValue: 0
-    minValue: 0
-    hasMaxValue: 0
-    maxValue: 0
+    levelCosts: 1400000023000000370000005000000078000000aa000000e600000022010000
+    requiredAffinityByLevel: 0000000000000000000000000000000000000000000000000000000000000000
+    modifiers:
+    - targetKind: 1
+      targetUnitId: cassia-vanguard
+      levelDeltas:
+      - 0.3
+      - 0.6
+      - 0.9
+      - 1.2
+      - 1.5
+      - 1.8
+      - 2.1
+      - 2.4
+      isInteger: 0
+      hasMinValue: 0
+      minValue: 0
+      hasMaxValue: 0
+      maxValue: 0
   - trackId: cassia.starting-cp
     displayName: "\uCD08\uAE30 CP \uC9C0\uAE09"
+    description: "\uC804\uD22C \uC2DC\uC791 \uC2DC \uBCF4\uC720\uD558\uB294 \uC9C0\uD718
+      \uD3EC\uC778\uD2B8\uB97C \uB298\uB9BD\uB2C8\uB2E4."
     category: 0
-    targetKind: 5
-    targetUnitId: 
     maxLevel: 8
-    perLevelDelta: 3
-    isInteger: 1
-    hasMinValue: 0
-    minValue: 0
-    hasMaxValue: 0
-    maxValue: 0
+    levelCosts: 1400000023000000370000005000000078000000aa000000e600000022010000
+    requiredAffinityByLevel: 0000000000000000000000000000000000000000000000000000000000000000
+    modifiers:
+    - targetKind: 5
+      targetUnitId: 
+      levelDeltas:
+      - 3
+      - 6
+      - 9
+      - 12
+      - 15
+      - 18
+      - 21
+      - 24
+      isInteger: 1
+      hasMinValue: 0
+      minValue: 0
+      hasMaxValue: 0
+      maxValue: 0
   - trackId: cassia.vanguard-range
     displayName: "\uC804\uC9C4 \uC0AC\uC218 \uC0AC\uAC70\uB9AC \uC5F0\uC7A5"
+    description: "\uC804\uC9C4 \uC0AC\uC218\uC758 \uACF5\uACA9 \uC0AC\uAC70\uB9AC\uB97C
+      \uB298\uB9BD\uB2C8\uB2E4."
     category: 1
-    targetKind: 2
-    targetUnitId: cassia-vanguard
     maxLevel: 8
-    perLevelDelta: 0.3
-    isInteger: 0
-    hasMinValue: 0
-    minValue: 0
-    hasMaxValue: 0
-    maxValue: 0
+    levelCosts: 0a0000000f00000019000000280000003c0000005a00000082000000b4000000
+    requiredAffinityByLevel: 0000000000000000000000000000000000000000000000000000000000000000
+    modifiers:
+    - targetKind: 2
+      targetUnitId: cassia-vanguard
+      levelDeltas:
+      - 0.3
+      - 0.6
+      - 0.9
+      - 1.2
+      - 1.5
+      - 1.8
+      - 2.1
+      - 2.4
+      isInteger: 0
+      hasMinValue: 0
+      minValue: 0
+      hasMaxValue: 0
+      maxValue: 0
   - trackId: cassia.guard-deploy-cost
     displayName: "\uBC29\uD638 \uC694\uC6D0 \uBC30\uCE58 \uBE44\uC6A9 \uC808\uAC10"
+    description: "\uBC29\uD638 \uC694\uC6D0\uC758 \uBC30\uCE58 \uBE44\uC6A9\uC744
+      \uC904\uC785\uB2C8\uB2E4."
     category: 1
-    targetKind: 4
-    targetUnitId: cassia-guard
     maxLevel: 8
-    perLevelDelta: -0.875
-    isInteger: 1
-    hasMinValue: 1
-    minValue: 1
-    hasMaxValue: 0
-    maxValue: 0
+    levelCosts: 0a0000000f00000019000000280000003c0000005a00000082000000b4000000
+    requiredAffinityByLevel: 0000000000000000000000000000000000000000000000000000000000000000
+    modifiers:
+    - targetKind: 4
+      targetUnitId: cassia-guard
+      levelDeltas:
+      - -1
+      - -2
+      - -3
+      - -4
+      - -5
+      - -6
+      - -7
+      - -7
+      isInteger: 1
+      hasMinValue: 1
+      minValue: 1
+      hasMaxValue: 0
+      maxValue: 0

@@ -139,6 +139,9 @@ namespace RCCom.EditorTools
                 managementPortrait = recipe.remoteContent ? null : definition.managementPortrait,
                 shopPortrait = recipe.remoteContent ? null : definition.shopPortrait,
                 shopUpperBodyPortrait = recipe.remoteContent ? null : definition.shopUpperBodyPortrait,
+                shopUpperBodyPortraitDimmed = recipe.remoteContent
+                    ? null
+                    : definition.shopUpperBodyPortraitDimmed,
                 alternateName = definition.alternateName,
                 shopDialogue = definition.shopDialogue,
                 unlockRewardPortrait = recipe.remoteContent ? null :
@@ -151,6 +154,7 @@ namespace RCCom.EditorTools
                 requiredBestWave = recipe.requiredBestWave,
                 purchasePrice = recipe.purchasePrice,
                 requiredStageId = recipe.requiredStageId ?? string.Empty,
+                unlockConditions = OperatorAssetBuilder.CloneUnlockConditions(recipe.unlockConditions),
                 unitPreviews = BuildUnitPreviews(definition, recipe.remoteContent),
             };
         }

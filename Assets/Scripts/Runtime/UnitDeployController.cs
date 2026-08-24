@@ -91,15 +91,18 @@ namespace RCCom.Runtime
             }
 
             PlayerProfile profile = OperatorUpgradeApplier.LoadProfile();
-            startingCommandPoints += Mathf.RoundToInt(OperatorUpgradeApplier.GetTotalDelta(
+            startingCommandPoints = Mathf.RoundToInt(OperatorUpgradeApplier.ResolveValue(
                 upgradeTracks, profile, definition.operatorId,
-                OperatorUpgradeTargetKind.DeployStartingCommandPoints, null));
-            maxCommandPoints += Mathf.RoundToInt(OperatorUpgradeApplier.GetTotalDelta(
+                OperatorUpgradeTargetKind.DeployStartingCommandPoints, null,
+                startingCommandPoints));
+            maxCommandPoints = Mathf.RoundToInt(OperatorUpgradeApplier.ResolveValue(
                 upgradeTracks, profile, definition.operatorId,
-                OperatorUpgradeTargetKind.DeployMaxCommandPoints, null));
-            commandPointRecoveryPerSecond += OperatorUpgradeApplier.GetTotalDelta(
+                OperatorUpgradeTargetKind.DeployMaxCommandPoints, null,
+                maxCommandPoints));
+            commandPointRecoveryPerSecond = OperatorUpgradeApplier.ResolveValue(
                 upgradeTracks, profile, definition.operatorId,
-                OperatorUpgradeTargetKind.DeployCommandPointRecoveryPerSecond, null);
+                OperatorUpgradeTargetKind.DeployCommandPointRecoveryPerSecond, null,
+                commandPointRecoveryPerSecond);
         }
 
         private void OnEnable()

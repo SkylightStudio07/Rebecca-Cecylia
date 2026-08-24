@@ -1,16 +1,5 @@
-using RCCom.EditorTools;
-using UnityEditor;
-using UnityEngine;
-
-namespace RCCom.Eval
-{
-    public static class BuildAuroraDialogueRunner
-    {
-        public static void Run()
-        {
-            AuroraDialogueBuilder.Build();
-            OperatorBuildReport report = OperatorAssetBuilder.BuildSingle("Assets/Editor/OperatorRecipes/Aurora.json");
-            Debug.Log($"[BuildAuroraDialogueRunner] Aurora Dialogue and Operator built successfully! Changed assets: {report.changedAssets.Count}, Validation: {report.validationPassed}");
-        }
-    }
-}
+UnityEditor.AssetDatabase.Refresh();
+RCCom.EditorTools.AuroraDialogueBuilder.Build();
+RCCom.EditorTools.OperatorAssetBuilder.BuildSingle("Assets/Editor/OperatorRecipes/Aurora.json");
+UnityEditor.AssetDatabase.SaveAssets();
+UnityEditor.AssetDatabase.Refresh();

@@ -15,62 +15,127 @@ MonoBehaviour:
   tracks:
   - trackId: racing.repair-rate
     displayName: "\uD53C\uD2B8\uC2A4\uD1B1 \uC218\uB9AC\uB825"
+    description: "\uD53C\uD2B8 \uD06C\uB8E8\uC758 \uCD08\uB2F9 \uC218\uB9AC\uB7C9\uC744
+      \uB192\uC785\uB2C8\uB2E4."
     category: 0
-    targetKind: 12
-    targetUnitId: racing-pitcrew
     maxLevel: 8
-    perLevelDelta: 0.2
-    isInteger: 0
-    hasMinValue: 0
-    minValue: 0
-    hasMaxValue: 0
-    maxValue: 0
+    levelCosts: 1400000023000000370000005000000078000000aa000000e600000022010000
+    requiredAffinityByLevel: 0000000000000000000000000000000000000000000000000000000000000000
+    modifiers:
+    - targetKind: 12
+      targetUnitId: racing-pitcrew
+      levelDeltas:
+      - 0.2
+      - 0.4
+      - 0.6
+      - 0.8
+      - 1
+      - 1.2
+      - 1.4
+      - 1.6
+      isInteger: 0
+      hasMinValue: 0
+      minValue: 0
+      hasMaxValue: 0
+      maxValue: 0
   - trackId: racing.pit-stop-multiplier
     displayName: "\uC815\uC9C0 \uD53C\uD2B8\uC2A4\uD1B1 \uBC30\uC728"
+    description: "\uC815\uC9C0 \uC911\uC778 \uC544\uAD70\uC5D0\uAC8C \uC81C\uACF5\uD558\uB294
+      \uC218\uB9AC \uBC30\uC728\uC744 \uB192\uC785\uB2C8\uB2E4."
     category: 0
-    targetKind: 13
-    targetUnitId: racing-pitcrew
     maxLevel: 8
-    perLevelDelta: 0.1
-    isInteger: 0
-    hasMinValue: 0
-    minValue: 0
-    hasMaxValue: 0
-    maxValue: 0
+    levelCosts: 1400000023000000370000005000000078000000aa000000e600000022010000
+    requiredAffinityByLevel: 0000000000000000000000000000000000000000000000000000000000000000
+    modifiers:
+    - targetKind: 13
+      targetUnitId: racing-pitcrew
+      levelDeltas:
+      - 0.1
+      - 0.2
+      - 0.3
+      - 0.4
+      - 0.5
+      - 0.6
+      - 0.7
+      - 0.8
+      isInteger: 0
+      hasMinValue: 0
+      minValue: 0
+      hasMaxValue: 0
+      maxValue: 0
   - trackId: racing.heavy-armor
     displayName: "\uD5E4\uBE44 \uD398\uC774\uC2A4\uCE74 \uCC28\uB2E8\uC120 \uBCF4\uAC15"
+    description: "\uD5E4\uBE44 \uD398\uC774\uC2A4\uCE74\uC758 \uCD5C\uB300 \uCCB4\uB825\uC744
+      \uB192\uC785\uB2C8\uB2E4."
     category: 0
-    targetKind: 0
-    targetUnitId: racing-heavy
     maxLevel: 8
-    perLevelDelta: 4.5
-    isInteger: 0
-    hasMinValue: 0
-    minValue: 0
-    hasMaxValue: 0
-    maxValue: 0
-  - trackId: racing.heavy-mobility
-    displayName: "\uD5E4\uBE44 \uD398\uC774\uC2A4\uCE74 \uAE30\uB3D9\uC131"
+    levelCosts: 1400000023000000370000005000000078000000aa000000e600000022010000
+    requiredAffinityByLevel: 0000000000000000000000000000000000000000000000000000000000000000
+    modifiers:
+    - targetKind: 0
+      targetUnitId: racing-heavy
+      levelDeltas:
+      - 4
+      - 9
+      - 13
+      - 18
+      - 22
+      - 27
+      - 31
+      - 36
+      isInteger: 0
+      hasMinValue: 0
+      minValue: 0
+      hasMaxValue: 0
+      maxValue: 0
+  - trackId: racing.pitcrew-mobility
+    displayName: "\uD53C\uD2B8 \uD06C\uB8E8 \uAE34\uAE09 \uCD9C\uB3D9"
+    description: "\uD53C\uD2B8 \uD06C\uB8E8\uC758 \uC774\uB3D9 \uC18D\uB3C4\uB97C
+      \uB192\uC785\uB2C8\uB2E4."
     category: 1
-    targetKind: 3
-    targetUnitId: racing-heavy
     maxLevel: 8
-    perLevelDelta: 0.15
-    isInteger: 0
-    hasMinValue: 0
-    minValue: 0
-    hasMaxValue: 0
-    maxValue: 0
+    levelCosts: 0a0000000f00000019000000280000003c0000005a00000082000000b4000000
+    requiredAffinityByLevel: 0000000000000000000000000000000000000000000000000000000000000000
+    modifiers:
+    - targetKind: 3
+      targetUnitId: racing-pitcrew
+      levelDeltas:
+      - 0.3
+      - 0.6
+      - 0.9
+      - 1.2
+      - 1.5
+      - 1.8
+      - 2.1
+      - 2.4
+      isInteger: 0
+      hasMinValue: 0
+      minValue: 0
+      hasMaxValue: 0
+      maxValue: 0
   - trackId: racing.heavy-deploy-cost
     displayName: "\uD5E4\uBE44 \uD398\uC774\uC2A4\uCE74 \uBC30\uCE58 \uBE44\uC6A9
       \uC808\uAC10"
+    description: "\uD5E4\uBE44 \uD398\uC774\uC2A4\uCE74\uC758 \uBC30\uCE58 \uBE44\uC6A9\uC744
+      \uC904\uC785\uB2C8\uB2E4."
     category: 1
-    targetKind: 4
-    targetUnitId: racing-heavy
     maxLevel: 8
-    perLevelDelta: -1.875
-    isInteger: 1
-    hasMinValue: 1
-    minValue: 1
-    hasMaxValue: 0
-    maxValue: 0
+    levelCosts: 0a0000000f00000019000000280000003c0000005a00000082000000b4000000
+    requiredAffinityByLevel: 0000000000000000000000000000000000000000000000000000000000000000
+    modifiers:
+    - targetKind: 4
+      targetUnitId: racing-heavy
+      levelDeltas:
+      - -2
+      - -4
+      - -7
+      - -9
+      - -11
+      - -13
+      - -15
+      - -15
+      isInteger: 1
+      hasMinValue: 1
+      minValue: 1
+      hasMaxValue: 0
+      maxValue: 0

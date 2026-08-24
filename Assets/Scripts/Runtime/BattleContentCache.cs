@@ -47,8 +47,61 @@ namespace RCCom.Runtime
             AllyUnitHandles.Clear();
             RuntimeEnemyRosters.Clear();
             RuntimeAllyUnitRosters.Clear();
-            RuntimeUpgradedUnitDefinitions.Clear();
+            ClearRuntimeUpgradeCache();
             _addressablesInitialized = false;
+        }
+
+        /// <summary>
+        /// 강화 레벨은 같은 애플리케이션 실행 중에도 상점에서 바뀔 수 있으므로 전투 씬마다
+        /// 복제본을 다시 계산한다. 복제한 효과 SO까지 함께 파괴해 Retry 누적 메모리도 남기지 않는다.
+        /// </summary>
+        public static void ClearRuntimeUpgradeCache()
+        {
+            foreach (KeyValuePair<(AllyUnitDefinition source, string operatorId), AllyUnitDefinition> pair
+                     in RuntimeUpgradedUnitDefinitions)
+            {
+                AllyUnitDefinition source = pair.Key.source;
+                AllyUnitDefinition upgraded = pair.Value;
+                if (upgraded == null || ReferenceEquals(upgraded, source))
+                {
+                    continue;
+                }
+
+                if (upgraded.effects != null)
+                {
+                    for (int i = 0; i < upgraded.effects.Count; i++)
+                    {
+                        UnityEngine.Object effect = upgraded.effects[i];
+                        if (effect != null && !ContainsReference(source != null ? source.effects : null, effect))
+                        {
+                            UnityEngine.Object.Destroy(effect);
+                        }
+                    }
+                }
+
+                UnityEngine.Object.Destroy(upgraded);
+            }
+
+            RuntimeUpgradedUnitDefinitions.Clear();
+        }
+
+        private static bool ContainsReference(List<RCCom.Effects.Unit.AllyUnitEffectBase> effects,
+            UnityEngine.Object target)
+        {
+            if (effects == null)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < effects.Count; i++)
+            {
+                if (ReferenceEquals(effects[i], target))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         public static EnemyDefinition ResolveEnemy(string enemyId)

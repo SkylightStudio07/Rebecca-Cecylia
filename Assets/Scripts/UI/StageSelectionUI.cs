@@ -250,9 +250,7 @@ namespace RCCom.UI
             for (int i = 0; i < operatorCatalog.entries.Count; i++)
             {
                 OperatorCatalogEntry entry = operatorCatalog.entries[i];
-                if (entry != null && entry.unlockType == OperatorUnlockType.StageClearReward &&
-                    string.Equals(entry.requiredStageId, definition.stageId,
-                        System.StringComparison.Ordinal))
+                if (entry != null && entry.IsStageRewardFor(definition.stageId))
                 {
                     return entry;
                 }

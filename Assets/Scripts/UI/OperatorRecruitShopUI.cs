@@ -23,9 +23,15 @@ namespace RCCom.UI
         [Header("Portraits")]
         [SerializeField] private Image operatorPortrait;
         [SerializeField] private Image operatorUpperBodyPortrait;
+        [SerializeField] private Image operatorUpperBodyPortraitLeft;
+        [SerializeField] private Image operatorUpperBodyPortraitRight;
+        [SerializeField] private GameObject lockSpriteLeft;
+        [SerializeField] private GameObject lockSpriteRight;
 
         [Header("Labels")]
         [SerializeField] private TMP_Text operatorName;
+        [SerializeField] private TMP_Text operatorNameLeft;
+        [SerializeField] private TMP_Text operatorNameRight;
         [SerializeField] private TMP_Text anotherNameText;
         [SerializeField] private TMP_Text priceText;
         [SerializeField] private TMP_Text rightOperatorNameText;
@@ -35,6 +41,8 @@ namespace RCCom.UI
         [SerializeField] private OperatorRosterPreviewItem[] unitPreviewItems;
 
         [Header("Actions")]
+        [SerializeField] private Button previousButton;
+        [SerializeField] private Button nextButton;
         [SerializeField] private Button recruitOperatorButton;
         [SerializeField] private Image recruitOperatorButtonImage;
         [SerializeField] private Sprite recruitNormalSprite;
@@ -49,28 +57,26 @@ namespace RCCom.UI
         private void Awake()
         {
             _profileStorage = new PlayerPrefsProfileStorage();
-            if (recruitOperatorButton != null)
+            if (operatorPortrait != null)
             {
-                recruitOperatorButton.onClick.AddListener(PurchaseSelected);
+                // 중앙 전신은 원본 비율을 유지하고 패널 밖으로 넘치는 부분만 자연스럽게 잘리게 한다.
+                operatorPortrait.preserveAspect = true;
             }
-
-            Refresh();
         }
 
         private void OnEnable()
         {
-            if (_profileStorage != null)
-            {
-                Refresh();
-            }
+            if (recruitOperatorButton != null) { recruitOperatorButton.onClick.AddListener(PurchaseSelected); }
+            if (previousButton != null) { previousButton.onClick.AddListener(Previous); }
+            if (nextButton != null) { nextButton.onClick.AddListener(Next); }
+            Refresh();
         }
 
-        private void OnDestroy()
+        private void OnDisable()
         {
-            if (recruitOperatorButton != null)
-            {
-                recruitOperatorButton.onClick.RemoveListener(PurchaseSelected);
-            }
+            if (recruitOperatorButton != null) { recruitOperatorButton.onClick.RemoveListener(PurchaseSelected); }
+            if (previousButton != null) { previousButton.onClick.RemoveListener(Previous); }
+            if (nextButton != null) { nextButton.onClick.RemoveListener(Next); }
         }
 
         public void Refresh()
@@ -95,7 +101,7 @@ namespace RCCom.UI
         {
             OperatorCatalogEntry entry = GetSelectedEntry();
             if (entry == null || _profile == null || entry.IsUnlocked(_profile) ||
-                !_profile.TryPurchaseOperator(entry.operatorId, entry.purchasePrice))
+                !_profile.TryPurchaseOperator(entry.operatorId, entry.GetPurchasePrice()))
             {
                 RenderSelected();
                 return;
@@ -125,7 +131,7 @@ namespace RCCom.UI
                 for (int i = 0; i < catalog.entries.Count; i++)
                 {
                     OperatorCatalogEntry entry = catalog.entries[i];
-                    if (entry != null && entry.unlockType == OperatorUnlockType.CommodityPurchase)
+                    if (entry != null && entry.HasUnlockCondition(OperatorUnlockType.CommodityPurchase))
                     {
                         _purchaseEntries.Add(entry);
                     }
@@ -163,10 +169,11 @@ namespace RCCom.UI
             SetSprite(operatorPortrait, hasEntry ? entry.shopPortrait : null);
             SetSprite(operatorUpperBodyPortrait,
                 hasEntry ? entry.shopUpperBodyPortrait : null);
+            RenderSideSlots();
 
             SetText(operatorName, hasEntry ? entry.displayName : string.Empty);
             SetText(anotherNameText, hasEntry ? entry.alternateName : string.Empty);
-            SetText(priceText, hasEntry ? entry.purchasePrice.ToString() : string.Empty);
+            SetText(priceText, hasEntry ? entry.GetPurchasePrice().ToString() : string.Empty);
             SetText(rightOperatorNameText, hasEntry ? entry.displayName : string.Empty);
             SetText(operatorDialogue, hasEntry ? entry.shopDialogue : string.Empty);
             RenderUnitPreviews(entry);
@@ -176,6 +183,41 @@ namespace RCCom.UI
                 bool alreadyPurchased = hasEntry && _profile != null && entry.IsUnlocked(_profile);
                 ApplyRecruitButtonVisual(alreadyPurchased);
                 recruitOperatorButton.interactable = hasEntry && _profile != null && !alreadyPurchased;
+            }
+
+            bool canNavigate = _purchaseEntries.Count > 1;
+            if (previousButton != null) { previousButton.interactable = canNavigate; }
+            if (nextButton != null) { nextButton.interactable = canNavigate; }
+        }
+
+        private void RenderSideSlots()
+        {
+            if (_purchaseEntries.Count <= 1)
+            {
+                RenderSideSlot(operatorUpperBodyPortraitLeft, operatorNameLeft, lockSpriteLeft, null);
+                RenderSideSlot(operatorUpperBodyPortraitRight, operatorNameRight, lockSpriteRight, null);
+                return;
+            }
+
+            int leftIndex = (_selectedIndex - 1 + _purchaseEntries.Count) % _purchaseEntries.Count;
+            int rightIndex = (_selectedIndex + 1) % _purchaseEntries.Count;
+            RenderSideSlot(operatorUpperBodyPortraitLeft, operatorNameLeft, lockSpriteLeft,
+                _purchaseEntries[leftIndex]);
+            RenderSideSlot(operatorUpperBodyPortraitRight, operatorNameRight, lockSpriteRight,
+                _purchaseEntries[rightIndex]);
+        }
+
+        private void RenderSideSlot(Image portrait, TMP_Text nameLabel, GameObject lockSprite,
+            OperatorCatalogEntry entry)
+        {
+            Sprite sprite = entry != null && entry.shopUpperBodyPortraitDimmed != null
+                ? entry.shopUpperBodyPortraitDimmed
+                : entry != null ? entry.shopUpperBodyPortrait : null;
+            SetSprite(portrait, sprite);
+            SetText(nameLabel, entry != null ? entry.displayName : string.Empty);
+            if (lockSprite != null)
+            {
+                lockSprite.SetActive(entry != null && (_profile == null || !entry.IsUnlocked(_profile)));
             }
         }
 

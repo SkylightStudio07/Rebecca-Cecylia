@@ -15,73 +15,158 @@ MonoBehaviour:
   tracks:
   - trackId: aurora.vulnerable-multiplier
     displayName: "\uCDE8\uC57D \uB514\uBC84\uD504 \uC99D\uD3ED"
+    description: "\uCDE8\uC57D \uC0C1\uD0DC\uC758 \uBC1B\uB294 \uD53C\uD574 \uC99D\uAC00\uB7C9\uC744
+      \uB192\uC785\uB2C8\uB2E4."
     category: 0
-    targetKind: 9
-    targetUnitId: aurora-debuff-drone
     maxLevel: 8
-    perLevelDelta: 0.03125
-    isInteger: 0
-    hasMinValue: 0
-    minValue: 0
-    hasMaxValue: 0
-    maxValue: 0
+    levelCosts: 1400000023000000370000005000000078000000aa000000e600000022010000
+    requiredAffinityByLevel: 0000000000000000000000000000000000000000000000000000000000000000
+    modifiers:
+    - targetKind: 9
+      targetUnitId: aurora-debuff-drone
+      levelDeltas:
+      - 0.03
+      - 0.07
+      - 0.1
+      - 0.13
+      - 0.16
+      - 0.19
+      - 0.22
+      - 0.25
+      isInteger: 0
+      hasMinValue: 0
+      minValue: 0
+      hasMaxValue: 0
+      maxValue: 0
   - trackId: aurora.slow-strength
     displayName: "\uAC10\uC18D \uAC15\uD654"
+    description: "\uAC10\uC18D \uB4DC\uB860\uC774 \uC801\uC758 \uC774\uB3D9 \uC18D\uB3C4\uB97C
+      \uB354 \uB0AE\uCDA5\uB2C8\uB2E4."
     category: 0
-    targetKind: 11
-    targetUnitId: aurora-slow-drone
     maxLevel: 8
-    perLevelDelta: -0.021875
-    isInteger: 0
-    hasMinValue: 1
-    minValue: 0
-    hasMaxValue: 0
-    maxValue: 0
+    levelCosts: 1400000023000000370000005000000078000000aa000000e600000022010000
+    requiredAffinityByLevel: 0000000000000000000000000000000000000000000000000000000000000000
+    modifiers:
+    - targetKind: 11
+      targetUnitId: aurora-slow-drone
+      levelDeltas:
+      - -0.022
+      - -0.044
+      - -0.066
+      - -0.087
+      - -0.109
+      - -0.131
+      - -0.153
+      - -0.175
+      isInteger: 0
+      hasMinValue: 1
+      minValue: 0
+      hasMaxValue: 0
+      maxValue: 0
   - trackId: aurora.drone-mobility
     displayName: "\uB4DC\uB860 \uC21C\uCC30 \uAE30\uB3D9\uC131"
+    description: "\uB450 \uC804\uC790\uC804 \uB4DC\uB860\uC758 \uC774\uB3D9 \uC18D\uB3C4\uB97C
+      \uB192\uC785\uB2C8\uB2E4."
     category: 0
-    targetKind: 3
-    targetUnitId: aurora-debuff-drone;aurora-slow-drone
     maxLevel: 8
-    perLevelDelta: 0.125
-    isInteger: 0
-    hasMinValue: 0
-    minValue: 0
-    hasMaxValue: 0
-    maxValue: 0
+    levelCosts: 1400000023000000370000005000000078000000aa000000e600000022010000
+    requiredAffinityByLevel: 0000000000000000000000000000000000000000000000000000000000000000
+    modifiers:
+    - targetKind: 3
+      targetUnitId: aurora-debuff-drone
+      levelDeltas:
+      - 0.125
+      - 0.25
+      - 0.375
+      - 0.5
+      - 0.625
+      - 0.75
+      - 0.875
+      - 1
+      isInteger: 0
+      hasMinValue: 0
+      minValue: 0
+      hasMaxValue: 0
+      maxValue: 0
+    - targetKind: 3
+      targetUnitId: aurora-slow-drone
+      levelDeltas:
+      - 0.125
+      - 0.25
+      - 0.375
+      - 0.5
+      - 0.625
+      - 0.75
+      - 0.875
+      - 1
+      isInteger: 0
+      hasMinValue: 0
+      minValue: 0
+      hasMaxValue: 0
+      maxValue: 0
   - trackId: aurora.vulnerable-refresh
     displayName: "\uB514\uBC84\uD504 \uC7AC\uC801\uC6A9 \uC720\uC608 \uC5F0\uC7A5"
+    description: "\uCDE8\uC57D \uB514\uBC84\uD504\uC758 \uC7AC\uC801\uC6A9 \uC720\uC9C0
+      \uC2DC\uAC04\uC744 \uB298\uB9BD\uB2C8\uB2E4."
     category: 1
-    targetKind: 10
-    targetUnitId: aurora-debuff-drone
     maxLevel: 8
-    perLevelDelta: 0.0625
-    isInteger: 0
-    hasMinValue: 0
-    minValue: 0
-    hasMaxValue: 0
-    maxValue: 0
-  - trackId: aurora.drone-armor-debuff
-    displayName: "\uC57D\uD654 \uB4DC\uB860 \uC7A5\uAC11 \uAC15\uD654"
+    levelCosts: 0a0000000f00000019000000280000003c0000005a00000082000000b4000000
+    requiredAffinityByLevel: 0000000000000000000000000000000000000000000000000000000000000000
+    modifiers:
+    - targetKind: 10
+      targetUnitId: aurora-debuff-drone
+      levelDeltas:
+      - 0.06
+      - 0.13
+      - 0.19
+      - 0.25
+      - 0.31
+      - 0.38
+      - 0.44
+      - 0.5
+      isInteger: 0
+      hasMinValue: 0
+      minValue: 0
+      hasMaxValue: 0
+      maxValue: 0
+  - trackId: aurora.drone-armor
+    displayName: "\uC804\uC790\uC804 \uB4DC\uB860 \uC7A5\uAC11 \uAC15\uD654"
+    description: "\uB450 \uC804\uC790\uC804 \uB4DC\uB860\uC758 \uCD5C\uB300 \uCCB4\uB825\uC744
+      \uAC01 \uAE30\uCCB4\uC5D0 \uB9DE\uAC8C \uB192\uC785\uB2C8\uB2E4."
     category: 1
-    targetKind: 0
-    targetUnitId: aurora-debuff-drone
     maxLevel: 8
-    perLevelDelta: 4
-    isInteger: 0
-    hasMinValue: 0
-    minValue: 0
-    hasMaxValue: 0
-    maxValue: 0
-  - trackId: aurora.drone-armor-slow
-    displayName: "\uAC10\uC18D \uB4DC\uB860 \uC7A5\uAC11 \uAC15\uD654"
-    category: 1
-    targetKind: 0
-    targetUnitId: aurora-slow-drone
-    maxLevel: 8
-    perLevelDelta: 5
-    isInteger: 0
-    hasMinValue: 0
-    minValue: 0
-    hasMaxValue: 0
-    maxValue: 0
+    levelCosts: 0a0000000f00000019000000280000003c0000005a00000082000000b4000000
+    requiredAffinityByLevel: 0000000000000000000000000000000000000000000000000000000000000000
+    modifiers:
+    - targetKind: 0
+      targetUnitId: aurora-debuff-drone
+      levelDeltas:
+      - 4
+      - 8
+      - 12
+      - 16
+      - 20
+      - 24
+      - 28
+      - 32
+      isInteger: 0
+      hasMinValue: 0
+      minValue: 0
+      hasMaxValue: 0
+      maxValue: 0
+    - targetKind: 0
+      targetUnitId: aurora-slow-drone
+      levelDeltas:
+      - 5
+      - 10
+      - 15
+      - 20
+      - 25
+      - 30
+      - 35
+      - 40
+      isInteger: 0
+      hasMinValue: 0
+      minValue: 0
+      hasMaxValue: 0
+      maxValue: 0

@@ -39,10 +39,18 @@ namespace RCCom.EditorTools
             GameObject entryObject = RequirePath(mainMenu.transform, "underPanel/RecruitButton");
             GameObject recruitObject = RequirePath(shopPanel.transform, "StrategistPanel/RecruitOperatorButton");
             GameObject backObject = RequirePath(shopPanel.transform, "StrategistPanel/BackButton");
+            GameObject previousObject = RequirePath(shopPanel.transform, "OperatorPanel/LeftButton");
+            GameObject nextObject = RequirePath(shopPanel.transform, "OperatorPanel/RightButton");
 
             Button entryButton = GetOrAddButton(entryObject);
             Button recruitButton = ConfigureSpriteSwap(recruitObject, RecruitNormalPath, RecruitHoverPath);
             Button backButton = ConfigureSpriteSwap(backObject, BackNormalPath, BackHoverPath);
+            Button previousButton = GetOrAddButton(previousObject);
+            Button nextButton = GetOrAddButton(nextObject);
+            previousButton.targetGraphic = RequireComponent<Image>(previousObject);
+            nextButton.targetGraphic = RequireComponent<Image>(nextObject);
+            previousButton.targetGraphic.raycastTarget = true;
+            nextButton.targetGraphic.raycastTarget = true;
             ConfigureShopLeftNavigation(shopPanel.transform);
 
             LobbyShopPanelUI controller = canvas.GetComponent<LobbyShopPanelUI>();
@@ -66,14 +74,32 @@ namespace RCCom.EditorTools
             Assign(shopSerialized, "catalog", catalog);
             Assign(shopSerialized, "acquisitionUI",
                 UnityEngine.Object.FindFirstObjectByType<OperatorAcquisitionUI>(FindObjectsInactive.Include));
-            Assign(shopSerialized, "operatorPortrait",
-                RequireComponent<Image>(RequirePath(shopPanel.transform, "OperatorPanel/OperatorPortrait")));
+            Image operatorPortrait = RequireComponent<Image>(
+                RequirePath(shopPanel.transform, "OperatorPanel/OperatorPortrait"));
+            operatorPortrait.preserveAspect = true;
+            Assign(shopSerialized, "operatorPortrait", operatorPortrait);
             Assign(shopSerialized, "operatorUpperBodyPortrait",
                 RequireComponent<Image>(RequirePath(shopPanel.transform,
                     "OperatorPanel/UnderPanel/OperatorUpperbodyPortrait")));
+            Assign(shopSerialized, "operatorUpperBodyPortraitLeft",
+                RequireComponent<Image>(RequirePath(shopPanel.transform,
+                    "OperatorPanel/UnderPanel/OperatorUpperbodyPortrait_Left")));
+            Assign(shopSerialized, "operatorUpperBodyPortraitRight",
+                RequireComponent<Image>(RequirePath(shopPanel.transform,
+                    "OperatorPanel/UnderPanel/OperatorUpperbodyPortrait_Right")));
+            Assign(shopSerialized, "lockSpriteLeft",
+                RequirePath(shopPanel.transform, "OperatorPanel/UnderPanel/LockSprite_Left"));
+            Assign(shopSerialized, "lockSpriteRight",
+                RequirePath(shopPanel.transform, "OperatorPanel/UnderPanel/LockSprite_Right"));
             Assign(shopSerialized, "operatorName",
                 RequireComponent<TMP_Text>(RequirePath(shopPanel.transform,
                     "OperatorPanel/UnderPanel/OperatorName")));
+            Assign(shopSerialized, "operatorNameLeft",
+                RequireComponent<TMP_Text>(RequirePath(shopPanel.transform,
+                    "OperatorPanel/UnderPanel/OperatorName_Left")));
+            Assign(shopSerialized, "operatorNameRight",
+                RequireComponent<TMP_Text>(RequirePath(shopPanel.transform,
+                    "OperatorPanel/UnderPanel/OperatorName_Right")));
             Assign(shopSerialized, "anotherNameText",
                 RequireComponent<TMP_Text>(RequirePath(shopPanel.transform,
                     "OperatorPanel/UnderPanel/AnotherNameText")));
@@ -100,6 +126,8 @@ namespace RCCom.EditorTools
                 unitItemsProperty.GetArrayElementAtIndex(i).objectReferenceValue = unitItems[i];
             }
             Assign(shopSerialized, "recruitOperatorButton", recruitButton);
+            Assign(shopSerialized, "previousButton", previousButton);
+            Assign(shopSerialized, "nextButton", nextButton);
             Assign(shopSerialized, "recruitOperatorButtonImage", recruitObject.GetComponent<Image>());
             Assign(shopSerialized, "recruitNormalSprite", LoadFullFrameSprite(RecruitNormalPath));
             Assign(shopSerialized, "recruitHoverSprite", LoadFullFrameSprite(RecruitHoverPath));
@@ -160,7 +188,10 @@ namespace RCCom.EditorTools
             string[] requiredProperties =
             {
                 "catalog", "operatorPortrait", "operatorUpperBodyPortrait", "operatorName",
+                "operatorUpperBodyPortraitLeft", "operatorUpperBodyPortraitRight",
+                "lockSpriteLeft", "lockSpriteRight", "operatorNameLeft", "operatorNameRight",
                 "anotherNameText", "priceText", "rightOperatorNameText", "operatorDialogue",
+                "previousButton", "nextButton",
                 "recruitOperatorButton", "recruitOperatorButtonImage", "recruitNormalSprite",
                 "recruitHoverSprite", "recruitAlreadyPurchasedSprite",
             };
@@ -555,7 +586,7 @@ namespace RCCom.EditorTools
             }
 
             return catalog.entries.Find(entry =>
-                entry != null && entry.unlockType == OperatorUnlockType.CommodityPurchase);
+                entry != null && entry.HasUnlockCondition(OperatorUnlockType.CommodityPurchase));
         }
 
         private static void SetRect(RectTransform rect, Vector2 position, Vector2 size)

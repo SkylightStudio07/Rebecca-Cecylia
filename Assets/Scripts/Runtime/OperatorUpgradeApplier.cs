@@ -9,60 +9,55 @@ using UnityEngine;
 namespace RCCom.Runtime
 {
     /// <summary>
-    /// PlayerProfile에 저장된 오퍼레이터 강화 레벨을 실제 전투 값으로 계산·적용하는 순수 헬퍼.
-    /// MonoBehaviour가 아니며, 원본 SO 에셋은 절대 수정하지 않는다 — 값이 바뀌는 대상은 항상
-    /// 호출자가 만든 런타임 복제본(AllyUnitDefinition, AllyUnitEffectBase, 씬 컴포넌트 필드)이다.
+    /// PlayerProfile의 영구 강화 레벨을 전투용 복제본에 적용하는 순수 헬퍼. 원본 Definition과
+    /// 효과 SO는 수정하지 않으며, 트랙 하나의 여러 modifier도 한 번의 레벨로 함께 계산한다.
     /// </summary>
     public static class OperatorUpgradeApplier
     {
-        /// <summary>여러 호출부가 저장소 생성 코드를 중복하지 않도록 감싼 진입점.</summary>
         public static PlayerProfile LoadProfile()
         {
             return new PlayerPrefsProfileStorage().Load();
         }
 
-        /// <summary>저장된 레벨을 트랙의 maxLevel로 클램프한다. 상한은 PlayerProfile이 모르는 값이라 여기서 강제한다.</summary>
-        public static int GetEffectiveLevel(PlayerProfile profile, string operatorId, OperatorUpgradeTrack track)
+        public static int GetEffectiveLevel(
+            PlayerProfile profile,
+            string operatorId,
+            OperatorUpgradeTrack track)
         {
             if (profile == null || track == null || string.IsNullOrWhiteSpace(operatorId))
             {
                 return 0;
             }
 
-            int rawLevel = profile.GetUpgradeLevel(operatorId, track.trackId);
-            return Mathf.Clamp(rawLevel, 0, Mathf.Max(1, track.maxLevel));
+            return Mathf.Clamp(
+                profile.GetUpgradeLevel(operatorId, track.trackId),
+                0,
+                Mathf.Max(1, track.maxLevel));
         }
 
         /// <summary>
-        /// unitId가 null이면 유닛과 무관한 트랙(Deploy* 계열)만, 아니면 해당 유닛을 대상으로 하는
-        /// 트랙만 찾아 perLevelDelta × 유효 레벨의 합을 반환한다. 일치하는 트랙이 여럿이면 합산한다.
+        /// 기준값에 해당 대상의 모든 modifier를 순서대로 적용한다. Studio 검증은 동일 대상 중복을
+        /// 막지만, 손상 데이터에서도 결정적으로 동작하도록 런타임은 모든 일치 항목을 처리한다.
         /// </summary>
-        public static float GetTotalDelta(
+        public static float ResolveValue(
             OperatorUpgradeTrackSet trackSet,
             PlayerProfile profile,
             string operatorId,
             OperatorUpgradeTargetKind targetKind,
-            string unitId)
+            string unitId,
+            float baseValue)
         {
             if (trackSet == null || trackSet.tracks == null || profile == null ||
                 string.IsNullOrWhiteSpace(operatorId))
             {
-                return 0f;
+                return baseValue;
             }
 
-            float total = 0f;
-            for (int i = 0; i < trackSet.tracks.Count; i++)
+            float value = baseValue;
+            for (int trackIndex = 0; trackIndex < trackSet.tracks.Count; trackIndex++)
             {
-                OperatorUpgradeTrack track = trackSet.tracks[i];
-                if (track == null || track.targetKind != targetKind)
-                {
-                    continue;
-                }
-
-                bool matchesUnit = unitId == null
-                    ? string.IsNullOrWhiteSpace(track.targetUnitId)
-                    : track.TargetsUnit(unitId);
-                if (!matchesUnit)
+                OperatorUpgradeTrack track = trackSet.tracks[trackIndex];
+                if (track == null || track.modifiers == null)
                 {
                     continue;
                 }
@@ -73,16 +68,21 @@ namespace RCCom.Runtime
                     continue;
                 }
 
-                total += track.perLevelDelta * level;
+                for (int modifierIndex = 0; modifierIndex < track.modifiers.Count; modifierIndex++)
+                {
+                    OperatorUpgradeModifier modifier = track.modifiers[modifierIndex];
+                    if (!Matches(modifier, targetKind, unitId))
+                    {
+                        continue;
+                    }
+
+                    value = modifier.ClampResult(value + modifier.GetDelta(level));
+                }
             }
 
-            return total;
+            return value;
         }
 
-        /// <summary>
-        /// 유닛 하나의 AllyUnitDefinition에 해당 유닛을 대상으로 하는 모든 트랙을 적용한 런타임
-        /// 복제본을 만든다. 바뀐 값이 하나도 없으면 불필요한 할당 없이 원본을 그대로 반환한다.
-        /// </summary>
         public static AllyUnitDefinition CreateUpgradedUnitDefinition(
             AllyUnitDefinition source,
             string operatorId,
@@ -96,30 +96,28 @@ namespace RCCom.Runtime
             }
 
             string unitId = source.data.unitId;
+            AllyUnitData data = CloneAllyUnitData(source.data);
             bool changed = false;
 
-            AllyUnitData data = CloneAllyUnitData(source.data);
-            changed |= TryApplyDataField(trackSet, profile, operatorId, unitId,
+            changed |= ApplyDataValue(trackSet, profile, operatorId, unitId,
                 OperatorUpgradeTargetKind.AllyUnitMaxHealth, data.maxHealth, value => data.maxHealth = value);
-            changed |= TryApplyDataField(trackSet, profile, operatorId, unitId,
+            changed |= ApplyDataValue(trackSet, profile, operatorId, unitId,
                 OperatorUpgradeTargetKind.AllyUnitAttackDamage, data.attackDamage, value => data.attackDamage = value);
-            changed |= TryApplyDataField(trackSet, profile, operatorId, unitId,
+            changed |= ApplyDataValue(trackSet, profile, operatorId, unitId,
                 OperatorUpgradeTargetKind.AllyUnitAttackRange, data.attackRange, value => data.attackRange = value);
-            changed |= TryApplyDataField(trackSet, profile, operatorId, unitId,
+            changed |= ApplyDataValue(trackSet, profile, operatorId, unitId,
                 OperatorUpgradeTargetKind.AllyUnitMoveSpeed, data.moveSpeed, value => data.moveSpeed = value);
-            changed |= TryApplyDataField(trackSet, profile, operatorId, unitId,
-                OperatorUpgradeTargetKind.AllyUnitDeployCost, data.deployCost, value => data.deployCost = Mathf.RoundToInt(value));
+            changed |= ApplyDataValue(trackSet, profile, operatorId, unitId,
+                OperatorUpgradeTargetKind.AllyUnitDeployCost, data.deployCost,
+                value => data.deployCost = Mathf.RoundToInt(value));
 
-            var effects = new List<AllyUnitEffectBase>(source.effects.Count);
-            for (int i = 0; i < source.effects.Count; i++)
+            List<AllyUnitEffectBase> sourceEffects = source.effects ?? new List<AllyUnitEffectBase>();
+            var effects = new List<AllyUnitEffectBase>(sourceEffects.Count);
+            for (int i = 0; i < sourceEffects.Count; i++)
             {
-                AllyUnitEffectBase original = source.effects[i];
-                AllyUnitEffectBase upgraded = TryUpgradeEffect(original, unitId, operatorId, trackSet, profile);
-                if (!ReferenceEquals(upgraded, original))
-                {
-                    changed = true;
-                }
-
+                AllyUnitEffectBase original = sourceEffects[i];
+                AllyUnitEffectBase upgraded = UpgradeEffect(original, unitId, operatorId, trackSet, profile);
+                changed |= !ReferenceEquals(upgraded, original);
                 effects.Add(upgraded ?? original);
             }
 
@@ -140,7 +138,7 @@ namespace RCCom.Runtime
             return clone;
         }
 
-        private static bool TryApplyDataField(
+        private static bool ApplyDataValue(
             OperatorUpgradeTrackSet trackSet,
             PlayerProfile profile,
             string operatorId,
@@ -149,43 +147,17 @@ namespace RCCom.Runtime
             float baseValue,
             System.Action<float> apply)
         {
-            OperatorUpgradeTrack matched = FindMatchingTrack(trackSet, targetKind, unitId);
-            if (matched == null)
+            float resolved = ResolveValue(trackSet, profile, operatorId, targetKind, unitId, baseValue);
+            if (Mathf.Approximately(resolved, baseValue))
             {
                 return false;
             }
 
-            int level = GetEffectiveLevel(profile, operatorId, matched);
-            if (level <= 0)
-            {
-                return false;
-            }
-
-            float value = matched.ClampResult(baseValue + matched.perLevelDelta * level);
-            apply(value);
+            apply(resolved);
             return true;
         }
 
-        private static OperatorUpgradeTrack FindMatchingTrack(
-            OperatorUpgradeTrackSet trackSet, OperatorUpgradeTargetKind targetKind, string unitId)
-        {
-            for (int i = 0; i < trackSet.tracks.Count; i++)
-            {
-                OperatorUpgradeTrack track = trackSet.tracks[i];
-                if (track != null && track.targetKind == targetKind && track.TargetsUnit(unitId))
-                {
-                    return track;
-                }
-            }
-
-            return null;
-        }
-
-        /// <summary>
-        /// 효과 SO 한 개를 대상 유닛/트랙 정보로 검사해, 강화 델타가 있으면 Instantiate한
-        /// 복제본에 오버라이드를 적용해 반환한다. 없으면 원본을 그대로 반환해 공유 인스턴스를 유지한다.
-        /// </summary>
-        private static AllyUnitEffectBase TryUpgradeEffect(
+        private static AllyUnitEffectBase UpgradeEffect(
             AllyUnitEffectBase source,
             string unitId,
             string operatorId,
@@ -194,84 +166,101 @@ namespace RCCom.Runtime
         {
             if (source == null)
             {
-                return source;
+                return null;
             }
 
             switch (source)
             {
                 case TacticalRelayAuraEffect tacticalRelay:
                 {
-                    float delta = GetTotalDelta(trackSet, profile, operatorId,
-                        OperatorUpgradeTargetKind.EffectTacticalRelayMultiplier, unitId);
-                    if (delta == 0f)
+                    float move = ResolveValue(trackSet, profile, operatorId,
+                        OperatorUpgradeTargetKind.EffectTacticalRelayMultiplier, unitId,
+                        tacticalRelay.MoveSpeedMultiplier);
+                    float attack = ResolveValue(trackSet, profile, operatorId,
+                        OperatorUpgradeTargetKind.EffectTacticalRelayMultiplier, unitId,
+                        tacticalRelay.AttackSpeedMultiplier);
+                    if (Mathf.Approximately(move, tacticalRelay.MoveSpeedMultiplier) &&
+                        Mathf.Approximately(attack, tacticalRelay.AttackSpeedMultiplier))
                     {
                         return source;
                     }
 
                     var clone = Object.Instantiate(tacticalRelay);
                     clone.hideFlags = HideFlags.DontSave;
-                    clone.ApplyRuntimeOverride(
-                        tacticalRelay.MoveSpeedMultiplier + delta,
-                        tacticalRelay.AttackSpeedMultiplier + delta);
+                    clone.ApplyRuntimeOverride(move, attack);
                     return clone;
                 }
-
                 case VulnerableAuraEffect vulnerable:
                 {
-                    float multiplierDelta = GetTotalDelta(trackSet, profile, operatorId,
-                        OperatorUpgradeTargetKind.EffectVulnerableDamageMultiplier, unitId);
-                    float refreshDelta = GetTotalDelta(trackSet, profile, operatorId,
-                        OperatorUpgradeTargetKind.EffectVulnerableRefreshDuration, unitId);
-                    if (multiplierDelta == 0f && refreshDelta == 0f)
+                    float multiplier = ResolveValue(trackSet, profile, operatorId,
+                        OperatorUpgradeTargetKind.EffectVulnerableDamageMultiplier, unitId,
+                        vulnerable.DamageTakenMultiplier);
+                    float refresh = ResolveValue(trackSet, profile, operatorId,
+                        OperatorUpgradeTargetKind.EffectVulnerableRefreshDuration, unitId,
+                        vulnerable.RefreshDuration);
+                    if (Mathf.Approximately(multiplier, vulnerable.DamageTakenMultiplier) &&
+                        Mathf.Approximately(refresh, vulnerable.RefreshDuration))
                     {
                         return source;
                     }
 
                     var clone = Object.Instantiate(vulnerable);
                     clone.hideFlags = HideFlags.DontSave;
-                    clone.ApplyRuntimeOverride(
-                        vulnerable.DamageTakenMultiplier + multiplierDelta,
-                        vulnerable.RefreshDuration + refreshDelta);
+                    clone.ApplyRuntimeOverride(multiplier, refresh);
                     return clone;
                 }
-
                 case SlowAuraEffect slow:
                 {
-                    float delta = GetTotalDelta(trackSet, profile, operatorId,
-                        OperatorUpgradeTargetKind.EffectSlowMultiplier, unitId);
-                    if (delta == 0f)
+                    float multiplier = ResolveValue(trackSet, profile, operatorId,
+                        OperatorUpgradeTargetKind.EffectSlowMultiplier, unitId,
+                        slow.SpeedMultiplier);
+                    if (Mathf.Approximately(multiplier, slow.SpeedMultiplier))
                     {
                         return source;
                     }
 
                     var clone = Object.Instantiate(slow);
                     clone.hideFlags = HideFlags.DontSave;
-                    clone.ApplyRuntimeOverride(slow.SpeedMultiplier + delta);
+                    clone.ApplyRuntimeOverride(multiplier);
                     return clone;
                 }
-
                 case PitCrewRepairAuraEffect pitCrew:
                 {
-                    float repairDelta = GetTotalDelta(trackSet, profile, operatorId,
-                        OperatorUpgradeTargetKind.EffectRepairPerSecond, unitId);
-                    float pitStopDelta = GetTotalDelta(trackSet, profile, operatorId,
-                        OperatorUpgradeTargetKind.EffectRepairPitStopMultiplier, unitId);
-                    if (repairDelta == 0f && pitStopDelta == 0f)
+                    float repair = ResolveValue(trackSet, profile, operatorId,
+                        OperatorUpgradeTargetKind.EffectRepairPerSecond, unitId,
+                        pitCrew.RepairPerSecond);
+                    float pitStop = ResolveValue(trackSet, profile, operatorId,
+                        OperatorUpgradeTargetKind.EffectRepairPitStopMultiplier, unitId,
+                        pitCrew.PitStopMultiplier);
+                    if (Mathf.Approximately(repair, pitCrew.RepairPerSecond) &&
+                        Mathf.Approximately(pitStop, pitCrew.PitStopMultiplier))
                     {
                         return source;
                     }
 
                     var clone = Object.Instantiate(pitCrew);
                     clone.hideFlags = HideFlags.DontSave;
-                    clone.ApplyRuntimeOverride(
-                        pitCrew.RepairPerSecond + repairDelta,
-                        pitCrew.PitStopMultiplier + pitStopDelta);
+                    clone.ApplyRuntimeOverride(repair, pitStop);
                     return clone;
                 }
-
                 default:
                     return source;
             }
+        }
+
+        private static bool Matches(
+            OperatorUpgradeModifier modifier,
+            OperatorUpgradeTargetKind targetKind,
+            string unitId)
+        {
+            if (modifier == null || modifier.targetKind != targetKind)
+            {
+                return false;
+            }
+
+            return unitId == null
+                ? string.IsNullOrWhiteSpace(modifier.targetUnitId)
+                : string.Equals(modifier.targetUnitId, unitId, System.StringComparison.Ordinal);
         }
 
         private static AllyUnitData CloneAllyUnitData(AllyUnitData source)

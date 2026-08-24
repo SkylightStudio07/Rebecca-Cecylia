@@ -41,6 +41,8 @@ namespace RCCom.UI
             _profileStorage = new PlayerPrefsProfileStorage();
             if (lobbyOperatorImage != null)
             {
+                // 오퍼레이터마다 전신 원본 비율이 달라도 로비 레이아웃에 맞춰 찌그러지지 않게 한다.
+                lobbyOperatorImage.preserveAspect = true;
                 _sceneLobbyIdleSprite = lobbyOperatorImage.sprite;
             }
             Hide();

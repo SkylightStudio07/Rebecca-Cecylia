@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using RCCom.Data;
 using RCCom.Definitions.Card;
 using RCCom.Definitions.Tower;
@@ -41,6 +42,9 @@ namespace RCCom.Definitions.Operator
         [Tooltip("리크루트 화면 하단 카드에 표시할 상반신 이미지")]
         public Sprite shopUpperBodyPortrait;
 
+        [Tooltip("리크루트 화면 하단 좌우 카드에 표시할 전처리된 어두운 상반신 이미지")]
+        public Sprite shopUpperBodyPortraitDimmed;
+
         [Tooltip("리크루트 화면에서 이름 아래에 표시할 이명")]
         public string alternateName;
 
@@ -82,6 +86,9 @@ namespace RCCom.Definitions.Operator
 
         [Tooltip("해금 방식이 StageClearReward일 때 클리어해야 하는 영구 Stage ID")]
         public string requiredStageId = string.Empty;
+
+        [Tooltip("여러 항목 중 하나만 만족해도 해금된다. 구버전 필드는 마이그레이션 호환용으로 유지한다.")]
+        public List<OperatorUnlockCondition> unlockConditions = new();
 
         [Tooltip("스테이지 보상 UI 전용 초상화. 비어 있으면 선택 화면 초상화를 사용한다.")]
         public Sprite unlockRewardPortrait;

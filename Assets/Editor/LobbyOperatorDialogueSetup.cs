@@ -47,6 +47,9 @@ namespace RCCom.EditorTools
                 throw new InvalidOperationException("TitleScene에서 로비 OperatorImage를 찾지 못했습니다.");
             }
 
+            lobbyOperatorImage.preserveAspect = true;
+            EditorUtility.SetDirty(lobbyOperatorImage);
+
             OperatorDialogueSet dialogueSet = AssetDatabase.LoadAssetAtPath<OperatorDialogueSet>(DialogueSetPath);
             TMP_FontAsset koreanFont = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(KoreanFontPath);
             if (dialogueSet == null || koreanFont == null)

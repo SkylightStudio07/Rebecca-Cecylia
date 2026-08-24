@@ -7,6 +7,7 @@
     "managementPortraitPath": "Assets/Art/Character Standing Arts/바텐더/레베카/오퍼레이터관리_칼리스테.png",
     "shopPortraitPath": "Assets/Art/Character Standing Arts/바텐더/레베카/오퍼레이터관리_칼리스테.png",
     "shopUpperBodyPortraitPath": "Assets/Art/Character Standing Arts/바텐더/레베카/레베카/CalisteShop.png",
+    "shopUpperBodyPortraitDimmedPath": "Assets/Art/Character Standing Arts/바텐더/레베카/레베카/CalisteShop_locked.png",
     "alternateName": "Bartender",
     "shopDialogue": "우리는 빛이 없는 곳에서\n다시 만날 거야.",
     "unlockRewardPortraitPath": "",
@@ -31,76 +32,254 @@
     "unlockType": 2,
     "purchasePrice": 100,
     "requiredStageId": "",
+    "unlockConditions": [
+        {
+            "type": 2,
+            "requiredBestWave": 0,
+            "purchasePrice": 100,
+            "requiredStageId": ""
+        }
+    ],
     "upgradeTracks": [
         {
             "trackId": "calliste.cp-recovery",
             "displayName": "CP 회복 가속",
+            "description": "지휘 포인트 초당 회복량을 높입니다.",
             "category": 0,
-            "targetKind": 7,
-            "targetUnitId": "",
             "maxLevel": 8,
-            "perLevelDelta": 0.2,
-            "isInteger": false,
-            "hasMinValue": false,
-            "minValue": 0.0,
-            "hasMaxValue": false,
-            "maxValue": 0.0
+            "levelCosts": [
+                20,
+                35,
+                55,
+                80,
+                120,
+                170,
+                230,
+                290
+            ],
+            "requiredAffinityByLevel": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            "modifiers": [
+                {
+                    "targetKind": 7,
+                    "targetUnitId": "",
+                    "levelDeltas": [
+                        0.20000000298023225,
+                        0.4000000059604645,
+                        0.6000000238418579,
+                        0.800000011920929,
+                        1.0,
+                        1.2000000476837159,
+                        1.399999976158142,
+                        1.600000023841858
+                    ],
+                    "isInteger": false,
+                    "hasMinValue": false,
+                    "minValue": 0.0,
+                    "hasMaxValue": false,
+                    "maxValue": 0.0
+                }
+            ]
         },
         {
             "trackId": "calliste.cp-cap",
             "displayName": "CP 상한 확장",
+            "description": "보유 가능한 지휘 포인트 상한을 높입니다.",
             "category": 0,
-            "targetKind": 6,
-            "targetUnitId": "",
             "maxLevel": 8,
-            "perLevelDelta": 6.25,
-            "isInteger": true,
-            "hasMinValue": false,
-            "minValue": 0.0,
-            "hasMaxValue": false,
-            "maxValue": 0.0
+            "levelCosts": [
+                20,
+                35,
+                55,
+                80,
+                120,
+                170,
+                230,
+                290
+            ],
+            "requiredAffinityByLevel": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            "modifiers": [
+                {
+                    "targetKind": 6,
+                    "targetUnitId": "",
+                    "levelDeltas": [
+                        6.0,
+                        13.0,
+                        19.0,
+                        25.0,
+                        31.0,
+                        38.0,
+                        44.0,
+                        50.0
+                    ],
+                    "isInteger": true,
+                    "hasMinValue": false,
+                    "minValue": 0.0,
+                    "hasMaxValue": false,
+                    "maxValue": 0.0
+                }
+            ]
         },
         {
             "trackId": "calliste.relay-multiplier",
             "displayName": "전술 드론 버프 증폭",
+            "description": "전술 드론의 이동·공격 속도 지원을 강화합니다.",
             "category": 0,
-            "targetKind": 8,
-            "targetUnitId": "calliste-drone",
             "maxLevel": 8,
-            "perLevelDelta": 0.03125,
-            "isInteger": false,
-            "hasMinValue": false,
-            "minValue": 0.0,
-            "hasMaxValue": false,
-            "maxValue": 0.0
+            "levelCosts": [
+                20,
+                35,
+                55,
+                80,
+                120,
+                170,
+                230,
+                290
+            ],
+            "requiredAffinityByLevel": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            "modifiers": [
+                {
+                    "targetKind": 8,
+                    "targetUnitId": "calliste-drone",
+                    "levelDeltas": [
+                        0.029999999329447748,
+                        0.05999999865889549,
+                        0.09000000357627869,
+                        0.11999999731779099,
+                        0.15000000596046449,
+                        0.18000000715255738,
+                        0.2199999988079071,
+                        0.25
+                    ],
+                    "isInteger": false,
+                    "hasMinValue": false,
+                    "minValue": 0.0,
+                    "hasMaxValue": false,
+                    "maxValue": 0.0
+                }
+            ]
         },
         {
             "trackId": "calliste.drone-mobility",
             "displayName": "서포트 드론 기동성",
+            "description": "서포트 드론의 이동 속도를 높입니다.",
             "category": 1,
-            "targetKind": 3,
-            "targetUnitId": "calliste-drone",
             "maxLevel": 8,
-            "perLevelDelta": 0.1,
-            "isInteger": false,
-            "hasMinValue": false,
-            "minValue": 0.0,
-            "hasMaxValue": false,
-            "maxValue": 0.0
+            "levelCosts": [
+                10,
+                15,
+                25,
+                40,
+                60,
+                90,
+                130,
+                180
+            ],
+            "requiredAffinityByLevel": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            "modifiers": [
+                {
+                    "targetKind": 3,
+                    "targetUnitId": "calliste-drone",
+                    "levelDeltas": [
+                        0.10000000149011612,
+                        0.20000000298023225,
+                        0.30000001192092898,
+                        0.4000000059604645,
+                        0.5,
+                        0.6000000238418579,
+                        0.699999988079071,
+                        0.800000011920929
+                    ],
+                    "isInteger": false,
+                    "hasMinValue": false,
+                    "minValue": 0.0,
+                    "hasMaxValue": false,
+                    "maxValue": 0.0
+                }
+            ]
         },
         {
             "trackId": "calliste.guard-armor",
             "displayName": "중장갑 센티넬 요새화",
+            "description": "중장갑 센티넬의 최대 체력을 높입니다.",
             "category": 1,
-            "targetKind": 0,
-            "targetUnitId": "calliste-guard",
             "maxLevel": 8,
-            "perLevelDelta": 3.0,
-            "isInteger": false,
-            "hasMinValue": false,
-            "minValue": 0.0,
-            "hasMaxValue": false,
-            "maxValue": 0.0
+            "levelCosts": [
+                10,
+                15,
+                25,
+                40,
+                60,
+                90,
+                130,
+                180
+            ],
+            "requiredAffinityByLevel": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            "modifiers": [
+                {
+                    "targetKind": 0,
+                    "targetUnitId": "calliste-guard",
+                    "levelDeltas": [
+                        3.0,
+                        6.0,
+                        9.0,
+                        12.0,
+                        15.0,
+                        18.0,
+                        21.0,
+                        24.0
+                    ],
+                    "isInteger": false,
+                    "hasMinValue": false,
+                    "minValue": 0.0,
+                    "hasMaxValue": false,
+                    "maxValue": 0.0
+                }
+            ]
         }
     ]
 }

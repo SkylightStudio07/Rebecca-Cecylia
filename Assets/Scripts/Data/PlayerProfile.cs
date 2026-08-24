@@ -262,6 +262,36 @@ namespace RCCom.Data
             return SetUpgradeLevel(operatorId, trackId, GetUpgradeLevel(operatorId, trackId) + delta);
         }
 
+        /// <summary>
+        /// 강화 한 레벨의 조건 확인·재화 차감·레벨 기록을 한 번에 처리한다. UI가 각 단계를
+        /// 따로 호출하면 중복 클릭 중 재화만 빠지는 중간 상태가 생길 수 있어 Profile이 원자적으로
+        /// 소유한다. 트랙 데이터 타입을 참조하지 않아 저장 계층과 콘텐츠 계층의 결합은 만들지 않는다.
+        /// </summary>
+        public bool TryPurchaseUpgradeLevel(
+            string operatorId,
+            string trackId,
+            int maxLevel,
+            int cost,
+            int requiredAffinity)
+        {
+            if (string.IsNullOrWhiteSpace(operatorId) || string.IsNullOrWhiteSpace(trackId) ||
+                maxLevel < 1)
+            {
+                return false;
+            }
+
+            int currentLevel = GetUpgradeLevel(operatorId, trackId);
+            if (currentLevel >= maxLevel ||
+                GetOperatorAffinity(operatorId) < Math.Max(0, requiredAffinity) ||
+                !TrySpendCommodity(Math.Max(0, cost)))
+            {
+                return false;
+            }
+
+            SetUpgradeLevel(operatorId, trackId, currentLevel + 1);
+            return true;
+        }
+
         private OperatorUpgradeRecord FindUpgradeRecord(string operatorId, string trackId)
         {
             if (string.IsNullOrWhiteSpace(operatorId) || string.IsNullOrWhiteSpace(trackId) ||

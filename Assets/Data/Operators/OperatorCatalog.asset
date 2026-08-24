@@ -22,6 +22,7 @@ MonoBehaviour:
     managementPortrait: {fileID: -9117580695321126117, guid: 5e950858e95008a4ca29ca70c69f3a01, type: 3}
     shopPortrait: {fileID: 0}
     shopUpperBodyPortrait: {fileID: 0}
+    shopUpperBodyPortraitDimmed: {fileID: 0}
     alternateName: 
     shopDialogue: 
     address: operator/cassia
@@ -30,6 +31,11 @@ MonoBehaviour:
     requiredBestWave: 0
     purchasePrice: 0
     requiredStageId: 
+    unlockConditions:
+    - type: 0
+      requiredBestWave: 0
+      purchasePrice: 0
+      requiredStageId: 
     unlockRewardPortrait: {fileID: 8101380904372118242, guid: 7692c1b2ac922604a964bcd1026289c7, type: 3}
     unitPreviews:
     - unitId: cassia-guard
@@ -53,6 +59,7 @@ MonoBehaviour:
     managementPortrait: {fileID: 5667498768502238285, guid: cd384616f9666b341bc8163e96db5136, type: 3}
     shopPortrait: {fileID: 5667498768502238285, guid: cd384616f9666b341bc8163e96db5136, type: 3}
     shopUpperBodyPortrait: {fileID: 21300000, guid: 15ef76899e629894c8484e42fe738bbc, type: 3}
+    shopUpperBodyPortraitDimmed: {fileID: 3748452310637042673, guid: 489e9269d72c4a84b8e8d6ee5d1bd8ed, type: 3}
     alternateName: Bartender
     shopDialogue: "\uC6B0\uB9AC\uB294 \uBE5B\uC774 \uC5C6\uB294 \uACF3\uC5D0\uC11C\n\uB2E4\uC2DC
       \uB9CC\uB0A0 \uAC70\uC57C."
@@ -62,6 +69,11 @@ MonoBehaviour:
     requiredBestWave: 0
     purchasePrice: 100
     requiredStageId: 
+    unlockConditions:
+    - type: 2
+      requiredBestWave: 0
+      purchasePrice: 100
+      requiredStageId: 
     unlockRewardPortrait: {fileID: 8573740378125166142, guid: 93979212c860bc740a289e3b210e4fdf, type: 3}
     unitPreviews:
     - unitId: calliste-drone
@@ -83,16 +95,26 @@ MonoBehaviour:
     playStyleDescription: "\uB808\uC774\uC2F1\uAC78 \uCEE8\uC149\uC758 \uCE90\uB9AD\uD130"
     previewPortrait: {fileID: -5444712353710830913, guid: a13fbdb6118b92346afad784d8f984f9, type: 3}
     managementPortrait: {fileID: 4831207923975717834, guid: 86f456bec9ddbf940b3f7d082e6425a3, type: 3}
-    shopPortrait: {fileID: 0}
-    shopUpperBodyPortrait: {fileID: 0}
+    shopPortrait: {fileID: 5771864889448805728, guid: 5b49084e49d23c9439bdffe7e3b23f8f, type: 3}
+    shopUpperBodyPortrait: {fileID: 5213403170487169785, guid: f025c6e990d1a354891fb2f4188bab81, type: 3}
+    shopUpperBodyPortraitDimmed: {fileID: 4485910227987535040, guid: f079c1ff310953f48a5c5772d15af6a2, type: 3}
     alternateName: 
-    shopDialogue: 
+    shopDialogue: "Get, Set, GO!\n\uB2EC\uB824\uBCFC\uAE4C\uC694, \uAC10\uB3C5\uAD00!"
     address: operator/racing
     remoteContent: 0
     unlockType: 3
     requiredBestWave: 0
     purchasePrice: 0
     requiredStageId: ch1-02
+    unlockConditions:
+    - type: 3
+      requiredBestWave: 0
+      purchasePrice: 0
+      requiredStageId: ch1-02
+    - type: 2
+      requiredBestWave: 0
+      purchasePrice: 500
+      requiredStageId: 
     unlockRewardPortrait: {fileID: 5771864889448805728, guid: 5b49084e49d23c9439bdffe7e3b23f8f, type: 3}
     unitPreviews:
     - unitId: racing-heavy
@@ -111,19 +133,28 @@ MonoBehaviour:
       fallbackColor: {r: 1, g: 1, b: 1, a: 1}
   - operatorId: aurora
     displayName: "\uC624\uB85C\uB77C"
-    playStyleDescription: 
+    playStyleDescription: "\uC804\uC790\uC804\uACFC \uB514\uBC84\uD504 \uB4DC\uB860\uC73C\uB85C
+      \uC801\uC758 \uBC29\uC5B4\uC120\uC744 \uBB34\uB825\uD654\uD558\uB294 \uCC9C\uC7AC
+      \uD574\uCEE4"
     previewPortrait: {fileID: 5289064701412196668, guid: bb1abba075bbd6d4ead988923493eb6d, type: 3}
     managementPortrait: {fileID: 3339152671587006292, guid: f1835f90c9e5d27469c36ff53f78fe2d, type: 3}
-    shopPortrait: {fileID: 0}
-    shopUpperBodyPortrait: {fileID: 0}
-    alternateName: 
-    shopDialogue: 
+    shopPortrait: {fileID: 5558651059094571980, guid: fbf0aa06b56c04c428b157a771df7796, type: 3}
+    shopUpperBodyPortrait: {fileID: -2565678213714093970, guid: b3025d6bfe0364940869a9a91bc27071, type: 3}
+    shopUpperBodyPortraitDimmed: {fileID: 5426730094900957068, guid: 78e34ada9ec1051478b5564069bf747a, type: 3}
+    alternateName: Hacker
+    shopDialogue: "\uCE90\uB098\uB2E4 \uCD5C\uACE0\uC758 \uD574\uCEE4, \uC601\uC785\uD560
+      \uC900\uBE44\uB294 \uB410\uC5B4?\n\uD2B9\uAC00 \uD560\uC778 \uC911\uC774\uB77C\uACE0~"
     address: operator/aurora
     remoteContent: 0
     unlockType: 1
     requiredBestWave: 2
     purchasePrice: 0
     requiredStageId: 
+    unlockConditions:
+    - type: 2
+      requiredBestWave: 0
+      purchasePrice: 500
+      requiredStageId: 
     unlockRewardPortrait: {fileID: 5289064701412196668, guid: bb1abba075bbd6d4ead988923493eb6d, type: 3}
     unitPreviews:
     - unitId: aurora-debuff-drone

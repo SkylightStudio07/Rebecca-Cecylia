@@ -21,6 +21,7 @@ MonoBehaviour:
   managementPortrait: {fileID: -9117580695321126117, guid: 5e950858e95008a4ca29ca70c69f3a01, type: 3}
   shopPortrait: {fileID: 0}
   shopUpperBodyPortrait: {fileID: 0}
+  shopUpperBodyPortraitDimmed: {fileID: 0}
   alternateName: 
   shopDialogue: 
   playerData:
@@ -43,4 +44,9 @@ MonoBehaviour:
   requiredBestWave: 0
   purchasePrice: 0
   requiredStageId: 
+  unlockConditions:
+  - type: 0
+    requiredBestWave: 0
+    purchasePrice: 0
+    requiredStageId: 
   unlockRewardPortrait: {fileID: 0}

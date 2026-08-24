@@ -70,11 +70,19 @@ namespace RCCom.Runtime
                 }
 
                 profile.operatorUpgrades ??= new System.Collections.Generic.List<OperatorUpgradeRecord>();
+                var upgradeKeys = new System.Collections.Generic.HashSet<string>(StringComparer.Ordinal);
                 for (int i = profile.operatorUpgrades.Count - 1; i >= 0; i--)
                 {
                     OperatorUpgradeRecord record = profile.operatorUpgrades[i];
                     if (record == null || string.IsNullOrWhiteSpace(record.operatorId) ||
                         string.IsNullOrWhiteSpace(record.trackId))
+                    {
+                        profile.operatorUpgrades.RemoveAt(i);
+                        continue;
+                    }
+
+                    string key = record.operatorId + "\n" + record.trackId;
+                    if (!upgradeKeys.Add(key))
                     {
                         profile.operatorUpgrades.RemoveAt(i);
                         continue;

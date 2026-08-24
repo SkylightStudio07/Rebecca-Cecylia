@@ -126,6 +126,7 @@ namespace RCCom.EditorTools
             Sprite managementPortrait = LoadOptional<Sprite>(recipe.managementPortraitPath);
             Sprite shopPortrait = LoadOptional<Sprite>(recipe.shopPortraitPath);
             Sprite shopUpperBodyPortrait = LoadOptional<Sprite>(recipe.shopUpperBodyPortraitPath);
+            Sprite shopUpperBodyPortraitDimmed = LoadOptional<Sprite>(recipe.shopUpperBodyPortraitDimmedPath);
             Sprite unlockRewardPortrait = LoadOptional<Sprite>(recipe.unlockRewardPortraitPath);
 
             string operatorFolder = $"{OutputRoot}/{recipe.operatorId}";
@@ -181,6 +182,7 @@ namespace RCCom.EditorTools
                 asset.managementPortrait = managementPortrait;
                 asset.shopPortrait = shopPortrait;
                 asset.shopUpperBodyPortrait = shopUpperBodyPortrait;
+                asset.shopUpperBodyPortraitDimmed = shopUpperBodyPortraitDimmed;
                 asset.alternateName = recipe.alternateName ?? string.Empty;
                 asset.shopDialogue = recipe.shopDialogue ?? string.Empty;
                 asset.unlockRewardPortrait = unlockRewardPortrait;
@@ -194,6 +196,7 @@ namespace RCCom.EditorTools
                 asset.requiredBestWave = recipe.requiredBestWave;
                 asset.purchasePrice = recipe.purchasePrice;
                 asset.requiredStageId = recipe.requiredStageId ?? string.Empty;
+                asset.unlockConditions = CloneUnlockConditions(recipe.unlockConditions);
             }, changedAssets);
         }
 
@@ -329,7 +332,17 @@ namespace RCCom.EditorTools
 
             if (recipe.upgradeTracks != null)
             {
+                if (recipe.upgradeTracks.Count != 5)
+                {
+                    throw new InvalidOperationException(
+                        $"오퍼레이터 강화 트랙은 정확히 5개여야 합니다: {recipePath}");
+                }
+
                 var trackIds = new HashSet<string>(StringComparer.Ordinal);
+                var modifierTargets = new HashSet<string>(StringComparer.Ordinal);
+                AllyUnitRoster unitRoster = string.IsNullOrWhiteSpace(recipe.sourceAllyUnitRosterPath)
+                    ? null
+                    : AssetDatabase.LoadAssetAtPath<AllyUnitRoster>(recipe.sourceAllyUnitRosterPath);
                 foreach (OperatorUpgradeTrack track in recipe.upgradeTracks)
                 {
                     if (track == null || string.IsNullOrWhiteSpace(track.trackId))
@@ -348,8 +361,84 @@ namespace RCCom.EditorTools
                         throw new InvalidOperationException(
                             $"강화 트랙 maxLevel은 1 이상이어야 합니다: {track.trackId} ({recipePath})");
                     }
+
+                    if (string.IsNullOrWhiteSpace(track.displayName) || track.levelCosts == null ||
+                        track.levelCosts.Count != track.maxLevel || track.modifiers == null ||
+                        track.modifiers.Count == 0)
+                    {
+                        throw new InvalidOperationException(
+                            $"강화 이름·비용표·modifier 구성이 불완전합니다: {track.trackId} ({recipePath})");
+                    }
+
+                    if (track.requiredAffinityByLevel != null &&
+                        track.requiredAffinityByLevel.Count != 0 &&
+                        track.requiredAffinityByLevel.Count != track.maxLevel)
+                    {
+                        throw new InvalidOperationException(
+                            $"호감도 조건표 길이는 0 또는 maxLevel이어야 합니다: {track.trackId} ({recipePath})");
+                    }
+
+                    int previousAffinity = 0;
+                    for (int levelIndex = 0; levelIndex < track.maxLevel; levelIndex++)
+                    {
+                        if (track.levelCosts[levelIndex] <= 0)
+                        {
+                            throw new InvalidOperationException(
+                                $"강화 비용은 1 이상이어야 합니다: {track.trackId} Lv{levelIndex + 1} ({recipePath})");
+                        }
+
+                        if (track.requiredAffinityByLevel != null && track.requiredAffinityByLevel.Count > 0)
+                        {
+                            int affinity = track.requiredAffinityByLevel[levelIndex];
+                            if (affinity < previousAffinity || affinity < 0 ||
+                                affinity > PlayerProfile.MaxOperatorAffinity)
+                            {
+                                throw new InvalidOperationException(
+                                    $"호감도 조건은 0~100 사이에서 감소하지 않아야 합니다: {track.trackId} ({recipePath})");
+                            }
+
+                            previousAffinity = affinity;
+                        }
+                    }
+
+                    foreach (OperatorUpgradeModifier modifier in track.modifiers)
+                    {
+                        if (modifier == null || modifier.levelDeltas == null ||
+                            modifier.levelDeltas.Count != track.maxLevel ||
+                            modifier.hasMinValue && modifier.hasMaxValue && modifier.minValue > modifier.maxValue)
+                        {
+                            throw new InvalidOperationException(
+                                $"modifier의 레벨표 또는 범위가 잘못됐습니다: {track.trackId} ({recipePath})");
+                        }
+
+                        bool deployTarget = modifier.targetKind is
+                            OperatorUpgradeTargetKind.DeployStartingCommandPoints or
+                            OperatorUpgradeTargetKind.DeployMaxCommandPoints or
+                            OperatorUpgradeTargetKind.DeployCommandPointRecoveryPerSecond;
+                        if (deployTarget != string.IsNullOrWhiteSpace(modifier.targetUnitId))
+                        {
+                            throw new InvalidOperationException(
+                                $"지휘 포인트 modifier만 Unit ID를 비워야 합니다: {track.trackId} ({recipePath})");
+                        }
+
+                        if (!deployTarget && (unitRoster == null ||
+                            unitRoster.unitIds == null || !unitRoster.unitIds.Contains(modifier.targetUnitId)))
+                        {
+                            throw new InvalidOperationException(
+                                $"modifier Unit ID가 오퍼레이터 Roster에 없습니다: {modifier.targetUnitId} ({recipePath})");
+                        }
+
+                        string targetKey = modifier.targetKind + "\n" + modifier.targetUnitId;
+                        if (!modifierTargets.Add(targetKey))
+                        {
+                            throw new InvalidOperationException(
+                                $"같은 강화 대상이 여러 트랙에 중복됩니다: {track.trackId} ({recipePath})");
+                        }
+                    }
                 }
             }
+
+            ValidateUnlockConditions(recipe, recipePath);
         }
 
         private static List<OperatorUpgradeTrack> CloneUpgradeTracks(List<OperatorUpgradeTrack> source)
@@ -371,16 +460,111 @@ namespace RCCom.EditorTools
                 {
                     trackId = track.trackId,
                     displayName = track.displayName,
+                    description = track.description,
                     category = track.category,
-                    targetKind = track.targetKind,
-                    targetUnitId = track.targetUnitId,
                     maxLevel = track.maxLevel,
-                    perLevelDelta = track.perLevelDelta,
-                    isInteger = track.isInteger,
-                    hasMinValue = track.hasMinValue,
-                    minValue = track.minValue,
-                    hasMaxValue = track.hasMaxValue,
-                    maxValue = track.maxValue,
+                    levelCosts = track.levelCosts == null
+                        ? new List<int>()
+                        : new List<int>(track.levelCosts),
+                    requiredAffinityByLevel = track.requiredAffinityByLevel == null
+                        ? new List<int>()
+                        : new List<int>(track.requiredAffinityByLevel),
+                    modifiers = CloneUpgradeModifiers(track.modifiers),
+                });
+            }
+
+            return clone;
+        }
+
+        internal static List<OperatorUnlockCondition> CloneUnlockConditions(
+            List<OperatorUnlockCondition> source)
+        {
+            var clone = new List<OperatorUnlockCondition>();
+            if (source == null)
+            {
+                return clone;
+            }
+
+            foreach (OperatorUnlockCondition condition in source)
+            {
+                if (condition == null)
+                {
+                    continue;
+                }
+
+                clone.Add(new OperatorUnlockCondition
+                {
+                    type = condition.type,
+                    requiredBestWave = condition.requiredBestWave,
+                    purchasePrice = condition.purchasePrice,
+                    requiredStageId = condition.requiredStageId ?? string.Empty,
+                });
+            }
+
+            return clone;
+        }
+
+        private static void ValidateUnlockConditions(OperatorAssetRecipe recipe, string recipePath)
+        {
+            if (recipe.unlockConditions == null || recipe.unlockConditions.Count == 0)
+            {
+                return;
+            }
+
+            var types = new HashSet<OperatorUnlockType>();
+            foreach (OperatorUnlockCondition condition in recipe.unlockConditions)
+            {
+                if (condition == null || !types.Add(condition.type))
+                {
+                    throw new InvalidOperationException($"해금 조건이 비어 있거나 종류가 중복됩니다: {recipePath}");
+                }
+
+                if (condition.requiredBestWave < 0 || condition.purchasePrice < 0)
+                {
+                    throw new InvalidOperationException($"해금 조건 수치는 음수일 수 없습니다: {recipePath}");
+                }
+
+                if (condition.type == OperatorUnlockType.CommodityPurchase && condition.purchasePrice <= 0)
+                {
+                    throw new InvalidOperationException($"상점 구매 조건의 가격은 1 이상이어야 합니다: {recipePath}");
+                }
+
+                if (condition.type == OperatorUnlockType.StageClearReward &&
+                    string.IsNullOrWhiteSpace(condition.requiredStageId))
+                {
+                    throw new InvalidOperationException($"스테이지 보상 조건의 Stage ID가 비어 있습니다: {recipePath}");
+                }
+            }
+        }
+
+        private static List<OperatorUpgradeModifier> CloneUpgradeModifiers(
+            List<OperatorUpgradeModifier> source)
+        {
+            var clone = new List<OperatorUpgradeModifier>();
+            if (source == null)
+            {
+                return clone;
+            }
+
+            foreach (OperatorUpgradeModifier modifier in source)
+            {
+                if (modifier == null)
+                {
+                    continue;
+                }
+
+                clone.Add(new OperatorUpgradeModifier
+                {
+                    targetKind = modifier.targetKind,
+                    targetUnitId = modifier.targetUnitId,
+                    levelDeltas = modifier.levelDeltas == null
+                        ? new List<float>()
+                        : new List<float>(modifier.levelDeltas),
+                    isInteger = modifier.isInteger,
+                    hasMinValue = modifier.hasMinValue,
+                    minValue = modifier.minValue,
+                    hasMaxValue = modifier.hasMaxValue,
+                    maxValue = modifier.maxValue,
                 });
             }
 

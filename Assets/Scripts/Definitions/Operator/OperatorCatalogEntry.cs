@@ -32,6 +32,9 @@ namespace RCCom.Definitions.Operator
         [Tooltip("리크루트 화면 하단 카드에 표시할 상반신 이미지. 원격 콘텐츠는 다운로드 전 비워둔다.")]
         public Sprite shopUpperBodyPortrait;
 
+        [Tooltip("리크루트 화면 하단 좌우 카드에 표시할 전처리된 어두운 상반신 이미지")]
+        public Sprite shopUpperBodyPortraitDimmed;
+
         public string alternateName;
 
         [TextArea(2, 4)]
@@ -53,6 +56,9 @@ namespace RCCom.Definitions.Operator
 
         public string requiredStageId;
 
+        [Tooltip("여러 항목 중 하나만 만족해도 해금된다. 비어 있으면 구버전 단일 조건 필드를 사용한다.")]
+        public List<OperatorUnlockCondition> unlockConditions = new();
+
         [Tooltip("스테이지 보상 화면에 표시할 경량 초상화")]
         public Sprite unlockRewardPortrait;
 
@@ -68,43 +74,86 @@ namespace RCCom.Definitions.Operator
                 return false;
             }
 
-            return unlockType switch
+            if (unlockConditions != null && unlockConditions.Count > 0)
             {
-                OperatorUnlockType.InitiallyAvailable => true,
-                OperatorUnlockType.BestWave => profile.bestWave >= requiredBestWave,
-                OperatorUnlockType.CommodityPurchase => profile.HasAcquiredOperator(operatorId),
-                OperatorUnlockType.StageClearReward => profile.HasClearedStage(requiredStageId),
-                _ => false,
-            };
+                for (int i = 0; i < unlockConditions.Count; i++)
+                {
+                    if (unlockConditions[i] != null && unlockConditions[i].IsSatisfied(profile, operatorId))
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+
+            return CreateLegacyCondition().IsSatisfied(profile, operatorId);
         }
 
         public string GetLockedDescription()
         {
-            return unlockType switch
+            if (unlockConditions != null && unlockConditions.Count > 0)
             {
-                OperatorUnlockType.BestWave => $"최고 웨이브 {requiredBestWave} 달성 시 해금",
-                OperatorUnlockType.CommodityPurchase => $"{purchasePrice} 골드로 영입",
-                OperatorUnlockType.StageClearReward => $"스테이지 {FormatStageLabel(requiredStageId)} 클리어 보상",
-                _ => "사용 가능",
-            };
+                var descriptions = new List<string>();
+                for (int i = 0; i < unlockConditions.Count; i++)
+                {
+                    if (unlockConditions[i] != null)
+                    {
+                        descriptions.Add(unlockConditions[i].GetDescription());
+                    }
+                }
+
+                return descriptions.Count > 0 ? string.Join(" 또는 ", descriptions) : "해금 조건 미지정";
+            }
+
+            return CreateLegacyCondition().GetDescription();
         }
 
-        private static string FormatStageLabel(string stageId)
+        public bool HasUnlockCondition(OperatorUnlockType type)
         {
-            if (string.IsNullOrWhiteSpace(stageId))
+            if (unlockConditions != null && unlockConditions.Count > 0)
             {
-                return "미지정";
+                return unlockConditions.Exists(condition => condition != null && condition.type == type);
             }
 
-            string[] parts = stageId.Split('-');
-            if (parts.Length == 2 && parts[0].StartsWith("ch", StringComparison.OrdinalIgnoreCase) &&
-                int.TryParse(parts[0].Substring(2), out int chapter) &&
-                int.TryParse(parts[1], out int stage))
+            return unlockType == type;
+        }
+
+        public int GetPurchasePrice()
+        {
+            OperatorUnlockCondition condition = FindCondition(OperatorUnlockType.CommodityPurchase);
+            return condition != null ? condition.purchasePrice : purchasePrice;
+        }
+
+        public bool IsStageRewardFor(string stageId)
+        {
+            if (unlockConditions != null && unlockConditions.Count > 0)
             {
-                return $"{chapter}-{stage}";
+                return unlockConditions.Exists(condition => condition != null &&
+                    condition.type == OperatorUnlockType.StageClearReward &&
+                    string.Equals(condition.requiredStageId, stageId, StringComparison.OrdinalIgnoreCase));
             }
 
-            return stageId;
+            return unlockType == OperatorUnlockType.StageClearReward &&
+                string.Equals(requiredStageId, stageId, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private OperatorUnlockCondition FindCondition(OperatorUnlockType type)
+        {
+            return unlockConditions != null
+                ? unlockConditions.Find(condition => condition != null && condition.type == type)
+                : null;
+        }
+
+        private OperatorUnlockCondition CreateLegacyCondition()
+        {
+            return new OperatorUnlockCondition
+            {
+                type = unlockType,
+                requiredBestWave = requiredBestWave,
+                purchasePrice = purchasePrice,
+                requiredStageId = requiredStageId,
+            };
         }
     }
 }

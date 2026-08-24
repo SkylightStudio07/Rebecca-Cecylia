@@ -37,7 +37,7 @@ namespace RCCom.EditorTools
                 dialogueSet.operatorAcquired,
                 portrait: LoadPortrait("chibby_portrait_1.png"),
                 defaultLobby: LoadStanding("오로라.smile-1.png"),
-                entries: new[]
+                entries: new (string, Sprite)[]
                 {
                     ("캐나다 최고의 해커, 여기 등장!\n외주 인력이라지만 뭐어, 잘 부탁해!", LoadStanding("오로라.smile-1.png"))
                 }
@@ -48,7 +48,7 @@ namespace RCCom.EditorTools
                 dialogueSet.lobbyInteraction,
                 portrait: LoadPortrait("chibby_portrait_1.png"),
                 defaultLobby: LoadStanding("오로라.default-1.png"),
-                entries: new[]
+                entries: new (string, Sprite)[]
                 {
                     ("뭐야 뭐야, 감독관? 새 외주 일거리라도 가져왔어?", LoadStanding("오로라.curious-1.png")),
                     ("잠깐만~ 지금 방화벽 보안 패치 중이라 손이 바쁘거든? 3분만 대기!", LoadStanding("오로라.annoyed-1.png")),
@@ -61,7 +61,7 @@ namespace RCCom.EditorTools
                 dialogueSet.lobbyReturnTogether,
                 portrait: LoadPortrait("chibby_portrait_2.png"),
                 defaultLobby: LoadStanding("오로라.happy smile.png"),
-                entries: new[]
+                entries: new (string, Sprite)[]
                 {
                     ("뭐, 이 정도야 아무것도 아니니까!\n감독관도 수고했어!", LoadStanding("오로라.happy smile.png")),
                     ("내 드론 디버프 폭격 봤지? 완전 사기 치트키 수준이었다니까!", LoadStanding("오로라.smug.png"))
@@ -73,7 +73,7 @@ namespace RCCom.EditorTools
                 dialogueSet.lobbyReturn,
                 portrait: LoadPortrait("chibby_portrait_1.png"),
                 defaultLobby: LoadStanding("오로라.bored-1.png"),
-                entries: new[]
+                entries: new (string, Sprite)[]
                 {
                     ("어어~ 다녀왔어?\n잘 잤다~", LoadStanding("오로라.bored-1.png")),
                     ("나 없이 고생 좀 했나 보네? 다음엔 꼭 나도 데려가, 감독관.", LoadStanding("오로라.smile-2.png"))
@@ -85,7 +85,7 @@ namespace RCCom.EditorTools
                 dialogueSet.lobbyTouchUnfamiliar,
                 portrait: LoadPortrait("chibby_portrait_7.png"),
                 defaultLobby: LoadStanding("오로라.annoyed-1.png"),
-                entries: new[]
+                entries: new (string, Sprite)[]
                 {
                     ("어어, 터치 금지! 방화벽 뚫리면 감전된다?", LoadStanding("오로라.annoyed-1.png")),
                     ("계약서 똑바로 읽어봤어? 불필요한 신체 접촉은 외주 옵션에 없거든요~", LoadStanding("오로라.annoyed-2.png")),
@@ -98,7 +98,7 @@ namespace RCCom.EditorTools
                 dialogueSet.lobbyTouchFavorable,
                 portrait: LoadPortrait("chibby_portrait_1.png"),
                 defaultLobby: LoadStanding("오로라.smug.png"),
-                entries: new[]
+                entries: new (string, Sprite)[]
                 {
                     ("감독관은 생각보다 반응속도가 빠르네? 꽤 마음에 드는 스펙이야.", LoadStanding("오로라.smug.png")),
                     ("외주 계약 끝나도 여기 계속 있을까나~ 감독관이랑 일하는 거, 제법 재밌단 말이지.", LoadStanding("오로라.smile-1.png")),
@@ -111,7 +111,7 @@ namespace RCCom.EditorTools
                 dialogueSet.lobbyTouchJoy,
                 portrait: LoadPortrait("chibby_portrait_2.png"),
                 defaultLobby: LoadStanding("오로라.flustered-1.png"),
-                entries: new[]
+                entries: new (string, Sprite)[]
                 {
                     ("자꾸 쿡쿡 찌르면 시스템 과열된다고! ...뭐, 싫다는 건 아니지만.", LoadStanding("오로라.flustered-1.png")),
                     ("내 드론들 우선 제어권, 1순위가 나고 2순위가 감독관 너인 거 알아? 특별 대우라고!", LoadStanding("오로라.smug.png")),
@@ -124,7 +124,7 @@ namespace RCCom.EditorTools
                 dialogueSet.lobbyTouchLove,
                 portrait: LoadPortrait("chibby_portrait_11.png"),
                 defaultLobby: LoadStanding("오로라.blushing shyly-1.png"),
-                entries: new[]
+                entries: new (string, Sprite)[]
                 {
                     ("내 철벽 보안 시스템에 백도어 심은 범인이 누군지 알아? ...감독관 너잖아, 바보야.", LoadStanding("오로라.blushing shyly-1.png")),
                     ("다른 오퍼레이터들이랑 그렇게 다정하게 이야기하지 마. ...치트키 써서 감독관 시야 차단해버린다?", LoadStanding("오로라.annoyed-3.png")),
@@ -137,7 +137,7 @@ namespace RCCom.EditorTools
                 dialogueSet.lobbyTouchEx,
                 portrait: LoadPortrait("chibby_portrait_12.png"),
                 defaultLobby: LoadStanding("오로라.blushing shyly-3.png"),
-                entries: new[]
+                entries: new (string, Sprite)[]
                 {
                     ("이제 감독관 없이는 로그인도 안 돼... 내 하트의 루트 권한, 영원히 네 거야.", LoadStanding("오로라.blushing shyly-3.png")),
                     ("내 모든 개인 암호키, 감독관한테만 다 넘겨줄게. 그러니까... 평생 책임져, 알았지?", LoadStanding("오로라.fidgeting shyly.png")),
@@ -150,7 +150,7 @@ namespace RCCom.EditorTools
                 dialogueSet.gameStart,
                 portrait: LoadPortrait("chibby_portrait_2.png"),
                 defaultLobby: null,
-                entries: new[]
+                entries: new (string, Sprite)[]
                 {
                     ("접속 완료! 적들 시스템 싹 다 털어버릴 준비 됐어?", null),
                     ("자, 이번 판도 내가 하드캐리 해줄 테니까 딱 붙어있어!", null)
@@ -162,7 +162,7 @@ namespace RCCom.EditorTools
                 dialogueSet.skillUsed,
                 portrait: LoadPortrait("chibby_portrait_3.png"),
                 defaultLobby: null,
-                entries: new[]
+                entries: new (string, Sprite)[]
                 {
                     ("오버클럭 가동! 적 방화벽 강제 셧다운!", null),
                     ("루트 권한 탈취 완료! 디버프 잔뜩 걸어줄 테니까 다 쓸어버려!", null),
@@ -175,7 +175,7 @@ namespace RCCom.EditorTools
                 dialogueSet.baseAttacked,
                 portrait: LoadPortrait("chibby_portrait_4.png"),
                 defaultLobby: null,
-                entries: new[]
+                entries: new (string, Sprite)[]
                 {
                     ("야! 메인 서버 털리잖아! 백업 안 해뒀단 말이야!", null),
                     ("거점 핑 튀어! 당장 디도스 공격 차단해!", null),
@@ -188,7 +188,7 @@ namespace RCCom.EditorTools
                 dialogueSet.playerHit,
                 portrait: LoadPortrait("chibby_portrait_5.png"),
                 defaultLobby: null,
-                entries: new[]
+                entries: new (string, Sprite)[]
                 {
                     ("기체 쉴드 경고! 무빙 좀 신경 써 봐!", null),
                     ("피격 감지! 어어, 에러 로그 쌓인다!", null),
@@ -201,7 +201,7 @@ namespace RCCom.EditorTools
                 dialogueSet.playerHitCritical,
                 portrait: LoadPortrait("chibby_portrait_6.png"),
                 defaultLobby: null,
-                entries: new[]
+                entries: new (string, Sprite)[]
                 {
                     ("치명적 시스템 오류! 당장 빠져나와, 바보 감독관!!", null),
                     ("강제 로그아웃 직전이야! 죽으면 진짜 가만 안 둬!", null),
@@ -214,7 +214,7 @@ namespace RCCom.EditorTools
                 dialogueSet.insufficientGold,
                 portrait: LoadPortrait("chibby_portrait_7.png"),
                 defaultLobby: null,
-                entries: new[]
+                entries: new (string, Sprite)[]
                 {
                     ("자금 락 걸렸어! 무과금 유저도 아니고 돈 좀 더 모아와~", null),
                     ("잔액 0원! 나 천재 해커지만 골드 복사 치트는 안 쓴다고?", null)
@@ -226,7 +226,7 @@ namespace RCCom.EditorTools
                 dialogueSet.slotUnavailable,
                 portrait: LoadPortrait("chibby_portrait_8.png"),
                 defaultLobby: null,
-                entries: new[]
+                entries: new (string, Sprite)[]
                 {
                     ("포트 만석이야! 트래픽 초과로 더 못 꽂아!", null),
                     ("슬롯 꽉 찼어! 업그레이드 카드로 슬롯부터 확장하고 와!", null)
@@ -238,7 +238,7 @@ namespace RCCom.EditorTools
                 dialogueSet.playerDied,
                 portrait: LoadPortrait("chibby_portrait_9.png"),
                 defaultLobby: null,
-                entries: new[]
+                entries: new (string, Sprite)[]
                 {
                     ("연결 끊김... 거짓말이지? 야! 눈 떠봐... 제발...!!", null),
                     ("비정상 종료... 안 돼, 감독관! 복구 코드 실행해... 제발...", null)
@@ -250,7 +250,7 @@ namespace RCCom.EditorTools
                 dialogueSet.baseDestroyed,
                 portrait: LoadPortrait("chibby_portrait_10.png"),
                 defaultLobby: null,
-                entries: new[]
+                entries: new (string, Sprite)[]
                 {
                     ("메인 코어 파괴... 시스템 올 셧다운이야. ...감독관, 얼른 도망쳐!", null),
                     ("방화벽 완전 붕괴... 크윽, 이번 판은 리셋하고 재접속하자...", null)
