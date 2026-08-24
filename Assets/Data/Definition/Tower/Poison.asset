@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Poison
   m_EditorClassIdentifier: Assembly-CSharp::RCCom.Definitions.Tower.AttackTowerDefinition
   effects:
-  - {fileID: 11400000, guid: 3b33542cc05c041499a8f608f985eb00, type: 2}
+  - {fileID: 11400000, guid: 4c2c26f9679c07e48ad79b6c8da49b3c, type: 2}
   sprite: {fileID: 21300000, guid: ce36340e601d3e94b93307977088b948, type: 3}
   data:
     towerId: 7
