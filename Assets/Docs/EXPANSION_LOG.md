@@ -1693,3 +1693,15 @@ Phase 0 자동화 경로를 실제로 열고, 이후 오퍼레이터별 원격 �
 - 로비 하단 Enhance 버튼은 로딩 트랜지션을 거쳐 강화 탭으로 진입하고, Shop의 Recruit/Enhance 좌측 탭은 `LeftPanelSheet`의 기존 Normal/Selected 스프라이트를 유지하며 즉시 전환한다.
 - `OperatorEnhancePanelSetup`을 멱등한 Edit Mode 생성·검증 도구로 추가했다. 모든 카탈로그, 공용 패널, 트랙 행, 버튼과 탭 스프라이트 참조 및 TitleScene 기본 비활성 상태를 검사한다.
 - Unity 6000.3.13f1 재컴파일 결과 `failed=false`, `errors=[]`, 강화 UI 전용 배선 검증 통과를 확인했다. Play Mode와 플레이어 빌드는 실행하지 않았다.
+
+## 2026-08-25 — 발렌티나 대사 표정 Missing 참조 복구
+
+### 결정
+- `valentina-dialogue-set.md`의 번호가 붙은 대사 행에서 Primary 표정 121개를 순서대로 읽어 `OperatorDialogueSet.asset`의 18개 상황·121개 문장에 연결했다.
+- 전신은 `발렌티나.{표정}.png`, 전투 포트레잇은 `portrait/발렌티나.Chibby.{표정}.png`라는 실제 에셋 경로에서만 로드한다. 어느 하나라도 없거나 표의 행 수와 대사 수가 다르면 저장 전에 예외를 내므로, 존재하지 않는 파일을 추측해 Missing 참조를 만들지 않는다.
+- `ValentinaDialogueBuilder`를 남겨 문서 또는 아트가 갱신된 뒤에도 `RCCom/Operators/Build Valentina Dialogue`로 같은 데이터 배선을 재현할 수 있게 했다.
+
+### 검증
+- Unity 에디터 API로 `OperatorDialogueSet.asset`을 저장했다.
+- 18개 상황의 기본 전신·포트레잇과 121개 문장별 전신·포트레잇 참조가 모두 비어 있지 않음을 검증했다.
+- Unity 6000.3.13f1 재컴파일 결과 `failed=false`, `errors=[]`를 확인했다. Play Mode와 플레이어 빌드는 실행하지 않았다.
