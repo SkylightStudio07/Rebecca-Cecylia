@@ -1881,3 +1881,42 @@ Phase 0 자동화 경로를 실제로 열고, 이후 오퍼레이터별 원격 �
 - 플레이 테스트로 포물선 궤적 체감, 충격파 링 확산 속도, 그을림 자국 절차적 텍스처가
   실제로 봐줄 만한지 확인. 그을림 자국은 placeholder이니 정식 생성형 아트로 교체를 고려.
 - 착탄 연출 타이밍(위 트레이드오프 항목)이 어색하면 알려줄 것 — 다음 턴에 재검토.
+
+## 2026-08-24 — "스플래시" 타워가 스플래시 데미지를 낸 적이 없던 배선 오류 발견·수정
+
+### 결정
+- 4단계 VFX(스플래시 착탄 연출)를 붙였는데 플레이 테스트에서 전혀 보이지 않는다는 보고를 받고
+  역추적한 결과: `Assets/Data/Definition/Tower/Splash.asset`(towerId 6, displayName "스플래시")의
+  `effects` 슬롯이 **광역 피해를 주는 `SplashDamageEffect`가 아니라 단일 타겟
+  `DamageEffect_Default`를 참조**하고 있었다. `git log -p`로 추적하니 Day 3 커밋(`e848607`)에서
+  이 타워가 처음 만들어질 때부터 계속 이 상태였다 — 이번 VFX 브랜치가 만든 문제가 아니라, 스플래시
+  타워가 프로젝트 시작부터 한 번도 실제로 광역 피해를 낸 적이 없었다는 뜻이다. `Splash Damage
+  Effect.asset`은 어떤 타워 정의에서도 참조되지 않는 완전한 고아 에셋이었다(`grep -r`로 전체
+  `Assets/` 검색해 확인) — 그러니 4단계에서 아무리 정확하게 프리팹을 배선해도 게임에서 이
+  `OnTick`이 호출될 방법 자체가 없었다.
+- `effects[0]`을 `Splash Damage Effect.asset`으로 교체(`582d77f`). 데미지/사거리/공격주기는
+  `Splash.asset` 자체의 `data` 필드에 있고 이번 교체 대상인 `effects`와는 분리돼 있어 밸런스
+  수치는 영향받지 않는다.
+- 수정은 `.asset` 텍스트 직접 편집이 아니라 `unity command eval_file`로 Editor 안에서
+  `SerializedObject`를 통해 했다(이 저장소 관례).
+
+### 부수적으로 발견한 별개 버그 (이번 턴에서 손대지 않음)
+- 위 수정을 검증하는 과정에서 콘솔에 `InvalidOperationException: Collection was modified;
+  enumeration operation may not execute.`가 `PierceDamageEffect.OnTick`(줄 43,
+  `foreach (EnemyInstance enemy in ctx.activeEnemies) { ... enemy.TakeDamage(damage); }`)에서
+  발생하는 것을 목격했다. `git log -p`로 확인한 결과 이 foreach 루프는 이 효과가 처음 만들어질
+  때부터 그대로였고 이번 VFX 작업이 건드린 적 없는 코드라 — 이번 스코프의 회귀가 아니다. 관통
+  범위 내 적 중 하나가 `TakeDamage`로 죽으면서 `ctx.activeEnemies`(순회 중인 그 리스트)에서
+  동기적으로 제거되는 경로가 있으면 재현될 것으로 보인다. 별개 이슈라 이번 커밋에는 포함하지
+  않았고, 사람이 다음에 손볼 항목으로만 남겨둔다.
+
+### 검증
+- `unity command eval_file`로 `Splash.asset`의 `effects` 필드를 읽어 교체 전후 값을 콘솔 로그로
+  직접 확인(`DamageEffect_Default` → `Splash Damage Effect`).
+- `git diff`로 변경분이 정확히 그 한 줄(guid 교체)뿐임을 확인 후 커밋.
+
+### 사람이 할 일
+- 플레이 테스트로 스플래시 타워가 이제 실제로 광역 피해 + 4단계 VFX(포물선 투사체/충격파 링/
+  그을림 자국)를 내는지 확인.
+- `PierceDamageEffect.OnTick`의 "Collection was modified" 예외 — 관통 타워가 다수의 적을 동시에
+  잡을 때 재현되는지, 재현된다면 우선순위 낮은 별도 버그 수정 턴으로 처리할지 판단 필요.
