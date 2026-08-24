@@ -20,6 +20,7 @@ namespace RCCom.UI
         [SerializeField] private Image lobbyOperatorImage;
         [SerializeField] private TextMeshProUGUI dialogueText;
         [SerializeField] private CanvasGroup dialogueGroup;
+        [SerializeField] private OperatorAffinityElevationUI affinityElevationUI;
         [SerializeField] private string fallbackOperatorId = "cassia";
         [SerializeField] private float displayDuration = 4f;
         [SerializeField] private float fadeDuration = 0.35f;
@@ -30,6 +31,8 @@ namespace RCCom.UI
         private IProfileStorage _profileStorage;
         private Sprite _sceneLobbyIdleSprite;
         private OperatorDialogueSet _sceneDialogueSet;
+        private string _claimedReturnOperatorId = string.Empty;
+        private bool _claimedReturnParticipated;
 
         private void Awake()
         {
@@ -111,11 +114,24 @@ namespace RCCom.UI
         {
             PlayerProfile profile = _profileStorage.Load();
             string operatorId = ResolveOperatorId(profile);
-            bool claimedReturn = profile.TryClaimBattleReturn(operatorId, out _, out bool participated);
+            bool claimedReturn = ConsumePresentedReturn(operatorId, out bool participated);
+            if (!claimedReturn)
+            {
+                claimedReturn = profile.TryClaimBattleReturn(operatorId, out int grantedAffinity,
+                    out participated);
+                if (claimedReturn)
+                {
+                    if (affinityElevationUI != null)
+                    {
+                        affinityElevationUI.ShowAffinityIncrease(grantedAffinity);
+                    }
+                }
+            }
+
             if (claimedReturn)
             {
-                // 결과 화면에서 예약한 보상은 이 클릭에서만 소비한다. 로비 재진입이나
-                // WebGL 새로고침 뒤에도 중복 수령되지 않도록 정산 직후 저장한다.
+                // 이미 열린 로비에서 디버그 예약한 보상도 이 클릭에서 소비한다. 로비 재진입이나
+                // WebGL 새로고침 뒤에 중복 수령되지 않도록 정산 직후 저장한다.
                 _profileStorage.Save(profile);
             }
 
@@ -150,6 +166,28 @@ namespace RCCom.UI
             _remainingDisplay = Mathf.Max(0f, displayDuration);
             _remainingFade = 0f;
             _isFading = false;
+        }
+
+        /// <summary>
+        /// 타이틀에서 메인 로비가 완전히 열린 뒤 귀환 보상을 정산한다. 대사는 다음 클릭까지
+        /// 보존해, 자동 토스트 때문에 기존 귀환 대사가 일반 터치 대사로 바뀌지 않게 한다.
+        /// </summary>
+        public void PresentPendingReturn()
+        {
+            PlayerProfile profile = _profileStorage.Load();
+            string operatorId = ResolveOperatorId(profile);
+            if (!profile.TryClaimBattleReturn(operatorId, out int grantedAffinity, out bool participated))
+            {
+                return;
+            }
+
+            _profileStorage.Save(profile);
+            _claimedReturnOperatorId = operatorId;
+            _claimedReturnParticipated = participated;
+            if (affinityElevationUI != null)
+            {
+                affinityElevationUI.ShowAffinityIncrease(grantedAffinity);
+            }
         }
 
         public void Hide()
@@ -260,6 +298,21 @@ namespace RCCom.UI
             }
 
             return fallbackOperatorId;
+        }
+
+        private bool ConsumePresentedReturn(string operatorId, out bool participated)
+        {
+            participated = false;
+            if (string.IsNullOrWhiteSpace(_claimedReturnOperatorId) ||
+                !string.Equals(_claimedReturnOperatorId, operatorId, System.StringComparison.Ordinal))
+            {
+                return false;
+            }
+
+            participated = _claimedReturnParticipated;
+            _claimedReturnOperatorId = string.Empty;
+            _claimedReturnParticipated = false;
+            return true;
         }
 
         private static bool HasLines(OperatorLineSet lineSet)

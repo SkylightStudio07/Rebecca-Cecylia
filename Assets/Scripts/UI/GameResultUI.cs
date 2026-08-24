@@ -125,8 +125,8 @@ namespace RCCom.UI
 
             if (!string.IsNullOrWhiteSpace(participatingOperatorId))
             {
-                // 호감도는 전투 종료 즉시 올리지 않고, 귀환 후 해당 오퍼레이터를
-                // 클릭하는 순간 정산한다. 전투가 다시 시작돼도 보상이 소실되지 않게
+                // 호감도는 전투 종료 즉시 올리지 않고, 귀환 후 메인 로비가 열릴 때
+                // 정산한다. 전투가 다시 시작돼도 보상이 소실되지 않게
                 // PlayerProfile에 예약 상태를 함께 저장한다.
                 profile.QueueBattleReturn(participatingOperatorId);
                 shouldSaveProfile = true;

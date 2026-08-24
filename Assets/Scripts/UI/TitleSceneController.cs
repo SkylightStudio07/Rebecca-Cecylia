@@ -48,6 +48,7 @@ namespace RCCom.UI
         private bool isMenuOpen;
         private IProfileStorage profileStorage;
         private TextMeshProUGUI commodityText;
+        private LobbyOperatorDialogueUI lobbyOperatorDialogueUI;
 
         private void Awake()
         {
@@ -113,6 +114,11 @@ namespace RCCom.UI
             if (pressAnyButtonGraphic == null)
             {
                 pressAnyButtonGraphic = GetComponent<Graphic>();
+            }
+
+            if (mainMenuBackground != null)
+            {
+                lobbyOperatorDialogueUI = mainMenuBackground.GetComponentInChildren<LobbyOperatorDialogueUI>(true);
             }
         }
 
@@ -308,6 +314,10 @@ namespace RCCom.UI
             SetCanvasGroup(mainMenuGroup, 1f, true);
             isAnimating = false;
             isMenuOpen = true;
+            if (lobbyOperatorDialogueUI != null)
+            {
+                lobbyOperatorDialogueUI.PresentPendingReturn();
+            }
         }
 
         private IEnumerator PlayReturnToTitle()

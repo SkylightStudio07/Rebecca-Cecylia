@@ -49,8 +49,8 @@ namespace RCCom.Data
         public List<string> clearedStageIds = new List<string>();
 
         /// <summary>
-        /// 결과 화면에서 귀환한 오퍼레이터. 실제 보상은 로비에서 해당 오퍼레이터를
-        /// 클릭할 때 정산해, 전투 직후 자동으로 호감도가 오르는 것을 막는다.
+        /// 결과 화면에서 귀환한 오퍼레이터. 실제 보상은 메인 로비가 열린 뒤 정산해,
+        /// 전투 결과 화면에서 즉시 호감도가 오르는 것을 막는다.
         /// </summary>
         public string pendingReturnOperatorId = string.Empty;
         public int pendingReturnCount;
@@ -180,9 +180,9 @@ namespace RCCom.Data
         }
 
         /// <summary>
-        /// 로비 클릭 한 번으로 미수령 귀환 보상을 소비한다. 참전 오퍼레이터를 클릭하면
-        /// +5, 다른 오퍼레이터를 클릭하면 +2이며, 현재 로비는 참전 오퍼레이터를
-        /// 표시하므로 기본 흐름은 +5다.
+        /// 로비 진입 또는 클릭 폴백에서 미수령 귀환 보상을 소비한다. 참전 오퍼레이터면
+        /// +5, 다른 오퍼레이터면 +2이며, 현재 로비는 참전 오퍼레이터를 표시하므로
+        /// 기본 흐름은 +5다.
         /// </summary>
         public bool TryClaimBattleReturn(string interactedOperatorId, out int grantedAffinity,
             out bool participated)
@@ -200,8 +200,10 @@ namespace RCCom.Data
             int perReturn = participated
                 ? ReturnAffinityWithParticipation
                 : ReturnAffinityWithoutParticipation;
-            grantedAffinity = perReturn * pendingReturnCount;
-            AddOperatorAffinity(interactedOperatorId, grantedAffinity);
+            int previousAffinity = GetOperatorAffinity(interactedOperatorId);
+            AddOperatorAffinity(interactedOperatorId, perReturn * pendingReturnCount);
+            // 상한에 막힌 값을 알림에 표시하지 않도록 요청량이 아닌 실제 증가량을 반환한다.
+            grantedAffinity = GetOperatorAffinity(interactedOperatorId) - previousAffinity;
 
             pendingReturnOperatorId = string.Empty;
             pendingReturnCount = 0;
