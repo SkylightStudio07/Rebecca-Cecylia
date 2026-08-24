@@ -2,8 +2,10 @@ using System;
 using RCCom.Effects.Tower.Concrete;
 using RCCom.Runtime;
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEditor.U2D.Sprites;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace RCCom.EditorTools
 {
@@ -29,6 +31,9 @@ namespace RCCom.EditorTools
             "Assets/Data/Effects/Tower/Splash Damage Effect.asset";
         private const string PierceDamageEffectPath =
             "Assets/Data/Effects/Tower/Pierce Damage Effect.asset";
+        private const string PoisonDamageEffectPath =
+            "Assets/Data/Effects/Tower/Poison Damage Effect.asset";
+        private const string PlayerScenePath = "Assets/Scenes/DefenseScene.unity";
 
         [MenuItem("RCCom/Combat VFX/Build Projectile And Hit Spark")]
         public static void BuildAndConnect()
@@ -41,11 +46,13 @@ namespace RCCom.EditorTools
             ConnectEffect<DamageEffect>(DamageEffectPath, fakeProjectilePrefab);
             ConnectEffect<SplashDamageEffect>(SplashDamageEffectPath, fakeProjectilePrefab);
             ConnectEffect<PierceDamageEffect>(PierceDamageEffectPath, fakeProjectilePrefab);
+            ConnectEffect<PoisonDamageEffect>(PoisonDamageEffectPath, fakeProjectilePrefab);
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
+            ConnectPlayerController(fakeProjectilePrefab);
             Validate();
-            Debug.Log("[CombatVfxAssetBuilder] 투사체·히트 스파크 생성 및 세 공격 효과 배선 완료");
+            Debug.Log("[CombatVfxAssetBuilder] 투사체·히트 스파크 생성 및 네 공격 효과 + 플레이어 배선 완료");
         }
 
         private static void ConfigureProjectileSprite()
@@ -265,6 +272,75 @@ namespace RCCom.EditorTools
             EditorUtility.SetDirty(effect);
         }
 
+        /// <summary>
+        /// PlayerController는 프리팹이 아니라 DefenseScene에 직접 배치된 씬 오브젝트라 SO 배선과
+        /// 달리 씬을 열어 컴포넌트를 찾아야 한다. 원래 열려 있던 씬 목록을 기억해뒀다가 끝나면
+        /// 되돌려, 이 메뉴 실행이 에디터에 열려 있던 작업 씬을 조용히 바꿔버리지 않게 한다.
+        /// </summary>
+        private static void ConnectPlayerController(GameObject prefab)
+        {
+            string[] originallyOpenScenePaths = GetOpenScenePaths();
+            bool alreadyOpen = Array.IndexOf(originallyOpenScenePaths, PlayerScenePath) >= 0;
+
+            Scene scene = alreadyOpen
+                ? SceneManager.GetSceneByPath(PlayerScenePath)
+                : EditorSceneManager.OpenScene(PlayerScenePath, OpenSceneMode.Additive);
+
+            try
+            {
+                PlayerController player = FindPlayerController(scene);
+                if (player == null)
+                {
+                    throw new InvalidOperationException(
+                        $"{PlayerScenePath}에서 PlayerController를 찾지 못했습니다.");
+                }
+
+                var serializedPlayer = new SerializedObject(player);
+                SerializedProperty property = serializedPlayer.FindProperty("fakeProjectilePrefab");
+                if (property == null)
+                {
+                    throw new InvalidOperationException("PlayerController에 fakeProjectilePrefab 슬롯이 없습니다.");
+                }
+
+                property.objectReferenceValue = prefab;
+                serializedPlayer.ApplyModifiedPropertiesWithoutUndo();
+                EditorSceneManager.MarkSceneDirty(scene);
+                EditorSceneManager.SaveScene(scene);
+            }
+            finally
+            {
+                if (!alreadyOpen)
+                {
+                    EditorSceneManager.CloseScene(scene, true);
+                }
+            }
+        }
+
+        private static PlayerController FindPlayerController(Scene scene)
+        {
+            foreach (GameObject root in scene.GetRootGameObjects())
+            {
+                PlayerController player = root.GetComponentInChildren<PlayerController>(true);
+                if (player != null)
+                {
+                    return player;
+                }
+            }
+
+            return null;
+        }
+
+        private static string[] GetOpenScenePaths()
+        {
+            var paths = new string[SceneManager.sceneCount];
+            for (int i = 0; i < paths.Length; i++)
+            {
+                paths[i] = SceneManager.GetSceneAt(i).path;
+            }
+
+            return paths;
+        }
+
         [MenuItem("RCCom/Combat VFX/Validate Projectile And Hit Spark")]
         public static void Validate()
         {
@@ -312,7 +388,44 @@ namespace RCCom.EditorTools
             ValidateEffect<DamageEffect>(DamageEffectPath, fakeProjectilePrefab);
             ValidateEffect<SplashDamageEffect>(SplashDamageEffectPath, fakeProjectilePrefab);
             ValidateEffect<PierceDamageEffect>(PierceDamageEffectPath, fakeProjectilePrefab);
+            ValidateEffect<PoisonDamageEffect>(PoisonDamageEffectPath, fakeProjectilePrefab);
+            ValidatePlayerController(fakeProjectilePrefab);
             Debug.Log("[CombatVfxAssetBuilder] 투사체·히트 스파크 에셋 검증 통과");
+        }
+
+        private static void ValidatePlayerController(GameObject expectedPrefab)
+        {
+            string[] originallyOpenScenePaths = GetOpenScenePaths();
+            bool alreadyOpen = Array.IndexOf(originallyOpenScenePaths, PlayerScenePath) >= 0;
+
+            Scene scene = alreadyOpen
+                ? SceneManager.GetSceneByPath(PlayerScenePath)
+                : EditorSceneManager.OpenScene(PlayerScenePath, OpenSceneMode.Additive);
+
+            try
+            {
+                PlayerController player = FindPlayerController(scene);
+                if (player == null)
+                {
+                    throw new InvalidOperationException(
+                        $"{PlayerScenePath}에서 PlayerController를 찾지 못했습니다.");
+                }
+
+                var serializedPlayer = new SerializedObject(player);
+                SerializedProperty property = serializedPlayer.FindProperty("fakeProjectilePrefab");
+                if (property == null || property.objectReferenceValue != expectedPrefab)
+                {
+                    throw new InvalidOperationException(
+                        "PlayerController의 fakeProjectilePrefab 배선이 올바르지 않습니다.");
+                }
+            }
+            finally
+            {
+                if (!alreadyOpen)
+                {
+                    EditorSceneManager.CloseScene(scene, true);
+                }
+            }
         }
 
         private static void ValidateSpriteImport()

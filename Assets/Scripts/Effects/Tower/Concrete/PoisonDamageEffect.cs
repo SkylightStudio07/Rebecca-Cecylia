@@ -17,7 +17,7 @@ namespace RCCom.Effects.Tower.Concrete
     {
         [SerializeField] private float poisonDamagePerSecond = 3f;
         [SerializeField] private float poisonDuration = 3f;
-        [SerializeField] private GameObject attackFlashPrefab;
+        [SerializeField] private GameObject fakeProjectilePrefab;
 
         public override void OnTick(TowerContext ctx)
         {
@@ -40,7 +40,7 @@ namespace RCCom.Effects.Tower.Concrete
 
             target.TakeDamage(TowerDamageMath.CalculateDamage(ctx.self, data.damage));
             target.ApplyPoison(poisonDamagePerSecond, poisonDuration);
-            AttackFlash.Spawn(attackFlashPrefab, ctx.self.Position, target.position);
+            FakeProjectile.Spawn(fakeProjectilePrefab, ctx.self.Position, target.position);
 
             if (SoundManager.Instance != null)
             {

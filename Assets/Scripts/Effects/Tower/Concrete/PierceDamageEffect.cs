@@ -16,7 +16,6 @@ namespace RCCom.Effects.Tower.Concrete
     public class PierceDamageEffect : TowerEffectBase
     {
         [SerializeField] private float beamHalfAngleDegrees = 10f;
-        [SerializeField] private GameObject attackFlashPrefab;
         [SerializeField] private GameObject fakeProjectilePrefab;
 
         public override void OnTick(TowerContext ctx)
@@ -56,7 +55,6 @@ namespace RCCom.Effects.Tower.Concrete
             }
 
             Vector3 beamEnd = ctx.self.Position + beamDirection * data.attackRange;
-            AttackFlash.Spawn(attackFlashPrefab, ctx.self.Position, beamEnd);
             FakeProjectile.Spawn(fakeProjectilePrefab, ctx.self.Position, beamEnd);
 
             if (SoundManager.Instance != null)

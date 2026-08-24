@@ -17,7 +17,6 @@ namespace RCCom.Effects.Tower.Concrete
     {
         [SerializeField] private float splashRadius = 1.5f;
         [SerializeField] private float splashDamageMultiplier = 0.5f;
-        [SerializeField] private GameObject attackFlashPrefab;
         [SerializeField] private GameObject fakeProjectilePrefab;
 
         public override void OnTick(TowerContext ctx)
@@ -41,7 +40,6 @@ namespace RCCom.Effects.Tower.Concrete
 
             float damage = TowerDamageMath.CalculateDamage(ctx.self, data.damage);
             target.TakeDamage(damage);
-            AttackFlash.Spawn(attackFlashPrefab, ctx.self.Position, target.position);
             FakeProjectile.Spawn(fakeProjectilePrefab, ctx.self.Position, target.position);
 
             if (SoundManager.Instance != null)
