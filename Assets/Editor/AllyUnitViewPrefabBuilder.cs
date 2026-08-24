@@ -17,6 +17,7 @@ namespace RCCom.EditorTools
         [MenuItem("RCCom/Ally Units/Build Common View Prefab")]
         public static void Build()
         {
+            EnsureOverwriteIsOwned(PrefabPath);
             var root = new GameObject("AllyUnitView");
 
             try
@@ -30,6 +31,25 @@ namespace RCCom.EditorTools
                 renderer.sortingOrder = 2;
 
                 root.AddComponent<AllyUnitView>();
+
+                // 기존 프리팹과 구조가 같으면 재생성을 건너뛰어 손으로 튜닝한 값(소팅오더 등)을
+                // 보존한다. 구조가 바뀐 경우에만 값을 최대한 이식한 뒤 재생성한다
+                // (BuilderPrefabMerge 참고, {{user}} 지적, 2026-08-24).
+                GameObject existing = AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPath);
+                if (existing != null && BuilderPrefabMerge.HasSameShape(existing, root))
+                {
+                    Debug.Log($"[AllyUnitViewPrefabBuilder] 구조 변경 없음, 기존 프리팹 값 보존: {PrefabPath}");
+                    Validate();
+                    return;
+                }
+
+                if (existing != null)
+                {
+                    int mergedCount = BuilderPrefabMerge.CopyTunedValues(existing, root);
+                    Debug.LogWarning(
+                        $"[AllyUnitViewPrefabBuilder] 구조 변경을 감지해 프리팹을 재생성합니다 " +
+                        $"(값 필드 {mergedCount}개 컴포넌트에서 이식): {PrefabPath}");
+                }
 
                 GameObject prefab = PrefabUtility.SaveAsPrefabAsset(root, PrefabPath, out bool succeeded);
                 if (!succeeded || prefab == null)
@@ -48,6 +68,15 @@ namespace RCCom.EditorTools
             finally
             {
                 UnityEngine.Object.DestroyImmediate(root);
+            }
+        }
+
+        private static void EnsureOverwriteIsOwned(string path)
+        {
+            UnityEngine.Object existing = AssetDatabase.LoadMainAssetAtPath(path);
+            if (existing != null && Array.IndexOf(AssetDatabase.GetLabels(existing), GeneratedLabel) < 0)
+            {
+                throw new InvalidOperationException($"자동 생성 라벨이 없는 기존 에셋은 덮어쓸 수 없습니다: {path}");
             }
         }
 
