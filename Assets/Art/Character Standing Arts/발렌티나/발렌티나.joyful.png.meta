@@ -1,0 +1,455 @@
+fileFormatVersion: 2
+guid: 7bdc6ca24e4a2bd4c84694d27190c487
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -6665568463997063814
+    second: "\uBC1C\uB80C\uD2F0\uB098.joyful_0"
+  - first:
+      213: 7639722290450093243
+    second: "\uBC1C\uB80C\uD2F0\uB098.joyful_1"
+  - first:
+      213: 7364739560733644323
+    second: "\uBC1C\uB80C\uD2F0\uB098.joyful_2"
+  - first:
+      213: 7890240686625510956
+    second: "\uBC1C\uB80C\uD2F0\uB098.joyful_3"
+  - first:
+      213: -6967043964047071732
+    second: "\uBC1C\uB80C\uD2F0\uB098.joyful_4"
+  - first:
+      213: 714751861641403277
+    second: "\uBC1C\uB80C\uD2F0\uB098.joyful_5"
+  - first:
+      213: 173607826548855259
+    second: "\uBC1C\uB80C\uD2F0\uB098.joyful_6"
+  - first:
+      213: -1015663266550148883
+    second: "\uBC1C\uB80C\uD2F0\uB098.joyful_7"
+  - first:
+      213: -6887276436785578037
+    second: "\uBC1C\uB80C\uD2F0\uB098.joyful_8"
+  - first:
+      213: -5038020725691247668
+    second: "\uBC1C\uB80C\uD2F0\uB098.joyful_9"
+  - first:
+      213: -2229312821092051071
+    second: "\uBC1C\uB80C\uD2F0\uB098.joyful_10"
+  - first:
+      213: 8089103729059525658
+    second: "\uBC1C\uB80C\uD2F0\uB098.joyful_11"
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 1
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: "\uBC1C\uB80C\uD2F0\uB098.joyful_0"
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 1142
+        width: 18
+        height: 74
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a7da8653cc42f73a0800000000000000
+      internalID: -6665568463997063814
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uBC1C\uB80C\uD2F0\uB098.joyful_1"
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 1084
+        width: 18
+        height: 62
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bb459e832feb50a60800000000000000
+      internalID: 7639722290450093243
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uBC1C\uB80C\uD2F0\uB098.joyful_2"
+      rect:
+        serializedVersion: 2
+        x: 99
+        y: 0
+        width: 709
+        height: 1216
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3269bc44c9fc43660800000000000000
+      internalID: 7364739560733644323
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uBC1C\uB80C\uD2F0\uB098.joyful_3"
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 636
+        width: 18
+        height: 450
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c26d5a6a914cf7d60800000000000000
+      internalID: 7890240686625510956
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uBC1C\uB80C\uD2F0\uB098.joyful_4"
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 631
+        width: 10
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c06e17c7d66105f90800000000000000
+      internalID: -6967043964047071732
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uBC1C\uB80C\uD2F0\uB098.joyful_5"
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 580
+        width: 17
+        height: 57
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d8b5faff70f4be900800000000000000
+      internalID: 714751861641403277
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uBC1C\uB80C\uD2F0\uB098.joyful_6"
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 502
+        width: 17
+        height: 86
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bd11caff567c86200800000000000000
+      internalID: 173607826548855259
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uBC1C\uB80C\uD2F0\uB098.joyful_7"
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 478
+        width: 17
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: de09dd9e3a3a7e1f0800000000000000
+      internalID: -1015663266550148883
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uBC1C\uB80C\uD2F0\uB098.joyful_8"
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 217
+        width: 17
+        height: 265
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bcf3a73329a7b60a0800000000000000
+      internalID: -6887276436785578037
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uBC1C\uB80C\uD2F0\uB098.joyful_9"
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 213
+        width: 7
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cc31e12b7da551ab0800000000000000
+      internalID: -5038020725691247668
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uBC1C\uB80C\uD2F0\uB098.joyful_10"
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 63
+        width: 17
+        height: 156
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1879595fcc3ef01e0800000000000000
+      internalID: -2229312821092051071
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uBC1C\uB80C\uD2F0\uB098.joyful_11"
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 17
+        height: 70
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a1471e1dbf4424070800000000000000
+      internalID: 8089103729059525658
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      "\uBC1C\uB80C\uD2F0\uB098.joyful_0": -6665568463997063814
+      "\uBC1C\uB80C\uD2F0\uB098.joyful_1": 7639722290450093243
+      "\uBC1C\uB80C\uD2F0\uB098.joyful_10": -2229312821092051071
+      "\uBC1C\uB80C\uD2F0\uB098.joyful_11": 8089103729059525658
+      "\uBC1C\uB80C\uD2F0\uB098.joyful_2": 7364739560733644323
+      "\uBC1C\uB80C\uD2F0\uB098.joyful_3": 7890240686625510956
+      "\uBC1C\uB80C\uD2F0\uB098.joyful_4": -6967043964047071732
+      "\uBC1C\uB80C\uD2F0\uB098.joyful_5": 714751861641403277
+      "\uBC1C\uB80C\uD2F0\uB098.joyful_6": 173607826548855259
+      "\uBC1C\uB80C\uD2F0\uB098.joyful_7": -1015663266550148883
+      "\uBC1C\uB80C\uD2F0\uB098.joyful_8": -6887276436785578037
+      "\uBC1C\uB80C\uD2F0\uB098.joyful_9": -5038020725691247668
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

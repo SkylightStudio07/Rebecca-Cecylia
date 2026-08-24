@@ -166,9 +166,12 @@ namespace RCCom.UI
         {
             OperatorCatalogEntry entry = GetSelectedEntry();
             bool hasEntry = entry != null;
-            SetSprite(operatorPortrait, hasEntry ? entry.shopPortrait : null);
-            SetSprite(operatorUpperBodyPortrait,
-                hasEntry ? entry.shopUpperBodyPortrait : null);
+            RemotePreviewSpriteLoader.LoadInto(operatorPortrait,
+                hasEntry ? entry.shopPortrait : null,
+                hasEntry ? entry.shopPortraitAddress : null, Color.clear);
+            RemotePreviewSpriteLoader.LoadInto(operatorUpperBodyPortrait,
+                hasEntry ? entry.shopUpperBodyPortrait : null,
+                hasEntry ? entry.shopUpperBodyPortraitAddress : null, Color.clear);
             RenderSideSlots();
 
             SetText(operatorName, hasEntry ? entry.displayName : string.Empty);
@@ -212,8 +215,11 @@ namespace RCCom.UI
         {
             Sprite sprite = entry != null && entry.shopUpperBodyPortraitDimmed != null
                 ? entry.shopUpperBodyPortraitDimmed
-                : entry != null ? entry.shopUpperBodyPortrait : null;
-            SetSprite(portrait, sprite);
+                : entry?.shopUpperBodyPortrait;
+            string address = entry != null && !string.IsNullOrEmpty(entry.shopUpperBodyPortraitDimmedAddress)
+                ? entry.shopUpperBodyPortraitDimmedAddress
+                : entry?.shopUpperBodyPortraitAddress;
+            RemotePreviewSpriteLoader.LoadInto(portrait, sprite, address, Color.clear);
             SetText(nameLabel, entry != null ? entry.displayName : string.Empty);
             if (lockSprite != null)
             {
@@ -278,17 +284,6 @@ namespace RCCom.UI
                     item.Setup(entry.unitPreviews[i]);
                 }
             }
-        }
-
-        private static void SetSprite(Image image, Sprite sprite)
-        {
-            if (image == null)
-            {
-                return;
-            }
-
-            image.sprite = sprite;
-            image.enabled = sprite != null;
         }
 
         private static void SetText(TMP_Text label, string value)

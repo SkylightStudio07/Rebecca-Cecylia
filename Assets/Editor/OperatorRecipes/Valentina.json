@@ -1,0 +1,285 @@
+{
+    "operatorId": "valentina",
+    "catalogOrder": 4,
+    "displayName": "발렌티나",
+    "playStyleDescription": "메가코프 화학 폐기물 특수 처리반 출신의 화학공학 폭파 전문가",
+    "selectionPortraitPath": "Assets/Art/Character Standing Arts/발렌티나/portrait/발렌티나.Chibby.default.png",
+    "managementPortraitPath": "Assets/Art/Character Standing Arts/발렌티나/발렌티나.bored-1.png",
+    "shopPortraitPath": "Assets/Art/Character Standing Arts/발렌티나/발렌티나.bored-1.png",
+    "shopUpperBodyPortraitPath": "Assets/Art/Character Standing Arts/발렌티나/portrait/발렌티나.Chibby.childlike whining-1.png",
+    "shopUpperBodyPortraitDimmedPath": "Assets/Art/Character Standing Arts/발렌티나/portrait/발렌티나.Chibby.embarrassed.png",
+    "alternateName": "Mad Scientist",
+    "shopDialogue": "안전 규정? 그런 건 실험실 책상에나 꽂아두라고.",
+    "unlockRewardPortraitPath": "Assets/Art/Character Standing Arts/발렌티나/portrait/발렌티나.Chibby.smile.png",
+    "sourceTowerRosterPath": "Assets/Data/Prefabs/TowerRoaster.asset",
+    "sourceCardRosterPath": "Assets/Data/Cards/Unlock/플레이어 카드 로스터.asset",
+    "sourceAllyUnitRosterPath": "Assets/Data/Operators/valentina/AllyUnits/valentina-ally-unit-roster.asset",
+    "dialogueSetPath": "Assets/Data/Operators/valentina/OperatorDialogueSet.asset",
+    "remoteContent": true,
+    "playerData": {
+        "maxHealth": 30.0,
+        "moveSpeed": 5.0,
+        "hitInvulnerabilityDuration": 0.0,
+        "attackDamage": 5.0,
+        "attackRange": 4.0,
+        "attackInterval": 1.0,
+        "projectileSpeed": 1.0,
+        "skillCooldown": 12.0,
+        "skillRange": 5.0,
+        "skillDamage": 5.0
+    },
+    "requiredBestWave": 0,
+    "unlockType": 0,
+    "purchasePrice": 0,
+    "requiredStageId": "",
+    "unlockConditions": [
+        {
+            "type": 2,
+            "requiredBestWave": 0,
+            "purchasePrice": 500,
+            "requiredStageId": ""
+        }
+    ],
+    "upgradeTracks": [
+        {
+            "trackId": "valentina.vulnerable-strength",
+            "displayName": "부식성 슬러지 증폭",
+            "description": "슬러지 방출 탱크의 부식 효과로 받는 피해 증가량을 높입니다.",
+            "category": 0,
+            "maxLevel": 8,
+            "levelCosts": [
+                20,
+                35,
+                55,
+                80,
+                120,
+                170,
+                230,
+                290
+            ],
+            "requiredAffinityByLevel": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            "modifiers": [
+                {
+                    "targetKind": 9,
+                    "targetUnitId": "valentina-sludge-rover",
+                    "levelDeltas": [
+                        0.029999999329447748,
+                        0.07000000029802323,
+                        0.10000000149011612,
+                        0.12999999523162843,
+                        0.1599999964237213,
+                        0.1899999976158142,
+                        0.2199999988079071,
+                        0.25
+                    ],
+                    "isInteger": false,
+                    "hasMinValue": false,
+                    "minValue": 0.0,
+                    "hasMaxValue": false,
+                    "maxValue": 0.0
+                }
+            ]
+        },
+        {
+            "trackId": "valentina.slow-strength",
+            "displayName": "슬러지 정체 강화",
+            "description": "슬러지 방출 탱크의 감속 효과로 적의 이동 속도를 더 낮춥니다.",
+            "category": 0,
+            "maxLevel": 8,
+            "levelCosts": [
+                20,
+                35,
+                55,
+                80,
+                120,
+                170,
+                230,
+                290
+            ],
+            "requiredAffinityByLevel": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            "modifiers": [
+                {
+                    "targetKind": 11,
+                    "targetUnitId": "valentina-sludge-rover",
+                    "levelDeltas": [
+                        -0.02199999988079071,
+                        -0.04399999976158142,
+                        -0.06599999964237213,
+                        -0.08699999749660492,
+                        -0.10899999737739563,
+                        -0.13099999725818635,
+                        -0.15299999713897706,
+                        -0.17499999701976777
+                    ],
+                    "isInteger": false,
+                    "hasMinValue": true,
+                    "minValue": 0.0,
+                    "hasMaxValue": false,
+                    "maxValue": 0.0
+                }
+            ]
+        },
+        {
+            "trackId": "valentina.crawler-damage",
+            "displayName": "박격포 화력 강화",
+            "description": "속사 박격포 크롤러의 공격력을 높입니다.",
+            "category": 0,
+            "maxLevel": 8,
+            "levelCosts": [
+                20,
+                35,
+                55,
+                80,
+                120,
+                170,
+                230,
+                290
+            ],
+            "requiredAffinityByLevel": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            "modifiers": [
+                {
+                    "targetKind": 1,
+                    "targetUnitId": "valentina-pyro-crawler",
+                    "levelDeltas": [
+                        0.10000000149011612,
+                        0.20000000298023225,
+                        0.30000001192092898,
+                        0.4000000059604645,
+                        0.5,
+                        0.6000000238418579,
+                        0.699999988079071,
+                        0.800000011920929
+                    ],
+                    "isInteger": false,
+                    "hasMinValue": false,
+                    "minValue": 0.0,
+                    "hasMaxValue": false,
+                    "maxValue": 0.0
+                }
+            ]
+        },
+        {
+            "trackId": "valentina.rover-armor",
+            "displayName": "슬러지 탱크 장갑 보강",
+            "description": "슬러지 방출 탱크의 최대 체력을 높입니다.",
+            "category": 1,
+            "maxLevel": 8,
+            "levelCosts": [
+                10,
+                15,
+                25,
+                40,
+                60,
+                90,
+                130,
+                180
+            ],
+            "requiredAffinityByLevel": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            "modifiers": [
+                {
+                    "targetKind": 0,
+                    "targetUnitId": "valentina-sludge-rover",
+                    "levelDeltas": [
+                        4.0,
+                        8.0,
+                        12.0,
+                        16.0,
+                        20.0,
+                        24.0,
+                        28.0,
+                        32.0
+                    ],
+                    "isInteger": false,
+                    "hasMinValue": false,
+                    "minValue": 0.0,
+                    "hasMaxValue": false,
+                    "maxValue": 0.0
+                }
+            ]
+        },
+        {
+            "trackId": "valentina.crawler-mobility",
+            "displayName": "크롤러 기동 강화",
+            "description": "속사 박격포 크롤러의 이동 속도를 높입니다.",
+            "category": 1,
+            "maxLevel": 8,
+            "levelCosts": [
+                10,
+                15,
+                25,
+                40,
+                60,
+                90,
+                130,
+                180
+            ],
+            "requiredAffinityByLevel": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            "modifiers": [
+                {
+                    "targetKind": 3,
+                    "targetUnitId": "valentina-pyro-crawler",
+                    "levelDeltas": [
+                        0.05000000074505806,
+                        0.10000000149011612,
+                        0.15000000596046449,
+                        0.20000000298023225,
+                        0.25,
+                        0.30000001192092898,
+                        0.3499999940395355,
+                        0.4000000059604645
+                    ],
+                    "isInteger": false,
+                    "hasMinValue": false,
+                    "minValue": 0.0,
+                    "hasMaxValue": false,
+                    "maxValue": 0.0
+                }
+            ]
+        }
+    ]
+}

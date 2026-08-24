@@ -136,10 +136,13 @@ namespace RCCom.UI
         private void RenderOperator()
         {
             OperatorCatalogEntry entry = GetSelectedEntry();
-            SetSprite(operatorPortrait, entry != null
-                ? entry.shopPortrait != null ? entry.shopPortrait : entry.managementPortrait
-                : null);
-            SetSprite(operatorUpperBodyPortrait, ResolveBrightPortrait(entry));
+            RemotePreviewSpriteLoader.LoadInto(
+                operatorPortrait,
+                entry != null ? (entry.shopPortrait != null ? entry.shopPortrait : entry.managementPortrait) : null,
+                ResolveShopOrManagementPortraitAddress(entry), Color.clear);
+            RemotePreviewSpriteLoader.LoadInto(
+                operatorUpperBodyPortrait, ResolveBrightPortrait(entry), ResolveBrightPortraitAddress(entry),
+                Color.clear);
             SetText(operatorName, entry != null ? entry.displayName : string.Empty);
             SetText(anotherNameText, entry != null ? entry.alternateName : string.Empty);
             SetText(panelOperatorName, entry != null ? entry.displayName : "NO OPERATOR");
@@ -177,7 +180,8 @@ namespace RCCom.UI
         private static void RenderSideSlot(Image portrait, TMP_Text label, GameObject lockSprite,
             OperatorCatalogEntry entry)
         {
-            SetSprite(portrait, ResolveDimmedPortrait(entry));
+            RemotePreviewSpriteLoader.LoadInto(
+                portrait, ResolveDimmedPortrait(entry), ResolveDimmedPortraitAddress(entry), Color.clear);
             SetText(label, entry != null ? entry.displayName : string.Empty);
             if (lockSprite != null) { lockSprite.SetActive(entry == null); }
         }
@@ -382,11 +386,30 @@ namespace RCCom.UI
                 : ResolveBrightPortrait(entry);
         }
 
-        private static void SetSprite(Image image, Sprite sprite)
+        // 아래 세 메서드는 위 Resolve*Portrait와 같은 우선순위로, Sprite가 원격이라 비어
+        // 있을 때 RemotePreviewSpriteLoader가 대신 받을 주소를 고른다.
+        private static string ResolveShopOrManagementPortraitAddress(OperatorCatalogEntry entry)
         {
-            if (image == null) { return; }
-            image.sprite = sprite;
-            image.enabled = sprite != null;
+            if (entry == null) { return null; }
+            return !string.IsNullOrEmpty(entry.shopPortraitAddress)
+                ? entry.shopPortraitAddress
+                : entry.managementPortraitAddress;
+        }
+
+        private static string ResolveBrightPortraitAddress(OperatorCatalogEntry entry)
+        {
+            if (entry == null) { return null; }
+            if (!string.IsNullOrEmpty(entry.shopUpperBodyPortraitAddress)) { return entry.shopUpperBodyPortraitAddress; }
+            if (!string.IsNullOrEmpty(entry.managementPortraitAddress)) { return entry.managementPortraitAddress; }
+            return entry.previewPortraitAddress;
+        }
+
+        private static string ResolveDimmedPortraitAddress(OperatorCatalogEntry entry)
+        {
+            if (entry == null) { return null; }
+            return !string.IsNullOrEmpty(entry.shopUpperBodyPortraitDimmedAddress)
+                ? entry.shopUpperBodyPortraitDimmedAddress
+                : ResolveBrightPortraitAddress(entry);
         }
 
         private static void SetText(TMP_Text label, string value)

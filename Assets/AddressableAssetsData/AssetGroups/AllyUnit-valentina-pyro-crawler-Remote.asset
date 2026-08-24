@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: AllyUnit-valentina-pyro-crawler-Remote
+  m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
+  m_GroupName: AllyUnit-valentina-pyro-crawler-Remote
+  m_GUID: 92aa1f6281c7f58408def7a35bc257e6
+  m_SerializeEntries:
+  - m_GUID: 2a0826da78821bd4b841fbef63cac3ec
+    m_Address: ally-unit/valentina-pyro-crawler/preview
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ally-unit-preview
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 629467fe3ac4bbd40b35684b3f72e0fe
+    m_Address: ally-unit/valentina-pyro-crawler
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ally-unit-definition
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 2afb846ca87b5fb4d915c11291554efd, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: d2ed7cde1f6634444a88628b6975d828, type: 2}
+    - {fileID: 11400000, guid: 8a5361805e65f2841ab9d3c0bfacd89c, type: 2}

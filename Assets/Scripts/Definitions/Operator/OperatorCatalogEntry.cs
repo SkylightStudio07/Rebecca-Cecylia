@@ -35,6 +35,25 @@ namespace RCCom.Definitions.Operator
         [Tooltip("리크루트 화면 하단 좌우 카드에 표시할 전처리된 어두운 상반신 이미지")]
         public Sprite shopUpperBodyPortraitDimmed;
 
+        // 아래 *Address 필드들은 위 Sprite가 원격 콘텐츠라 비어 있을 때만 채워진다.
+        // Definition 전체(대사·이펙트 포함)를 당기지 않고 이 초상화 한 장만 담긴 독립
+        // 번들을 RemotePreviewSpriteLoader가 내려받을 수 있게 하는 Addressables 주소다.
+        // 로컬 오퍼레이터는 위 Sprite가 이미 채워져 있어 이 주소들이 쓰이지 않는다.
+        [Tooltip("previewPortrait이 원격이라 비어 있을 때 내려받을 Addressables 주소")]
+        public string previewPortraitAddress;
+
+        [Tooltip("managementPortrait이 원격이라 비어 있을 때 내려받을 Addressables 주소")]
+        public string managementPortraitAddress;
+
+        [Tooltip("shopPortrait이 원격이라 비어 있을 때 내려받을 Addressables 주소")]
+        public string shopPortraitAddress;
+
+        [Tooltip("shopUpperBodyPortrait이 원격이라 비어 있을 때 내려받을 Addressables 주소")]
+        public string shopUpperBodyPortraitAddress;
+
+        [Tooltip("shopUpperBodyPortraitDimmed이 원격이라 비어 있을 때 내려받을 Addressables 주소")]
+        public string shopUpperBodyPortraitDimmedAddress;
+
         public string alternateName;
 
         [TextArea(2, 4)]
@@ -61,6 +80,9 @@ namespace RCCom.Definitions.Operator
 
         [Tooltip("스테이지 보상 화면에 표시할 경량 초상화")]
         public Sprite unlockRewardPortrait;
+
+        [Tooltip("unlockRewardPortrait이 원격이라 비어 있을 때 내려받을 Addressables 주소")]
+        public string unlockRewardPortraitAddress;
 
         [Tooltip("Definition을 내려받기 전 로스터 패널에 표시할 경량 유닛 정보")]
         // 유닛 전용 카탈로그와 같은 엔트리 타입을 사용해 선택 화면이 별도 미리보기

@@ -1,4 +1,5 @@
 using RCCom.Definitions.Operator;
+using RCCom.Runtime;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -34,10 +35,13 @@ namespace RCCom.UI
 
             if (portraitImage != null)
             {
-                portraitImage.sprite = entry != null && entry.managementPortrait != null
+                Sprite localSprite = entry != null && entry.managementPortrait != null
                     ? entry.managementPortrait
-                    : entry != null ? entry.previewPortrait : null;
-                portraitImage.enabled = portraitImage.sprite != null;
+                    : entry?.previewPortrait;
+                string remoteAddress = entry != null && !string.IsNullOrEmpty(entry.managementPortraitAddress)
+                    ? entry.managementPortraitAddress
+                    : entry?.previewPortraitAddress;
+                RemotePreviewSpriteLoader.LoadInto(portraitImage, localSprite, remoteAddress, Color.clear);
             }
         }
     }

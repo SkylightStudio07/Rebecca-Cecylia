@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f7442777632e98f40898f5e383227cb8, type: 3}
+  m_Name: TowerRoster
+  m_EditorClassIdentifier: Assembly-CSharp::RCCom.Definitions.Tower.TowerRoster
+  towers:
+  - {fileID: 11400000, guid: c02b6b82a2765de4e895b04f5f913611, type: 2}
+  - {fileID: 11400000, guid: 5dfc3f41dcb030c4eac944589513dacd, type: 2}
+  - {fileID: 11400000, guid: 5d7c9bf90a486374784caadcfe6a6007, type: 2}

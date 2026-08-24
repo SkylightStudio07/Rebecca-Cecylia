@@ -1,0 +1,33 @@
+{
+    "unitId": "valentina-sludge-rover",
+    "catalogOrder": 10,
+    "displayName": "슬러지 방출 탱크",
+    "spritePath": "Assets/Art/AllyUnits/valentina-sludge-rover.png",
+    "tint": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+    },
+    "spriteForwardOffsetDegrees": -90.0,
+    "effectPaths": [
+        "Assets/Data/Effects/Unit/SlowAuraEffect.asset",
+        "Assets/Data/Effects/Unit/VulnerableAuraEffect.asset"
+    ],
+    "visualEffectPaths": [
+        "Assets/Data/Effects/Unit/Visual/RangeAuraGreen.asset"
+    ],
+    "remoteContent": true,
+    "data": {
+        "unitId": "valentina-sludge-rover",
+        "displayName": "슬러지 방출 탱크",
+        "deployCost": 80,
+        "maxHealth": 80.0,
+        "moveSpeed": 1.0,
+        "attackDamage": 0.0,
+        "attackInterval": 10.0,
+        "attackRange": 10.0,
+        "detectionRange": 10.0,
+        "projectileSpeed": 8.0
+    }
+}

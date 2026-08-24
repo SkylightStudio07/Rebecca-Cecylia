@@ -1,0 +1,140 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7f0ec232f1c62a2469a491525378f217, type: 3}
+  m_Name: OperatorUpgradeTrackSet
+  m_EditorClassIdentifier: Assembly-CSharp::RCCom.Definitions.Operator.OperatorUpgradeTrackSet
+  tracks:
+  - trackId: valentina.vulnerable-strength
+    displayName: "\uBD80\uC2DD\uC131 \uC2AC\uB7EC\uC9C0 \uC99D\uD3ED"
+    description: "\uC2AC\uB7EC\uC9C0 \uBC29\uCD9C \uD0F1\uD06C\uC758 \uBD80\uC2DD
+      \uD6A8\uACFC\uB85C \uBC1B\uB294 \uD53C\uD574 \uC99D\uAC00\uB7C9\uC744 \uB192\uC785\uB2C8\uB2E4."
+    category: 0
+    maxLevel: 8
+    levelCosts: 1400000023000000370000005000000078000000aa000000e600000022010000
+    requiredAffinityByLevel: 0000000000000000000000000000000000000000000000000000000000000000
+    modifiers:
+    - targetKind: 9
+      targetUnitId: valentina-sludge-rover
+      levelDeltas:
+      - 0.03
+      - 0.07
+      - 0.1
+      - 0.13
+      - 0.16
+      - 0.19
+      - 0.22
+      - 0.25
+      isInteger: 0
+      hasMinValue: 0
+      minValue: 0
+      hasMaxValue: 0
+      maxValue: 0
+  - trackId: valentina.slow-strength
+    displayName: "\uC2AC\uB7EC\uC9C0 \uC815\uCCB4 \uAC15\uD654"
+    description: "\uC2AC\uB7EC\uC9C0 \uBC29\uCD9C \uD0F1\uD06C\uC758 \uAC10\uC18D
+      \uD6A8\uACFC\uB85C \uC801\uC758 \uC774\uB3D9 \uC18D\uB3C4\uB97C \uB354 \uB0AE\uCDA5\uB2C8\uB2E4."
+    category: 0
+    maxLevel: 8
+    levelCosts: 1400000023000000370000005000000078000000aa000000e600000022010000
+    requiredAffinityByLevel: 0000000000000000000000000000000000000000000000000000000000000000
+    modifiers:
+    - targetKind: 11
+      targetUnitId: valentina-sludge-rover
+      levelDeltas:
+      - -0.022
+      - -0.044
+      - -0.066
+      - -0.087
+      - -0.109
+      - -0.131
+      - -0.153
+      - -0.175
+      isInteger: 0
+      hasMinValue: 1
+      minValue: 0
+      hasMaxValue: 0
+      maxValue: 0
+  - trackId: valentina.crawler-damage
+    displayName: "\uBC15\uACA9\uD3EC \uD654\uB825 \uAC15\uD654"
+    description: "\uC18D\uC0AC \uBC15\uACA9\uD3EC \uD06C\uB864\uB7EC\uC758 \uACF5\uACA9\uB825\uC744
+      \uB192\uC785\uB2C8\uB2E4."
+    category: 0
+    maxLevel: 8
+    levelCosts: 1400000023000000370000005000000078000000aa000000e600000022010000
+    requiredAffinityByLevel: 0000000000000000000000000000000000000000000000000000000000000000
+    modifiers:
+    - targetKind: 1
+      targetUnitId: valentina-pyro-crawler
+      levelDeltas:
+      - 0.1
+      - 0.2
+      - 0.3
+      - 0.4
+      - 0.5
+      - 0.6
+      - 0.7
+      - 0.8
+      isInteger: 0
+      hasMinValue: 0
+      minValue: 0
+      hasMaxValue: 0
+      maxValue: 0
+  - trackId: valentina.rover-armor
+    displayName: "\uC2AC\uB7EC\uC9C0 \uD0F1\uD06C \uC7A5\uAC11 \uBCF4\uAC15"
+    description: "\uC2AC\uB7EC\uC9C0 \uBC29\uCD9C \uD0F1\uD06C\uC758 \uCD5C\uB300
+      \uCCB4\uB825\uC744 \uB192\uC785\uB2C8\uB2E4."
+    category: 1
+    maxLevel: 8
+    levelCosts: 0a0000000f00000019000000280000003c0000005a00000082000000b4000000
+    requiredAffinityByLevel: 0000000000000000000000000000000000000000000000000000000000000000
+    modifiers:
+    - targetKind: 0
+      targetUnitId: valentina-sludge-rover
+      levelDeltas:
+      - 4
+      - 8
+      - 12
+      - 16
+      - 20
+      - 24
+      - 28
+      - 32
+      isInteger: 0
+      hasMinValue: 0
+      minValue: 0
+      hasMaxValue: 0
+      maxValue: 0
+  - trackId: valentina.crawler-mobility
+    displayName: "\uD06C\uB864\uB7EC \uAE30\uB3D9 \uAC15\uD654"
+    description: "\uC18D\uC0AC \uBC15\uACA9\uD3EC \uD06C\uB864\uB7EC\uC758 \uC774\uB3D9
+      \uC18D\uB3C4\uB97C \uB192\uC785\uB2C8\uB2E4."
+    category: 1
+    maxLevel: 8
+    levelCosts: 0a0000000f00000019000000280000003c0000005a00000082000000b4000000
+    requiredAffinityByLevel: 0000000000000000000000000000000000000000000000000000000000000000
+    modifiers:
+    - targetKind: 3
+      targetUnitId: valentina-pyro-crawler
+      levelDeltas:
+      - 0.05
+      - 0.1
+      - 0.15
+      - 0.2
+      - 0.25
+      - 0.3
+      - 0.35
+      - 0.4
+      isInteger: 0
+      hasMinValue: 0
+      minValue: 0
+      hasMaxValue: 0
+      maxValue: 0
