@@ -2099,3 +2099,63 @@ Project 뷰에서 직접 열어 밸런싱했다가 다음 Build 실행에서 조
 타는지는, 다음에 이 프리팹들 중 하나의 구조를 실제로 바꾸는 코드 변경(예: 새 컴포넌트 추가)이
 있을 때 콘솔의 "구조 변경을 감지해 프리팹을 재생성합니다" 경고 로그와 이식된 값이 기대대로
 보존되는지 눈으로 한 번 확인해 두면 좋다.
+
+## 2026-08-24 — 적/아군 사망 연출 고도화: 폭발 플립북 + 넉백/틴트/페이드
+
+### 결정
+- 3단계에서 만든 사망 연출(파티클 버스트 + 단순 알파 페이드)을 실제 요청 스펙대로 확장했다.
+- **폭발 이펙트**: `Assets/Art/VFX/explosion/Sprites`에 있는 8프레임 그림 애니메이션을
+  12fps 플립북으로 재생한다. `SpriteFlipbook.cs` 신규 — `AttackFlash.cs`와 같은 prefab별
+  static 풀링 패턴을 그대로 따르되, 이 코드베이스 첫 "실제 프레임 애니메이션 에셋" 재생
+  컴포넌트다(지금까지는 파티클/셰이더/lerp만 썼음). `ParticleBurst_DeathBurst`는 스플래시
+  착탄 폭발(`explosionBurstPrefab`)로는 계속 재사용되므로 그대로 뒀다 — 유닛 사망 쪽 배선만
+  `SpriteFlipbook` 기반 `DeathExplosion.prefab`으로 교체했다.
+- **넉백 연출**: 죽는 유닛 스프라이트가 반투명(알파 0.75)+어두운 틴트(밝기 55%)로 바뀌며
+  15~30도 랜덤 회전, 랜덤 바깥 방향으로 짧은 거리(0.25유닛)를 OutQuad 이징으로 밀려난 뒤,
+  그 자리에 1.25초 정지 유지하다가 0.35초에 걸쳐 페이드아웃한다.
+  - `DeathKnockbackSequencer.cs`(순수 C#, MonoBehaviour 아님) 신규 — Knockback→Hold→FadeOut
+    3단계 진행을 계산만 하고 `Position`/`RotationDegrees`/`TintColor`를 반환한다. 이전엔 이런
+    사망 연출 확장을 "EnemyView/AllyUnitView 두 파일에 동일 패턴으로 확장"해왔는데, 이번엔
+    상태 필드(시작/목표 위치, 목표 회전각, 틴트 색, 단계별 잔여시간 등)가 많이 늘어나 그대로
+    두 번 베껴 쓰기엔 중복이 부담스러워 계산 부분만 분리했다 — `RangePulseVisualRuntime`이
+    자기 SO(`RangePulseVisualEffect`)를 읽어 값만 반환하고 실제 렌더러 적용은 스스로 하는
+    구조와 동일한 결로, MonoBehaviour 의존 없이 순수 계산만 하는 클래스라 두 View가 각자
+    인스턴스를 들고 있다가 매 프레임 `Tick()`만 부르고 반환값을 자기 SpriteRenderer/Transform에
+    그대로 적용한다.
+  - `DeathKnockbackVisualEffect` SO 신규 — `ShockwaveRingVisualEffect`/`LaserBeamVisualEffect`와
+    같은 "데이터 기반 SO, 빌더 재실행에도 값 보존" 원칙을 그대로 따른다. `EnemyView`/
+    `AllyUnitView`가 SO 하나를 공유한다(둘 다 같은 연출이라 따로 둘 이유가 없음).
+  - "바깥으로" 밀려나는 방향은 랜덤 각도로 정한다 — 폭발이 유닛 자기 자신의 위치에서 터지는
+    연출이라 밀려날 기준점(공격자 위치 등)이 따로 없다. 여러 개체가 동시에 죽어도 전부 같은
+    방향으로 안 밀리는 효과도 겸한다.
+- `EnemyView`/`AllyUnitView`의 `deathParticlePrefab`+`deathFadeDuration` 필드를
+  `deathExplosionPrefab`+`deathKnockbackVisual`로 교체. `Collider2D` 비활성화 타이밍(사망
+  확정 즉시) 등 판정 관련 로직은 전혀 안 건드렸다 — 순수 연출 교체.
+- `CombatVfxAssetBuilder`: `BuildDeathExplosionPrefab()`(8프레임 로드 + `SpriteFlipbook` 배선,
+  이미 올바르게 임포트돼 있는 아트 에셋이라 임포트 설정은 안 건드림), `BuildDeathKnockbackVisualEffect()`
+  (최초 생성 시 1회만 기본값, 이후 빌더 재실행에도 값 보존) 추가. `ConnectPrefabField`/
+  `ValidatePrefabField`를 `GameObject` 전용에서 `UnityEngine.Object`로 넓혀 SO 참조도 같은
+  헬퍼로 배선할 수 있게 했다(새 오버로드를 안 만들어도 됨).
+
+### 부수 작업 — 동시 작업 세션의 완성된 변경을 발견하고 커밋
+- 이번 검증 도중 작업 트리에 다른 세션이 이미 완성해 둔 `BuilderPrefabMerge.cs`(프리팹
+  재생성 시 구조가 같으면 스킵, 다르면 값만 이식 — 데이터 SO 쪽에 적용했던 "빌더 재실행이
+  튜닝값을 안 덮어씀" 원칙을 프리팹에도 확장한 것)와 `AllyUnitViewPrefabBuilder.cs` 배선,
+  관련 EXPANSION_LOG 항목이 우연히 함께 있었다. 내가 작성한 코드는 아니지만 온전히 완성·
+  검증된 상태였고 이번 사망 폭발 프리팹도 그 보호를 자동으로 받게 되므로, 별도 커밋으로
+  먼저 반영한 뒤 이번 작업을 그 위에 얹었다.
+
+### 검증
+- `unity command recompile`/`recompile_status` — 컴파일 에러 0건(단계별로 여러 번 확인).
+- `RCCom/Combat VFX/Build Projectile And Hit Spark` 실행 → 콘솔에 에러/예외 0건, 새 프리팹/SO
+  포함 검증 통과 로그 확인. `BuilderPrefabMerge`가 기존 6종 프리팹 전부 "구조 변경 없음, 기존
+  프리팹 값 보존"으로 스킵하는 것도 확인(내 새 코드가 그 보호 로직과 충돌 없이 공존).
+- `git diff`로 `EnemyView_Normal.prefab`/`AllyUnitView.prefab`이 딱 두 필드(`deathExplosionPrefab`/
+  `deathKnockbackVisual`) 교체뿐임을, `DeathKnockback.asset`이 요청받은 수치(거리 0.25/각도
+  15~30/알파 0.75/밝기 0.55/유지 1.25/페이드 0.35) 그대로 저장됐음을 확인.
+
+### 사람이 할 일
+- 플레이 테스트로 적/아군이 죽을 때 1) 8프레임 폭발이 12fps로 제대로 재생되는지(너무
+  빠르거나 느리면 프리팹 인스펙터의 `frameRate`만 조정하면 됨 — 빌더 재실행해도 보존됨),
+  2) 넉백 방향/거리/회전/틴트/유지시간이 기대한 느낌인지 확인. 안 맞으면 `DeathKnockback.asset`
+  인스펙터에서 직접 조정 가능(코드 재배포 불필요, 빌더 재실행해도 보존).
