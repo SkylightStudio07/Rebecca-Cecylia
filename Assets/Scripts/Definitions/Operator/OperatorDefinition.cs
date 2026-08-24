@@ -62,6 +62,9 @@ namespace RCCom.Definitions.Operator
         [Tooltip("이 오퍼레이터가 소환할 수 있는 아군 유닛 목록. 타워 전용 오퍼레이터는 비워둘 수 있다.")]
         public AllyUnitRoster allyUnitRoster;
 
+        [Tooltip("이 오퍼레이터의 영구 강화 트랙 묶음. 상점이 없어도 비어 있으면 그대로 미강화로 동작한다.")]
+        public OperatorUpgradeTrackSet upgradeTracks;
+
         [Header("연출")]
         [Tooltip("게임 상황별 대사와 전투 중 초상화 묶음")]
         public OperatorDialogueSet dialogueSet;

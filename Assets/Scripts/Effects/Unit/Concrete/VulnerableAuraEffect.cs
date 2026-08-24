@@ -16,6 +16,19 @@ namespace RCCom.Effects.Unit.Concrete
         [SerializeField, Min(1f)] private float damageTakenMultiplier = 1.3f;
         [SerializeField, Min(0.01f)] private float refreshDuration = 0.5f;
 
+        public float DamageTakenMultiplier => damageTakenMultiplier;
+        public float RefreshDuration => refreshDuration;
+
+        /// <summary>
+        /// 오퍼레이터 강화 적용 전용. 공유 원본 에셋이 아니라 OperatorUpgradeApplier가
+        /// Instantiate로 만든 런타임 복제본에만 호출해야 한다.
+        /// </summary>
+        internal void ApplyRuntimeOverride(float damageTakenMultiplier, float refreshDuration)
+        {
+            this.damageTakenMultiplier = Mathf.Max(1f, damageTakenMultiplier);
+            this.refreshDuration = Mathf.Max(0.01f, refreshDuration);
+        }
+
         public override void OnTick(AllyUnitContext ctx)
         {
             if (ctx == null || ctx.self == null || ctx.self.Data == null || ctx.activeEnemies == null)

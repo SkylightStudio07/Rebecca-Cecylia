@@ -11,7 +11,7 @@ namespace RCCom.Data
     [Serializable]
     public class PlayerProfile
     {
-        public const int CurrentSchemaVersion = 5;
+        public const int CurrentSchemaVersion = 6;
 
         public const int MaxOperatorAffinity = 100;
         public const int ReturnAffinityWithoutParticipation = 2;
@@ -31,6 +31,14 @@ namespace RCCom.Data
         /// 목록 항목이 없는 오퍼레이터는 호감도 0으로 간주한다.
         /// </summary>
         public List<OperatorAffinityRecord> operatorAffinities = new List<OperatorAffinityRecord>();
+
+        /// <summary>
+        /// 오퍼레이터별 업그레이드 트랙 레벨. JsonUtility 제약으로 목록 저장 방식은
+        /// operatorAffinities와 동일하다. 목록에 없는 (operatorId, trackId) 조합은 레벨 0(미강화)
+        /// 으로 간주한다. 상한(maxLevel)은 OperatorUpgradeTrackSet 쪽 데이터라 여기서는 모르므로,
+        /// 이 클래스는 0 이상만 보장하고 상한 클램프는 적용/디버그 쪽 책임이다.
+        /// </summary>
+        public List<OperatorUpgradeRecord> operatorUpgrades = new List<OperatorUpgradeRecord>();
 
         /// <summary>
         /// 해금 여부 자체는 bestWave에서 계속 계산한다. 이 목록은 해금 상태를 중복 저장하는
@@ -229,6 +237,65 @@ namespace RCCom.Data
             }
 
             return OperatorAffinityTier.Unfamiliar;
+        }
+
+        public int GetUpgradeLevel(string operatorId, string trackId)
+        {
+            OperatorUpgradeRecord record = FindUpgradeRecord(operatorId, trackId);
+            return record == null ? 0 : Math.Max(0, record.level);
+        }
+
+        public int SetUpgradeLevel(string operatorId, string trackId, int level)
+        {
+            if (string.IsNullOrWhiteSpace(operatorId) || string.IsNullOrWhiteSpace(trackId))
+            {
+                return 0;
+            }
+
+            OperatorUpgradeRecord record = FindOrCreateUpgradeRecord(operatorId, trackId);
+            record.level = Math.Max(0, level);
+            return record.level;
+        }
+
+        public int AddUpgradeLevel(string operatorId, string trackId, int delta)
+        {
+            return SetUpgradeLevel(operatorId, trackId, GetUpgradeLevel(operatorId, trackId) + delta);
+        }
+
+        private OperatorUpgradeRecord FindUpgradeRecord(string operatorId, string trackId)
+        {
+            if (string.IsNullOrWhiteSpace(operatorId) || string.IsNullOrWhiteSpace(trackId) ||
+                operatorUpgrades == null)
+            {
+                return null;
+            }
+
+            for (int i = 0; i < operatorUpgrades.Count; i++)
+            {
+                OperatorUpgradeRecord record = operatorUpgrades[i];
+                if (record != null &&
+                    string.Equals(record.operatorId, operatorId, StringComparison.Ordinal) &&
+                    string.Equals(record.trackId, trackId, StringComparison.Ordinal))
+                {
+                    return record;
+                }
+            }
+
+            return null;
+        }
+
+        private OperatorUpgradeRecord FindOrCreateUpgradeRecord(string operatorId, string trackId)
+        {
+            operatorUpgrades ??= new List<OperatorUpgradeRecord>();
+            OperatorUpgradeRecord existing = FindUpgradeRecord(operatorId, trackId);
+            if (existing != null)
+            {
+                return existing;
+            }
+
+            var created = new OperatorUpgradeRecord { operatorId = operatorId, trackId = trackId };
+            operatorUpgrades.Add(created);
+            return created;
         }
 
         public bool HasPresentedOperatorAcquisition(string operatorId)

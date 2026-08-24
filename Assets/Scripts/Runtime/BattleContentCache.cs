@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using RCCom.Data;
 using RCCom.Definitions.Enemy;
+using RCCom.Definitions.Operator;
 using RCCom.Definitions.Stage;
 using RCCom.Definitions.Unit;
 using UnityEngine;
@@ -31,6 +32,8 @@ namespace RCCom.Runtime
             new(StringComparer.Ordinal);
         private static readonly Dictionary<EnemyRoster, EnemyRoster> RuntimeEnemyRosters = new();
         private static readonly Dictionary<AllyUnitRoster, AllyUnitRoster> RuntimeAllyUnitRosters = new();
+        private static readonly Dictionary<(AllyUnitDefinition source, string operatorId), AllyUnitDefinition>
+            RuntimeUpgradedUnitDefinitions = new();
 
         private static bool _addressablesInitialized;
 
@@ -44,6 +47,7 @@ namespace RCCom.Runtime
             AllyUnitHandles.Clear();
             RuntimeEnemyRosters.Clear();
             RuntimeAllyUnitRosters.Clear();
+            RuntimeUpgradedUnitDefinitions.Clear();
             _addressablesInitialized = false;
         }
 
@@ -103,6 +107,20 @@ namespace RCCom.Runtime
         /// </summary>
         public static AllyUnitRoster CreateRuntimeAllyUnitRoster(AllyUnitRoster source)
         {
+            return CreateRuntimeAllyUnitRoster(source, null, null, null);
+        }
+
+        /// <summary>
+        /// 오퍼레이터 강화 레벨을 함께 반영하는 버전. operatorId/upgradeTracks/profile 중 하나라도
+        /// 비어 있으면 강화 계산을 건너뛰고 기존 무인자 오버로드와 동일하게 동작한다 — 미강화
+        /// 상태·구버전 호출부 모두 회귀 없이 그대로 유지된다.
+        /// </summary>
+        public static AllyUnitRoster CreateRuntimeAllyUnitRoster(
+            AllyUnitRoster source,
+            string operatorId,
+            OperatorUpgradeTrackSet upgradeTracks,
+            PlayerProfile profile)
+        {
             if (source == null)
             {
                 return null;
@@ -122,6 +140,7 @@ namespace RCCom.Runtime
             foreach (string unitId in GetAllyUnitIds(source))
             {
                 AllyUnitDefinition definition = ResolveAllyUnit(unitId) ?? source.FindById(unitId);
+                definition = ResolveUpgradedUnitDefinition(definition, operatorId, upgradeTracks, profile);
                 if (definition != null && !runtimeRoster.units.Contains(definition))
                 {
                     runtimeRoster.units.Add(definition);
@@ -142,6 +161,36 @@ namespace RCCom.Runtime
             }
 
             return runtimeRoster;
+        }
+
+        /// <summary>
+        /// 같은 원본 Definition + operatorId 조합은 씬 안에서 한 번만 강화 복제본을 만든다.
+        /// 강화 대상이 없으면(트랙 없음·레벨 0 등) OperatorUpgradeApplier가 원본을 그대로 돌려주므로
+        /// 캐시에도 원본이 그대로 들어가 불필요한 할당이 생기지 않는다.
+        /// </summary>
+        private static AllyUnitDefinition ResolveUpgradedUnitDefinition(
+            AllyUnitDefinition source,
+            string operatorId,
+            OperatorUpgradeTrackSet upgradeTracks,
+            PlayerProfile profile)
+        {
+            if (source == null || upgradeTracks == null || profile == null ||
+                string.IsNullOrWhiteSpace(operatorId))
+            {
+                return source;
+            }
+
+            var key = (source, operatorId);
+            if (RuntimeUpgradedUnitDefinitions.TryGetValue(key, out AllyUnitDefinition cached) &&
+                cached != null)
+            {
+                return cached;
+            }
+
+            AllyUnitDefinition upgraded =
+                OperatorUpgradeApplier.CreateUpgradedUnitDefinition(source, operatorId, upgradeTracks, profile);
+            RuntimeUpgradedUnitDefinitions[key] = upgraded;
+            return upgraded;
         }
 
         public static IEnumerator PreloadAllyUnits(

@@ -15,6 +15,18 @@ namespace RCCom.Effects.Unit.Concrete
         [SerializeField, Range(0f, 1f)] private float speedMultiplier = 0.625f;
         [SerializeField, Min(0.01f)] private float refreshDuration = 0.8f;
 
+        public float SpeedMultiplier => speedMultiplier;
+
+        /// <summary>
+        /// 오퍼레이터 강화 적용 전용. 공유 원본 에셋이 아니라 OperatorUpgradeApplier가
+        /// Instantiate로 만든 런타임 복제본에만 호출해야 한다. speedMultiplier는 낮을수록 강한
+        /// 감속이므로 강화 델타는 음수로 전달된다 (§7.6과 동일한 역방향 지표).
+        /// </summary>
+        internal void ApplyRuntimeOverride(float speedMultiplier)
+        {
+            this.speedMultiplier = Mathf.Clamp01(speedMultiplier);
+        }
+
         public override void OnTick(AllyUnitContext ctx)
         {
             if (ctx == null || ctx.self == null || ctx.self.Data == null || ctx.activeEnemies == null)
