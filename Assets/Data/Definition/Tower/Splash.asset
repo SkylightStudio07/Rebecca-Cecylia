@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Splash
   m_EditorClassIdentifier: Assembly-CSharp::RCCom.Definitions.Tower.AttackTowerDefinition
   effects:
-  - {fileID: 11400000, guid: 3b33542cc05c041499a8f608f985eb00, type: 2}
+  - {fileID: 11400000, guid: faeebade43d6510429aab994932bb9f0, type: 2}
   sprite: {fileID: 21300000, guid: de7267b268aac6d40999c610b62ceaac, type: 3}
   data:
     towerId: 6
