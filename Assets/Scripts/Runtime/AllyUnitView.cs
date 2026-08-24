@@ -105,19 +105,6 @@ namespace RCCom.Runtime
                 _spriteRenderer.sprite = visualSprite;
                 float scale = SpriteFit.CalculateUniformScale(visualSprite, targetVisualSize);
                 transform.localScale = new Vector3(scale, scale, 1f);
-
-                if (healthBar != null)
-                {
-                    // 체력바가 자식이라 부모(이 오브젝트) 스케일을 그대로 물려받는데, 유닛마다
-                    // scale이 달라 그대로 두면 체력바 크기/오프셋도 유닛마다 들쭉날쭉해진다.
-                    // 역보정해서 항상 같은 월드 크기·오프셋으로 보이게 한다. 유닛 생존 동안
-                    // scale이 안 바뀌므로 Bind() 시점에 한 번만 계산하면 된다(회전은 계속
-                    // 바뀌므로 UpdateHealthBar에서 매 프레임 상쇄).
-                    float inverseScale = scale != 0f ? 1f / scale : 1f;
-                    healthBar.transform.localScale = new Vector3(inverseScale, inverseScale, 1f);
-                    healthBar.transform.localPosition = new Vector3(
-                        healthBarOffset.x * inverseScale, healthBarOffset.y * inverseScale, 0f);
-                }
             }
 
             CreateVisualEffects();
@@ -171,10 +158,15 @@ namespace RCCom.Runtime
         }
 
         /// <summary>
-        /// healthBar가 자식 오브젝트라 위치는 자동으로 따라오지만, 이 오브젝트의 회전(이동/조준
-        /// 추적)까지 그대로 물려받으면 체력바가 같이 빙글빙글 돌아버린다 — EnemyView와 같은
-        /// 이유로 매 프레임 월드 회전을 identity로 되돌린다. 스케일/오프셋 보정은 Bind()에서
-        /// 한 번만 하면 되므로(유닛 생존 동안 안 바뀜) 여기서는 회전과 수치만 갱신한다.
+        /// healthBar는 프리팹상 이 오브젝트의 자식이지만, 위치/회전은 매 프레임 월드 좌표로
+        /// 직접 계산해 SetPositionAndRotation으로 못박는다 — 로컬 좌표로 오프셋을 두면 부모
+        /// 회전(이동/조준 추적)이 곱해져서, 유닛이 위를 보면 체력바가 반대로 튀어 오르는 버그가
+        /// 났었다({{user}} 스크린샷으로 발견, 2026-08-24: 회전만 identity로 되돌려도 "이미
+        /// 회전된 로컬 오프셋으로 계산된 위치" 자체는 못 되돌림 — Transform.rotation 세터는
+        /// 위치엔 전혀 관여하지 않기 때문). 월드 좌표로 직접 계산하면 부모 스케일/회전과
+        /// 완전히 무관해져 이 클래스 하나로 문제가 끝난다(EnemyView는 오프셋을 회전-보정된
+        /// HealthBar의 "손자"에 둬서 우연히 문제가 없었던 것 — 그 구조를 따라할 수도 있었지만
+        /// 이쪽이 훨씬 명시적이고 스케일 보정도 필요 없어져 더 단순하다).
         /// </summary>
         private void UpdateHealthBar()
         {
@@ -183,7 +175,17 @@ namespace RCCom.Runtime
                 return;
             }
 
-            healthBar.transform.rotation = Quaternion.identity;
+            // 체력바가 자식이라 부모(이 오브젝트) 스케일을 그대로 물려받는데, 유닛마다 SpriteFit
+            // 스케일이 달라 그대로 두면 체력바 크기도 유닛마다 들쭉날쭉해진다 — 역보정해서 항상
+            // 같은 월드 크기로 보이게 한다(위치/회전과 달리 SetPositionAndRotation으로는 스케일을
+            // 못 건드리므로 별도로 처리).
+            Vector3 lossyScale = transform.lossyScale;
+            float inverseX = lossyScale.x != 0f ? 1f / lossyScale.x : 1f;
+            float inverseY = lossyScale.y != 0f ? 1f / lossyScale.y : 1f;
+            healthBar.transform.localScale = new Vector3(inverseX, inverseY, 1f);
+
+            Vector3 worldPosition = (Vector3)Instance.Position + new Vector3(healthBarOffset.x, healthBarOffset.y, 0f);
+            healthBar.transform.SetPositionAndRotation(worldPosition, Quaternion.identity);
             healthBar.SetHealthPercent(Instance.CurrentHealth / Mathf.Max(Instance.Data.maxHealth, Mathf.Epsilon));
         }
 
