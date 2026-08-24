@@ -36,6 +36,7 @@ namespace RCCom.Runtime.Visuals
         private float _fadeOutDuration;
         private Vector3 _startPosition;
         private Vector3 _targetPosition;
+        private float _startRotationDegrees;
         private float _targetRotationDegrees;
         private Color _baseColor;
         private Color _tintColor;
@@ -50,15 +51,24 @@ namespace RCCom.Runtime.Visuals
         /// 시각 효과 미배치가 사망 처리 자체를 막으면 안 된다는 원칙과 같은 이유. attackerPosition은
         /// EnemyInstance/AllyUnitInstance.LastDamageSourcePosition — 있으면 그 반대 방향으로,
         /// 없거나(독 틱처럼 소스가 한 번도 안 알려진 경우) 공격자와 완전히 같은 위치면(근접 접촉
-        /// 판정 등, 방향이 정의되지 않음) 랜덤 방향으로 대체한다.
+        /// 판정 등, 방향이 정의되지 않음) 랜덤 방향으로 대체한다. startRotationDegrees는 죽는
+        /// 순간의 실제 화면 회전각(transform.eulerAngles.z) — 이걸 0으로 두면 죽자마자 원래
+        /// 향하던 방향을 무시하고 정면으로 스냅한 뒤에야 살짝 도는 것처럼 보여서(버그로 지적받음,
+        /// {{user}}, 2026-08-24) 반드시 호출자가 현재 회전을 넘겨야 한다 — 여기서 목표 회전각을
+        /// "그 값 + 랜덤 각도"로 잡아 매끄럽게 이어지게 한다.
         /// </summary>
         public void Begin(
-            Vector3 startPosition, Color baseColor, DeathKnockbackVisualEffect config, Vector2? attackerPosition = null)
+            Vector3 startPosition,
+            Color baseColor,
+            DeathKnockbackVisualEffect config,
+            Vector2? attackerPosition,
+            float startRotationDegrees)
         {
             _startPosition = startPosition;
             _baseColor = baseColor;
+            _startRotationDegrees = startRotationDegrees;
             Position = startPosition;
-            RotationDegrees = 0f;
+            RotationDegrees = startRotationDegrees;
             TintColor = baseColor;
 
             float distance = config != null ? config.KnockbackDistance : DefaultKnockbackDistance;
@@ -72,7 +82,8 @@ namespace RCCom.Runtime.Visuals
             _targetPosition = _startPosition + ResolveKnockbackDirection(attackerPosition) * distance;
 
             float rotationMagnitude = Random.Range(minDegrees, maxDegrees);
-            _targetRotationDegrees = Random.value < 0.5f ? -rotationMagnitude : rotationMagnitude;
+            float rotationDelta = Random.value < 0.5f ? -rotationMagnitude : rotationMagnitude;
+            _targetRotationDegrees = _startRotationDegrees + rotationDelta;
             _tintColor = new Color(
                 baseColor.r * tintBrightness, baseColor.g * tintBrightness, baseColor.b * tintBrightness, targetAlpha);
 
@@ -96,7 +107,7 @@ namespace RCCom.Runtime.Visuals
                     // OutQuad 이징 — ShockwaveRing과 같은 계산식(초반에 빠르게, 끝에서 느려짐).
                     float eased = 1f - (1f - elapsed) * (1f - elapsed);
                     Position = Vector3.LerpUnclamped(_startPosition, _targetPosition, eased);
-                    RotationDegrees = Mathf.LerpUnclamped(0f, _targetRotationDegrees, eased);
+                    RotationDegrees = Mathf.LerpUnclamped(_startRotationDegrees, _targetRotationDegrees, eased);
                     TintColor = Color.Lerp(_baseColor, _tintColor, eased);
                     break;
                 case Phase.Hold:

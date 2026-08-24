@@ -237,7 +237,12 @@ namespace RCCom.Runtime
             }
 
             SpriteFlipbook.Spawn(deathExplosionPrefab, transform.position);
-            _deathSequencer.Begin(transform.position, _baseColor, deathKnockbackVisual, Instance.LastDamageSourcePosition);
+            _deathSequencer.Begin(
+                transform.position,
+                _baseColor,
+                deathKnockbackVisual,
+                Instance.LastDamageSourcePosition,
+                transform.eulerAngles.z);
         }
 
         /// <summary>거점 도달로 인한 제거는 처치가 아니므로 넉백/페이드 없이 기존처럼 즉시 사라진다.</summary>

@@ -346,7 +346,12 @@ namespace RCCom.Runtime
             // 사망한 유닛이 오라 버프 등을 계속 발산하면 안 되므로 스프라이트보다 먼저 끈다.
             DisposeVisualEffects();
             SpriteFlipbook.Spawn(deathExplosionPrefab, transform.position);
-            _deathSequencer.Begin(transform.position, _baseColor, deathKnockbackVisual, Instance.LastDamageSourcePosition);
+            _deathSequencer.Begin(
+                transform.position,
+                _baseColor,
+                deathKnockbackVisual,
+                Instance.LastDamageSourcePosition,
+                transform.eulerAngles.z);
         }
 
         private void TickDeath()
