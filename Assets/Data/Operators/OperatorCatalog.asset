@@ -109,3 +109,34 @@ MonoBehaviour:
       remoteContent: 0
       previewIcon: {fileID: 650332114069399369, guid: 4ea8fe6b3a9a37d4ebcae94d2ddff187, type: 3}
       fallbackColor: {r: 1, g: 1, b: 1, a: 1}
+  - operatorId: aurora
+    displayName: "\uC624\uB85C\uB77C"
+    playStyleDescription: 
+    previewPortrait: {fileID: 5289064701412196668, guid: bb1abba075bbd6d4ead988923493eb6d, type: 3}
+    managementPortrait: {fileID: 3339152671587006292, guid: f1835f90c9e5d27469c36ff53f78fe2d, type: 3}
+    shopPortrait: {fileID: 0}
+    shopUpperBodyPortrait: {fileID: 0}
+    alternateName: 
+    shopDialogue: 
+    address: operator/aurora
+    remoteContent: 0
+    unlockType: 1
+    requiredBestWave: 2
+    purchasePrice: 0
+    requiredStageId: 
+    unlockRewardPortrait: {fileID: 5289064701412196668, guid: bb1abba075bbd6d4ead988923493eb6d, type: 3}
+    unitPreviews:
+    - unitId: aurora-debuff-drone
+      displayName: "\uC911\uC7A5\uAC11 \uC57D\uD654 \uB4DC\uB860"
+      deployCost: 60
+      address: ally-unit/aurora-debuff-drone
+      remoteContent: 0
+      previewIcon: {fileID: -4417582713298616247, guid: a7433232eec441b44b6fed99d2e48ce9, type: 3}
+      fallbackColor: {r: 1, g: 1, b: 1, a: 1}
+    - unitId: aurora-slow-drone
+      displayName: "\uC911\uC7A5\uAC11 \uAC10\uC18D \uB4DC\uB860"
+      deployCost: 60
+      address: ally-unit/aurora-slow-drone
+      remoteContent: 0
+      previewIcon: {fileID: -7489246896140172759, guid: 7cf264685bdfa6b4da89d1794ee316b0, type: 3}
+      fallbackColor: {r: 1, g: 1, b: 1, a: 1}

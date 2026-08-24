@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ffba40c49f52ff34dafa872220b0e9b8, type: 3}
-  m_Name: CallisteBuffRangePulseVisualEffect
+  m_Name: RangeAuraBlue
   m_EditorClassIdentifier: Assembly-CSharp::RCCom.Effects.UnitVisual.Concrete.RangePulseVisualEffect
   material: {fileID: 2100000, guid: c5434a0b77e94e140ba8e386c73a4a14, type: 2}
   auraColor: {r: 0.12, g: 0.82, b: 1.35, a: 0.9}

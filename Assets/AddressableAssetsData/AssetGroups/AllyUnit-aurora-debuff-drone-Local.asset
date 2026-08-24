@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: AllyUnit-aurora-debuff-drone-Local
+  m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
+  m_GroupName: AllyUnit-aurora-debuff-drone-Local
+  m_GUID: feb45adf0b3418d489eeb01fd1f1a2d9
+  m_SerializeEntries:
+  - m_GUID: cafcd64955e47a744bddf0ba0d38300f
+    m_Address: ally-unit/aurora-debuff-drone
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ally-unit-definition
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 2afb846ca87b5fb4d915c11291554efd, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: d95b5525740ed9149a401b3312cf238b, type: 2}
+    - {fileID: 11400000, guid: 255d18d43ca3a134f899e60b3f85ae1f, type: 2}

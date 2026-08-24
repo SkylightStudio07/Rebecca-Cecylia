@@ -13,19 +13,20 @@ MonoBehaviour:
   m_Name: AllyUnitDefinition
   m_EditorClassIdentifier: Assembly-CSharp::RCCom.Definitions.Unit.AllyUnitDefinition
   data:
-    unitId: calliste-guard
-    displayName: "\uC911\uC7A5\uAC11 \uC13C\uD2F0\uB12C"
+    unitId: aurora-debuff-drone
+    displayName: "\uC911\uC7A5\uAC11 \uC57D\uD654 \uB4DC\uB860"
     deployCost: 60
-    maxHealth: 60
-    moveSpeed: 0.8
-    attackDamage: 10
-    attackInterval: 1.5
-    attackRange: 5
-    detectionRange: 5
+    maxHealth: 80
+    moveSpeed: 2.5
+    attackDamage: 0
+    attackInterval: 10
+    attackRange: 6
+    detectionRange: 6
     projectileSpeed: 8
   effects:
-  - {fileID: 11400000, guid: 8f138e77d4cda09468de16d4dec8edfa, type: 2}
-  visualEffects: []
-  sprite: {fileID: -7446801812974973004, guid: 5af903ec0309d704d84ed95be71926e5, type: 3}
+  - {fileID: 11400000, guid: a01d8656682899bf9f5fa7a0fa1fda91, type: 2}
+  visualEffects:
+  - {fileID: 11400000, guid: a9d93482827b2b041b568d47e3318f73, type: 2}
+  sprite: {fileID: -4417582713298616247, guid: a7433232eec441b44b6fed99d2e48ce9, type: 3}
   tint: {r: 1, g: 1, b: 1, a: 1}
-  spriteForwardOffsetDegrees: 90
+  spriteForwardOffsetDegrees: 0

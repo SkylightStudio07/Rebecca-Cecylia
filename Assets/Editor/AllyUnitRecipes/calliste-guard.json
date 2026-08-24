@@ -19,7 +19,7 @@
         "unitId": "calliste-guard",
         "displayName": "중장갑 센티넬",
         "deployCost": 60,
-        "maxHealth": 50.0,
+        "maxHealth": 60.0,
         "moveSpeed": 0.800000011920929,
         "attackDamage": 10.0,
         "attackInterval": 1.5,

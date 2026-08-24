@@ -14,7 +14,7 @@
         "Assets/Data/Effects/Unit/TacticalRelayAuraEffect.asset"
     ],
     "visualEffectPaths": [
-        "Assets/Data/Effects/Unit/Visual/CallisteBuffRangePulseVisualEffect.asset"
+        "Assets/Data/Effects/Unit/Visual/RangeAuraBlue.asset"
     ],
     "remoteContent": false,
     "data": {
