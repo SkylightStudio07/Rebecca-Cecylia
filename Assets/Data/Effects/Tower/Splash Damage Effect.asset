@@ -15,3 +15,4 @@ MonoBehaviour:
   splashRadius: 1.5
   splashDamageMultiplier: 0.5
   attackFlashPrefab: {fileID: 6050871853458803644, guid: eea0950f8e56fed4fb0247898f3f625c, type: 3}
+  fakeProjectilePrefab: {fileID: 6302134341187759493, guid: 49e7cc62646cd804da79a8c0732e2abf, type: 3}

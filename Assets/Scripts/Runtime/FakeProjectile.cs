@@ -24,12 +24,19 @@ namespace RCCom.Runtime
         // 호출부를 공유해도 투사체의 스프라이트·파티클 조합이 섞이지 않아야 한다.
         private static readonly Dictionary<GameObject, Queue<FakeProjectile>> _availablePool = new();
 
+        private SpriteRenderer _spriteRenderer;
         private GameObject _sourcePrefab;
         private Vector3 _from;
         private Vector3 _to;
         private float _remainingTravelTime;
         private float _travelDuration;
         private bool _isActive;
+
+        private void Awake()
+        {
+            _spriteRenderer = GetComponent<SpriteRenderer>();
+            _spriteRenderer.enabled = false;
+        }
 
         private void Update()
         {
@@ -62,12 +69,14 @@ namespace RCCom.Runtime
             _travelDuration = CalculateTravelDuration(from, to, projectileSpeed);
             _remainingTravelTime = _travelDuration;
             transform.SetPositionAndRotation(from, CalculateRotation(from, to));
+            _spriteRenderer.enabled = true;
             _isActive = true;
         }
 
         private void Deactivate()
         {
             _isActive = false;
+            _spriteRenderer.enabled = false;
 
             if (_sourcePrefab == null)
             {

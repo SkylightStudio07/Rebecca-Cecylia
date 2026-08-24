@@ -1564,3 +1564,24 @@ Phase 0 자동화 경로를 실제로 열고, 이후 오퍼레이터별 원격 �
 ### 사람이 할 일
 - 투사체 스프라이트(생성형 모델로 제작 예정, 알파 포함 단일 탄환) 최종 승인 및 임포트.
 - `FakeProjectile`/`ParticleBurst` 프리팹 제작(Shuriken 기본 Circle/Cone 셰이프로 시작) 후 `DamageEffect`/`SplashDamageEffect`/`PierceDamageEffect`의 `fakeProjectilePrefab` 슬롯과 `FakeProjectile`의 `hitSparkPrefab` 슬롯에 인스펙터로 연결.
+
+## 2026-08-24 — 전투 VFX 아트·프리팹 배선 완료
+
+### 결정과 근거
+- 기존 공격 타워 아트의 검정 금속·주홍 발광·굵은 실루엣을 참조해 위쪽을 향한 공용 에너지 볼트 한 장을 생성했다. `detail_level 1`로 미세 노이즈와 작은 흠집을 제거해 0.05~0.1초만 보이는 작은 투사체에서도 중심의 밝은 코어와 외곽 형태가 먼저 읽히게 했다.
+- 생성 원본은 순수 그린 크로마키 배경으로 만들고 Codex 기본 이미지 생성 폴더에서만 알파 제거·녹색 스필 제거·256×512 축소를 수행했다. 프로젝트에는 완성된 `Assets/Art/VFX/fake-projectile-orange.png`만 반입해 크로마키 중간 산출물이 아트 폴더에 섞이지 않게 했다.
+- `CombatVfxAssetBuilder`가 Sprite Editor data provider의 `EditPivot` capability를 확인한 뒤 중앙 피벗을 적용하고, `FakeProjectile`/`ParticleBurst_HitSpark` 공용 프리팹을 생성해 세 공격 효과 SO에 동일한 투사체 프리팹을 연결한다. 효과별 프리팹 복제 대신 슬롯 조립을 유지한 이유는 신규 오퍼레이터가 같은 전투 코드를 그대로 쓰면서 비주얼만 데이터로 교체할 수 있어야 하기 때문이다.
+- 히트 스파크는 Shuriken Circle 버스트(주홍→노랑, 짧은 수명, Stretch 렌더)로 만들고 `ParticleBurst`의 범용 풀을 그대로 사용했다. 별도 히트 스파크 C# 클래스나 새 셰이더는 만들지 않았다.
+- 실제 스프라이트 프리팹을 연결하면 풀 반납 뒤에도 렌더러가 켜져 탄환이 명중 지점에 남는 문제가 생기므로, `FakeProjectile`이 재생 시 `SpriteRenderer`를 켜고 반납 시 끄도록 최소 수정했다. 판정·이동 시간·풀 구조는 변경하지 않았다.
+
+### 의도적으로 하지 않은 것
+- 효과별 투사체 프리팹/스크립트를 만들지 않았다. 세 SO는 같은 공용 프리팹을 참조한다.
+- 플레이 테스트와 최종 비주얼 튜닝, WebGL Player 빌드는 이번 작업 범위에서 제외했다.
+
+### 검증
+- 최종 PNG는 256×512 RGBA이며 네 모서리 알파 0, 불투명도 16 이상 픽셀 중 녹색 우세가 20을 넘는 픽셀 0개로 크로마키·녹색 스필 제거를 확인했다.
+- `CombatVfxAssetBuilder.Validate()`가 스프라이트 임포트, 두 프리팹 구성, `hitSparkPrefab`, 세 효과 SO의 `fakeProjectilePrefab` 참조를 모두 확인하고 통과했다.
+- Unity 6000.3.13f1 Pipeline 재컴파일 결과 `up_to_date`, 실패 `false`, 신규 error/exception 0건을 확인했다. 요청에 따라 WebGL Player 빌드는 실행하지 않았다.
+
+### 사람이 할 일
+- 요청대로 플레이 테스트에서 투사체 크기·이동 가독성과 히트 스파크 밀도를 최종 비주얼 검수한다.
