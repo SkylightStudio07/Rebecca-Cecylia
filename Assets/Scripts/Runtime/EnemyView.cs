@@ -1,4 +1,5 @@
 using RCCom.Core;
+using RCCom.Runtime.Visuals;
 using UnityEngine;
 
 namespace RCCom.Runtime
@@ -26,11 +27,11 @@ namespace RCCom.Runtime
         [SerializeField] private float hitFlashDuration = 0.1f;
 
         [Header("사망 연출")]
-        [Tooltip("사망 시 재생할 파티클 버스트(ParticleBurst) 프리팹. 비워두면 페이드만 재생된다.")]
-        [SerializeField] private GameObject deathParticlePrefab;
-        [Tooltip("사망 실루엣이 서서히 사라지는 데 걸리는 시간(초). ProjectBloodmoon의 실루엣 셰이더 이식은 " +
-                 "파기했으므로(VFX_전투_연출_설계안.md §0-2/§4) 기존 히트플래시와 같은 색상 조작만으로 구현한다.")]
-        [SerializeField] private float deathFadeDuration = 0.3f;
+        [Tooltip("사망 시 재생할 폭발 플립북(SpriteFlipbook, Assets/Art/VFX/explosion) 프리팹. 비워두면 넉백/페이드만 재생된다.")]
+        [SerializeField] private GameObject deathExplosionPrefab;
+        [Tooltip("폭발에 밀려나며 회전+반투명+어두운 틴트 → 정지 유지 → 페이드아웃하는 연출의 튜닝값. " +
+                 "비워두면 DeathKnockbackSequencer의 기본값으로 재생된다.")]
+        [SerializeField] private DeathKnockbackVisualEffect deathKnockbackVisual;
 
         [Tooltip("자식 오브젝트로 둔 체력바(선택) — 회전은 EnemyView가 이동방향으로 매 프레임 돌리므로, 자식이면 그대로 두면 같이 돌아가 버려 여기서 역회전으로 상쇄한다")]
         [SerializeField] private EnemyHealthBar healthBar;
@@ -47,7 +48,7 @@ namespace RCCom.Runtime
         private bool _hasFacing;
         private float _boundMaxHealth;
         private bool _isDying;
-        private float _deathFadeRemaining;
+        private readonly DeathKnockbackSequencer _deathSequencer = new();
 
         public EnemyInstance Instance { get; private set; }
 
@@ -70,9 +71,9 @@ namespace RCCom.Runtime
             Instance.Damaged += HandleDamaged;
 
             // 재사용을 대비한 방어적 초기화 — 지금은 사망 시 실제로 Destroy까지 가지만,
-            // 향후 풀링이 추가되더라도 이전 개체의 사망 페이드 상태가 새 개체에 새어나가지 않게.
+            // 향후 풀링이 추가되더라도 이전 개체의 사망 연출 상태가 새 개체에 새어나가지 않게.
             _isDying = false;
-            _deathFadeRemaining = 0f;
+            transform.rotation = Quaternion.identity;
             if (_collider != null)
             {
                 _collider.enabled = true;
@@ -102,7 +103,7 @@ namespace RCCom.Runtime
         {
             if (_isDying)
             {
-                TickDeathFade();
+                TickDeath();
                 return;
             }
 
@@ -207,10 +208,12 @@ namespace RCCom.Runtime
         }
 
         /// <summary>
-        /// 즉시 Destroy하는 대신 Collider2D부터 꺼서(더 이상 판정에 관여하지 않도록) 짧게
-        /// 알파 페이드아웃한 뒤 파괴한다. 완전한 단색 실루엣 고정은 셰이더 없이는 못 만들어서
-        /// (SpriteRenderer.color 곱연산으로는 원본 명암이 계속 비쳐 보임) 의도적으로 포기했다
-        /// (VFX_전투_연출_설계안.md §4 — ProjectBloodmoon 실루엣 셰이더 이식 파기 결정에 따른 트레이드오프).
+        /// 즉시 Destroy하는 대신 Collider2D부터 꺼서(더 이상 판정에 관여하지 않도록) 폭발
+        /// 플립북을 재생하고, 스프라이트는 넉백(밀려남+회전+반투명+어두운 틴트) → 정지 유지 →
+        /// 페이드아웃 순으로 진행한 뒤 파괴한다(DeathKnockbackSequencer, 사망 연출 고도화).
+        /// 완전한 단색 실루엣 고정은 셰이더 없이는 못 만들어서(SpriteRenderer.color 곱연산으로는
+        /// 원본 명암이 계속 비쳐 보임) 의도적으로 포기했다(VFX_전투_연출_설계안.md §4 —
+        /// ProjectBloodmoon 실루엣 셰이더 이식 파기 결정에 따른 트레이드오프).
         /// </summary>
         private void HandleDied()
         {
@@ -220,30 +223,29 @@ namespace RCCom.Runtime
             }
 
             _isDying = true;
-            _deathFadeRemaining = Mathf.Max(0f, deathFadeDuration);
             if (_collider != null)
             {
                 _collider.enabled = false;
             }
 
-            ParticleBurst.Spawn(deathParticlePrefab, transform.position);
+            SpriteFlipbook.Spawn(deathExplosionPrefab, transform.position);
+            _deathSequencer.Begin(transform.position, _baseColor, deathKnockbackVisual);
         }
 
-        /// <summary>거점 도달로 인한 제거는 처치가 아니므로 페이드 없이 기존처럼 즉시 사라진다.</summary>
+        /// <summary>거점 도달로 인한 제거는 처치가 아니므로 넉백/페이드 없이 기존처럼 즉시 사라진다.</summary>
         private void HandleReachedGoal()
         {
             Destroy(gameObject);
         }
 
-        private void TickDeathFade()
+        private void TickDeath()
         {
-            _deathFadeRemaining -= Time.deltaTime;
-            float alpha = deathFadeDuration > 0f ? Mathf.Clamp01(_deathFadeRemaining / deathFadeDuration) : 0f;
-            Color color = _baseColor;
-            color.a = alpha;
-            _spriteRenderer.color = color;
+            _deathSequencer.Tick(Time.deltaTime);
+            transform.position = _deathSequencer.Position;
+            transform.rotation = Quaternion.Euler(0f, 0f, _deathSequencer.RotationDegrees);
+            _spriteRenderer.color = _deathSequencer.TintColor;
 
-            if (_deathFadeRemaining <= 0f)
+            if (_deathSequencer.IsFinished)
             {
                 Destroy(gameObject);
             }

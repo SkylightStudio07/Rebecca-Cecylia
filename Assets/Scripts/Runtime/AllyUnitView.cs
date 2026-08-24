@@ -20,11 +20,11 @@ namespace RCCom.Runtime
         [SerializeField] private float hitFlashDuration = 0.1f;
 
         [Header("사망 연출")]
-        [Tooltip("사망 시 재생할 파티클 버스트(ParticleBurst) 프리팹. 비워두면 페이드만 재생된다.")]
-        [SerializeField] private GameObject deathParticlePrefab;
-        [Tooltip("사망 실루엣이 서서히 사라지는 데 걸리는 시간(초). EnemyView와 동일한 원칙 " +
-                 "(VFX_전투_연출_설계안.md §4) — 새 셰이더 없이 색상 알파만 조작한다.")]
-        [SerializeField] private float deathFadeDuration = 0.3f;
+        [Tooltip("사망 시 재생할 폭발 플립북(SpriteFlipbook, Assets/Art/VFX/explosion) 프리팹. 비워두면 넉백/페이드만 재생된다.")]
+        [SerializeField] private GameObject deathExplosionPrefab;
+        [Tooltip("폭발에 밀려나며 회전+반투명+어두운 틴트 → 정지 유지 → 페이드아웃하는 연출의 튜닝값. " +
+                 "비워두면 DeathKnockbackSequencer의 기본값으로 재생된다. EnemyView와 SO를 공유한다.")]
+        [SerializeField] private DeathKnockbackVisualEffect deathKnockbackVisual;
 
         [Header("회전 보간 (0 = 즉시 회전, 기존 동작)")]
         [Tooltip("목표 방향을 따라잡는 시간 상수(초). 0이면 기존처럼 즉시 스냅한다. 0.08~0.15 권장 — " +
@@ -37,7 +37,7 @@ namespace RCCom.Runtime
         private float _hitFlashRemaining;
         private bool _hasFacing;
         private bool _isDying;
-        private float _deathFadeRemaining;
+        private readonly DeathKnockbackSequencer _deathSequencer = new();
         private List<IAllyUnitVisualRuntime> _visualRuntimes;
         public AllyUnitInstance Instance { get; private set; }
 
@@ -69,9 +69,9 @@ namespace RCCom.Runtime
             transform.position = Instance.Position;
 
             // 재사용을 대비한 방어적 초기화 — 지금은 사망 시 실제로 Destroy까지 가지만,
-            // 향후 풀링이 추가되더라도 이전 개체의 사망 페이드 상태가 새 개체에 새어나가지 않게.
+            // 향후 풀링이 추가되더라도 이전 개체의 사망 연출 상태가 새 개체에 새어나가지 않게.
             _isDying = false;
-            _deathFadeRemaining = 0f;
+            transform.rotation = Quaternion.identity;
             if (_collider != null)
             {
                 _collider.enabled = true;
@@ -131,7 +131,7 @@ namespace RCCom.Runtime
 
             if (_isDying)
             {
-                TickDeathFade();
+                TickDeath();
                 return;
             }
 
@@ -275,9 +275,10 @@ namespace RCCom.Runtime
         }
 
         /// <summary>
-        /// 즉시 Destroy하는 대신 Collider2D부터 꺼서(있다면) 짧게 알파 페이드아웃한 뒤 파괴한다.
-        /// EnemyView와 동일한 트레이드오프 — 완전한 단색 실루엣 고정은 셰이더 없이는 못 만들어서
-        /// 의도적으로 포기했다(VFX_전투_연출_설계안.md §4).
+        /// 즉시 Destroy하는 대신 Collider2D부터 꺼서(있다면) 폭발 플립북을 재생하고, 스프라이트는
+        /// 넉백(밀려남+회전+반투명+어두운 틴트) → 정지 유지 → 페이드아웃 순으로 진행한 뒤
+        /// 파괴한다(DeathKnockbackSequencer, EnemyView와 동일 — 사망 연출 고도화). 완전한 단색
+        /// 실루엣 고정은 셰이더 없이는 못 만들어서 의도적으로 포기했다(VFX_전투_연출_설계안.md §4).
         /// </summary>
         private void HandleDied()
         {
@@ -287,7 +288,6 @@ namespace RCCom.Runtime
             }
 
             _isDying = true;
-            _deathFadeRemaining = Mathf.Max(0f, deathFadeDuration);
             if (_collider != null)
             {
                 _collider.enabled = false;
@@ -295,18 +295,18 @@ namespace RCCom.Runtime
 
             // 사망한 유닛이 오라 버프 등을 계속 발산하면 안 되므로 스프라이트보다 먼저 끈다.
             DisposeVisualEffects();
-            ParticleBurst.Spawn(deathParticlePrefab, transform.position);
+            SpriteFlipbook.Spawn(deathExplosionPrefab, transform.position);
+            _deathSequencer.Begin(transform.position, _baseColor, deathKnockbackVisual);
         }
 
-        private void TickDeathFade()
+        private void TickDeath()
         {
-            _deathFadeRemaining -= Time.deltaTime;
-            float alpha = deathFadeDuration > 0f ? Mathf.Clamp01(_deathFadeRemaining / deathFadeDuration) : 0f;
-            Color color = _baseColor;
-            color.a = alpha;
-            _spriteRenderer.color = color;
+            _deathSequencer.Tick(Time.deltaTime);
+            transform.position = _deathSequencer.Position;
+            transform.rotation = Quaternion.Euler(0f, 0f, _deathSequencer.RotationDegrees);
+            _spriteRenderer.color = _deathSequencer.TintColor;
 
-            if (_deathFadeRemaining <= 0f)
+            if (_deathSequencer.IsFinished)
             {
                 Destroy(gameObject);
             }

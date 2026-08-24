@@ -42,6 +42,11 @@ namespace RCCom.EditorTools
             "Assets/Data/Prefabs/VFX/LaserBeamView.prefab";
         public const string LaserBeamVisualEffectPath =
             "Assets/Data/Effects/Tower/Visual/LaserBeam_Pierce.asset";
+        public const string ExplosionSpritesFolder = "Assets/Art/VFX/explosion/Sprites";
+        public const string DeathExplosionPrefabPath =
+            "Assets/Data/Prefabs/VFX/DeathExplosion.prefab";
+        public const string DeathKnockbackVisualEffectPath =
+            "Assets/Data/Effects/Unit/Visual/DeathKnockback.asset";
 
         private const string RangePulseAuraMaterialPath =
             "Assets/Data/Effects/Unit/Visual/RangePulseAura.mat";
@@ -77,6 +82,8 @@ namespace RCCom.EditorTools
             ShockwaveRingVisualEffect shockwaveVisual = BuildShockwaveRingVisualEffect();
             GameObject laserBeamPrefab = BuildLaserBeamPrefab();
             LaserBeamVisualEffect laserBeamVisual = BuildLaserBeamVisualEffect();
+            GameObject deathExplosionPrefab = BuildDeathExplosionPrefab();
+            DeathKnockbackVisualEffect deathKnockbackVisual = BuildDeathKnockbackVisualEffect();
             ConnectEffect<DamageEffect>(DamageEffectPath, fakeProjectilePrefab);
             ConnectEffect<PoisonDamageEffect>(PoisonDamageEffectPath, fakeProjectilePrefab);
             ConnectEffect<BasicAttackEffect>(BasicAttackEffectPath, fakeProjectilePrefab);
@@ -87,12 +94,14 @@ namespace RCCom.EditorTools
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
             ConnectPlayerController(fakeProjectilePrefab);
-            ConnectPrefabField<EnemyView>(EnemyViewPrefabPath, "deathParticlePrefab", deathBurstPrefab);
-            ConnectPrefabField<AllyUnitView>(AllyUnitViewPrefabPath, "deathParticlePrefab", deathBurstPrefab);
+            ConnectPrefabField<EnemyView>(EnemyViewPrefabPath, "deathExplosionPrefab", deathExplosionPrefab);
+            ConnectPrefabField<EnemyView>(EnemyViewPrefabPath, "deathKnockbackVisual", deathKnockbackVisual);
+            ConnectPrefabField<AllyUnitView>(AllyUnitViewPrefabPath, "deathExplosionPrefab", deathExplosionPrefab);
+            ConnectPrefabField<AllyUnitView>(AllyUnitViewPrefabPath, "deathKnockbackVisual", deathKnockbackVisual);
             Validate();
-            Debug.Log("[CombatVfxAssetBuilder] 투사체·히트 스파크·사망 버스트·충격파 링·그을림 자국·레이저 빔 생성 및 " +
-                      "네 공격 효과 + 스플래시 착탄 연출 + 관통 빔 연출 + 아군 기본 공격 + 플레이어 + " +
-                      "적/아군 사망 연출 배선 완료");
+            Debug.Log("[CombatVfxAssetBuilder] 투사체·히트 스파크·사망 버스트·충격파 링·그을림 자국·레이저 빔·" +
+                      "사망 폭발 플립북 생성 및 네 공격 효과 + 스플래시 착탄 연출 + 관통 빔 연출 + " +
+                      "아군 기본 공격 + 플레이어 + 적/아군 사망 연출(넉백 고도화) 배선 완료");
         }
 
         /// <summary>
@@ -211,6 +220,94 @@ namespace RCCom.EditorTools
 
             AssetDatabase.CreateAsset(asset, LaserBeamVisualEffectPath);
             return asset;
+        }
+
+        /// <summary>
+        /// 사망 넉백(설계안 §4 고도화) 튜닝값. ShockwaveRingVisualEffect/LaserBeamVisualEffect와
+        /// 같은 이유로 이미 에셋이 있으면 값을 절대 건드리지 않는다 — 최초 생성 시 1회만
+        /// 기본값을 심는다. EnemyView/AllyUnitView가 이 SO 하나를 공유한다.
+        /// </summary>
+        private static DeathKnockbackVisualEffect BuildDeathKnockbackVisualEffect()
+        {
+            var asset =
+                AssetDatabase.LoadAssetAtPath<DeathKnockbackVisualEffect>(DeathKnockbackVisualEffectPath);
+            if (asset != null)
+            {
+                return asset;
+            }
+
+            EnsureFolder(Path.GetDirectoryName(DeathKnockbackVisualEffectPath)?.Replace('\\', '/'));
+
+            asset = ScriptableObject.CreateInstance<DeathKnockbackVisualEffect>();
+            var serializedAsset = new SerializedObject(asset);
+            serializedAsset.FindProperty("knockbackDistance").floatValue = 0.25f;
+            serializedAsset.FindProperty("knockbackDuration").floatValue = 0.2f;
+            serializedAsset.FindProperty("minRotationDegrees").floatValue = 15f;
+            serializedAsset.FindProperty("maxRotationDegrees").floatValue = 30f;
+            serializedAsset.FindProperty("targetAlpha").floatValue = 0.75f;
+            serializedAsset.FindProperty("tintBrightness").floatValue = 0.55f;
+            serializedAsset.FindProperty("holdDuration").floatValue = 1.25f;
+            serializedAsset.FindProperty("fadeOutDuration").floatValue = 0.35f;
+            serializedAsset.ApplyModifiedPropertiesWithoutUndo();
+
+            AssetDatabase.CreateAsset(asset, DeathKnockbackVisualEffectPath);
+            return asset;
+        }
+
+        /// <summary>
+        /// 8프레임 폭발 스프라이트(Assets/Art/VFX/explosion/Sprites, 이미 임포트돼 있는 아트
+        /// 에셋 — 여기서 임포트 설정을 새로 건드리지 않는다)를 12fps SpriteFlipbook 프리팹으로
+        /// 묶는다. SaveOwnedPrefab이 BuilderPrefabMerge를 거치므로 frameRate/targetVisualSize를
+        /// 인스펙터에서 직접 튜닝해도 다음 Build 실행에서 구조가 안 바뀌는 한 보존된다.
+        /// </summary>
+        private static GameObject BuildDeathExplosionPrefab()
+        {
+            EnsureOverwriteIsOwned(DeathExplosionPrefabPath);
+            Sprite[] frames = LoadExplosionFrames();
+
+            var root = new GameObject("DeathExplosion");
+            try
+            {
+                SpriteRenderer renderer = root.AddComponent<SpriteRenderer>();
+                // 사망 버스트(ParticleBurst_DeathBurst, 8)와 같은 시각 레이어에 그려지도록.
+                renderer.sortingOrder = 8;
+
+                SpriteFlipbook flipbook = root.AddComponent<SpriteFlipbook>();
+                var serializedFlipbook = new SerializedObject(flipbook);
+                SerializedProperty framesProperty = serializedFlipbook.FindProperty("frames");
+                framesProperty.arraySize = frames.Length;
+                for (int i = 0; i < frames.Length; i++)
+                {
+                    framesProperty.GetArrayElementAtIndex(i).objectReferenceValue = frames[i];
+                }
+
+                serializedFlipbook.FindProperty("frameRate").floatValue = 12f;
+                serializedFlipbook.ApplyModifiedPropertiesWithoutUndo();
+
+                return SaveOwnedPrefab(root, DeathExplosionPrefabPath);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(root);
+            }
+        }
+
+        private static Sprite[] LoadExplosionFrames()
+        {
+            var frames = new Sprite[8];
+            for (int i = 1; i <= 8; i++)
+            {
+                string path = $"{ExplosionSpritesFolder}/explosion-f{i}.png";
+                Sprite sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);
+                if (sprite == null)
+                {
+                    throw new InvalidOperationException($"폭발 플립북 프레임을 찾지 못했습니다: {path}");
+                }
+
+                frames[i - 1] = sprite;
+            }
+
+            return frames;
         }
 
         /// <summary>
@@ -684,7 +781,7 @@ namespace RCCom.EditorTools
         /// 쓰는 범용 헬퍼. 씬이 아니라 프리팹 에셋이라 PrefabUtility.LoadPrefabContents로 안전하게
         /// 연다(AGENTS.md §3-2: .prefab 텍스트 직접 편집 금지 — 반드시 에디터 API 경유).
         /// </summary>
-        private static void ConnectPrefabField<TComponent>(string prefabPath, string fieldName, GameObject value)
+        private static void ConnectPrefabField<TComponent>(string prefabPath, string fieldName, UnityEngine.Object value)
             where TComponent : Component
         {
             GameObject root = PrefabUtility.LoadPrefabContents(prefabPath);
@@ -715,7 +812,7 @@ namespace RCCom.EditorTools
             }
         }
 
-        private static void ValidatePrefabField<TComponent>(string prefabPath, string fieldName, GameObject expected)
+        private static void ValidatePrefabField<TComponent>(string prefabPath, string fieldName, UnityEngine.Object expected)
             where TComponent : Component
         {
             GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
@@ -816,8 +913,29 @@ namespace RCCom.EditorTools
             }
         }
 
+        /// <summary>
+        /// 기존 프리팹과 구조(자식 이름·컴포넌트 타입)가 같으면 재생성 자체를 건너뛰어 사람이
+        /// 파티클 커브·소팅오더 등을 손으로 튜닝한 값을 그대로 보존한다. 구조가 바뀐 경우(코드
+        /// 변경으로 컴포넌트/자식이 추가·제거된 경우)에만 값 필드를 최대한 이식한 뒤 재생성한다
+        /// (BuilderPrefabMerge 참고, {{user}} 지적, 2026-08-24).
+        /// </summary>
         private static GameObject SaveOwnedPrefab(GameObject root, string path)
         {
+            GameObject existing = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+            if (existing != null && BuilderPrefabMerge.HasSameShape(existing, root))
+            {
+                Debug.Log($"[CombatVfxAssetBuilder] 구조 변경 없음, 기존 프리팹 값 보존: {path}");
+                return existing;
+            }
+
+            if (existing != null)
+            {
+                int mergedCount = BuilderPrefabMerge.CopyTunedValues(existing, root);
+                Debug.LogWarning(
+                    $"[CombatVfxAssetBuilder] 구조 변경을 감지해 프리팹을 재생성합니다 " +
+                    $"(값 필드 {mergedCount}개 컴포넌트에서 이식): {path}");
+            }
+
             GameObject prefab = PrefabUtility.SaveAsPrefabAsset(root, path, out bool succeeded);
             if (!succeeded || prefab == null)
             {
@@ -991,11 +1109,49 @@ namespace RCCom.EditorTools
             if (deathBurst == null || deathBurstParticleSystem == null ||
                 deathBurstParticleSystem.emission.burstCount < 1)
             {
-                throw new InvalidOperationException("사망 버스트 프리팹 설정이 올바르지 않습니다.");
+                throw new InvalidOperationException("사망 버스트 프리팹 설정이 올바르지 않습니다(스플래시 착탄용).");
             }
 
-            ValidatePrefabField<EnemyView>(EnemyViewPrefabPath, "deathParticlePrefab", deathBurstPrefab);
-            ValidatePrefabField<AllyUnitView>(AllyUnitViewPrefabPath, "deathParticlePrefab", deathBurstPrefab);
+            GameObject deathExplosionPrefab =
+                AssetDatabase.LoadAssetAtPath<GameObject>(DeathExplosionPrefabPath);
+            SpriteFlipbook deathFlipbook = deathExplosionPrefab != null
+                ? deathExplosionPrefab.GetComponent<SpriteFlipbook>()
+                : null;
+            SpriteRenderer deathExplosionRenderer = deathExplosionPrefab != null
+                ? deathExplosionPrefab.GetComponent<SpriteRenderer>()
+                : null;
+            if (deathFlipbook == null || deathExplosionRenderer == null)
+            {
+                throw new InvalidOperationException("사망 폭발 플립북 프리팹 설정이 올바르지 않습니다.");
+            }
+
+            var serializedFlipbook = new SerializedObject(deathFlipbook);
+            SerializedProperty framesProperty = serializedFlipbook.FindProperty("frames");
+            if (framesProperty == null || framesProperty.arraySize != 8)
+            {
+                throw new InvalidOperationException("사망 폭발 플립북의 프레임 8장이 온전히 배선되지 않았습니다.");
+            }
+
+            for (int i = 0; i < framesProperty.arraySize; i++)
+            {
+                if (framesProperty.GetArrayElementAtIndex(i).objectReferenceValue == null)
+                {
+                    throw new InvalidOperationException(
+                        $"사망 폭발 플립북의 {i}번째 프레임이 비어 있습니다.");
+                }
+            }
+
+            var deathKnockbackVisual =
+                AssetDatabase.LoadAssetAtPath<DeathKnockbackVisualEffect>(DeathKnockbackVisualEffectPath);
+            if (deathKnockbackVisual == null)
+            {
+                throw new InvalidOperationException($"사망 넉백 시각 SO가 없습니다: {DeathKnockbackVisualEffectPath}");
+            }
+
+            ValidatePrefabField<EnemyView>(EnemyViewPrefabPath, "deathExplosionPrefab", deathExplosionPrefab);
+            ValidatePrefabField<EnemyView>(EnemyViewPrefabPath, "deathKnockbackVisual", deathKnockbackVisual);
+            ValidatePrefabField<AllyUnitView>(AllyUnitViewPrefabPath, "deathExplosionPrefab", deathExplosionPrefab);
+            ValidatePrefabField<AllyUnitView>(AllyUnitViewPrefabPath, "deathKnockbackVisual", deathKnockbackVisual);
 
             GameObject shockwaveRingPrefab =
                 AssetDatabase.LoadAssetAtPath<GameObject>(ShockwaveRingPrefabPath);
@@ -1061,7 +1217,8 @@ namespace RCCom.EditorTools
 
             ValidatePierceEffect(laserBeamPrefab, laserBeamVisual);
 
-            Debug.Log("[CombatVfxAssetBuilder] 투사체·히트 스파크·사망 버스트·충격파 링·그을림 자국·레이저 빔 에셋 검증 통과");
+            Debug.Log("[CombatVfxAssetBuilder] 투사체·히트 스파크·사망 버스트·충격파 링·그을림 자국·레이저 빔·" +
+                      "사망 폭발 플립북 에셋 검증 통과");
         }
 
         private static void ValidatePierceEffect(GameObject laserBeamPrefab, LaserBeamVisualEffect laserBeamVisual)
