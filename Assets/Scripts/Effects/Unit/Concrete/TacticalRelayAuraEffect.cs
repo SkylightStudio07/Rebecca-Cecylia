@@ -14,6 +14,19 @@ namespace RCCom.Effects.Unit.Concrete
         [SerializeField, Min(1f)] private float attackSpeedMultiplier = 1.2f;
         [SerializeField, Min(0.01f)] private float refreshDuration = 0.2f;
 
+        public float MoveSpeedMultiplier => moveSpeedMultiplier;
+        public float AttackSpeedMultiplier => attackSpeedMultiplier;
+
+        /// <summary>
+        /// 오퍼레이터 강화 적용 전용. 공유 원본 에셋이 아니라 OperatorUpgradeApplier가
+        /// Instantiate로 만든 런타임 복제본에만 호출해야 한다.
+        /// </summary>
+        internal void ApplyRuntimeOverride(float moveSpeedMultiplier, float attackSpeedMultiplier)
+        {
+            this.moveSpeedMultiplier = Mathf.Max(1f, moveSpeedMultiplier);
+            this.attackSpeedMultiplier = Mathf.Max(1f, attackSpeedMultiplier);
+        }
+
         public override void OnTick(AllyUnitContext ctx)
         {
             if (ctx == null || ctx.self == null || ctx.self.Data == null || ctx.activeAllies == null)
