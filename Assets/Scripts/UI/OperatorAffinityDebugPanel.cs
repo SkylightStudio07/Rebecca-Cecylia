@@ -30,11 +30,15 @@ namespace RCCom.UI
         [SerializeField] private Button queueOtherReturnButton;
         [SerializeField] private Button clearReturnButton;
         [SerializeField] private Button resetOperatorAcquisitionButton;
+        [SerializeField] private Button replayOperatorAcquisitionButton;
+        [SerializeField] private Button addCommodityButton;
+        [SerializeField] private Button resetProfileButton;
         [SerializeField] private Button showDialogueButton;
         [SerializeField] private Button refreshButton;
         [SerializeField] private LobbyOperatorDialogueUI lobbyDialogueUi;
 
         private const string DebugOtherOperatorId = "__debug_other_operator__";
+        private const int DebugCommodityAmount = 1000;
         private const float RefreshInterval = 0.25f;
 
         private IProfileStorage _storage;
@@ -74,6 +78,9 @@ namespace RCCom.UI
             if (queueOtherReturnButton != null) { queueOtherReturnButton.onClick.AddListener(QueueOtherReturn); }
             if (clearReturnButton != null) { clearReturnButton.onClick.AddListener(ClearReturn); }
             if (resetOperatorAcquisitionButton != null) { resetOperatorAcquisitionButton.onClick.AddListener(ResetOperatorAcquisition); }
+            if (replayOperatorAcquisitionButton != null) { replayOperatorAcquisitionButton.onClick.AddListener(ReplayOperatorAcquisition); }
+            if (addCommodityButton != null) { addCommodityButton.onClick.AddListener(AddCommodity); }
+            if (resetProfileButton != null) { resetProfileButton.onClick.AddListener(ResetProfile); }
             if (showDialogueButton != null) { showDialogueButton.onClick.AddListener(ShowDialogue); }
             if (refreshButton != null) { refreshButton.onClick.AddListener(RefreshFromProfile); }
 #endif
@@ -94,6 +101,9 @@ namespace RCCom.UI
             if (queueOtherReturnButton != null) { queueOtherReturnButton.onClick.RemoveListener(QueueOtherReturn); }
             if (clearReturnButton != null) { clearReturnButton.onClick.RemoveListener(ClearReturn); }
             if (resetOperatorAcquisitionButton != null) { resetOperatorAcquisitionButton.onClick.RemoveListener(ResetOperatorAcquisition); }
+            if (replayOperatorAcquisitionButton != null) { replayOperatorAcquisitionButton.onClick.RemoveListener(ReplayOperatorAcquisition); }
+            if (addCommodityButton != null) { addCommodityButton.onClick.RemoveListener(AddCommodity); }
+            if (resetProfileButton != null) { resetProfileButton.onClick.RemoveListener(ResetProfile); }
             if (showDialogueButton != null) { showDialogueButton.onClick.RemoveListener(ShowDialogue); }
             if (refreshButton != null) { refreshButton.onClick.RemoveListener(RefreshFromProfile); }
 #endif
@@ -187,11 +197,53 @@ namespace RCCom.UI
 
         private void ResetOperatorAcquisition()
         {
+            OperatorAcquisitionUI acquisitionUi = FindFirstObjectByType<OperatorAcquisitionUI>(
+                FindObjectsInactive.Include);
+            if (acquisitionUi != null)
+            {
+                // 실행 중인 연출이 완료되며 방금 지운 이력을 다시 쓰는 것을 먼저 막는다.
+                acquisitionUi.CancelPresentationForDebug();
+            }
+
             PlayerProfile profile = _storage.Load();
             profile.presentedOperatorAcquisitionIds ??= new System.Collections.Generic.List<string>();
             profile.presentedOperatorAcquisitionIds.Clear();
             _storage.Save(profile);
             RefreshFromProfile();
+        }
+
+        private void ReplayOperatorAcquisition()
+        {
+            OperatorAcquisitionUI acquisitionUi = FindFirstObjectByType<OperatorAcquisitionUI>(
+                FindObjectsInactive.Include);
+            if (acquisitionUi != null)
+            {
+                acquisitionUi.ReplayNewlyUnlockedForDebug();
+            }
+
+            RefreshFromProfile();
+        }
+
+        private void AddCommodity()
+        {
+            PlayerProfile profile = _storage.Load();
+            profile.AddCommodity(DebugCommodityAmount);
+            _storage.Save(profile);
+            RefreshFromProfile();
+        }
+
+        private void ResetProfile()
+        {
+            // 구매·스테이지 보상·웨이브 조건도 처음부터 재검증하려면 표시 이력만으로는 부족하다.
+            // 새 프로필로 교체해 계정 진행과 전투 선택 세션을 함께 비운다.
+            _storage.Save(new PlayerProfile());
+            OperatorLoadoutSession.ClearSelection();
+
+            // 각 로비 UI가 가진 프로필 캐시까지 새 값으로 교체하려면 씬 경계를 다시 여는 것이
+            // 가장 명확하다. 에디터 전용 버튼이므로 실제 빌드의 화면 흐름에는 포함되지 않는다.
+            UnityEngine.SceneManagement.Scene activeScene =
+                UnityEngine.SceneManagement.SceneManager.GetActiveScene();
+            UnityEngine.SceneManagement.SceneManager.LoadScene(activeScene.name);
         }
 
         private void ShowDialogue()
@@ -253,6 +305,7 @@ namespace RCCom.UI
                 : $"{profile.pendingReturnOperatorId} × {profile.pendingReturnCount}";
             statusText.text =
                 $"ID  {operatorId}\n" +
+                $"재화  {profile.commodity}\n" +
                 $"호감도  {affinity}/100\n" +
                 $"등급  {profile.GetOperatorAffinityTier(operatorId)}\n" +
                 $"귀환 예약  {pending}\n" +

@@ -1,0 +1,1040 @@
+fileFormatVersion: 2
+guid: 965331d902751d74cbb56b1c98dd5d9a
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 3372253102515987415
+    second: RightFrameV2Back_hover_0
+  - first:
+      213: -1343738876928613293
+    second: RightFrameV2Back_hover_1
+  - first:
+      213: 8508334230972429152
+    second: RightFrameV2Back_hover_2
+  - first:
+      213: 831267451049484035
+    second: RightFrameV2Back_hover_3
+  - first:
+      213: -2059301649506942180
+    second: RightFrameV2Back_hover_4
+  - first:
+      213: -1779560071133611755
+    second: RightFrameV2Back_hover_5
+  - first:
+      213: 6482120566318415423
+    second: RightFrameV2Back_hover_6
+  - first:
+      213: 490631249450340528
+    second: RightFrameV2Back_hover_7
+  - first:
+      213: -1634485429848274933
+    second: RightFrameV2Back_hover_8
+  - first:
+      213: 6826216247680847737
+    second: RightFrameV2Back_hover_9
+  - first:
+      213: -7104799492177305099
+    second: RightFrameV2Back_hover_10
+  - first:
+      213: -7127706977944761578
+    second: RightFrameV2Back_hover_11
+  - first:
+      213: 260013770626584673
+    second: RightFrameV2Back_hover_12
+  - first:
+      213: 4593503918629731370
+    second: RightFrameV2Back_hover_13
+  - first:
+      213: 393063272121283021
+    second: RightFrameV2Back_hover_14
+  - first:
+      213: 313342849703548819
+    second: RightFrameV2Back_hover_15
+  - first:
+      213: -1466360835902983314
+    second: RightFrameV2Back_hover_16
+  - first:
+      213: -1364758707350261265
+    second: RightFrameV2Back_hover_17
+  - first:
+      213: 3048979867244533889
+    second: RightFrameV2Back_hover_18
+  - first:
+      213: 4843087119522027069
+    second: RightFrameV2Back_hover_19
+  - first:
+      213: -3988476122998461600
+    second: RightFrameV2Back_hover_20
+  - first:
+      213: -6980015690465437182
+    second: RightFrameV2Back_hover_21
+  - first:
+      213: 6181862708398407024
+    second: RightFrameV2Back_hover_22
+  - first:
+      213: 271689187218604867
+    second: RightFrameV2Back_hover_23
+  - first:
+      213: -6735546605740334241
+    second: RightFrameV2Back_hover_24
+  - first:
+      213: 7504620495405137816
+    second: RightFrameV2Back_hover_25
+  - first:
+      213: -3822016121598295251
+    second: RightFrameV2Back_hover_26
+  - first:
+      213: 4875724320842409778
+    second: RightFrameV2Back_hover_27
+  - first:
+      213: 523116415636931596
+    second: RightFrameV2Back_hover_28
+  - first:
+      213: 8479138304318966964
+    second: RightFrameV2Back_hover_29
+  - first:
+      213: 7441855787093973396
+    second: RightFrameV2Back_hover_30
+  - first:
+      213: -3827492653076135593
+    second: RightFrameV2Back_hover_31
+  - first:
+      213: -5028236563983224330
+    second: RightFrameV2Back_hover_32
+  - first:
+      213: -8499199855557187241
+    second: RightFrameV2Back_hover_33
+  - first:
+      213: 6366223735397619761
+    second: RightFrameV2Back_hover_34
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 1
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: RightFrameV2Back_hover_0
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 25
+        width: 2172
+        height: 590
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7d3ac2c6456acce20800000000000000
+      internalID: 3372253102515987415
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RightFrameV2Back_hover_1
+      rect:
+        serializedVersion: 2
+        x: 877
+        y: 572
+        width: 9
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 354a9c16c941a5de0800000000000000
+      internalID: -1343738876928613293
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RightFrameV2Back_hover_2
+      rect:
+        serializedVersion: 2
+        x: 1520
+        y: 554
+        width: 15
+        height: 25
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 063786b67eca31670800000000000000
+      internalID: 8508334230972429152
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RightFrameV2Back_hover_3
+      rect:
+        serializedVersion: 2
+        x: 1534
+        y: 564
+        width: 10
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 30f162da751498b00800000000000000
+      internalID: 831267451049484035
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RightFrameV2Back_hover_4
+      rect:
+        serializedVersion: 2
+        x: 1617
+        y: 578
+        width: 15
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c1343c77f04eb63e0800000000000000
+      internalID: -2059301649506942180
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RightFrameV2Back_hover_5
+      rect:
+        serializedVersion: 2
+        x: 1631
+        y: 554
+        width: 9
+        height: 42
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 519bc973b8bbd47e0800000000000000
+      internalID: -1779560071133611755
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RightFrameV2Back_hover_6
+      rect:
+        serializedVersion: 2
+        x: 1671
+        y: 562
+        width: 23
+        height: 23
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f3eb9a2bf4e15f950800000000000000
+      internalID: 6482120566318415423
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RightFrameV2Back_hover_7
+      rect:
+        serializedVersion: 2
+        x: 1798
+        y: 576
+        width: 19
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0b0913b95821fc600800000000000000
+      internalID: 490631249450340528
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RightFrameV2Back_hover_8
+      rect:
+        serializedVersion: 2
+        x: 1939
+        y: 572
+        width: 7
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b08875359242159e0800000000000000
+      internalID: -1634485429848274933
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RightFrameV2Back_hover_9
+      rect:
+        serializedVersion: 2
+        x: 645
+        y: 177
+        width: 14
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 97f440ba2879bbe50800000000000000
+      internalID: 6826216247680847737
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RightFrameV2Back_hover_10
+      rect:
+        serializedVersion: 2
+        x: 961
+        y: 166
+        width: 20
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5f16564318ea66d90800000000000000
+      internalID: -7104799492177305099
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RightFrameV2Back_hover_11
+      rect:
+        serializedVersion: 2
+        x: 979
+        y: 174
+        width: 6
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 61b878c844c451d90800000000000000
+      internalID: -7127706977944761578
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RightFrameV2Back_hover_12
+      rect:
+        serializedVersion: 2
+        x: 1046
+        y: 178
+        width: 13
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 16058e29521cb9300800000000000000
+      internalID: 260013770626584673
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RightFrameV2Back_hover_13
+      rect:
+        serializedVersion: 2
+        x: 1166
+        y: 178
+        width: 8
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a2c3a400a776fbf30800000000000000
+      internalID: 4593503918629731370
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RightFrameV2Back_hover_14
+      rect:
+        serializedVersion: 2
+        x: 1263
+        y: 176
+        width: 23
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: dc1ba05a6f0747500800000000000000
+      internalID: 393063272121283021
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RightFrameV2Back_hover_15
+      rect:
+        serializedVersion: 2
+        x: 1776
+        y: 166
+        width: 14
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3971d7169a7395400800000000000000
+      internalID: 313342849703548819
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RightFrameV2Back_hover_16
+      rect:
+        serializedVersion: 2
+        x: 652
+        y: 146
+        width: 9
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e63357fb69076abe0800000000000000
+      internalID: -1466360835902983314
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RightFrameV2Back_hover_17
+      rect:
+        serializedVersion: 2
+        x: 740
+        y: 130
+        width: 23
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fe1344cbf276f0de0800000000000000
+      internalID: -1364758707350261265
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RightFrameV2Back_hover_18
+      rect:
+        serializedVersion: 2
+        x: 858
+        y: 141
+        width: 10
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1889d6af807205a20800000000000000
+      internalID: 3048979867244533889
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RightFrameV2Back_hover_19
+      rect:
+        serializedVersion: 2
+        x: 995
+        y: 142
+        width: 12
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d36516f431a163340800000000000000
+      internalID: 4843087119522027069
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RightFrameV2Back_hover_20
+      rect:
+        serializedVersion: 2
+        x: 1030
+        y: 143
+        width: 23
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 06bac85191616a8c0800000000000000
+      internalID: -3988476122998461600
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RightFrameV2Back_hover_21
+      rect:
+        serializedVersion: 2
+        x: 1102
+        y: 136
+        width: 13
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 20a972316b0022f90800000000000000
+      internalID: -6980015690465437182
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RightFrameV2Back_hover_22
+      rect:
+        serializedVersion: 2
+        x: 1126
+        y: 138
+        width: 17
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 07d325061636ac550800000000000000
+      internalID: 6181862708398407024
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RightFrameV2Back_hover_23
+      rect:
+        serializedVersion: 2
+        x: 1390
+        y: 144
+        width: 9
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 343ca7550eb35c300800000000000000
+      internalID: 271689187218604867
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RightFrameV2Back_hover_24
+      rect:
+        serializedVersion: 2
+        x: 1625
+        y: 144
+        width: 9
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f5362cc6c088682a0800000000000000
+      internalID: -6735546605740334241
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RightFrameV2Back_hover_25
+      rect:
+        serializedVersion: 2
+        x: 1721
+        y: 154
+        width: 10
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 89f3db25494c52860800000000000000
+      internalID: 7504620495405137816
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RightFrameV2Back_hover_26
+      rect:
+        serializedVersion: 2
+        x: 1725
+        y: 146
+        width: 13
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d23415a569875fac0800000000000000
+      internalID: -3822016121598295251
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RightFrameV2Back_hover_27
+      rect:
+        serializedVersion: 2
+        x: 1826
+        y: 147
+        width: 23
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2376b86ef6d0aa340800000000000000
+      internalID: 4875724320842409778
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RightFrameV2Back_hover_28
+      rect:
+        serializedVersion: 2
+        x: 505
+        y: 134
+        width: 9
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c040732cb9b724700800000000000000
+      internalID: 523116415636931596
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RightFrameV2Back_hover_29
+      rect:
+        serializedVersion: 2
+        x: 668
+        y: 146
+        width: 7
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4bc07560d53fba570800000000000000
+      internalID: 8479138304318966964
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RightFrameV2Back_hover_30
+      rect:
+        serializedVersion: 2
+        x: 796
+        y: 126
+        width: 20
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 499db63e868c64760800000000000000
+      internalID: 7441855787093973396
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RightFrameV2Back_hover_31
+      rect:
+        serializedVersion: 2
+        x: 496
+        y: 130
+        width: 10
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 751caf006b302eac0800000000000000
+      internalID: -3827492653076135593
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RightFrameV2Back_hover_32
+      rect:
+        serializedVersion: 2
+        x: 845
+        y: 131
+        width: 7
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6f1362d5c7d183ab0800000000000000
+      internalID: -5028236563983224330
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RightFrameV2Back_hover_33
+      rect:
+        serializedVersion: 2
+        x: 873
+        y: 130
+        width: 15
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 759667613c6cc0a80800000000000000
+      internalID: -8499199855557187241
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RightFrameV2Back_hover_34
+      rect:
+        serializedVersion: 2
+        x: 943
+        y: 132
+        width: 7
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1381905f1ce595850800000000000000
+      internalID: 6366223735397619761
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      RightFrameV2Back_hover_0: 3372253102515987415
+      RightFrameV2Back_hover_1: -1343738876928613293
+      RightFrameV2Back_hover_10: -7104799492177305099
+      RightFrameV2Back_hover_11: -7127706977944761578
+      RightFrameV2Back_hover_12: 260013770626584673
+      RightFrameV2Back_hover_13: 4593503918629731370
+      RightFrameV2Back_hover_14: 393063272121283021
+      RightFrameV2Back_hover_15: 313342849703548819
+      RightFrameV2Back_hover_16: -1466360835902983314
+      RightFrameV2Back_hover_17: -1364758707350261265
+      RightFrameV2Back_hover_18: 3048979867244533889
+      RightFrameV2Back_hover_19: 4843087119522027069
+      RightFrameV2Back_hover_2: 8508334230972429152
+      RightFrameV2Back_hover_20: -3988476122998461600
+      RightFrameV2Back_hover_21: -6980015690465437182
+      RightFrameV2Back_hover_22: 6181862708398407024
+      RightFrameV2Back_hover_23: 271689187218604867
+      RightFrameV2Back_hover_24: -6735546605740334241
+      RightFrameV2Back_hover_25: 7504620495405137816
+      RightFrameV2Back_hover_26: -3822016121598295251
+      RightFrameV2Back_hover_27: 4875724320842409778
+      RightFrameV2Back_hover_28: 523116415636931596
+      RightFrameV2Back_hover_29: 8479138304318966964
+      RightFrameV2Back_hover_3: 831267451049484035
+      RightFrameV2Back_hover_30: 7441855787093973396
+      RightFrameV2Back_hover_31: -3827492653076135593
+      RightFrameV2Back_hover_32: -5028236563983224330
+      RightFrameV2Back_hover_33: -8499199855557187241
+      RightFrameV2Back_hover_34: 6366223735397619761
+      RightFrameV2Back_hover_4: -2059301649506942180
+      RightFrameV2Back_hover_5: -1779560071133611755
+      RightFrameV2Back_hover_6: 6482120566318415423
+      RightFrameV2Back_hover_7: 490631249450340528
+      RightFrameV2Back_hover_8: -1634485429848274933
+      RightFrameV2Back_hover_9: 6826216247680847737
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

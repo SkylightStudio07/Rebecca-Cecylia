@@ -1539,3 +1539,71 @@ Phase 0 자동화 경로를 실제로 열고, 이후 오퍼레이터별 원격 �
 - 전술 중계 오라 Builder로 Shader·공용 Material·칼리스테 버프 비주얼 SO를 생성하고, 드론 Definition의 게임플레이 효과와 비주얼 효과 참조를 함께 검증했다.
 - 아군 에셋 검증 6개 레시피·경고 0건, 기존 전투 코어 23개 시나리오, 공용 View 프리팹 검증을 모두 통과했다.
 - Play Mode 임시 카메라에서 반경 10의 중간 파동을 실제 URP로 캡처해 얇은 청록 스트로크·외곽 글로우·하이라이트와 드론 중심 정렬을 확인했다. 프리뷰는 씬을 저장하지 않았고 생성한 캡처 에셋도 삭제했다.
+- `UILoadingTransitionCanvas`는 메인 로비 안에서 기능 화면을 이동할 때 사용한다. 메인 메뉴↔오퍼레이터 선택·관리·환경설정, 오퍼레이터 선택→모드 선택→스테이지 선택의 패널 교체를 화면이 덮인 프레임에 실행한다.
+- `DefenseScene` 출격과 결과 화면의 재도전·로비 복귀는 일반 씬 로딩을 사용한다. 로비 UI 전환 연출을 실제 씬 로딩 시간과 분리해 0.6초 진입·0.6초 퇴장 리듬을 일정하게 유지하기 위함이다.
+
+## 2026-08-24 — 합류 이력 초기화와 재생 분리
+
+- `합류 이력 초기화`는 진행 중인 획득 코루틴과 캐시를 먼저 취소하고 표시 이력만 비운다. 초기화 직후 재생까지 자동으로 시작하면 연출 완료 시 같은 이력이 다시 저장되어 초기화가 실패한 것처럼 보였기 때문이다.
+- `합류 재생`은 별도 버튼으로 두고 현재 프로필에서 해금됐지만 표시되지 않은 오퍼레이터의 큐를 새로 만든다. 기본 지급 오퍼레이터의 무음 등록 규칙은 유지한다.
+
+## 2026-08-24 — 계정 진행 디버그 조작
+
+- TitleScene 에디터 전용 호감도 패널에 `재화 +1000`과 `완전 초기화`를 추가했다. 전자는 `PlayerProfile.commodity`만 증가시켜 구매형 오퍼레이터를 즉시 검증할 수 있게 한다.
+- 완전 초기화는 새 `PlayerProfile`을 저장해 재화, 구매 소유, 스테이지 클리어, 최고 웨이브, 호감도, 합류 연출 이력, 귀환 예약을 함께 초기화하고 현재 오퍼레이터 선택 세션도 비운 뒤 TitleScene을 다시 로드한다. 여러 UI가 보유한 이전 프로필 캐시까지 확실히 제거하기 위함이다.
+
+## 2026-08-24 — 합류 디버그 패널과 카탈로그 복구
+
+- 디버그 패널 생성기는 중첩된 `UILoadingTransitionCanvas`가 아니라 TitleScene 루트의 메인 `Canvas`만 선택한다. 기존에 잘못 생성된 패널도 메인 Canvas로 옮겨 로딩 Canvas의 표시·입력 상태를 상속하지 않게 했다.
+- 레시피 3개를 기준으로 OperatorCatalog와 Addressables를 다시 생성해 누락됐던 실비아(`racing`)를 복구했다.
+- 로비 메뉴 스프라이트의 투명 클릭 판정은 원본 텍스처가 Read/Write 가능할 때만 적용한다. 아트 교체 후 읽기 불가 이미지가 들어와도 `Awake` 예외로 UI 초기화가 중단되는 것을 막는다.
+
+### 검증
+- 플레이 모드 UGUI 레이캐스트에서 `Canvas/OperatorAffinityDebugOverlay/ResetOperatorAcquisition`이 버튼 중심의 최상위 입력 대상으로 판정됨을 확인했다.
+- 합류 이력 초기화 직후와 지연 확인 모두 목록이 비어 있었고 큐가 0명으로 유지됐다.
+- 별도 합류 재생 버튼은 칼리스테와 실비아 2명의 큐를 생성하고 획득 화면을 `open=true`, `alpha=1`로 표시했다.
+
+## 2026-08-24 — 로비 리크루트 Shop 기본 내비게이션
+
+- 하단 `RecruitButton`은 로딩 와이프가 덮인 동안 `MainMenuBackground`를 숨기고 `ShopPanelBackground`를 연다. Shop의 Back 버튼은 같은 경로로 로비에 복귀한다.
+- Shop의 `RecruitOperatorButton`과 `BackButton`은 기존 Image 위에 UGUI Button과 SpriteSwap만 배선했다. 모집 대상·가격·소유 처리와 같은 오퍼레이터 데이터 로직은 의도적으로 연결하지 않았다.
+- Shop 패널은 아트 편집을 위해 씬에서는 켜 둘 수 있고, `LobbyShopPanelUI.Awake()`가 런타임 시작 시 Shop만 숨긴다. 타이틀과 메인 로비의 초기 활성 상태는 기존 `TitleSceneController`가 계속 소유한다.
+- Normal/Hover PNG가 자동 슬라이스에서 서로 다른 투명·발광 여백으로 잘려 버튼 본체가 축소·이동해 보이는 문제를 막기 위해, 네 상태 이미지는 전체 캔버스를 사용하는 Single Sprite로 통일한다. 최초 변환 시 기존 Normal의 보이는 범위가 유지되도록 RectTransform 크기와 중심을 함께 보정한다.
+
+## 2026-08-24 — 리크루트 Shop 오퍼레이터 데이터 바인딩
+
+- Operator Studio 레시피에 상점용 큰 초상화, 하단 상반신 초상화, 이명, 짧은 대사를 추가했다. 생성기가 이 값을 `OperatorDefinition`과 로컬 `OperatorCatalog`에 함께 복제하므로 신규 구매형 오퍼레이터는 C# 수정 없이 레시피 입력만으로 Shop 후보에 들어온다.
+- Shop UI는 카탈로그에서 `CommodityPurchase` 해금 방식만 필터링해 목록으로 보유한다. 현재는 칼리스테 한 명을 표시하지만 이전·다음 선택 API와 선택 인덱스를 미리 두어 후보가 늘어날 때 버튼 배선만 추가하면 된다.
+- 구매는 기존 `PlayerProfile.TryPurchaseOperator`를 그대로 사용해 재화 차감과 소유 기록의 원본을 중복 만들지 않는다. 성공 시 프로필 저장, 로비 재화 갱신, 기존 신규 오퍼레이터 합류 연출 호출까지 한 경로로 처리한다.
+- 원격 오퍼레이터의 상점 이미지는 기존 선택·관리 초상화와 같은 이유로 로컬 카탈로그에 직접 참조하지 않는다. 원격 그룹의 아트가 본체 빌드로 새는 것을 검증기가 차단한다.
+- 칼리스테 레시피에는 현재 TitleScene 목업에 배치된 `오퍼레이터관리_칼리스테.png`, `CalisteShop.png`, 이명 `Bartender`, 상점 대사를 이관했다. 가격 표시는 목업의 임시 문자열이 아니라 레시피의 실제 `purchasePrice`를 사용한다.
+
+### 검증
+- Unity 6000.3.13f1 Pipeline 재컴파일 결과 `failed=false`, `errors=[]`를 확인했다.
+- 칼리스테 단일 생성으로 Definition·Catalog·Addressables 메타데이터를 갱신하고 `OperatorAssetValidator` 검증을 통과했다.
+- Edit Mode에서 `LobbyShopPanelSetup`을 실행해 Shop 이미지 2개, 텍스트 5개, 구매 버튼, 카탈로그 참조가 모두 직렬화됐는지 검증했다. Play Mode는 사용하지 않았다.
+
+## 2026-08-24 — 리크루트 Shop 고유 유닛 미리보기
+
+- 우측 `OPERATOR INFO` 영역에 고유 유닛 슬롯 2개를 배치하고, 별도 상점용 데이터를 만들지 않은 채 `OperatorCatalogEntry.unitPreviews`의 앞 두 항목을 표시한다. 이름·아이콘·배치 CP는 AllyUnitRoster에서 카탈로그 생성 시 이미 파생되므로 로스터 변경이 상점에도 자동 반영된다.
+- 상점 컨트롤러는 구매형 오퍼레이터 선택이 바뀔 때 두 슬롯을 다시 그린다. 유닛이 2개 미만이면 남는 슬롯만 숨겨 빈 데이터가 이전 오퍼레이터의 정보로 남지 않게 한다.
+- 기존 선택 화면용 `OperatorRosterPreviewItem`의 데이터 바인딩 계약을 재사용하되, 상점 전용 크기와 청색 윤곽 스타일은 씬 인스턴스로 분리했다. 공용 프리팹 스타일 변경이 상점 레이아웃을 되돌리는 것을 막기 위함이다.
+
+### 검증
+- Unity 6000.3.13f1 Pipeline 재컴파일 결과 `failed=false`, `errors=[]`를 확인했다.
+- Edit Mode 배선 검증에서 고유 유닛 슬롯 정확히 2개, 칼리스테 카탈로그와 일치하는 이름·CP 비용·아이콘 참조를 확인했다. Play Mode는 사용하지 않았다.
+
+## 2026-08-24 — Shop 구매 직후 합류 연출 표시
+
+- `GachaGainBackground`가 `ShopPanelBackground`보다 앞에 오도록 합류 연출을 시작할 때 최상단 형제 순서로 이동한다. 기존에는 구매 성공 후 연출 큐가 생성돼도 Shop이 더 뒤에 배치돼 있어 화면에 가려졌다.
+- `PresentNewlyUnlocked`는 초기 `Start()` 이전에도 사용할 수 있도록 프로필 저장소를 필요 시 직접 준비한다. 따라서 구매 버튼이 호출한 같은 프레임에 합류 연출을 시작할 수 있다.
+
+## 2026-08-24 — Shop 좌측 탭 및 스테이지 보상 합류 연출
+
+- `ShopPanelBackground/LeftFrame/VerticalLayout`에만 `LeftPanelSheet` 상태를 배선했다. Recruit는 현재 페이지를 나타내므로 4번 선택 스프라이트를 상시 유지하고, Exchange·Enhance·Material은 각각 1→5, 2→6, 3→7로 포인터 호버 중에만 전환한다. 로비의 `MainMenuBackground/underPanel`은 별개 UI이므로 건드리지 않는다.
+- TitleScene의 `GachaGainBackground`를 `OperatorAcquisitionOverlay` 프리팹으로 보존하고 DefenseScene Canvas에 결과 전용 인스턴스를 배치했다. 같은 연출 자산을 두 씬에서 공유해 스테이지 보상과 Shop 구매가 서로 다른 획득 화면으로 갈라지지 않게 한다.
+- 결과 전용 합류 UI는 씬 시작 자동 검사를 끈다. `GameResultUI`가 승리한 스테이지 ID를 프로필에 저장한 다음 그 스테이지의 미표시 보상만 호출하므로, 1-2의 실비아는 결과 패널 위에서 즉시 등장하고 이미 표시한 보상은 재클리어 시 반복되지 않는다.
+
+## 2026-08-24 — 리크루트 구매 완료 버튼 상태
+
+- 구매형 오퍼레이터가 이미 프로필에 소유된 경우 `RecruitOperatorButton_AlreadyPurchased`를 고정 표시하고 버튼 입력을 막는다. 구매 전에는 기존 Normal/Hover SpriteSwap을 복원하므로, 향후 구매형 오퍼레이터가 여러 명으로 늘어나 선택을 이동해도 각 항목의 소유 상태에 맞춰 버튼 외형이 갱신된다.

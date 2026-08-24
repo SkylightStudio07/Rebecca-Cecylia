@@ -120,6 +120,10 @@ namespace RCCom.EditorTools
                     definition.unlockType != catalogEntry.unlockType ||
                     definition.requiredBestWave != catalogEntry.requiredBestWave ||
                     definition.purchasePrice != catalogEntry.purchasePrice ||
+                    !string.Equals(definition.alternateName, catalogEntry.alternateName,
+                        StringComparison.Ordinal) ||
+                    !string.Equals(definition.shopDialogue, catalogEntry.shopDialogue,
+                        StringComparison.Ordinal) ||
                     !string.Equals(definition.requiredStageId, catalogEntry.requiredStageId,
                         StringComparison.Ordinal))
                 {
@@ -134,6 +138,19 @@ namespace RCCom.EditorTools
                 if (catalogEntry.remoteContent && catalogEntry.managementPortrait != null)
                 {
                     errors.Add($"원격 오퍼레이터의 관리 카드 초상화가 로컬 카탈로그에 참조됩니다: {catalogEntry.operatorId}");
+                }
+
+                if (catalogEntry.remoteContent &&
+                    (catalogEntry.shopPortrait != null || catalogEntry.shopUpperBodyPortrait != null))
+                {
+                    errors.Add($"원격 오퍼레이터의 상점 초상화가 로컬 카탈로그에 참조됩니다: {catalogEntry.operatorId}");
+                }
+
+                if (!catalogEntry.remoteContent &&
+                    (catalogEntry.shopPortrait != definition.shopPortrait ||
+                     catalogEntry.shopUpperBodyPortrait != definition.shopUpperBodyPortrait))
+                {
+                    errors.Add($"상점 초상화 카탈로그 메타데이터가 Definition과 일치하지 않습니다: {definitionPath}");
                 }
 
                 AddressableAssetEntry addressableEntry = settings.FindAssetEntry(AssetDatabase.AssetPathToGUID(definitionPath));
@@ -294,6 +311,20 @@ namespace RCCom.EditorTools
                     definition.purchasePrice <= 0)
                 {
                     errors.Add($"골드 구매 오퍼레이터의 가격은 1 이상이어야 합니다: {path}");
+                }
+
+                if (definition.unlockType == OperatorUnlockType.CommodityPurchase)
+                {
+                    if (definition.shopPortrait == null || definition.shopUpperBodyPortrait == null)
+                    {
+                        errors.Add($"골드 구매 오퍼레이터의 상점 초상화가 비어 있습니다: {path}");
+                    }
+
+                    if (string.IsNullOrWhiteSpace(definition.alternateName) ||
+                        string.IsNullOrWhiteSpace(definition.shopDialogue))
+                    {
+                        errors.Add($"골드 구매 오퍼레이터의 이명 또는 상점 대사가 비어 있습니다: {path}");
+                    }
                 }
 
                 if (definition.unlockType == OperatorUnlockType.StageClearReward &&

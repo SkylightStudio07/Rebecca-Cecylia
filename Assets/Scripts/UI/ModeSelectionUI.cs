@@ -60,7 +60,7 @@ namespace RCCom.UI
 
         public void SelectStageMode()
         {
-            SelectStageModeCovered();
+            UILoadingTransition.Run(SelectStageModeCovered);
         }
 
         private void SelectStageModeCovered()
@@ -80,14 +80,19 @@ namespace RCCom.UI
         {
             BattleSession.SelectEndless();
             Time.timeScale = 1f;
-            UILoadingTransition.LoadSceneWithPreload(
-                defenseSceneName,
-                BattleContentCache.PreloadEnemies(enemyRoster, null, null));
+            StartCoroutine(PreloadEndlessAndLoad());
+        }
+
+        private System.Collections.IEnumerator PreloadEndlessAndLoad()
+        {
+            // 전투 Definition은 씬 진입 전에 준비하되, 전체 화면 로딩 연출은 로비 내부 이동에만 사용한다.
+            yield return BattleContentCache.PreloadEnemies(enemyRoster, null, null);
+            SceneManager.LoadScene(defenseSceneName);
         }
 
         public void Back()
         {
-            BackCovered();
+            UILoadingTransition.Run(BackCovered);
         }
 
         private void BackCovered()

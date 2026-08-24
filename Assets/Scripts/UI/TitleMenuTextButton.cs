@@ -104,9 +104,9 @@ namespace RCCom.UI
                 SoundManager.Instance.PlayMainMenuClick();
             }
 
-            // 로비 내부 패널은 즉시 전환한다. 로딩 연출은 DefenseScene 출격처럼
-            // 실제 씬을 떠나는 동선에서만 사용한다.
-            ExecuteActionCovered();
+            // 로딩 캔버스는 로비 내부 기능 화면을 오갈 때만 사용한다. 실제 전투 씬 로딩과
+            // 결합하면 씬 로딩 시간에 따라 연출 길이가 달라져 메뉴 전환 리듬이 깨진다.
+            UILoadingTransition.Run(ExecuteActionCovered);
         }
 
         private void ExecuteActionCovered()
@@ -121,7 +121,7 @@ namespace RCCom.UI
                     else
                     {
                         // 선택 UI가 아직 배선되지 않은 개발 씬에서도 기존 진입 경로는 유지한다.
-                        UILoadingTransition.LoadScene(defenseSceneName);
+                        SceneManager.LoadScene(defenseSceneName);
                     }
                     break;
                 case MenuAction.Preference:

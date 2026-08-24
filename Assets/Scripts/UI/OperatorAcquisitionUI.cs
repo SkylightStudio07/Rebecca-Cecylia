@@ -13,7 +13,7 @@ using UnityEngine.UI;
 namespace RCCom.UI
 {
     /// <summary>
-    /// 로비 진입 뒤 새로 해금된 오퍼레이터를 한 명씩 소개한다.
+    /// 로비 진입 또는 스테이지 결과 확정 뒤 새로 해금된 오퍼레이터를 한 명씩 소개한다.
     /// 해금 판정은 카탈로그와 프로필에서 파생하고, 이 컴포넌트는 연출과 표시 이력만 소유해
     /// 이후 실제 획득 수단이 추가되어도 전투 및 오퍼레이터 선택 흐름과 결합되지 않게 한다.
     /// </summary>
@@ -22,6 +22,8 @@ namespace RCCom.UI
         [Header("Flow")]
         [SerializeField] private OperatorCatalog catalog;
         [SerializeField] private GameObject mainMenuBackground;
+        [Tooltip("로비에서는 씬 진입 후 미표시 합류 연출을 자동 검사한다. 전투 결과용 인스턴스는 결과 확정 뒤 직접 호출하므로 끈다.")]
+        [SerializeField] private bool autoPresentOnStart = true;
         [SerializeField] private bool silentlyRegisterStarterOperator = true;
 
         [Header("Root")]
@@ -83,21 +85,73 @@ namespace RCCom.UI
         private void Start()
         {
             _profileStorage = new PlayerPrefsProfileStorage();
-            StartCoroutine(WaitForLobbyAndPresent());
+            if (autoPresentOnStart)
+            {
+                StartCoroutine(WaitForLobbyAndPresent());
+            }
         }
 
         public void PresentNewlyUnlocked()
         {
-            if (_isOpen || _profileStorage == null)
+            PresentNewlyUnlockedForStage(null);
+        }
+
+        /// <summary>
+        /// 결과 화면에서 해당 스테이지 보상으로 해금된 오퍼레이터만 즉시 소개한다.
+        /// null 또는 빈 값이면 Shop 구매처럼 모든 미표시 획득을 대상으로 한다.
+        /// </summary>
+        public void PresentNewlyUnlockedForStage(string stageId)
+        {
+            if (_isOpen) { return; }
+
+            // Shop과 결과 화면처럼 다른 패널 위에서 호출돼도 연출이 가려지지 않아야 한다.
+            _profileStorage ??= new PlayerPrefsProfileStorage();
+            transform.SetAsLastSibling();
+            BuildPendingQueue();
+            if (!string.IsNullOrWhiteSpace(stageId))
             {
-                return;
+                _pendingEntries.RemoveAll(entry =>
+                    entry == null ||
+                    entry.unlockType != OperatorUnlockType.StageClearReward ||
+                    !string.Equals(entry.requiredStageId, stageId,
+                        System.StringComparison.OrdinalIgnoreCase));
             }
 
+            if (_pendingEntries.Count > 0) { StartCoroutine(PresentNext()); }
+        }
+
+        /// <summary>
+        /// 에디터의 합류 연출 검증에서 현재 진행 중이던 코루틴과 표시 상태를 끊고
+        /// 프로필 기준 큐를 새로 만든다. 로비 진입 시 한 번만 도는 초기 검사와 분리한다.
+        /// </summary>
+        public void ReplayNewlyUnlockedForDebug()
+        {
+            CancelPresentationForDebug();
+            _profileStorage ??= new PlayerPrefsProfileStorage();
+
             BuildPendingQueue();
+            Debug.Log($"[OperatorAcquisition] 합류 연출 재검사: {_pendingEntries.Count}명", this);
             if (_pendingEntries.Count > 0)
             {
                 StartCoroutine(PresentNext());
             }
+        }
+
+        /// <summary>
+        /// 에디터에서 표시 이력만 검사할 때 실행 중인 연출이 그 값을 다시 저장하지 않도록
+        /// 코루틴과 캐시를 함께 비운다. 프로필 데이터 자체는 호출자가 결정한다.
+        /// </summary>
+        public void CancelPresentationForDebug()
+        {
+            StopAllCoroutines();
+            ReleaseDefinitionHandle();
+            _pendingEntries.Clear();
+            _pendingIndex = 0;
+            _isOpen = false;
+            _sequenceComplete = false;
+            _skipRequested = false;
+            SetRootVisible(false);
+            SetMainMenuInput(true);
         }
 
         private void OnDestroy()

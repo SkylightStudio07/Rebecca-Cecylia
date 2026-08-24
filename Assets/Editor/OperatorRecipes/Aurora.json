@@ -1,0 +1,30 @@
+{
+    "operatorId": "aurora",
+    "catalogOrder": 3,
+    "displayName": "오로라",
+    "playStyleDescription": "",
+    "selectionPortraitPath": "Assets/Art/Character Standing Arts/오로라/chibby_portrait_1.png",
+    "managementPortraitPath": "Assets/Art/Character Standing Arts/오로라/레베카/Management.png",
+    "unlockRewardPortraitPath": "Assets/Art/Character Standing Arts/오로라/chibby_portrait_1.png",
+    "sourceTowerRosterPath": "Assets/Data/Operators/calliste/TowerRoster.asset",
+    "sourceCardRosterPath": "Assets/Data/Operators/cassia/CardRoster.asset",
+    "sourceAllyUnitRosterPath": "Assets/Data/Operators/cassia/AllyUnitRoster.asset",
+    "dialogueSetPath": "Assets/Data/Operators/aurora/OperatorDialogueSet.asset",
+    "remoteContent": false,
+    "playerData": {
+        "maxHealth": 30.0,
+        "moveSpeed": 5.0,
+        "hitInvulnerabilityDuration": 0.0,
+        "attackDamage": 5.0,
+        "attackRange": 4.0,
+        "attackInterval": 1.0,
+        "projectileSpeed": 1.0,
+        "skillCooldown": 12.0,
+        "skillRange": 5.0,
+        "skillDamage": 5.0
+    },
+    "requiredBestWave": 2,
+    "unlockType": 1,
+    "purchasePrice": 0,
+    "requiredStageId": ""
+}

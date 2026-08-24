@@ -88,7 +88,7 @@ namespace RCCom.UI
         public void Close()
         {
             if (_isLoading) { return; }
-            CloseCovered();
+            UILoadingTransition.Run(CloseCovered);
         }
 
         private void CloseCovered()

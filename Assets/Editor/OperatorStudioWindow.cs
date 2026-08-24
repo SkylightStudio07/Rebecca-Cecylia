@@ -211,10 +211,22 @@ namespace RCCom.EditorTools
                 "Selection Portrait", _recipe.selectionPortraitPath);
             _recipe.managementPortraitPath = DrawAssetPathField<Sprite>(
                 "Management Card Portrait", _recipe.managementPortraitPath);
+            GUILayout.Space(6);
+            GUILayout.Label("Recruit Shop", EditorStyles.boldLabel);
+            _recipe.shopPortraitPath = DrawAssetPathField<Sprite>(
+                "Shop Portrait", _recipe.shopPortraitPath);
+            _recipe.shopUpperBodyPortraitPath = DrawAssetPathField<Sprite>(
+                "Shop Upper-body Portrait", _recipe.shopUpperBodyPortraitPath);
+            _recipe.alternateName = EditorGUILayout.TextField(
+                "Another Name", _recipe.alternateName ?? string.Empty);
+            EditorGUILayout.LabelField("Shop Dialogue");
+            _recipe.shopDialogue = EditorGUILayout.TextArea(
+                _recipe.shopDialogue ?? string.Empty,
+                GUILayout.MinHeight(44));
             _recipe.unlockRewardPortraitPath = DrawAssetPathField<Sprite>(
                 "Stage Reward Portrait", _recipe.unlockRewardPortraitPath);
             EditorGUILayout.HelpBox(
-                "Selection Portrait는 선택 화면용 머리 크롭, Management Card Portrait는 Operators 관리 카드용 전신·반신 이미지입니다.",
+                "Selection Portrait는 선택 화면용 머리 크롭, Management Card Portrait는 Operators 관리 카드용 전신·반신 이미지입니다. Shop 항목은 리크루트 화면 전용입니다.",
                 MessageType.None);
             _recipe.remoteContent = EditorGUILayout.ToggleLeft("Remote Content", _recipe.remoteContent);
             GUILayout.Space(8);

@@ -40,6 +40,10 @@ namespace RCCom.UI
         [SerializeField] private string victoryTitle = "MISSION CLEAR";
         [SerializeField] private string defeatTitle = "MISSION FAILED";
 
+        [Header("오퍼레이터 보상")]
+        [Tooltip("스테이지 클리어 기록 저장 직후 결과 화면 위에 합류 연출을 표시한다.")]
+        [SerializeField] private OperatorAcquisitionUI operatorAcquisitionUI;
+
         [SerializeField] private Button retryButton;
         [SerializeField] private Button titleButton;
         [SerializeField] private string titleSceneName = "TitleScene";
@@ -89,6 +93,7 @@ namespace RCCom.UI
         {
             PlayerProfile profile = _profileStorage.Load();
             bool shouldSaveProfile = false;
+            string clearedStageId = string.Empty;
             GrantCommodity(profile);
             shouldSaveProfile = true;
             if (profile.TryRecordBestWave(waveManager.CurrentWave))
@@ -99,12 +104,12 @@ namespace RCCom.UI
             }
 
             if (outcome == BattleOutcome.Victory && BattleSession.IsStageMode &&
-                BattleSession.SelectedStage != null &&
-                profile.MarkStageCleared(BattleSession.SelectedStage.stageId))
+                BattleSession.SelectedStage != null)
             {
+                clearedStageId = BattleSession.SelectedStage.stageId;
                 // 스테이지 보상 오퍼레이터는 이 클리어 기록에서 파생한다. 별도 획득 목록에도
                 // 중복 기록하면 조건 변경 시 두 원본이 어긋날 수 있어 스테이지 ID만 저장한다.
-                shouldSaveProfile = true;
+                shouldSaveProfile |= profile.MarkStageCleared(clearedStageId);
             }
 
             string participatingOperatorId = string.Empty;
@@ -142,6 +147,12 @@ namespace RCCom.UI
             }
 
             Show();
+            if (operatorAcquisitionUI != null && !string.IsNullOrWhiteSpace(clearedStageId))
+            {
+                // 이미 소개한 보상은 내부 표시 이력에서 걸러지므로 재클리어에도 중복 재생되지 않는다.
+                // 반대로 과거 클리어 기록만 있고 소개되지 않은 경우에는 결과 화면에서 복구된다.
+                operatorAcquisitionUI.PresentNewlyUnlockedForStage(clearedStageId);
+            }
         }
 
         private int GrantCommodity(PlayerProfile profile)

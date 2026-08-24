@@ -124,6 +124,8 @@ namespace RCCom.EditorTools
             OperatorDialogueSet dialogueSet = LoadRequired<OperatorDialogueSet>(recipe.dialogueSetPath, recipe.operatorId);
             Sprite selectionPortrait = LoadOptional<Sprite>(recipe.selectionPortraitPath);
             Sprite managementPortrait = LoadOptional<Sprite>(recipe.managementPortraitPath);
+            Sprite shopPortrait = LoadOptional<Sprite>(recipe.shopPortraitPath);
+            Sprite shopUpperBodyPortrait = LoadOptional<Sprite>(recipe.shopUpperBodyPortraitPath);
             Sprite unlockRewardPortrait = LoadOptional<Sprite>(recipe.unlockRewardPortraitPath);
 
             string operatorFolder = $"{OutputRoot}/{recipe.operatorId}";
@@ -170,6 +172,10 @@ namespace RCCom.EditorTools
                 asset.playStyleDescription = recipe.playStyleDescription;
                 asset.selectionPortrait = selectionPortrait;
                 asset.managementPortrait = managementPortrait;
+                asset.shopPortrait = shopPortrait;
+                asset.shopUpperBodyPortrait = shopUpperBodyPortrait;
+                asset.alternateName = recipe.alternateName ?? string.Empty;
+                asset.shopDialogue = recipe.shopDialogue ?? string.Empty;
                 asset.unlockRewardPortrait = unlockRewardPortrait;
                 asset.playerData = ClonePlayerData(recipe.playerData);
                 asset.towerRoster = towerRoster;

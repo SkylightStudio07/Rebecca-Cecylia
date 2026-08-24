@@ -23,7 +23,7 @@ namespace RCCom.EditorTools
         public static void Build()
         {
             Scene scene = OpenTitleSceneSafely();
-            Canvas canvas = Object.FindFirstObjectByType<Canvas>(FindObjectsInactive.Include);
+            Canvas canvas = FindMainCanvas(scene);
             if (canvas == null)
             {
                 throw new System.InvalidOperationException("TitleScene에 Canvas가 없습니다.");
@@ -42,16 +42,20 @@ namespace RCCom.EditorTools
                 throw new System.InvalidOperationException("TitleScene에 LobbyOperatorDialogueUI가 없습니다.");
             }
 
-            Transform existing = canvas.transform.Find(OverlayName);
+            OperatorAffinityDebugPanel existingPanel = Object.FindFirstObjectByType<OperatorAffinityDebugPanel>(
+                FindObjectsInactive.Include);
+            Transform existing = existingPanel != null ? existingPanel.transform : null;
             GameObject rootObject;
             if (existing != null)
             {
                 rootObject = existing.gameObject;
                 if (rootObject.GetComponent<OperatorAffinityDebugPanel>() == null)
                 {
-                    throw new System.InvalidOperationException("같은 이름의 오브젝트가 있어 자동 갱신할 수 없습니다.");
+                        throw new System.InvalidOperationException("같은 이름의 오브젝트가 있어 자동 갱신할 수 없습니다.");
                 }
 
+                // 중첩 로딩 Canvas를 먼저 찾던 구버전 생성기가 만든 패널도 메인 Canvas로 복구한다.
+                rootObject.transform.SetParent(canvas.transform, false);
                 ClearChildren(rootObject.transform);
             }
             else
@@ -64,7 +68,7 @@ namespace RCCom.EditorTools
             rootRect.anchorMax = new Vector2(1f, 1f);
             rootRect.pivot = new Vector2(1f, 1f);
             rootRect.anchoredPosition = new Vector2(-24f, -24f);
-            rootRect.sizeDelta = new Vector2(360f, 434f);
+            rootRect.sizeDelta = new Vector2(360f, 506f);
 
             Image background = rootObject.GetComponent<Image>();
             if (background == null)
@@ -120,10 +124,16 @@ namespace RCCom.EditorTools
             Button showDialogue = CreateButton("ShowDialogue", rootObject.transform, font,
                 "대사 출력", 188f, 322f, 156f, 28f, new Color(0.05f, 0.22f, 0.32f, 1f));
             Button resetAcquisition = CreateButton("ResetOperatorAcquisition", rootObject.transform, font,
-                "합류 초기화", 16f, 358f, 328f, 28f, new Color(0.12f, 0.06f, 0.08f, 1f));
+                "합류 이력 초기화", 16f, 358f, 156f, 28f, new Color(0.12f, 0.06f, 0.08f, 1f));
+            Button replayAcquisition = CreateButton("ReplayOperatorAcquisition", rootObject.transform, font,
+                "합류 재생", 188f, 358f, 156f, 28f, new Color(0.05f, 0.22f, 0.32f, 1f));
+            Button addCommodity = CreateButton("AddCommodity", rootObject.transform, font,
+                "재화 +1000", 16f, 394f, 156f, 28f, new Color(0.05f, 0.22f, 0.32f, 1f));
+            Button resetProfile = CreateButton("ResetProfile", rootObject.transform, font,
+                "완전 초기화", 188f, 394f, 156f, 28f, new Color(0.32f, 0.06f, 0.06f, 1f));
             TextMeshProUGUI footer = CreateLabel("Footer", rootObject.transform, font,
                 "에디터 전용 · 실제 로비 클릭 경로 사용", 11f, new Color(0.55f, 0.65f, 0.7f),
-                TextAlignmentOptions.Left, 16f, 394f, 328f, 22f);
+                TextAlignmentOptions.Left, 16f, 466f, 328f, 22f);
 
             OperatorAffinityDebugPanel panel = rootObject.GetComponent<OperatorAffinityDebugPanel>();
             if (panel == null)
@@ -148,6 +158,9 @@ namespace RCCom.EditorTools
             serialized.FindProperty("queueOtherReturnButton").objectReferenceValue = otherReturn;
             serialized.FindProperty("clearReturnButton").objectReferenceValue = clearReturn;
             serialized.FindProperty("resetOperatorAcquisitionButton").objectReferenceValue = resetAcquisition;
+            serialized.FindProperty("replayOperatorAcquisitionButton").objectReferenceValue = replayAcquisition;
+            serialized.FindProperty("addCommodityButton").objectReferenceValue = addCommodity;
+            serialized.FindProperty("resetProfileButton").objectReferenceValue = resetProfile;
             serialized.FindProperty("showDialogueButton").objectReferenceValue = showDialogue;
             serialized.FindProperty("refreshButton").objectReferenceValue = refreshButton;
             serialized.FindProperty("lobbyDialogueUi").objectReferenceValue = lobbyDialogueUi;
@@ -180,7 +193,9 @@ namespace RCCom.EditorTools
             {
                 "operatorIdInput", "statusText", "affinitySlider", "applyAffinityButton",
                 "queueParticipatedReturnButton", "queueOtherReturnButton", "clearReturnButton",
-                "resetOperatorAcquisitionButton", "showDialogueButton", "lobbyDialogueUi",
+                "resetOperatorAcquisitionButton", "replayOperatorAcquisitionButton",
+                "addCommodityButton", "resetProfileButton",
+                "showDialogueButton", "lobbyDialogueUi",
             };
             for (int i = 0; i < requiredProperties.Length; i++)
             {
@@ -214,6 +229,20 @@ namespace RCCom.EditorTools
             }
 
             return EditorSceneManager.OpenScene(TitleScenePath, OpenSceneMode.Single);
+        }
+
+        private static Canvas FindMainCanvas(Scene scene)
+        {
+            GameObject[] roots = scene.GetRootGameObjects();
+            for (int i = 0; i < roots.Length; i++)
+            {
+                if (roots[i].name == "Canvas" && roots[i].TryGetComponent(out Canvas canvas))
+                {
+                    return canvas;
+                }
+            }
+
+            return null;
         }
 
         private static GameObject CreateRectObject(string name, Transform parent)

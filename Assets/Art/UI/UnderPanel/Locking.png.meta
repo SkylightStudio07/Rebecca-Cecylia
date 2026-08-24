@@ -1,0 +1,1014 @@
+fileFormatVersion: 2
+guid: 3c8ca32b9f3de3d40ae6d101cc3c4fb6
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -7276372162399785061
+    second: Locking_0
+  - first:
+      213: -6237287062665572388
+    second: Locking_1
+  - first:
+      213: -8621080337014952498
+    second: Locking_2
+  - first:
+      213: -3244409960231413857
+    second: Locking_3
+  - first:
+      213: -409818986922632336
+    second: Locking_4
+  - first:
+      213: 2181504536092663526
+    second: Locking_5
+  - first:
+      213: -4881875159258526434
+    second: Locking_6
+  - first:
+      213: -7285901870124550597
+    second: Locking_7
+  - first:
+      213: 3603452455771872968
+    second: Locking_8
+  - first:
+      213: -2873835205886904801
+    second: Locking_9
+  - first:
+      213: -6314637823828499936
+    second: Locking_10
+  - first:
+      213: 315713363035978762
+    second: Locking_11
+  - first:
+      213: 5687063517229951400
+    second: Locking_12
+  - first:
+      213: 3901954095912265420
+    second: Locking_13
+  - first:
+      213: -8246693415923804500
+    second: Locking_14
+  - first:
+      213: 8581351329803315026
+    second: Locking_15
+  - first:
+      213: 1063443273894981388
+    second: Locking_16
+  - first:
+      213: -6182599726946050255
+    second: Locking_17
+  - first:
+      213: -3740327095845532964
+    second: Locking_18
+  - first:
+      213: 3244808906674557745
+    second: Locking_19
+  - first:
+      213: 5686062769820276855
+    second: Locking_20
+  - first:
+      213: 8031002632396436018
+    second: Locking_21
+  - first:
+      213: -6935894396170565248
+    second: Locking_22
+  - first:
+      213: -6887072399920919093
+    second: Locking_23
+  - first:
+      213: 7767762999143818261
+    second: Locking_24
+  - first:
+      213: 2364382725171648329
+    second: Locking_25
+  - first:
+      213: 8035834119644765627
+    second: Locking_26
+  - first:
+      213: -4516227053375654795
+    second: Locking_27
+  - first:
+      213: 2350737847814033642
+    second: Locking_28
+  - first:
+      213: 8854856204730433525
+    second: Locking_29
+  - first:
+      213: 3743743939388239012
+    second: Locking_30
+  - first:
+      213: -3545534189688532605
+    second: Locking_31
+  - first:
+      213: -2776378399160190160
+    second: Locking_32
+  - first:
+      213: -8597854452023637696
+    second: Locking_33
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Locking_0
+      rect:
+        serializedVersion: 2
+        x: 263
+        y: 666
+        width: 928
+        height: 568
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b9fae96f112250b90800000000000000
+      internalID: -7276372162399785061
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Locking_1
+      rect:
+        serializedVersion: 2
+        x: 520
+        y: 1156
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cdfcdab8674b079a0800000000000000
+      internalID: -6237287062665572388
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Locking_2
+      rect:
+        serializedVersion: 2
+        x: 104
+        y: 742
+        width: 66
+        height: 176
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ecd6e142c15cb5880800000000000000
+      internalID: -8621080337014952498
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Locking_3
+      rect:
+        serializedVersion: 2
+        x: 108
+        y: 769
+        width: 16
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f97daaea45a89f2d0800000000000000
+      internalID: -3244409960231413857
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Locking_4
+      rect:
+        serializedVersion: 2
+        x: 211
+        y: 664
+        width: 101
+        height: 246
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 07b144e7dc7005af0800000000000000
+      internalID: -409818986922632336
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Locking_5
+      rect:
+        serializedVersion: 2
+        x: 368
+        y: 405
+        width: 489
+        height: 513
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6eed4b541d2464e10800000000000000
+      internalID: 2181504536092663526
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Locking_6
+      rect:
+        serializedVersion: 2
+        x: 943
+        y: 662
+        width: 86
+        height: 203
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e1d879e6868104cb0800000000000000
+      internalID: -4881875159258526434
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Locking_7
+      rect:
+        serializedVersion: 2
+        x: 127
+        y: 706
+        width: 37
+        height: 20
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b363fdaf9d643ea90800000000000000
+      internalID: -7285901870124550597
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Locking_8
+      rect:
+        serializedVersion: 2
+        x: 88
+        y: 73
+        width: 222
+        height: 527
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8ce9a47aae8020230800000000000000
+      internalID: 3603452455771872968
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Locking_9
+      rect:
+        serializedVersion: 2
+        x: 96
+        y: 552
+        width: 30
+        height: 140
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f1679124b161e18d0800000000000000
+      internalID: -2873835205886904801
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Locking_10
+      rect:
+        serializedVersion: 2
+        x: 203
+        y: 623
+        width: 49
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 022e4790b56ed58a0800000000000000
+      internalID: -6314637823828499936
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Locking_11
+      rect:
+        serializedVersion: 2
+        x: 884
+        y: 377
+        width: 288
+        height: 221
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a0c7a9681a3a16400800000000000000
+      internalID: 315713363035978762
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Locking_12
+      rect:
+        serializedVersion: 2
+        x: 1005
+        y: 623
+        width: 47
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8a9239733228cee40800000000000000
+      internalID: 5687063517229951400
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Locking_13
+      rect:
+        serializedVersion: 2
+        x: 1117
+        y: 545
+        width: 34
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cc62bb8a396862630800000000000000
+      internalID: 3901954095912265420
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Locking_14
+      rect:
+        serializedVersion: 2
+        x: 116
+        y: 449
+        width: 48
+        height: 31
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ca61f44f70cdd8d80800000000000000
+      internalID: -8246693415923804500
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Locking_15
+      rect:
+        serializedVersion: 2
+        x: 156
+        y: 413
+        width: 22
+        height: 47
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 257a0c98195171770800000000000000
+      internalID: 8581351329803315026
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Locking_16
+      rect:
+        serializedVersion: 2
+        x: 376
+        y: 437
+        width: 9
+        height: 20
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c0fe943f50c12ce00800000000000000
+      internalID: 1063443273894981388
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Locking_17
+      rect:
+        serializedVersion: 2
+        x: 382
+        y: 431
+        width: 7
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 13f14fe1e4ef23aa0800000000000000
+      internalID: -6182599726946050255
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Locking_18
+      rect:
+        serializedVersion: 2
+        x: 249
+        y: 288
+        width: 7
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cdacb5cc250b71cc0800000000000000
+      internalID: -3740327095845532964
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Locking_19
+      rect:
+        serializedVersion: 2
+        x: 321
+        y: 8
+        width: 623
+        height: 395
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1335c564280e70d20800000000000000
+      internalID: 3244808906674557745
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Locking_20
+      rect:
+        serializedVersion: 2
+        x: 948
+        y: 260
+        width: 58
+        height: 31
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 77816bd86f3f8ee40800000000000000
+      internalID: 5686062769820276855
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Locking_21
+      rect:
+        serializedVersion: 2
+        x: 1005
+        y: 170
+        width: 204
+        height: 144
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2327736185ad37f60800000000000000
+      internalID: 8031002632396436018
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Locking_22
+      rect:
+        serializedVersion: 2
+        x: 938
+        y: 246
+        width: 6
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 08981ac6bc0cebf90800000000000000
+      internalID: -6935894396170565248
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Locking_23
+      rect:
+        serializedVersion: 2
+        x: 941
+        y: 242
+        width: 25
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bcd015c34243c60a0800000000000000
+      internalID: -6887072399920919093
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Locking_24
+      rect:
+        serializedVersion: 2
+        x: 500
+        y: 184
+        width: 16
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 514e367da43accb60800000000000000
+      internalID: 7767762999143818261
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Locking_25
+      rect:
+        serializedVersion: 2
+        x: 506
+        y: 128
+        width: 10
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9471deebf89ffc020800000000000000
+      internalID: 2364382725171648329
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Locking_26
+      rect:
+        serializedVersion: 2
+        x: 758
+        y: 132
+        width: 7
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bbdd36f5e84058f60800000000000000
+      internalID: 8035834119644765627
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Locking_27
+      rect:
+        serializedVersion: 2
+        x: 762
+        y: 127
+        width: 7
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 574f8864c632351c0800000000000000
+      internalID: -4516227053375654795
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Locking_28
+      rect:
+        serializedVersion: 2
+        x: 770
+        y: 127
+        width: 9
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ae0950b2e9f7f9020800000000000000
+      internalID: 2350737847814033642
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Locking_29
+      rect:
+        serializedVersion: 2
+        x: 778
+        y: 128
+        width: 17
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5fffe1c9dc4c2ea70800000000000000
+      internalID: 8854856204730433525
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Locking_30
+      rect:
+        serializedVersion: 2
+        x: 547
+        y: 103
+        width: 7
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4ace145174374f330800000000000000
+      internalID: 3743743939388239012
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Locking_31
+      rect:
+        serializedVersion: 2
+        x: 548
+        y: 114
+        width: 6
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 381dc94807bbbcec0800000000000000
+      internalID: -3545534189688532605
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Locking_32
+      rect:
+        serializedVersion: 2
+        x: 553
+        y: 103
+        width: 7
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 03b3dfb4e825879d0800000000000000
+      internalID: -2776378399160190160
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Locking_33
+      rect:
+        serializedVersion: 2
+        x: 940
+        y: 104
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 049ce94ede84ea880800000000000000
+      internalID: -8597854452023637696
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      Locking_0: -7276372162399785061
+      Locking_1: -6237287062665572388
+      Locking_10: -6314637823828499936
+      Locking_11: 315713363035978762
+      Locking_12: 5687063517229951400
+      Locking_13: 3901954095912265420
+      Locking_14: -8246693415923804500
+      Locking_15: 8581351329803315026
+      Locking_16: 1063443273894981388
+      Locking_17: -6182599726946050255
+      Locking_18: -3740327095845532964
+      Locking_19: 3244808906674557745
+      Locking_2: -8621080337014952498
+      Locking_20: 5686062769820276855
+      Locking_21: 8031002632396436018
+      Locking_22: -6935894396170565248
+      Locking_23: -6887072399920919093
+      Locking_24: 7767762999143818261
+      Locking_25: 2364382725171648329
+      Locking_26: 8035834119644765627
+      Locking_27: -4516227053375654795
+      Locking_28: 2350737847814033642
+      Locking_29: 8854856204730433525
+      Locking_3: -3244409960231413857
+      Locking_30: 3743743939388239012
+      Locking_31: -3545534189688532605
+      Locking_32: -2776378399160190160
+      Locking_33: -8597854452023637696
+      Locking_4: -409818986922632336
+      Locking_5: 2181504536092663526
+      Locking_6: -4881875159258526434
+      Locking_7: -7285901870124550597
+      Locking_8: 3603452455771872968
+      Locking_9: -2873835205886904801
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

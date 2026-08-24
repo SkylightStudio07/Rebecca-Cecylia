@@ -34,6 +34,20 @@ namespace RCCom.Definitions.Operator
         [Tooltip("오퍼레이터 관리 카드 전용 전신·반신 초상화. 선택 화면의 머리 크롭 초상화와 분리한다.")]
         public Sprite managementPortrait;
 
+        [Header("상점 연출")]
+        [Tooltip("리크루트 화면 좌측의 큰 오퍼레이터 이미지")]
+        public Sprite shopPortrait;
+
+        [Tooltip("리크루트 화면 하단 카드에 표시할 상반신 이미지")]
+        public Sprite shopUpperBodyPortrait;
+
+        [Tooltip("리크루트 화면에서 이름 아래에 표시할 이명")]
+        public string alternateName;
+
+        [TextArea(2, 4)]
+        [Tooltip("리크루트 화면 우측 패널에 표시할 짧은 소개 대사")]
+        public string shopDialogue;
+
         [Header("플레이어 로드아웃")]
         [Tooltip("오퍼레이터 선택 시 적용할 플레이어 기본 수치. 런타임 적용 단계에서 반드시 복제해 카드 강화가 이 원본을 수정하지 않게 할 것.")]
         public PlayerData playerData = new();

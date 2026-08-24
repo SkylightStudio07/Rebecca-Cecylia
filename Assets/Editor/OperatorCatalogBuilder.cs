@@ -137,6 +137,10 @@ namespace RCCom.EditorTools
                 // 실제 초상화를 사용하고, 카탈로그에는 ID/설명만 남긴다.
                 previewPortrait = recipe.remoteContent ? null : definition.selectionPortrait,
                 managementPortrait = recipe.remoteContent ? null : definition.managementPortrait,
+                shopPortrait = recipe.remoteContent ? null : definition.shopPortrait,
+                shopUpperBodyPortrait = recipe.remoteContent ? null : definition.shopUpperBodyPortrait,
+                alternateName = definition.alternateName,
+                shopDialogue = definition.shopDialogue,
                 unlockRewardPortrait = recipe.remoteContent ? null :
                     (definition.unlockRewardPortrait != null
                         ? definition.unlockRewardPortrait

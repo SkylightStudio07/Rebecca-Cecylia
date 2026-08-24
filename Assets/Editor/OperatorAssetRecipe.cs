@@ -18,6 +18,10 @@ namespace RCCom.EditorTools
         public string playStyleDescription;
         public string selectionPortraitPath;
         public string managementPortraitPath;
+        public string shopPortraitPath;
+        public string shopUpperBodyPortraitPath;
+        public string alternateName;
+        public string shopDialogue;
         public string unlockRewardPortraitPath;
         public string sourceTowerRosterPath;
         public string sourceCardRosterPath;

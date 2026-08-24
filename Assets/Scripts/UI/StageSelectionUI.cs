@@ -70,7 +70,7 @@ namespace RCCom.UI
 
         public void Close()
         {
-            CloseCovered();
+            UILoadingTransition.Run(CloseCovered);
         }
 
         private void CloseCovered()
@@ -96,9 +96,14 @@ namespace RCCom.UI
 
             BattleSession.SelectStage(entry.stageDefinition);
             Time.timeScale = 1f;
-            UILoadingTransition.LoadSceneWithPreload(
-                "DefenseScene",
-                BattleContentCache.PreloadEnemiesForStage(BattleSession.SelectedStage, null, null));
+            StartCoroutine(PreloadStageAndLoad());
+        }
+
+        private System.Collections.IEnumerator PreloadStageAndLoad()
+        {
+            // 스테이지 전용 적을 먼저 확보해야 원격 Definition도 첫 웨이브부터 즉시 해석할 수 있다.
+            yield return BattleContentCache.PreloadEnemiesForStage(BattleSession.SelectedStage, null, null);
+            SceneManager.LoadScene("DefenseScene");
         }
 
         public void ScrollPrevious()

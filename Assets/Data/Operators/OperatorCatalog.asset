@@ -20,6 +20,10 @@ MonoBehaviour:
       \uAE30\uBCF8 \uC624\uD37C\uB808\uC774\uD130"
     previewPortrait: {fileID: 8101380904372118242, guid: 7692c1b2ac922604a964bcd1026289c7, type: 3}
     managementPortrait: {fileID: -9117580695321126117, guid: 5e950858e95008a4ca29ca70c69f3a01, type: 3}
+    shopPortrait: {fileID: 0}
+    shopUpperBodyPortrait: {fileID: 0}
+    alternateName: 
+    shopDialogue: 
     address: operator/cassia
     remoteContent: 0
     unlockType: 0
@@ -47,6 +51,11 @@ MonoBehaviour:
     playStyleDescription: 
     previewPortrait: {fileID: 8573740378125166142, guid: 93979212c860bc740a289e3b210e4fdf, type: 3}
     managementPortrait: {fileID: 5667498768502238285, guid: cd384616f9666b341bc8163e96db5136, type: 3}
+    shopPortrait: {fileID: 5667498768502238285, guid: cd384616f9666b341bc8163e96db5136, type: 3}
+    shopUpperBodyPortrait: {fileID: 21300000, guid: 15ef76899e629894c8484e42fe738bbc, type: 3}
+    alternateName: Bartender
+    shopDialogue: "\uC6B0\uB9AC\uB294 \uBE5B\uC774 \uC5C6\uB294 \uACF3\uC5D0\uC11C\n\uB2E4\uC2DC
+      \uB9CC\uB0A0 \uAC70\uC57C."
     address: operator/calliste
     remoteContent: 0
     unlockType: 2
@@ -74,6 +83,10 @@ MonoBehaviour:
     playStyleDescription: "\uB808\uC774\uC2F1\uAC78 \uCEE8\uC149\uC758 \uCE90\uB9AD\uD130"
     previewPortrait: {fileID: -5444712353710830913, guid: a13fbdb6118b92346afad784d8f984f9, type: 3}
     managementPortrait: {fileID: 4831207923975717834, guid: 86f456bec9ddbf940b3f7d082e6425a3, type: 3}
+    shopPortrait: {fileID: 0}
+    shopUpperBodyPortrait: {fileID: 0}
+    alternateName: 
+    shopDialogue: 
     address: operator/racing
     remoteContent: 0
     unlockType: 3

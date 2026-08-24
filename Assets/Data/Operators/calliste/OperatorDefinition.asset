@@ -17,6 +17,11 @@ MonoBehaviour:
   playStyleDescription: 
   selectionPortrait: {fileID: 8573740378125166142, guid: 93979212c860bc740a289e3b210e4fdf, type: 3}
   managementPortrait: {fileID: 5667498768502238285, guid: cd384616f9666b341bc8163e96db5136, type: 3}
+  shopPortrait: {fileID: 5667498768502238285, guid: cd384616f9666b341bc8163e96db5136, type: 3}
+  shopUpperBodyPortrait: {fileID: 21300000, guid: 15ef76899e629894c8484e42fe738bbc, type: 3}
+  alternateName: Bartender
+  shopDialogue: "\uC6B0\uB9AC\uB294 \uBE5B\uC774 \uC5C6\uB294 \uACF3\uC5D0\uC11C\n\uB2E4\uC2DC
+    \uB9CC\uB0A0 \uAC70\uC57C."
   playerData:
     maxHealth: 30
     moveSpeed: 5

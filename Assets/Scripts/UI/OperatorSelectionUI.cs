@@ -77,7 +77,7 @@ namespace RCCom.UI
                 return;
             }
 
-            CloseCovered();
+            UILoadingTransition.Run(CloseCovered);
         }
 
         private void CloseCovered()
@@ -177,6 +177,11 @@ namespace RCCom.UI
             Time.timeScale = 1f;
 
             _isLoading = false;
+            UILoadingTransition.Run(() => OpenModeSelectionCovered(operatorId));
+        }
+
+        private void OpenModeSelectionCovered(string operatorId)
+        {
             SetPanelVisible(false);
             if (modeSelectionUI != null)
             {

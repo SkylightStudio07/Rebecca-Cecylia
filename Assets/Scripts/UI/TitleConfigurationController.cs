@@ -123,7 +123,7 @@ namespace RCCom.UI
                 return;
             }
 
-            CloseCovered();
+            UILoadingTransition.Run(CloseCovered);
         }
 
         private void CloseCovered()

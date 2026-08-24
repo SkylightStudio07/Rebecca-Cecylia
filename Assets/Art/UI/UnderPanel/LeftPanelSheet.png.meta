@@ -1,0 +1,517 @@
+fileFormatVersion: 2
+guid: a67b1fbc52378e546966c7fbc7521a9f
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -2072601973298882663
+    second: LeftPanelSheet_0
+  - first:
+      213: -6663885049604972906
+    second: LeftPanelSheet_1
+  - first:
+      213: 8812557574664931991
+    second: LeftPanelSheet_2
+  - first:
+      213: 6304238593019215162
+    second: LeftPanelSheet_3
+  - first:
+      213: 8705629139875813137
+    second: LeftPanelSheet_4
+  - first:
+      213: 7480413676800271047
+    second: LeftPanelSheet_5
+  - first:
+      213: -6776708388263121737
+    second: LeftPanelSheet_6
+  - first:
+      213: 861093067260801697
+    second: LeftPanelSheet_7
+  - first:
+      213: -3170740770348559045
+    second: LeftPanelSheet_8
+  - first:
+      213: -1793981980595723104
+    second: LeftPanelSheet_9
+  - first:
+      213: -6428658476378512304
+    second: LeftPanelSheet_10
+  - first:
+      213: 3325916402752408653
+    second: LeftPanelSheet_11
+  - first:
+      213: -8205943086637921414
+    second: LeftPanelSheet_12
+  - first:
+      213: 4234630008513538212
+    second: LeftPanelSheet_13
+  - first:
+      213: 3461111606653978715
+    second: LeftPanelSheet_14
+  - first:
+      213: -4030474122763603985
+    second: LeftPanelSheet_15
+  - first:
+      213: 90460610266716061
+    second: LeftPanelSheet_16
+  - first:
+      213: -8346964962350519235
+    second: LeftPanelSheet_17
+  - first:
+      213: -5780646540692536476
+    second: LeftPanelSheet_18
+  - first:
+      213: -5737979794820153045
+    second: LeftPanelSheet_19
+  - first:
+      213: -6850176875651661468
+    second: LeftPanelSheet_20
+  - first:
+      213: 1086360108662302770
+    second: LeftPanelSheet_21
+  - first:
+      213: -9069612063086846211
+    second: LeftPanelSheet_22
+  - first:
+      213: -1793111180557943108
+    second: LeftPanelSheet_23
+  - first:
+      213: 8289566434980270590
+    second: LeftPanelSheet_24
+  - first:
+      213: 3705309717975846521
+    second: LeftPanelSheet_25
+  - first:
+      213: 3705484187662571252
+    second: LeftPanelSheet_26
+  - first:
+      213: 2569969903097135852
+    second: LeftPanelSheet_27
+  - first:
+      213: 7123167526580587921
+    second: LeftPanelSheet_28
+  - first:
+      213: -995309195665165886
+    second: LeftPanelSheet_29
+  - first:
+      213: -6871611741193247533
+    second: LeftPanelSheet_30
+  - first:
+      213: -5224649073974475869
+    second: LeftPanelSheet_31
+  - first:
+      213: 434041363477455492
+    second: LeftPanelSheet_32
+  - first:
+      213: -5301292976197613182
+    second: LeftPanelSheet_33
+  - first:
+      213: 6635836743345005559
+    second: LeftPanelSheet_34
+  - first:
+      213: -3617165400344167404
+    second: LeftPanelSheet_35
+  - first:
+      213: 7149008029666886202
+    second: LeftPanelSheet_36
+  - first:
+      213: -7246098585642811184
+    second: LeftPanelSheet_37
+  - first:
+      213: 4962715479421892805
+    second: LeftPanelSheet_38
+  - first:
+      213: 2476692336107139523
+    second: LeftPanelSheet_39
+  - first:
+      213: -1920743412876173562
+    second: LeftPanelSheet_40
+  - first:
+      213: 5359266294980559009
+    second: LeftPanelSheet_41
+  - first:
+      213: -9201199984722989057
+    second: LeftPanelSheet_42
+  - first:
+      213: 3582161545729424799
+    second: LeftPanelSheet_43
+  - first:
+      213: 162992691385900035
+    second: LeftPanelSheet_44
+  - first:
+      213: 5168171425804861789
+    second: LeftPanelSheet_45
+  - first:
+      213: 5056009117457035615
+    second: LeftPanelSheet_46
+  - first:
+      213: -2497200314128095161
+    second: LeftPanelSheet_47
+  - first:
+      213: 3356921956493442723
+    second: LeftPanelSheet_48
+  - first:
+      213: -7106537465147154244
+    second: LeftPanelSheet_49
+  - first:
+      213: -2195232475945294448
+    second: LeftPanelSheet_50
+  - first:
+      213: 2679456622410411890
+    second: LeftPanelSheet_51
+  - first:
+      213: 2666987146344072679
+    second: LeftPanelSheet_52
+  - first:
+      213: -2343300479702383797
+    second: LeftPanelSheet_53
+  - first:
+      213: 6989775230273805624
+    second: LeftPanelSheet_54
+  - first:
+      213: 6487259241902492034
+    second: LeftPanelSheet_55
+  - first:
+      213: -5305158378829151827
+    second: LeftPanelSheet_56
+  - first:
+      213: 8337239833027297430
+    second: LeftPanelSheet_57
+  - first:
+      213: 1731380115151876778
+    second: LeftPanelSheet_58
+  - first:
+      213: 3609554363128788858
+    second: LeftPanelSheet_59
+  - first:
+      213: -8962359867965637006
+    second: LeftPanelSheet_60
+  - first:
+      213: 7790325103751331549
+    second: LeftPanelSheet_61
+  - first:
+      213: -1806605478583249354
+    second: LeftPanelSheet_62
+  - first:
+      213: 6570734353922304669
+    second: LeftPanelSheet_63
+  - first:
+      213: -8179523057632262616
+    second: LeftPanelSheet_64
+  - first:
+      213: 8617212157873542674
+    second: LeftPanelSheet_65
+  - first:
+      213: 7972758634642076149
+    second: LeftPanelSheet_66
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: LeftPanelSheet_0
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 443
+        width: 443
+        height: 443
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9971fb48c73ac33e0800000000000000
+      internalID: -2072601973298882663
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: LeftPanelSheet_1
+      rect:
+        serializedVersion: 2
+        x: 443
+        y: 444
+        width: 443
+        height: 443
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 69e524aaadf1583a0800000000000000
+      internalID: -6663885049604972906
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: LeftPanelSheet_2
+      rect:
+        serializedVersion: 2
+        x: 886
+        y: 444
+        width: 443
+        height: 443
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 79ac4985c6e7c4a70800000000000000
+      internalID: 8812557574664931991
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: LeftPanelSheet_3
+      rect:
+        serializedVersion: 2
+        x: 1329
+        y: 444
+        width: 443
+        height: 443
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a3df73c59972d7750800000000000000
+      internalID: 6304238593019215162
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: LeftPanelSheet_4
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 1
+        width: 443
+        height: 443
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 117569c049b90d870800000000000000
+      internalID: 8705629139875813137
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: LeftPanelSheet_5
+      rect:
+        serializedVersion: 2
+        x: 443
+        y: 1
+        width: 443
+        height: 443
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7c267aa2b94cfc760800000000000000
+      internalID: 7480413676800271047
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: LeftPanelSheet_6
+      rect:
+        serializedVersion: 2
+        x: 886
+        y: 1
+        width: 443
+        height: 443
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7bcaa2b10ab44f1a0800000000000000
+      internalID: -6776708388263121737
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: LeftPanelSheet_7
+      rect:
+        serializedVersion: 2
+        x: 1329
+        y: 1
+        width: 443
+        height: 443
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1a2b1a8159733fb00800000000000000
+      internalID: 861093067260801697
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 3917020b32a352d4cb7b1d914384fa78
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries:
+      - key: SpriteEditor.SliceSettings
+        value: '{"sliceOnImport":false,"gridCellCount":{"x":4.0,"y":2.0},"gridSpriteSize":{"x":443.0,"y":443.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.5},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"pivotUnitMode":0,"slicingType":2,"keepEmptyRects":false,"isAlternate":false}'
+    nameFileIdTable:
+      LeftPanelSheet_0: -2072601973298882663
+      LeftPanelSheet_1: -6663885049604972906
+      LeftPanelSheet_2: 8812557574664931991
+      LeftPanelSheet_3: 6304238593019215162
+      LeftPanelSheet_4: 8705629139875813137
+      LeftPanelSheet_5: 7480413676800271047
+      LeftPanelSheet_6: -6776708388263121737
+      LeftPanelSheet_7: 861093067260801697
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

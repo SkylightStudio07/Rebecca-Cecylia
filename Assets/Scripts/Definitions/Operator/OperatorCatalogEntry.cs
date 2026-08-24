@@ -26,6 +26,17 @@ namespace RCCom.Definitions.Operator
         [Tooltip("오퍼레이터 관리 카드에 표시할 전신·반신 초상화. 원격 콘텐츠는 다운로드 전 비워둔다.")]
         public Sprite managementPortrait;
 
+        [Tooltip("리크루트 화면 좌측의 큰 오퍼레이터 이미지. 원격 콘텐츠는 다운로드 전 비워둔다.")]
+        public Sprite shopPortrait;
+
+        [Tooltip("리크루트 화면 하단 카드에 표시할 상반신 이미지. 원격 콘텐츠는 다운로드 전 비워둔다.")]
+        public Sprite shopUpperBodyPortrait;
+
+        public string alternateName;
+
+        [TextArea(2, 4)]
+        public string shopDialogue;
+
         [Tooltip("OperatorDefinition의 Addressables 주소")]
         public string address;
 

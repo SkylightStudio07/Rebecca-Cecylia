@@ -1,6 +1,5 @@
 using System;
 using RCCom.UI;
-using TMPro;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -21,7 +20,6 @@ namespace RCCom.EditorTools
         private const string LegacyLobbyName = "LegacyMainMenuBackground";
         private const string MenuRootName = "CommandMenuPanels";
         private const string SpriteFolder = "Assets/Art/UI/Sprites/CommandLobbyMenu/";
-        private const string KoreanFontPath = "Assets/Resource/Font/Pretendard-Bold SDF.asset";
 
         [MenuItem("RCCom/UI/Build Command Lobby Menu")]
         public static void Build()
@@ -34,12 +32,6 @@ namespace RCCom.EditorTools
             }
 
             Transform lobby = ResolveLobbyRoot(canvas.transform, out Transform legacyLobby);
-            TMP_FontAsset font = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(KoreanFontPath);
-            if (font == null)
-            {
-                throw new InvalidOperationException("로비 메뉴용 TMP 글꼴을 찾지 못했습니다.");
-            }
-
             PrepareLobbyRoot(lobby, legacyLobby);
             Transform menuRoot = RebuildMenuRoot(lobby);
 
@@ -57,21 +49,21 @@ namespace RCCom.EditorTools
                 throw new InvalidOperationException("기존 타이틀·설정·오퍼레이터 선택 Controller를 찾지 못했습니다.");
             }
 
-            CreatePanel(menuRoot, font, "LiveContent", "LIVE CONTENT", "REMOTE CONTENT ACCESS",
-                new Vector2(430f, 300f), new Vector2(430f, 110f), -1.5f, 34f, 13f, 62f,
+            CreatePanel(menuRoot, "LiveContent",
+                new Vector2(430f, 300f), new Vector2(430f, 110f),
                 null, titleController, configurationController, selectionUI, managementUI);
-            CreatePanel(menuRoot, font, "Operators", "OPERATORS", "MANAGE YOUR TEAM",
-                new Vector2(420f, 165f), new Vector2(560f, 140f), -2f, 43f, 15f, 78f,
+            CreatePanel(menuRoot, "Operators",
+                new Vector2(420f, 165f), new Vector2(560f, 140f),
                 TitleMenuTextButton.MenuAction.ManageOperators, titleController, configurationController, selectionUI,
                 managementUI);
-            CreatePanel(menuRoot, font, "Operation", "OPERATION", "DEPLOY TO BATTLEFIELD",
-                new Vector2(315f, -15f), new Vector2(760f, 220f), -4.5f, 58f, 18f, 135f,
+            CreatePanel(menuRoot, "Operation",
+                new Vector2(315f, -15f), new Vector2(760f, 220f),
                 TitleMenuTextButton.MenuAction.NewGame, titleController, configurationController, selectionUI, managementUI);
-            CreatePanel(menuRoot, font, "Records", "RECORDS", "BATTLE DATA ARCHIVE",
-                new Vector2(365f, -220f), new Vector2(500f, 125f), -3f, 38f, 14f, 76f,
+            CreatePanel(menuRoot, "Records",
+                new Vector2(365f, -220f), new Vector2(500f, 125f),
                 null, titleController, configurationController, selectionUI, managementUI);
-            CreatePanel(menuRoot, font, "Configuration", "CONFIGURATION", "SYSTEM SETTINGS",
-                new Vector2(430f, -350f), new Vector2(560f, 110f), -2.5f, 35f, 13f, 84f,
+            CreatePanel(menuRoot, "Configuration",
+                new Vector2(430f, -350f), new Vector2(560f, 110f),
                 TitleMenuTextButton.MenuAction.Preference, titleController, configurationController, selectionUI,
                 managementUI);
 
@@ -106,8 +98,7 @@ namespace RCCom.EditorTools
             {
                 Transform panel = menuRoot.Find(name);
                 if (panel == null || panel.GetComponent<Button>() == null ||
-                    panel.GetComponent<CommandLobbyMenuItem>() == null || panel.Find("Title") == null ||
-                    panel.Find("Subtitle") == null)
+                    panel.GetComponent<CommandLobbyMenuItem>() == null)
                 {
                     throw new InvalidOperationException($"로비 메뉴 패널 구성이 올바르지 않습니다: {name}");
                 }
@@ -231,9 +222,8 @@ namespace RCCom.EditorTools
             return rootObject.transform;
         }
 
-        private static void CreatePanel(Transform parent, TMP_FontAsset font, string name, string title,
-            string subtitle, Vector2 position, Vector2 size, float rotation, float titleSize, float subtitleSize,
-            float leftPadding, TitleMenuTextButton.MenuAction? action, TitleSceneController titleController,
+        private static void CreatePanel(Transform parent, string name, Vector2 position, Vector2 size,
+            TitleMenuTextButton.MenuAction? action, TitleSceneController titleController,
             TitleConfigurationController configurationController, OperatorSelectionUI selectionUI,
             OperatorManagementUI managementUI)
         {
@@ -258,24 +248,22 @@ namespace RCCom.EditorTools
 
             Button button = panelObject.GetComponent<Button>();
             button.targetGraphic = image;
-            button.transition = Selectable.Transition.None;
-
-            TextMeshProUGUI titleText = CreateText("Title", panelObject.transform, font, title, titleSize,
-                new Vector2(0f, 0.38f), new Vector2(1f, 0.88f), new Vector2(leftPadding, 0f),
-                new Vector2(-112f, 0f));
-            TextMeshProUGUI subtitleText = CreateText("Subtitle", panelObject.transform, font, subtitle, subtitleSize,
-                new Vector2(0f, 0.13f), new Vector2(1f, 0.44f), new Vector2(leftPadding + 4f, 0f),
-                new Vector2(-112f, 0f));
-            titleText.rectTransform.localEulerAngles = new Vector3(0f, 0f, rotation);
-            subtitleText.rectTransform.localEulerAngles = new Vector3(0f, 0f, rotation);
+            // CommandLobbyMenuItem이 직접 전환하는 경로와 별개로 Button 자체도 같은 SpriteSwap을
+            // 가진다. 입력 모듈이나 선택 방식이 달라도 Hover 이미지가 빠지지 않게 하기 위함이다.
+            button.transition = Selectable.Transition.SpriteSwap;
+            button.spriteState = new SpriteState
+            {
+                highlightedSprite = hover,
+                pressedSprite = hover,
+                selectedSprite = hover,
+                disabledSprite = normal
+            };
 
             CommandLobbyMenuItem visual = panelObject.GetComponent<CommandLobbyMenuItem>();
             var visualSerialized = new SerializedObject(visual);
             visualSerialized.FindProperty("panelImage").objectReferenceValue = image;
             visualSerialized.FindProperty("normalSprite").objectReferenceValue = normal;
             visualSerialized.FindProperty("hoverSprite").objectReferenceValue = hover;
-            visualSerialized.FindProperty("titleText").objectReferenceValue = titleText;
-            visualSerialized.FindProperty("subtitleText").objectReferenceValue = subtitleText;
             visualSerialized.ApplyModifiedPropertiesWithoutUndo();
 
             if (!action.HasValue)
@@ -294,33 +282,19 @@ namespace RCCom.EditorTools
             actionSerialized.ApplyModifiedPropertiesWithoutUndo();
         }
 
-        private static TextMeshProUGUI CreateText(string name, Transform parent, TMP_FontAsset font, string content,
-            float fontSize, Vector2 anchorMin, Vector2 anchorMax, Vector2 offsetMin, Vector2 offsetMax)
-        {
-            GameObject textObject = new(name, typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
-            textObject.transform.SetParent(parent, false);
-            RectTransform rect = (RectTransform)textObject.transform;
-            rect.anchorMin = anchorMin;
-            rect.anchorMax = anchorMax;
-            rect.offsetMin = offsetMin;
-            rect.offsetMax = offsetMax;
-
-            TextMeshProUGUI text = textObject.GetComponent<TextMeshProUGUI>();
-            text.font = font;
-            text.fontSize = fontSize;
-            text.fontStyle = FontStyles.Bold;
-            text.text = content;
-            text.color = new Color(0.035f, 0.045f, 0.06f, 1f);
-            text.alignment = TextAlignmentOptions.MidlineLeft;
-            text.textWrappingMode = TextWrappingModes.NoWrap;
-            text.overflowMode = TextOverflowModes.Ellipsis;
-            text.raycastTarget = false;
-            return text;
-        }
 
         private static Sprite LoadSprite(string name, string state)
         {
             string path = $"{SpriteFolder}{name}-{state}-v1.png";
+            TextureImporter importer = AssetImporter.GetAtPath(path) as TextureImporter;
+            if (importer != null && !importer.isReadable)
+            {
+                // 사다리꼴 패널의 투명 여백을 클릭 통과시키려면 UGUI Image가 원본 알파를
+                // 읽을 수 있어야 한다. 메뉴 스프라이트 10장만 이 메모리 비용을 부담한다.
+                importer.isReadable = true;
+                importer.SaveAndReimport();
+            }
+
             Sprite sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);
             if (sprite == null)
             {

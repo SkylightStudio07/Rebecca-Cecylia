@@ -1,4 +1,3 @@
-using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -6,7 +5,7 @@ using UnityEngine.UI;
 namespace RCCom.UI
 {
     /// <summary>
-    /// 로비 메뉴의 패널 스프라이트와 TMP 색만 전환한다.
+    /// 로비 메뉴의 패널 스프라이트만 전환한다.
     /// 클릭 결과는 기존 TitleMenuTextButton에 남겨 시각 상태가 화면 흐름을 소유하지 않게 한다.
     /// </summary>
     public sealed class CommandLobbyMenuItem : MonoBehaviour,
@@ -15,18 +14,15 @@ namespace RCCom.UI
         [SerializeField] private Image panelImage;
         [SerializeField] private Sprite normalSprite;
         [SerializeField] private Sprite hoverSprite;
-        [SerializeField] private TextMeshProUGUI titleText;
-        [SerializeField] private TextMeshProUGUI subtitleText;
-        [SerializeField] private Color normalTitleColor = new(0.035f, 0.045f, 0.06f, 1f);
-        [SerializeField] private Color normalSubtitleColor = new(0.18f, 0.2f, 0.23f, 1f);
-        [SerializeField] private Color hoverTitleColor = Color.white;
-        [SerializeField] private Color hoverSubtitleColor = new(0.84f, 0.94f, 1f, 1f);
+        [Tooltip("패널 PNG의 투명 여백은 클릭을 통과시키고, 보이는 패널만 메뉴로 판정한다.")]
+        [SerializeField, Range(0.01f, 1f)] private float alphaHitTestThreshold = 0.08f;
 
         private bool _pointerInside;
         private bool _selected;
 
         private void Awake()
         {
+            ApplyRaycastShape();
             ApplyVisual(false);
         }
 
@@ -67,16 +63,21 @@ namespace RCCom.UI
             {
                 panelImage.sprite = highlighted && hoverSprite != null ? hoverSprite : normalSprite;
             }
+        }
 
-            if (titleText != null)
+        private void ApplyRaycastShape()
+        {
+            if (panelImage == null)
             {
-                titleText.color = highlighted ? hoverTitleColor : normalTitleColor;
+                return;
             }
 
-            if (subtitleText != null)
-            {
-                subtitleText.color = highlighted ? hoverSubtitleColor : normalSubtitleColor;
-            }
+            // 아트 교체 직후에는 Read/Write가 꺼진 텍스처가 들어올 수 있다. 이 경우 UGUI가
+            // 예외를 던지므로, 투명 판정 대신 기본 사각형 판정을 유지해 로비 초기화를 막지 않는다.
+            Texture2D texture = panelImage.sprite != null ? panelImage.sprite.texture : null;
+            panelImage.alphaHitTestMinimumThreshold = texture != null && texture.isReadable
+                ? alphaHitTestThreshold
+                : 0f;
         }
     }
 }
