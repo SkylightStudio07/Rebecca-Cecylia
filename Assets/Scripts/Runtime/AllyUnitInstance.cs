@@ -52,6 +52,15 @@ namespace RCCom.Runtime
         public float SeparationMargin => _separationMargin;
         public float EffectiveAttackRange => Mathf.Max(Data != null ? Data.attackRange : 0f, _contactRange);
 
+        /// <summary>대상별 접촉 크기를 포함해 실제 공격 가능한 중심점 거리를 계산한다.</summary>
+        public float GetEffectiveAttackRange(EnemyInstance target)
+        {
+            float targetContactRange = target != null
+                ? target.GetContactRange(this)
+                : ContactRange;
+            return Mathf.Max(Data != null ? Data.attackRange : 0f, targetContactRange);
+        }
+
         /// <summary>사망 넉백 연출용 — 가장 최근에 알려진 피해 발신 위치(AllyUnitView.HandleDied가 읽음).</summary>
         public Vector2? LastDamageSourcePosition { get; private set; }
 
@@ -250,14 +259,24 @@ namespace RCCom.Runtime
         public bool IsTargetInContactRange(EnemyInstance target)
         {
             return target != null && target.IsAlive &&
-                   AllyUnitTargeting.IsWithinRange(Position, target.position, ContactRange);
+                   AllyUnitTargeting.IsWithinRange(
+                       Position,
+                       target.position,
+                       target.GetContactRange(this));
         }
 
         /// <summary>현재 위치에서 공격 범위 안에 있는지 확인한다.</summary>
         public bool IsTargetInAttackRange(EnemyInstance target)
         {
-            return target != null && target.IsAlive &&
-                   AllyUnitTargeting.IsWithinRange(Position, target.position, EffectiveAttackRange);
+            if (target == null || !target.IsAlive)
+            {
+                return false;
+            }
+
+            return AllyUnitTargeting.IsWithinRange(
+                Position,
+                target.position,
+                GetEffectiveAttackRange(target));
         }
 
         /// <summary>공격 타이밍을 결정한 런타임 로직이 효과 SO의 OnAttack 훅을 구동한다.</summary>
@@ -563,7 +582,7 @@ namespace RCCom.Runtime
                         Position,
                         end,
                         enemy.position,
-                        ContactRange));
+                        enemy.GetContactRange(this)));
             }
 
             AllyUnitInstance precedingAlly = FindPrecedingAlly();

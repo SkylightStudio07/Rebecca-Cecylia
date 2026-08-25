@@ -50,9 +50,6 @@ namespace RCCom.Runtime
         private bool _isDying;
         private Vector3 _baseLocalScale;
         private Vector3 _healthBarBaseLocalScale;
-        private CircleCollider2D _circleCollider;
-        private Vector2 _circleColliderBaseOffset;
-        private float _circleColliderBaseRadius;
         private readonly DeathKnockbackSequencer _deathSequencer = new();
 
         public EnemyInstance Instance { get; private set; }
@@ -61,18 +58,11 @@ namespace RCCom.Runtime
         {
             _spriteRenderer = GetComponent<SpriteRenderer>();
             _collider = GetComponent<Collider2D>();
-            _circleCollider = _collider as CircleCollider2D;
             _baseColor = _spriteRenderer.color;
             _baseLocalScale = transform.localScale;
             if (healthBar != null)
             {
                 _healthBarBaseLocalScale = healthBar.transform.localScale;
-            }
-
-            if (_circleCollider != null)
-            {
-                _circleColliderBaseOffset = _circleCollider.offset;
-                _circleColliderBaseRadius = _circleCollider.radius;
             }
         }
 
@@ -109,9 +99,9 @@ namespace RCCom.Runtime
         }
 
         /// <summary>
-        /// 보스 확대는 그리기만 바꾸는 연출이므로 접촉 판정까지 커지면 안 된다. 공용 SpriteFit으로
-        /// 현재 스프라이트의 원래 drawing size를 기준값으로 삼고 승급 보스에만 1.5배를 적용한 뒤,
-        /// 같은 루트에 붙은 CircleCollider2D는 역보정해 월드 반경과 오프셋을 그대로 유지한다.
+        /// 공용 SpriteFit으로 현재 스프라이트의 원래 drawing size를 기준값으로 삼고 승급 보스에만
+        /// 1.5배를 적용한다. 같은 루트의 Collider도 함께 확대해 화면에 보이는 크기와 물리 판정을
+        /// 일치시키며, 아군과의 순수 C# 거리 판정은 EnemyInstance.GetContactRange에서 맞춘다.
         /// </summary>
         private void ApplyVisualSize(Sprite sprite)
         {
@@ -128,12 +118,6 @@ namespace RCCom.Runtime
                 _baseLocalScale.x * fittedScale,
                 _baseLocalScale.y * fittedScale,
                 _baseLocalScale.z);
-
-            if (_circleCollider != null)
-            {
-                _circleCollider.offset = _circleColliderBaseOffset / visualMultiplier;
-                _circleCollider.radius = _circleColliderBaseRadius / visualMultiplier;
-            }
         }
 
         private void OnDestroy()

@@ -95,14 +95,14 @@ namespace RCCom.EditorTools
 
                 AssertNear(1.5f, viewObject.transform.localScale.x, "보스 drawing size가 1.5배가 아닙니다.");
                 AssertNear(1.5f, viewObject.transform.localScale.y, "보스 drawing size가 균일한 1.5배가 아닙니다.");
-                AssertNear(0.6f, circleCollider.radius * viewObject.transform.lossyScale.x,
-                    "보스 시각 확대가 월드 접촉 반경까지 키웠습니다.");
-                AssertNear(0.1f, circleCollider.offset.x * viewObject.transform.lossyScale.x,
-                    "보스 시각 확대가 Collider 오프셋을 변경했습니다.");
+                AssertNear(0.9f, circleCollider.radius * viewObject.transform.lossyScale.x,
+                    "보스 Collider의 월드 접촉 반경이 외형과 함께 1.5배 커지지 않았습니다.");
+                AssertNear(0.15f, circleCollider.offset.x * viewObject.transform.lossyScale.x,
+                    "보스 Collider의 월드 오프셋이 외형과 함께 1.5배 커지지 않았습니다.");
 
                 Debug.Log("[EndlessBossPromotionVerifier] PASS — 무한 모드 5웨이브 조건, 랜덤 슬롯 승급용 " +
-                          "런타임 복제, 체력·속도·공격·골드/EXP 수식, drawing size 1.5배와 " +
-                          "Collider 판정 불변성, 원본 SO 불변성 확인");
+                          "런타임 복제, 체력·속도·공격·골드/EXP 수식, drawing size와 " +
+                          "Collider 판정 1.5배 확대, 원본 SO 불변성 확인");
             }
             finally
             {

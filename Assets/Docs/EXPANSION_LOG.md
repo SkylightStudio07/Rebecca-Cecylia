@@ -2001,3 +2001,19 @@ Phase 0 자동화 경로를 실제로 열고, 이후 오퍼레이터별 원격 �
 - `EndlessBossPromotionVerifier`가 체력 1.75배, 공격력 1.75배, 스프라이트 1.5배 균일 확대와 Collider 월드 반경·오프셋 불변성을 함께 검증한다.
 - Unity 스크립트 재컴파일이 오류 없이 완료됐고 `RCCom/Verify/Endless Boss Promotion`, `RCCom/Enemies/Verify Exploder Special Effect`, `RCCom/Verify/Enemy Healer` 검증이 모두 PASS했다. 검증 시작 시점 이후 콘솔 오류는 0건이었다.
 
+## 2026-08-26 — 승급 보스 확대에 접촉 판정 동기화
+
+### 결정
+
+- 앞선 구현에서 "1.5배 크게 그리기"를 시각 연출만으로 해석해 `CircleCollider2D`를 역보정했으나, 큰 외형과 작은 접촉 경계가 어긋나면 플레이어·거점 접촉뿐 아니라 아군 교전 시 보스 안쪽으로 파고들어 보이는 문제가 생긴다. 따라서 Collider 역보정을 제거하고 보스 루트와 함께 1.5배 확대되도록 정정했다.
+- 아군 프리팹에는 Collider가 없고 아군·적 조우는 `UnitCombatSettings.ContactRange`를 이용한 순수 C# 중심점 거리로 처리된다. 물리 Collider만 확대해서는 아군 겹침이 해결되지 않으므로, `EnemyInstance.GetContactRange`에서 승급 보스와 교전할 때의 논리 접촉 거리를 기본값의 1.5배로 계산한다.
+- 대상별 접촉 거리를 아군과 적 양쪽의 이동 차단, 접촉 후보 선택, 근접 공격 가능 거리, 공격 대상 유지에 일관되게 사용한다. 기본·독·범위 공격의 원거리 투사체 판별과 관통 공격의 빔 길이도 대상별 실제 접촉 경계를 사용해, 확대된 보스 앞에서 근접 유닛이 공격하지 못하거나 원거리로 오인되는 부작용을 막았다.
+- 체력바는 전투 판정과 무관한 UI이므로 기존 역스케일을 유지해 일반 적과 같은 화면 크기로 표시한다. 일반 적과 디자이너가 정의한 스테이지 보스는 `IsPromotedBoss`가 아니므로 모든 거리와 크기가 종전과 같다.
+
+### 검증
+
+- Unity `6000.3.13f1` 스크립트 재컴파일이 `failed=false`, `errors=[]`로 완료됐다.
+- `EndlessBossPromotionVerifier`에서 스프라이트와 `CircleCollider2D`의 월드 반경·오프셋이 함께 1.5배 확대됨을 확인했다.
+- `AllyUnitCombatVerifier`에 승급 보스 전용 30번째 시나리오를 추가해 아군이 접근하는 경우와 보스가 접근하는 경우 모두 중심거리 `0.75 × 1.5 = 1.125`에서 멈추고 교전함을 확인했다. 기본·관통·범위·독 공격을 포함한 전체 30개 시나리오가 PASS했다.
+- `EnemySelfDestructVerifier`와 `EnemyHealerVerifier` 회귀 검증도 PASS했으며 최종 검증 구간의 콘솔 오류는 0건이었다.
+

@@ -80,6 +80,24 @@ namespace RCCom.Runtime
         public bool IsAlive => _isSpawned && !_isDead && !_hasReachedGoal;
         public float MaxHealth { get; private set; }
         public AllyUnitInstance CurrentTarget => _currentTarget;
+
+        /// <summary>
+        /// 승급 보스는 외형과 물리 Collider가 함께 커지므로 아군과의 논리적 접촉 거리도 같은
+        /// 비율로 넓힌다. 아군 전투는 물리 충돌이 아닌 중심점 거리로 처리되므로 이 보정이 없으면
+        /// 커진 보스 스프라이트 안쪽까지 아군이 파고든 뒤 교전하게 된다.
+        /// </summary>
+        public float GetContactRange(AllyUnitInstance target)
+        {
+            if (target == null)
+            {
+                return 0f;
+            }
+
+            float sizeMultiplier = IsPromotedBoss
+                ? EndlessBossPromotion.VisualSizeMultiplier
+                : 1f;
+            return target.ContactRange * sizeMultiplier;
+        }
         public float AttackCooldownRemaining => _attackCooldownRemaining;
 
         /// <summary>사망 넉백 연출용 — 가장 최근에 알려진 피해 발신 위치(EnemyView.HandleDied가 읽음).</summary>
@@ -172,7 +190,7 @@ namespace RCCom.Runtime
                                     AllyUnitTargeting.IsWithinRange(
                                         position,
                                         _currentMovementTarget.Position,
-                                        _currentMovementTarget.ContactRange);
+                                        GetContactRange(_currentMovementTarget));
             if (!isInContactRange)
             {
                 MoveAlongPath(Mathf.Max(0f, deltaTime));
@@ -299,7 +317,7 @@ namespace RCCom.Runtime
                 position,
                 pathTarget,
                 candidate.Position,
-                candidate.ContactRange);
+                GetContactRange(candidate));
             if (candidateContactDistance > movementDistance + 0.0001f)
             {
                 if (_currentMovementTarget == candidate)
@@ -410,7 +428,7 @@ namespace RCCom.Runtime
                     position,
                     target,
                     _currentMovementTarget.Position,
-                    _currentMovementTarget.ContactRange);
+                    GetContactRange(_currentMovementTarget));
                 movementDistance = Mathf.Min(movementDistance, contactDistance);
             }
 
@@ -550,7 +568,7 @@ namespace RCCom.Runtime
                 position,
                 pathTarget,
                 _currentMovementTarget.Position,
-                _currentMovementTarget.ContactRange);
+                GetContactRange(_currentMovementTarget));
             if (contactDistance > movementDistance + 0.0001f)
             {
                 _currentMovementTarget = null;
@@ -594,12 +612,12 @@ namespace RCCom.Runtime
                 position,
                 pathTarget,
                 candidate.Position,
-                candidate.ContactRange);
+                GetContactRange(candidate));
             float currentDistance = AllyUnitTargeting.DistanceBeforeContact(
                 position,
                 pathTarget,
                 current.Position,
-                current.ContactRange);
+                GetContactRange(current));
             if (candidateDistance < currentDistance - 0.0001f)
             {
                 return true;
@@ -641,8 +659,9 @@ namespace RCCom.Runtime
 
         private float GetEffectiveAttackRange(AllyUnitInstance target)
         {
-            float configuredRange = Data.attackRange > 0f ? Data.attackRange : target.ContactRange;
-            return Mathf.Max(configuredRange, target.ContactRange);
+            float contactRange = GetContactRange(target);
+            float configuredRange = Data.attackRange > 0f ? Data.attackRange : contactRange;
+            return Mathf.Max(configuredRange, contactRange);
         }
 
         private EnemyContext MakeContext(
