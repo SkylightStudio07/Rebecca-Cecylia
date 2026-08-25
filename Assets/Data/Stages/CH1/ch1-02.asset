@@ -24,9 +24,9 @@ MonoBehaviour:
   description: "\uC801\uC758 \uC774\uB3D9 \uACBD\uB85C\uAC00 \uBC14\uB00C\uC5C8\uC2B5\uB2C8\uB2E4.
     \uBC29\uC5B4\uC120\uC744 \uC7AC\uBC30\uCE58\uD558\uC2ED\uC2DC\uC624."
   descriptionBackground: {fileID: 0}
-  battleBackground: {fileID: 0}
+  battleBackground: {fileID: -2257400970625278361, guid: db9011e01f3a5104d9c80c3c7677e63e, type: 3}
   battleBackgroundPosition: {x: 0, y: 0}
-  battleBackgroundScale: {x: 1, y: 1}
+  battleBackgroundScale: {x: 2, y: 2}
   routePoints:
   - {x: -16.62, y: -3.63}
   - {x: -12.81, y: 1.11}
@@ -39,6 +39,7 @@ MonoBehaviour:
   - {x: 15.47, y: -2.78}
   pathSmoothness: 1
   maxPointSpacing: 0.25
+  buildableCells: []
   rewards: []
   waves:
   - displayName: WAVE 01
