@@ -18,6 +18,7 @@ namespace RCCom.EditorTools
         private const string CatalogPath = "Assets/Resources/PlayerParts/PlayerPartCatalog.asset";
         private const string LeftPanelSheetPath = "Assets/Art/UI/UnderPanel/LeftPanelSheet.png";
         private const string PlayerSpritePath = "Assets/Art/Player/player-cursor-sprite-no-halo.png";
+        private const string SubgearSpriteSheetPath = "Assets/Art/UI/ExchangePanel/SubgearSpriteSheet.png";
 
         private static readonly Color Panel = new(0.005f, 0.025f, 0.045f, 0.96f);
         private static readonly Color PanelSoft = new(0.012f, 0.065f, 0.11f, 0.92f);
@@ -31,6 +32,8 @@ namespace RCCom.EditorTools
             {
                 throw new InvalidOperationException("Exchange UI 생성은 Edit Mode에서만 실행할 수 있습니다.");
             }
+
+            ExchangeSpriteRectNormalizer.NormalizeSpriteRects();
 
             GameObject canvas = RequireSceneObject("Canvas");
             Transform mainMenu = Require(canvas.transform, "MainMenuBackground");
@@ -188,6 +191,46 @@ namespace RCCom.EditorTools
             Debug.Log("[PlayerPartShopPanelSetup] Exchange uGUI와 5슬롯 파츠 상점 배선 완료");
         }
 
+        [MenuItem("RCCom/UI/Wire PartCarousel Card Hover Sprites")]
+        public static void WirePartCarouselCardHoverSprites()
+        {
+            if (EditorApplication.isPlayingOrWillChangePlaymode)
+            {
+                throw new InvalidOperationException("PartCarousel 배선은 Edit Mode에서만 실행할 수 있습니다.");
+            }
+
+            GameObject canvas = RequireSceneObject("Canvas");
+            Transform shop = Require(canvas.transform, "ShopPanelBackground");
+            Transform carousel = Require(shop, "ExchangePanel/PartCarousel");
+            Sprite normal = LoadSubgearSprite(0);
+            Sprite hover = LoadSubgearSprite(1);
+
+            for (int i = 0; i < 5; i++)
+            {
+                Transform card = carousel.Find($"PartCard_{i + 1:00}");
+                if (card == null)
+                {
+                    throw new InvalidOperationException($"PartCarousel/PartCard_{i + 1:00}을 찾지 못했습니다.");
+                }
+
+                UnityEngine.UI.Image background = card.GetComponent<UnityEngine.UI.Image>();
+                if (background == null)
+                {
+                    throw new InvalidOperationException($"{card.name}에 배경 Image가 없습니다.");
+                }
+
+                ConfigurePartCardSpriteSwap(card.gameObject, background, normal, hover);
+                EditorUtility.SetDirty(card.gameObject);
+            }
+
+            EditorUtility.SetDirty(canvas);
+            EditorSceneManager.MarkSceneDirty(canvas.scene);
+            EditorSceneManager.SaveScene(canvas.scene);
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+            Debug.Log("[PlayerPartShopPanelSetup] PartCard_01~05 Normal/Hover 스프라이트 배선 완료");
+        }
+
         [MenuItem("RCCom/UI/Validate Player Part Exchange Panel")]
         public static void Validate()
         {
@@ -216,6 +259,10 @@ namespace RCCom.EditorTools
             float x = -510f + index * 255f;
             UnityEngine.UI.Button button = EnsureButton(parent, $"PartCard_{index + 1:00}", font, string.Empty,
                 new Vector2(x, 0f), new Vector2(235f, 265f), PanelSoft);
+            UnityEngine.UI.Image background = button.GetComponent<UnityEngine.UI.Image>();
+            ConfigurePartCardSpriteSwap(button.gameObject, background,
+                LoadSubgearSprite(0), LoadSubgearSprite(1));
+
             UnityEngine.UI.Image icon = EnsureImage(button.transform, "Icon",
                 new Vector2(0f, 35f), new Vector2(150f, 130f));
             TMP_Text name = EnsureText(button.transform, "Name", font, "PART", 17f,
@@ -230,7 +277,7 @@ namespace RCCom.EditorTools
             PlayerPartShopCardView view = GetOrAdd<PlayerPartShopCardView>(button.gameObject);
             SerializedObject serialized = new(view);
             Assign(serialized, "button", button);
-            Assign(serialized, "background", button.GetComponent<UnityEngine.UI.Image>());
+            Assign(serialized, "background", background);
             Assign(serialized, "icon", icon);
             Assign(serialized, "nameText", name);
             Assign(serialized, "gradeText", grade);
@@ -326,6 +373,34 @@ namespace RCCom.EditorTools
                 if (asset is Sprite sprite && sprite.name == name) { return sprite; }
             }
             throw new InvalidOperationException($"{LeftPanelSheetPath}에서 {name}을 찾지 못했습니다.");
+        }
+
+        private static Sprite LoadSubgearSprite(int index)
+        {
+            string name = $"SubgearSpriteSheet_{index}";
+            foreach (UnityEngine.Object asset in AssetDatabase.LoadAllAssetsAtPath(SubgearSpriteSheetPath))
+            {
+                if (asset is Sprite sprite && sprite.name == name) { return sprite; }
+            }
+
+            throw new InvalidOperationException($"{SubgearSpriteSheetPath}에서 {name}을 찾지 못했습니다.");
+        }
+
+        private static void ConfigurePartCardSpriteSwap(GameObject card,
+            UnityEngine.UI.Image background, Sprite normal, Sprite hover)
+        {
+            background.sprite = normal;
+            background.color = Color.white;
+
+            UISpriteHoverSwap spriteSwap = GetOrAdd<UISpriteHoverSwap>(card);
+            SerializedObject serialized = new(spriteSwap);
+            Assign(serialized, "targetImage", background);
+            Assign(serialized, "normalSprite", normal);
+            Assign(serialized, "hoverSprite", hover);
+            serialized.FindProperty("startHighlighted").boolValue = false;
+            // Hover 원본의 가시 외곽 중심이 Normal보다 약 28px 왼쪽이라 같은 RectTransform에서 보정한다.
+            serialized.FindProperty("highlightedPositionOffset").vector2Value = new Vector2(28f, 0f);
+            serialized.ApplyModifiedPropertiesWithoutUndo();
         }
 
         private static RectTransform EnsureRect(Transform parent, string name)

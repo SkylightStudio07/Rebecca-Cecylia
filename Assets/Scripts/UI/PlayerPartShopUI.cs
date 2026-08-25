@@ -147,9 +147,16 @@ namespace RCCom.UI
                 bool selected = i == (int)_slot;
                 if (slotBackgrounds != null && i < slotBackgrounds.Length && slotBackgrounds[i] != null)
                 {
-                    slotBackgrounds[i].color = selected
-                        ? new Color(0f, 0.48f, 1f, 0.95f)
-                        : new Color(0.01f, 0.06f, 0.11f, 0.92f);
+                    // 스프라이트의 Normal/Hover 아트가 이미 밝기와 선택 테두리를 포함한다.
+                    // 색상 곱으로 다시 어둡게 만들면 새 스프라이트의 발광과 글자가 사라지므로,
+                    // 선택 상태는 범용 호버 컴포넌트에 맡기고 Image는 원본 색을 유지한다.
+                    slotBackgrounds[i].color = Color.white;
+                    UISpriteHoverSwap spriteSwap =
+                        slotBackgrounds[i].GetComponent<UISpriteHoverSwap>();
+                    if (spriteSwap != null)
+                    {
+                        spriteSwap.SetHighlighted(selected);
+                    }
                 }
 
                 if (slotEquippedTexts != null && i < slotEquippedTexts.Length)

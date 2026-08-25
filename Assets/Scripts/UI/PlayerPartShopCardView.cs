@@ -19,14 +19,26 @@ namespace RCCom.UI
         private Action<int> _clicked;
         private int _index;
 
+        private UISpriteHoverSwap _backgroundSpriteSwap;
+
         private void Awake()
         {
+            if (background != null)
+            {
+                _backgroundSpriteSwap = background.GetComponent<UISpriteHoverSwap>();
+            }
+
             if (button != null) { button.onClick.AddListener(HandleClick); }
         }
 
         private void OnDestroy()
         {
             if (button != null) { button.onClick.RemoveListener(HandleClick); }
+        }
+
+        private void OnDisable()
+        {
+            if (_backgroundSpriteSwap != null) { _backgroundSpriteSwap.SetHighlighted(false); }
         }
 
         public void Bind(PlayerPartDefinition part, bool owned, bool equipped, bool selected,
@@ -50,9 +62,13 @@ namespace RCCom.UI
             SetText(priceText, part.grade == PlayerPartGrade.Common ? "BASIC" : part.price.ToString());
             if (background != null)
             {
-                background.color = selected
-                    ? new Color(0.015f, 0.27f, 0.55f, 0.96f)
-                    : new Color(0.01f, 0.045f, 0.08f, 0.94f);
+                // 카드 아트가 Normal/Hover 스프라이트 안에 선택 상태를 포함하므로,
+                // 색상 곱으로 새 테두리와 발광을 다시 어둡게 만들지 않는다.
+                background.color = Color.white;
+                if (_backgroundSpriteSwap != null)
+                {
+                    _backgroundSpriteSwap.SetHighlighted(selected);
+                }
             }
         }
 

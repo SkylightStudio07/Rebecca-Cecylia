@@ -1,0 +1,354 @@
+fileFormatVersion: 2
+guid: 93acc9a7d310aab44b2271ecd0f58add
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -5197550581833845956
+    second: RightPanelButtonSPrite_0
+  - first:
+      213: 1917184578108066833
+    second: RightPanelButtonSPrite_1
+  - first:
+      213: -5539425704758911546
+    second: RightPanelButtonSPrite_2
+  - first:
+      213: 8682637986653746205
+    second: RightPanelButtonSPrite_3
+  - first:
+      213: -1202192053057574322
+    second: RightPanelButtonSPrite_4
+  - first:
+      213: -3142770657763036968
+    second: RightPanelButtonSPrite_5
+  - first:
+      213: 5991342735093573481
+    second: RightPanelButtonSPrite_6
+  - first:
+      213: 1395586057369004269
+    second: RightPanelButtonSPrite_7
+  - first:
+      213: 6336803843704947885
+    second: RightPanelButtonSPrite_8
+  - first:
+      213: -5130503584498400503
+    second: RightPanelButtonSPrite_9
+  - first:
+      213: -4217781990424518853
+    second: RightPanelButtonSPrite_10
+  - first:
+      213: -4398609994106102472
+    second: RightPanelButtonSPrite_11
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: RightPanelButtonSPrite_0
+      rect:
+        serializedVersion: 2
+        x: 16
+        y: 498
+        width: 552
+        height: 206
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c333bab98479ed7b0800000000000000
+      internalID: -5197550581833845956
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RightPanelButtonSPrite_1
+      rect:
+        serializedVersion: 2
+        x: 569
+        y: 497
+        width: 350
+        height: 212
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 11c0df257353b9a10800000000000000
+      internalID: 1917184578108066833
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RightPanelButtonSPrite_2
+      rect:
+        serializedVersion: 2
+        x: 920
+        y: 490
+        width: 342
+        height: 217
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6cd5d20bba10023b0800000000000000
+      internalID: -5539425704758911546
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RightPanelButtonSPrite_3
+      rect:
+        serializedVersion: 2
+        x: 1268
+        y: 497
+        width: 491
+        height: 207
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d143fcb0f3dee7870800000000000000
+      internalID: 8682637986653746205
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RightPanelButtonSPrite_4
+      rect:
+        serializedVersion: 2
+        x: 14
+        y: 227
+        width: 552
+        height: 206
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e4aa4bd72b4f05fe0800000000000000
+      internalID: -1202192053057574322
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RightPanelButtonSPrite_5
+      rect:
+        serializedVersion: 2
+        x: 566
+        y: 221
+        width: 350
+        height: 212
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8d07385ecb2a264d0800000000000000
+      internalID: -3142770657763036968
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RightPanelButtonSPrite_6
+      rect:
+        serializedVersion: 2
+        x: 918
+        y: 220
+        width: 342
+        height: 217
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 967aedc5976852350800000000000000
+      internalID: 5991342735093573481
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: RightPanelButtonSPrite_7
+      rect:
+        serializedVersion: 2
+        x: 1272
+        y: 228
+        width: 491
+        height: 207
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: de8a7f2002e1e5310800000000000000
+      internalID: 1395586057369004269
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: c3573454dc00bef468acde4640c44d47
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      RightPanelButtonSPrite_0: -5197550581833845956
+      RightPanelButtonSPrite_1: 1917184578108066833
+      RightPanelButtonSPrite_10: -4217781990424518853
+      RightPanelButtonSPrite_11: -4398609994106102472
+      RightPanelButtonSPrite_2: -5539425704758911546
+      RightPanelButtonSPrite_3: 8682637986653746205
+      RightPanelButtonSPrite_4: -1202192053057574322
+      RightPanelButtonSPrite_5: -3142770657763036968
+      RightPanelButtonSPrite_6: 5991342735093573481
+      RightPanelButtonSPrite_7: 1395586057369004269
+      RightPanelButtonSPrite_8: 6336803843704947885
+      RightPanelButtonSPrite_9: -5130503584498400503
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

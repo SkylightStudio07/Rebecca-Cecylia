@@ -1965,7 +1965,6 @@ Phase 0 자동화 경로를 실제로 열고, 이후 오퍼레이터별 원격 �
 - 공유 세계관(Project Vertex 대체역사 연대기: 2060년대 추축국 승전 대체역사, 5대 열강 냉전, 자유세계조약기구 FWTO-캐나다 연방, 라이히스팍트 게슈타포/아프베어 정보망, 경계공명 능력자 설정)을 반영하여 오로라의 프로필 8개 항목과 5단계 인연 기록을 완성했다.
 - 다른 전선/지역을 다루는 특성을 감안해 버텍스 직접 언급은 5단계 결말에서 세계의 메타포로 단 1회만 제한적으로 사용하고, FWTO(자유세계조약기구) 캐나다 출신 넷러너 의적단 및 만성 신경 과부하를 앓는 전뇌계 공명 능력자로서의 정체성을 구축했다.
 - `Aurora.json` 레시피의 `codename`, `role`, `faction`, `height`, `birthday`, `speciality`, `weapon`, `origin`, `bondRecords` 5건을 모두 동기화했다.
-
 ## 2026-08-25 — 무한 모드 5웨이브 보스 승급
 
 ### 결정
@@ -2090,3 +2089,21 @@ Phase 0 자동화 경로를 실제로 열고, 이후 오퍼레이터별 원격 �
   기존과 동일하게 동작하는지 확인이 필요하다. 이번 세션은 Edit Mode 코드·데이터 변경만 했고 Play Mode는
   실행하지 않았다.
 
+## 2026-08-26 — 해상도 독립 로딩 전환 이동 거리
+
+- `UILoadingTransition`은 초기 Awake 시점의 Canvas 높이를 숨김 위치로 고정하지 않는다. CanvasScaler의 실제 배치가 해상도별로 완료된 뒤, 각 전환 직전에 로딩 배경과 부모 Canvas의 현재 높이 중 큰 값으로 이동 거리를 다시 계산한다. QHD 외 해상도에서 와이프가 화면 중간에 멈추는 것을 막고, 런타임 창 크기 변경에도 같은 전환 프리팹을 재사용하기 위한 처리다.
+
+## 2026-08-26 — 범용 Normal/Hover 스프라이트 전환 컴포넌트
+
+- 화면별 메뉴가 각각 포인터 이벤트와 Image 스프라이트를 직접 관리하던 중복을 줄이기 위해 `UISpriteHoverSwap`을 추가했다. 포인터 진입·이탈과 키보드/패드 선택·해제를 같은 강조 상태로 취급하며, 화면 흐름은 기존 Button에 남긴다.
+- `SetHighlighted`를 제공해 Recruit 탭처럼 포인터가 없어도 Hover를 유지해야 하는 화면도 같은 컴포넌트를 재사용할 수 있게 했다. Normal 스프라이트가 비어 있으면 기존 Image 스프라이트를 보존해 에디터 배선 누락으로 이미지가 사라지지 않게 한다.
+
+## 2026-08-26 — Exchange 슬롯 스프라이트 밝기 보존
+
+- `PlayerPartShopUI.RenderSlots`가 슬롯 Image에 어두운 색을 곱하던 처리를 제거했다. GearSpriteSheet의 Normal/Hover 스프라이트가 이미 비선택·선택 밝기와 발광을 포함하므로, 런타임 색상 곱은 교체 아트의 글자와 테두리를 훼손한다.
+- 선택 슬롯의 고정 강조는 `UISpriteHoverSwap.SetHighlighted`로 전달해 포인터가 빠진 뒤에도 선택된 슬롯의 Hover 스프라이트가 유지되도록 했다.
+
+## 2026-08-26 — PartCarousel 카드 Normal/Hover 스프라이트 배선
+
+- `PartCard_01~05`의 배경 Image에 `SubgearSpriteSheet_0`을 Normal, `SubgearSpriteSheet_1`을 Hover로 공통 배선한다. 카드마다 별도 로직을 만들지 않고 `UISpriteHoverSwap`과 `PlayerPartShopCardView.Bind`의 선택 상태 전달을 재사용한다.
+- 카드가 선택되면 Hover 스프라이트를 유지하고, 선택되지 않은 카드도 Image 색상을 흰색으로 보존해 아트에 포함된 외곽 발광과 텍스트가 런타임 색상 곱으로 어두워지지 않게 했다. `PlayerPartShopPanelSetup`을 다시 실행하면 다섯 카드의 배선이 동일하게 갱신된다.

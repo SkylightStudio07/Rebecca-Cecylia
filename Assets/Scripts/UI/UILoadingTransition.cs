@@ -160,6 +160,7 @@ namespace RCCom.UI
         {
             _isTransitioning = true;
             _loadingVisualTime = 0f;
+            RefreshHiddenPosition();
             PreparePresentation();
             SetVisible(true);
 
@@ -362,16 +363,41 @@ namespace RCCom.UI
             _coveredPosition = loadingBackground != null
                 ? loadingBackground.anchoredPosition
                 : Vector2.zero;
-            float height = 1440f;
-            if (loadingBackground != null && loadingBackground.parent is RectTransform parentRect)
-            {
-                height = Mathf.Max(parentRect.rect.height, 1f);
-            }
-
-            _hiddenAbovePosition = _coveredPosition + Vector2.up * height;
             _geometryBaseScale = loadingGeometry != null
                 ? loadingGeometry.localScale
                 : Vector3.one;
+            RefreshHiddenPosition();
+        }
+
+        private void RefreshHiddenPosition()
+        {
+            if (loadingBackground == null)
+            {
+                _hiddenAbovePosition = _coveredPosition + Vector2.up * 1440f;
+                return;
+            }
+
+            // CanvasScaler의 실제 계산이 Awake보다 늦게 끝나는 해상도가 있어,
+            // 화면을 덮기 직전에 현재 Canvas 좌표계 기준으로 이동 거리를 다시 구한다.
+            Canvas.ForceUpdateCanvases();
+
+            float travelDistance = loadingBackground.rect.height;
+            if (loadingBackground.parent is RectTransform parentRect)
+            {
+                travelDistance = Mathf.Max(travelDistance, parentRect.rect.height);
+            }
+
+            Canvas parentCanvas = loadingBackground.GetComponentInParent<Canvas>();
+            if (parentCanvas != null && parentCanvas.renderMode != RenderMode.WorldSpace)
+            {
+                float scaleFactor = Mathf.Max(parentCanvas.scaleFactor, 0.0001f);
+                travelDistance = Mathf.Max(
+                    travelDistance,
+                    parentCanvas.pixelRect.height / scaleFactor);
+            }
+
+            _hiddenAbovePosition = _coveredPosition +
+                                   Vector2.up * Mathf.Max(travelDistance, 1f);
         }
 
         private void SetVisible(bool visible)
