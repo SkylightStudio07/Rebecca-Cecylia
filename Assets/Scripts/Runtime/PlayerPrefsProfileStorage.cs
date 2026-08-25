@@ -106,6 +106,19 @@ namespace RCCom.Runtime
 
                 NormalizeIdList(ref profile.acquiredOperatorIds);
                 NormalizeIdList(ref profile.clearedStageIds);
+                NormalizeIdList(ref profile.ownedPlayerPartIds);
+                profile.equippedPlayerParts ??=
+                    new System.Collections.Generic.List<PlayerPartLoadoutRecord>();
+                var equippedSlots = new System.Collections.Generic.HashSet<string>(StringComparer.Ordinal);
+                for (int i = profile.equippedPlayerParts.Count - 1; i >= 0; i--)
+                {
+                    PlayerPartLoadoutRecord record = profile.equippedPlayerParts[i];
+                    if (record == null || string.IsNullOrWhiteSpace(record.slot) ||
+                        string.IsNullOrWhiteSpace(record.partId) || !equippedSlots.Add(record.slot))
+                    {
+                        profile.equippedPlayerParts.RemoveAt(i);
+                    }
+                }
 
                 profile.pendingReturnOperatorId ??= string.Empty;
                 profile.pendingReturnCount = Math.Max(0, profile.pendingReturnCount);

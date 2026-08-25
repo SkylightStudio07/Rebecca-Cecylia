@@ -352,6 +352,30 @@ namespace RCCom.EditorTools
                     }
                 }
 
+                if (string.IsNullOrWhiteSpace(definition.codename) ||
+                    string.IsNullOrWhiteSpace(definition.role) ||
+                    string.IsNullOrWhiteSpace(definition.faction) ||
+                    string.IsNullOrWhiteSpace(definition.height) ||
+                    string.IsNullOrWhiteSpace(definition.birthday) ||
+                    string.IsNullOrWhiteSpace(definition.speciality) ||
+                    string.IsNullOrWhiteSpace(definition.weapon) ||
+                    string.IsNullOrWhiteSpace(definition.origin))
+                {
+                    // 창작 데이터가 비어 있어도 전투 패키지 빌드 자체를 막지는 않되,
+                    // DossierPanel에서 공란이 보이는 문제는 전체 검증에서 찾을 수 있게 한다.
+                    warnings.Add($"오퍼레이터 자료 프로필 항목이 일부 비어 있습니다: {path}");
+                }
+
+                if (definition.bondRecords == null || definition.bondRecords.Count != 5)
+                {
+                    warnings.Add($"오퍼레이터 인연 기록은 5건이어야 합니다: {path}");
+                }
+                else if (definition.bondRecords.Exists(record =>
+                             record == null || string.IsNullOrWhiteSpace(record.description)))
+                {
+                    warnings.Add($"오퍼레이터 인연 기록 본문이 일부 비어 있습니다: {path}");
+                }
+
                 ValidateUnlockConditions(definition, path, errors);
             }
         }

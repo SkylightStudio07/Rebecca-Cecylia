@@ -103,6 +103,10 @@ namespace RCCom.UI
 
         public void PurchaseSelected()
         {
+            // 합류 연출이 별도 프로필 인스턴스에 표시 완료 이력을 저장할 수 있으므로,
+            // 연속 구매 전에 최신본을 다시 읽어 이전 오퍼레이터의 이력을 덮어쓰지 않는다.
+            _profileStorage ??= new PlayerPrefsProfileStorage();
+            _profile = _profileStorage.Load();
             OperatorCatalogEntry entry = GetSelectedEntry();
             if (entry == null || _profile == null || entry.IsUnlocked(_profile) ||
                 !_profile.TryPurchaseOperator(entry.operatorId, entry.GetPurchasePrice()))
@@ -122,7 +126,7 @@ namespace RCCom.UI
             RenderSelected();
             if (acquisitionUI != null)
             {
-                acquisitionUI.PresentNewlyUnlocked();
+                acquisitionUI.PresentOperator(entry.operatorId);
             }
         }
 

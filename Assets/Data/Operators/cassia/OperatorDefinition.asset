@@ -19,10 +19,10 @@ MonoBehaviour:
     \uC624\uD37C\uB808\uC774\uD130"
   selectionPortrait: {fileID: 8101380904372118242, guid: 7692c1b2ac922604a964bcd1026289c7, type: 3}
   managementPortrait: {fileID: -9117580695321126117, guid: 5e950858e95008a4ca29ca70c69f3a01, type: 3}
-  shopPortrait: {fileID: 0}
-  shopUpperBodyPortrait: {fileID: 0}
-  shopUpperBodyPortraitDimmed: {fileID: 0}
-  alternateName: 
+  shopPortrait: {fileID: -9117580695321126117, guid: 5e950858e95008a4ca29ca70c69f3a01, type: 3}
+  shopUpperBodyPortrait: {fileID: 3409871396524259743, guid: f9ac8fb9332b11c46957b362e661a471, type: 3}
+  shopUpperBodyPortraitDimmed: {fileID: -1820050786735437845, guid: 77f9ff1341a1ad14aa5e87303d57a7ff, type: 3}
+  alternateName: Operator
   shopDialogue: 
   playerData:
     maxHealth: 30

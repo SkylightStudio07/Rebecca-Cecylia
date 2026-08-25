@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using RCCom.Data;
 using RCCom.Definitions.PlayerPart;
 using UnityEngine;
 
@@ -75,6 +76,30 @@ namespace RCCom.Runtime
         public static void ClearEquipment()
         {
             _equippedPartIds.Clear();
+        }
+
+        /// <summary>
+        /// 로비 Exchange에서 저장한 계정 로드아웃을 기존 전투 조립 경계에 주입한다. Home 디버그
+        /// 패널은 이후 TryEquip으로 값을 덮어쓸 수 있어 개발용 조합 테스트도 그대로 유지된다.
+        /// </summary>
+        public static void ApplyProfile(PlayerProfile profile)
+        {
+            _equippedPartIds.Clear();
+            if (Catalog == null || profile == null)
+            {
+                return;
+            }
+
+            foreach (PlayerPartSlot slot in System.Enum.GetValues(typeof(PlayerPartSlot)))
+            {
+                string partId = profile.GetEquippedPlayerPartId(slot.ToString());
+                PlayerPartDefinition part = Catalog.FindById(partId);
+                if (part != null && part.slot == slot &&
+                    (part.grade == PlayerPartGrade.Common || profile.OwnsPlayerPart(part.partId)))
+                {
+                    _equippedPartIds[slot] = part.partId;
+                }
+            }
         }
     }
 }

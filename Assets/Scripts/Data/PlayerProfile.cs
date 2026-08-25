@@ -11,7 +11,7 @@ namespace RCCom.Data
     [Serializable]
     public class PlayerProfile
     {
-        public const int CurrentSchemaVersion = 6;
+        public const int CurrentSchemaVersion = 7;
 
         public const int MaxOperatorAffinity = 100;
         public const int ReturnAffinityWithoutParticipation = 2;
@@ -55,6 +55,13 @@ namespace RCCom.Data
 
         /// <summary>최초 클리어 여부와 스테이지 보상 판정에 사용하는 영구 Stage ID 목록.</summary>
         public List<string> clearedStageIds = new List<string>();
+
+        /// <summary>
+        /// Common 파츠는 항상 제공되는 폴백이라 소유 목록에 넣지 않는다. 유료 파츠만 기록해
+        /// 상점 구매·판매 여부와 계정 전역 기체 로드아웃을 앱 재실행 뒤에도 복원한다.
+        /// </summary>
+        public List<string> ownedPlayerPartIds = new List<string>();
+        public List<PlayerPartLoadoutRecord> equippedPlayerParts = new List<PlayerPartLoadoutRecord>();
 
         /// <summary>
         /// 결과 화면에서 귀환한 오퍼레이터. 실제 보상은 메인 로비가 열린 뒤 정산해,
@@ -292,6 +299,67 @@ namespace RCCom.Data
             return true;
         }
 
+        public bool OwnsPlayerPart(string partId)
+        {
+            return ContainsId(ownedPlayerPartIds, partId);
+        }
+
+        public bool TryPurchasePlayerPart(string partId, int price)
+        {
+            if (string.IsNullOrWhiteSpace(partId) || OwnsPlayerPart(partId) ||
+                !TrySpendCommodity(price))
+            {
+                return false;
+            }
+
+            ownedPlayerPartIds ??= new List<string>();
+            ownedPlayerPartIds.Add(partId);
+            return true;
+        }
+
+        public string GetEquippedPlayerPartId(string slot)
+        {
+            PlayerPartLoadoutRecord record = FindPlayerPartLoadout(slot);
+            return record != null ? record.partId ?? string.Empty : string.Empty;
+        }
+
+        public bool TryEquipPlayerPart(string slot, string partId)
+        {
+            if (string.IsNullOrWhiteSpace(slot) || string.IsNullOrWhiteSpace(partId))
+            {
+                return false;
+            }
+
+            equippedPlayerParts ??= new List<PlayerPartLoadoutRecord>();
+            PlayerPartLoadoutRecord record = FindPlayerPartLoadout(slot);
+            if (record == null)
+            {
+                record = new PlayerPartLoadoutRecord { slot = slot };
+                equippedPlayerParts.Add(record);
+            }
+
+            record.partId = partId;
+            return true;
+        }
+
+        public bool TrySellPlayerPart(string partId, int refund)
+        {
+            if (!OwnsPlayerPart(partId))
+            {
+                return false;
+            }
+
+            ownedPlayerPartIds.RemoveAll(id => string.Equals(id, partId, StringComparison.Ordinal));
+            if (equippedPlayerParts != null)
+            {
+                equippedPlayerParts.RemoveAll(record => record != null &&
+                    string.Equals(record.partId, partId, StringComparison.Ordinal));
+            }
+
+            AddCommodity(refund);
+            return true;
+        }
+
         private OperatorUpgradeRecord FindUpgradeRecord(string operatorId, string trackId)
         {
             if (string.IsNullOrWhiteSpace(operatorId) || string.IsNullOrWhiteSpace(trackId) ||
@@ -326,6 +394,17 @@ namespace RCCom.Data
             var created = new OperatorUpgradeRecord { operatorId = operatorId, trackId = trackId };
             operatorUpgrades.Add(created);
             return created;
+        }
+
+        private PlayerPartLoadoutRecord FindPlayerPartLoadout(string slot)
+        {
+            if (string.IsNullOrWhiteSpace(slot) || equippedPlayerParts == null)
+            {
+                return null;
+            }
+
+            return equippedPlayerParts.Find(record => record != null &&
+                string.Equals(record.slot, slot, StringComparison.Ordinal));
         }
 
         public bool HasPresentedOperatorAcquisition(string operatorId)

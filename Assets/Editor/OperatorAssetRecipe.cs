@@ -24,6 +24,15 @@ namespace RCCom.EditorTools
         public string shopUpperBodyPortraitDimmedPath;
         public string alternateName;
         public string shopDialogue;
+        public string codename;
+        public string role;
+        public string faction;
+        public string height;
+        public string birthday;
+        public string speciality;
+        public string weapon;
+        public string origin;
+        public List<OperatorBondRecord> bondRecords = new();
         public string unlockRewardPortraitPath;
         public string sourceTowerRosterPath;
         public string sourceCardRosterPath;

@@ -17,8 +17,12 @@ MonoBehaviour:
   operatorAcquired:
     defaultPortraitSprite: {fileID: 0}
     portraitSprite: {fileID: 0}
-    defaultLobbySprite: {fileID: 0}
-    entries: []
+    defaultLobbySprite: {fileID: 6660641790689550690, guid: 5b6d79512458acf4d95c461e680addc4, type: 3}
+    entries:
+    - text: "\uC6B0\uB9AC\uB294 \uBE5B\uC774 \uC5C6\uB294 \uACF3\uC5D0\uC11C\n\uB2E4\uC2DC
+        \uB9CC\uB0A0 \uAC70\uC57C."
+      lobbySprite: {fileID: 6660641790689550690, guid: 5b6d79512458acf4d95c461e680addc4, type: 3}
+      portraitSprite: {fileID: 0}
     lines: []
   lobbyInteraction:
     defaultPortraitSprite: {fileID: 0}

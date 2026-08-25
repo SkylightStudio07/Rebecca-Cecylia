@@ -96,6 +96,10 @@ namespace RCCom.Runtime
                 PlayerPartDebugSession.SetCatalog(catalog);
             }
 
+            // Exchange에서 저장한 계정 전역 기체 구성을 매 전투 진입 직전에 다시 읽는다.
+            // 씬 재로드 뒤에도 static 디버그 세션의 낡은 선택이 영속 데이터보다 우선하지 않게 한다.
+            PlayerPartDebugSession.ApplyProfile(new PlayerPrefsProfileStorage().Load());
+
             // 플레이어 강화 카드는 data를 직접 수정하므로 Definition과 파츠 SO 원본을 넘기지
             // 않고 매 게임플레이 씬마다 새 값 객체와 Effect 목록을 조립한다.
             return PlayerLoadoutBuilder.Compose(source, catalog);

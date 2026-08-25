@@ -118,6 +118,9 @@ namespace RCCom.UI
 
         public void Purchase()
         {
+            // 합류 연출이 저장한 표시 완료 이력을 다음 구매가 낡은 프로필로 덮지 않게 한다.
+            _profileStorage ??= new PlayerPrefsProfileStorage();
+            _profile = _profileStorage.Load();
             if (_isLoading || !TryGetBrowsingEntry(out OperatorCatalogEntry entry) ||
                 !entry.HasUnlockCondition(OperatorUnlockType.CommodityPurchase) || entry.IsUnlocked(_profile))
             {
@@ -146,7 +149,7 @@ namespace RCCom.UI
             if (acquisitionUI != null)
             {
                 SetPanelVisible(false);
-                acquisitionUI.PresentNewlyUnlocked();
+                acquisitionUI.PresentOperator(entry.operatorId);
             }
         }
 

@@ -65,6 +65,7 @@ namespace RCCom.UI
         private bool _skipRequested;
         private bool _sequenceComplete;
         private bool _isOpen;
+        private bool _presentationQueueActive;
         private int _pendingIndex;
         private AsyncOperationHandle<OperatorDefinition> _definitionHandle;
         private bool _ownsDefinitionHandle;
@@ -100,12 +101,46 @@ namespace RCCom.UI
         }
 
         /// <summary>
+        /// 구매 직후에는 전체 미표시 목록을 재검색하지 않고 방금 획득한 대상만 큐에 넣는다.
+        /// Addressables 로딩 중 추가 구매가 들어와도 코루틴을 중복 시작하지 않고 기존 큐 뒤에 붙인다.
+        /// </summary>
+        public void PresentOperator(string operatorId)
+        {
+            if (string.IsNullOrWhiteSpace(operatorId)) { return; }
+
+            _profileStorage ??= new PlayerPrefsProfileStorage();
+            _profile = _profileStorage.Load();
+            OperatorCatalogEntry entry = FindCatalogEntry(operatorId);
+            if (entry == null || !entry.IsUnlocked(_profile) ||
+                _profile.HasPresentedOperatorAcquisition(operatorId))
+            {
+                return;
+            }
+
+            transform.SetAsLastSibling();
+            if (!_presentationQueueActive)
+            {
+                _pendingEntries.Clear();
+                _pendingIndex = 0;
+            }
+
+            bool alreadyQueued = _pendingEntries.Exists(candidate =>
+                candidate != null && candidate.operatorId == operatorId);
+            if (!alreadyQueued)
+            {
+                _pendingEntries.Add(entry);
+            }
+
+            StartPendingQueueIfNeeded();
+        }
+
+        /// <summary>
         /// 결과 화면에서 해당 스테이지 보상으로 해금된 오퍼레이터만 즉시 소개한다.
         /// null 또는 빈 값이면 Shop 구매처럼 모든 미표시 획득을 대상으로 한다.
         /// </summary>
         public void PresentNewlyUnlockedForStage(string stageId)
         {
-            if (_isOpen) { return; }
+            if (_presentationQueueActive) { return; }
 
             // Shop과 결과 화면처럼 다른 패널 위에서 호출돼도 연출이 가려지지 않아야 한다.
             _profileStorage ??= new PlayerPrefsProfileStorage();
@@ -118,7 +153,7 @@ namespace RCCom.UI
                     !entry.IsStageRewardFor(stageId));
             }
 
-            if (_pendingEntries.Count > 0) { StartCoroutine(PresentNext()); }
+            StartPendingQueueIfNeeded();
         }
 
         /// <summary>
@@ -132,10 +167,7 @@ namespace RCCom.UI
 
             BuildPendingQueue();
             Debug.Log($"[OperatorAcquisition] 합류 연출 재검사: {_pendingEntries.Count}명", this);
-            if (_pendingEntries.Count > 0)
-            {
-                StartCoroutine(PresentNext());
-            }
+            StartPendingQueueIfNeeded();
         }
 
         /// <summary>
@@ -149,6 +181,7 @@ namespace RCCom.UI
             _pendingEntries.Clear();
             _pendingIndex = 0;
             _isOpen = false;
+            _presentationQueueActive = false;
             _sequenceComplete = false;
             _skipRequested = false;
             SetRootVisible(false);
@@ -177,6 +210,7 @@ namespace RCCom.UI
             BuildPendingQueue();
             if (_pendingEntries.Count > 0)
             {
+                _presentationQueueActive = true;
                 yield return PresentNext();
             }
         }
@@ -465,9 +499,33 @@ namespace RCCom.UI
         private void CloseOverlay()
         {
             _isOpen = false;
+            _presentationQueueActive = false;
             SetRootVisible(false);
             SetMainMenuInput(true);
             ReleaseDefinitionHandle();
+            _pendingEntries.Clear();
+            _pendingIndex = 0;
+        }
+
+        private void StartPendingQueueIfNeeded()
+        {
+            if (_presentationQueueActive || _pendingIndex >= _pendingEntries.Count)
+            {
+                return;
+            }
+
+            _presentationQueueActive = true;
+            StartCoroutine(PresentNext());
+        }
+
+        private OperatorCatalogEntry FindCatalogEntry(string operatorId)
+        {
+            if (catalog == null || catalog.entries == null)
+            {
+                return null;
+            }
+
+            return catalog.entries.Find(entry => entry != null && entry.operatorId == operatorId);
         }
 
         private void ResolveReferences()

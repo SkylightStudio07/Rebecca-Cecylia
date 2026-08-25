@@ -52,6 +52,19 @@ namespace RCCom.Definitions.Operator
         [Tooltip("리크루트 화면 우측 패널에 표시할 짧은 소개 대사")]
         public string shopDialogue;
 
+        [Header("오퍼레이터 자료")]
+        public string codename;
+        public string role;
+        public string faction;
+        public string height;
+        public string birthday;
+        public string speciality;
+        public string weapon;
+        public string origin;
+
+        [Tooltip("낯섦·호감·기쁨·사랑·EX 순서로 공개되는 인연 기록 5건")]
+        public List<OperatorBondRecord> bondRecords = new();
+
         [Header("플레이어 로드아웃")]
         [Tooltip("오퍼레이터 선택 시 적용할 플레이어 기본 수치. 런타임 적용 단계에서 반드시 복제해 카드 강화가 이 원본을 수정하지 않게 할 것.")]
         public PlayerData playerData = new();

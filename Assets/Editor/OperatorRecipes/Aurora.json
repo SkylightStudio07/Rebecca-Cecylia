@@ -5,11 +5,36 @@
     "playStyleDescription": "전자전과 디버프 드론으로 적의 방어선을 무력화하는 천재 해커",
     "selectionPortraitPath": "Assets/Art/Character Standing Arts/오로라/chibby_portrait_1.png",
     "managementPortraitPath": "Assets/Art/Character Standing Arts/오로라/레베카/Management.png",
-    "shopPortraitPath": "Assets/Art/Character Standing Arts/오로라/레베카/오로라.default-1.png",
+    "shopPortraitPath": "Assets/Art/Character Standing Arts/오로라/레베카/Management.png",
     "shopUpperBodyPortraitPath": "Assets/Art/Character Standing Arts/오로라/레베카/오로라.shop.highlight.png",
     "shopUpperBodyPortraitDimmedPath": "Assets/Art/Character Standing Arts/오로라/레베카/오로라.shop.normal.png",
     "alternateName": "Hacker",
-    "shopDialogue": "캐나다 최고의 해커, 영입할 준비는 됐어?\n특가 할인 중이라고~",
+    "shopDialogue": "세상은 하나의 게임이야.\n플레이는, 우리의 몫인 거고.",
+    "codename": "Hacker",
+    "role": "R&C 전자전 특작조",
+    "faction": "R&C 컴퍼니, FWTO(자유세계조약기구)",
+    "height": "160cm",
+    "birthday": "8월 18일",
+    "speciality": "전자전 침투, 드론 원격 해킹",
+    "weapon": "스마트 PDW, 커스텀 전자전 포트",
+    "origin": "토론토, 캐나다 연방 (FWTO)",
+    "bondRecords": [
+        {
+            "description": "이름 : 오로라 (본명 불상)\n신장/체중 : 160cm / 47kg\n활동 지역 : 토론토(FWTO), R&C 컴퍼니 전선 네트워크\n속성 : 혼돈 선\n\n\"세상은 하나의 거대한 게임이야.\n플레이는, 우리의 몫인 거고.\""
+        },
+        {
+            "description": "R&C 컴퍼니의 외주 오퍼레이터 겸 초일류 넷러너.\n\n전장보안기술국과 아프베어의 보안 방화벽조차 장난감 다루듯 뚫어버리는 실력자로, 자칭 '캐나다 최고의 해커'.\n\n전장에서는 다수의 자율형 디버프·감속 드론을 단말기 하나로 오버클럭 제어하여 적의 통신과 기계화 장비를 순식간에 마비시킨다.\n창업자인 레베카가 거액의 외주비와 최고급 서버 자원을 약속하고 영입했으나, 정작 본인은 돈보다 '재미있는 판(Game)'을 찾아 즐겁게 전장을 휘젓고 다닌다."
+        },
+        {
+            "description": "성격은 당돌하고 장난기 넘치며 매사에 자신만만하지만... 실상은 경계공명 현상으로 인해 전파 신호와 코드를 뇌파로 직접 시각화해 인지하는 희귀한 전뇌계 공명 능력자다.\n\n전 세계의 무수한 노이즈와 데이터 패킷이 24시간 내내 뇌 속으로 밀려들어오기에 항상 만성적인 신경 과부하를 겪고 있다.\n특유의 헤드셋과 음악, 그리고 감독관과의 잡담 및 게임은 그 과열된 뇌를 식혀주는 유일한 안식처인 셈이다."
+        },
+        {
+            "description": "과거 자유세계조약기구(FWTO) 산하 전자전 부대 출신이라는 소문이 있으나, 거대기업들과 군벌들의 비밀 금고 및 독재 정권의 군사 기밀을 털어 각지의 저항군들에게 무상 배포하던 '넷러너 의적단'의 핵심 리더였다.\n\n열강들의 추적을 피해 북미를 떠나 유랑하던 중 R&C 컴퍼니와 감독관을 만났고, 처음으로 '언제든 접속을 끊고 도망칠 필요가 없는 안전한 서버(집)'를 발견했다고 느낀다.\n\n\"내 철벽 보안 시스템에 백도어 심은 범인이 누군지 알아? ...감독관 너잖아, 바보야.\""
+        },
+        {
+            "description": "이제... 감독관 없이는 내 시스템 로그인도 안 되잖아.\n\n내 모든 암호키와 전뇌 루트 권한, 감독관한테만 영구 공유해둘 테니까... 평생 책임져, 알았지?\n\n이 세상이 아무리 잔혹한 버텍스나 열강들의 체스판이라 해도 상관없어. 내 인생의 마지막 엔드게임 플레이어는 오직 너 하나뿐이니까.\n\n...사랑해, 나의 영원한 관리자님♥"
+        }
+    ],
     "unlockRewardPortraitPath": "Assets/Art/Character Standing Arts/오로라/chibby_portrait_1.png",
     "sourceTowerRosterPath": "Assets/Data/Operators/calliste/TowerRoster.asset",
     "sourceCardRosterPath": "Assets/Data/Operators/cassia/CardRoster.asset",

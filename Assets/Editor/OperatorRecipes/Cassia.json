@@ -5,6 +5,11 @@
     "playStyleDescription": "타워 건설과 카드 강화를 중심으로 방어선을 확장하는 기본 오퍼레이터",
     "selectionPortraitPath": "Assets/Art/Operator Sprite/Chibby_smile_idle.png",
     "managementPortraitPath": "Assets/Art/Character Standing Arts/레베카/레베카/오퍼레이터관리_카시아.png",
+    "shopPortraitPath": "Assets/Art/Character Standing Arts/레베카/레베카/오퍼레이터관리_카시아.png",
+    "shopUpperBodyPortraitPath": "Assets/Art/Character Standing Arts/레베카/레베카/카시아.shop.highlight.png",
+    "shopUpperBodyPortraitDimmedPath": "Assets/Art/Character Standing Arts/레베카/레베카/카시아.shop.normal.png",
+    "alternateName": "Operator",
+    "shopDialogue": "",
     "unlockRewardPortraitPath": "",
     "sourceTowerRosterPath": "Assets/Data/Prefabs/TowerRoaster.asset",
     "sourceCardRosterPath": "Assets/Data/Cards/Unlock/플레이어 카드 로스터.asset",
@@ -28,13 +33,253 @@
     "purchasePrice": 0,
     "requiredStageId": "",
     "unlockConditions": [
-        {"type":0,"requiredBestWave":0,"purchasePrice":0,"requiredStageId":""}
+        {
+            "type": 0,
+            "requiredBestWave": 0,
+            "purchasePrice": 0,
+            "requiredStageId": ""
+        }
     ],
     "upgradeTracks": [
-        {"trackId":"cassia.guard-armor","displayName":"방호 요원 장갑 강화","description":"방호 요원의 최대 체력을 높입니다.","category":0,"maxLevel":8,"levelCosts":[20,35,55,80,120,170,230,290],"requiredAffinityByLevel":[0,0,0,0,0,0,0,0],"modifiers":[{"targetKind":0,"targetUnitId":"cassia-guard","levelDeltas":[3.2,6.4,9.6,12.8,16.0,19.2,22.4,25.6]}]},
-        {"trackId":"cassia.vanguard-damage","displayName":"전진 사수 화력 강화","description":"전진 사수의 공격력을 높입니다.","category":0,"maxLevel":8,"levelCosts":[20,35,55,80,120,170,230,290],"requiredAffinityByLevel":[0,0,0,0,0,0,0,0],"modifiers":[{"targetKind":1,"targetUnitId":"cassia-vanguard","levelDeltas":[0.3,0.6,0.9,1.2,1.5,1.8,2.1,2.4]}]},
-        {"trackId":"cassia.starting-cp","displayName":"초기 CP 지급","description":"전투 시작 시 보유하는 지휘 포인트를 늘립니다.","category":0,"maxLevel":8,"levelCosts":[20,35,55,80,120,170,230,290],"requiredAffinityByLevel":[0,0,0,0,0,0,0,0],"modifiers":[{"targetKind":5,"targetUnitId":"","levelDeltas":[3,6,9,12,15,18,21,24],"isInteger":true}]},
-        {"trackId":"cassia.vanguard-range","displayName":"전진 사수 사거리 연장","description":"전진 사수의 공격 사거리를 늘립니다.","category":1,"maxLevel":8,"levelCosts":[10,15,25,40,60,90,130,180],"requiredAffinityByLevel":[0,0,0,0,0,0,0,0],"modifiers":[{"targetKind":2,"targetUnitId":"cassia-vanguard","levelDeltas":[0.3,0.6,0.9,1.2,1.5,1.8,2.1,2.4]}]},
-        {"trackId":"cassia.guard-deploy-cost","displayName":"방호 요원 배치 비용 절감","description":"방호 요원의 배치 비용을 줄입니다.","category":1,"maxLevel":8,"levelCosts":[10,15,25,40,60,90,130,180],"requiredAffinityByLevel":[0,0,0,0,0,0,0,0],"modifiers":[{"targetKind":4,"targetUnitId":"cassia-guard","levelDeltas":[-1,-2,-3,-4,-5,-6,-7,-7],"isInteger":true,"hasMinValue":true,"minValue":1.0}]}
+        {
+            "trackId": "cassia.guard-armor",
+            "displayName": "방호 요원 장갑 강화",
+            "description": "방호 요원의 최대 체력을 높입니다.",
+            "category": 0,
+            "maxLevel": 8,
+            "levelCosts": [
+                20,
+                35,
+                55,
+                80,
+                120,
+                170,
+                230,
+                290
+            ],
+            "requiredAffinityByLevel": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            "modifiers": [
+                {
+                    "targetKind": 0,
+                    "targetUnitId": "cassia-guard",
+                    "levelDeltas": [
+                        3.200000047683716,
+                        6.400000095367432,
+                        9.600000381469727,
+                        12.800000190734864,
+                        16.0,
+                        19.200000762939454,
+                        22.399999618530275,
+                        25.600000381469728
+                    ],
+                    "isInteger": false,
+                    "hasMinValue": false,
+                    "minValue": 0.0,
+                    "hasMaxValue": false,
+                    "maxValue": 0.0
+                }
+            ]
+        },
+        {
+            "trackId": "cassia.vanguard-damage",
+            "displayName": "전진 사수 화력 강화",
+            "description": "전진 사수의 공격력을 높입니다.",
+            "category": 0,
+            "maxLevel": 8,
+            "levelCosts": [
+                20,
+                35,
+                55,
+                80,
+                120,
+                170,
+                230,
+                290
+            ],
+            "requiredAffinityByLevel": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            "modifiers": [
+                {
+                    "targetKind": 1,
+                    "targetUnitId": "cassia-vanguard",
+                    "levelDeltas": [
+                        0.30000001192092898,
+                        0.6000000238418579,
+                        0.8999999761581421,
+                        1.2000000476837159,
+                        1.5,
+                        1.7999999523162842,
+                        2.0999999046325685,
+                        2.4000000953674318
+                    ],
+                    "isInteger": false,
+                    "hasMinValue": false,
+                    "minValue": 0.0,
+                    "hasMaxValue": false,
+                    "maxValue": 0.0
+                }
+            ]
+        },
+        {
+            "trackId": "cassia.starting-cp",
+            "displayName": "초기 CP 지급",
+            "description": "전투 시작 시 보유하는 지휘 포인트를 늘립니다.",
+            "category": 0,
+            "maxLevel": 8,
+            "levelCosts": [
+                20,
+                35,
+                55,
+                80,
+                120,
+                170,
+                230,
+                290
+            ],
+            "requiredAffinityByLevel": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            "modifiers": [
+                {
+                    "targetKind": 5,
+                    "targetUnitId": "",
+                    "levelDeltas": [
+                        3.0,
+                        6.0,
+                        9.0,
+                        12.0,
+                        15.0,
+                        18.0,
+                        21.0,
+                        24.0
+                    ],
+                    "isInteger": true,
+                    "hasMinValue": false,
+                    "minValue": 0.0,
+                    "hasMaxValue": false,
+                    "maxValue": 0.0
+                }
+            ]
+        },
+        {
+            "trackId": "cassia.vanguard-range",
+            "displayName": "전진 사수 사거리 연장",
+            "description": "전진 사수의 공격 사거리를 늘립니다.",
+            "category": 1,
+            "maxLevel": 8,
+            "levelCosts": [
+                10,
+                15,
+                25,
+                40,
+                60,
+                90,
+                130,
+                180
+            ],
+            "requiredAffinityByLevel": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            "modifiers": [
+                {
+                    "targetKind": 2,
+                    "targetUnitId": "cassia-vanguard",
+                    "levelDeltas": [
+                        0.30000001192092898,
+                        0.6000000238418579,
+                        0.8999999761581421,
+                        1.2000000476837159,
+                        1.5,
+                        1.7999999523162842,
+                        2.0999999046325685,
+                        2.4000000953674318
+                    ],
+                    "isInteger": false,
+                    "hasMinValue": false,
+                    "minValue": 0.0,
+                    "hasMaxValue": false,
+                    "maxValue": 0.0
+                }
+            ]
+        },
+        {
+            "trackId": "cassia.guard-deploy-cost",
+            "displayName": "방호 요원 배치 비용 절감",
+            "description": "방호 요원의 배치 비용을 줄입니다.",
+            "category": 1,
+            "maxLevel": 8,
+            "levelCosts": [
+                10,
+                15,
+                25,
+                40,
+                60,
+                90,
+                130,
+                180
+            ],
+            "requiredAffinityByLevel": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            "modifiers": [
+                {
+                    "targetKind": 4,
+                    "targetUnitId": "cassia-guard",
+                    "levelDeltas": [
+                        -1.0,
+                        -2.0,
+                        -3.0,
+                        -4.0,
+                        -5.0,
+                        -6.0,
+                        -7.0,
+                        -7.0
+                    ],
+                    "isInteger": true,
+                    "hasMinValue": true,
+                    "minValue": 1.0,
+                    "hasMaxValue": false,
+                    "maxValue": 0.0
+                }
+            ]
+        }
     ]
 }

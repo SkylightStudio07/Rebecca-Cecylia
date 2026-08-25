@@ -185,6 +185,15 @@ namespace RCCom.EditorTools
                 asset.shopUpperBodyPortraitDimmed = shopUpperBodyPortraitDimmed;
                 asset.alternateName = recipe.alternateName ?? string.Empty;
                 asset.shopDialogue = recipe.shopDialogue ?? string.Empty;
+                asset.codename = recipe.codename ?? string.Empty;
+                asset.role = recipe.role ?? string.Empty;
+                asset.faction = recipe.faction ?? string.Empty;
+                asset.height = recipe.height ?? string.Empty;
+                asset.birthday = recipe.birthday ?? string.Empty;
+                asset.speciality = recipe.speciality ?? string.Empty;
+                asset.weapon = recipe.weapon ?? string.Empty;
+                asset.origin = recipe.origin ?? string.Empty;
+                asset.bondRecords = CloneBondRecords(recipe.bondRecords);
                 asset.unlockRewardPortrait = unlockRewardPortrait;
                 asset.playerData = ClonePlayerData(recipe.playerData);
                 asset.towerRoster = towerRoster;
@@ -498,6 +507,21 @@ namespace RCCom.EditorTools
                     requiredBestWave = condition.requiredBestWave,
                     purchasePrice = condition.purchasePrice,
                     requiredStageId = condition.requiredStageId ?? string.Empty,
+                });
+            }
+
+            return clone;
+        }
+
+        internal static List<OperatorBondRecord> CloneBondRecords(List<OperatorBondRecord> source)
+        {
+            var clone = new List<OperatorBondRecord>();
+            for (int i = 0; i < 5; i++)
+            {
+                OperatorBondRecord record = source != null && i < source.Count ? source[i] : null;
+                clone.Add(new OperatorBondRecord
+                {
+                    description = record != null ? record.description ?? string.Empty : string.Empty,
                 });
             }
 

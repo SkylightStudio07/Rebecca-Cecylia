@@ -57,6 +57,7 @@ namespace RCCom.EditorTools
         private enum StudioTab
         {
             Identity,
+            Dossier,
             Loadout,
             Dialogue,
             Upgrades,
@@ -165,7 +166,7 @@ namespace RCCom.EditorTools
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
             _tabIndex = GUILayout.Toolbar(
                 _tabIndex,
-                new[] { "Identity", "Loadout", "Dialogue", "Upgrades", "Package" },
+                new[] { "Identity", "Dossier", "Loadout", "Dialogue", "Upgrades", "Package" },
                 EditorStyles.toolbarButton);
             EditorGUILayout.EndHorizontal();
 
@@ -174,6 +175,9 @@ namespace RCCom.EditorTools
             {
                 case StudioTab.Identity:
                     DrawIdentityTab();
+                    break;
+                case StudioTab.Dossier:
+                    DrawDossierTab();
                     break;
                 case StudioTab.Loadout:
                     DrawLoadoutTab();
@@ -470,6 +474,62 @@ namespace RCCom.EditorTools
             DrawSaveButton();
         }
 
+        private void DrawDossierTab()
+        {
+            GUILayout.Label("Operator Dossier", EditorStyles.boldLabel);
+            EditorGUILayout.HelpBox(
+                "프로필 항목과 인연 기록은 OperatorDefinition에 포함되어 Addressables 콘텐츠 갱신만으로 교체됩니다.",
+                MessageType.Info);
+
+            _recipe.codename = EditorGUILayout.TextField("Codename", _recipe.codename ?? string.Empty);
+            _recipe.role = EditorGUILayout.TextField("Role", _recipe.role ?? string.Empty);
+            _recipe.faction = EditorGUILayout.TextField("Faction", _recipe.faction ?? string.Empty);
+            _recipe.height = EditorGUILayout.TextField("Height", _recipe.height ?? string.Empty);
+            _recipe.birthday = EditorGUILayout.TextField("Birthday", _recipe.birthday ?? string.Empty);
+            _recipe.speciality = EditorGUILayout.TextField("Speciality", _recipe.speciality ?? string.Empty);
+            _recipe.weapon = EditorGUILayout.TextField("Weapon", _recipe.weapon ?? string.Empty);
+            _recipe.origin = EditorGUILayout.TextField("Origin", _recipe.origin ?? string.Empty);
+
+            GUILayout.Space(12);
+            GUILayout.Label("Bond Archive", EditorStyles.boldLabel);
+            EditorGUILayout.HelpBox(
+                "낯섦(0) · 호감(25) · 기쁨(50) · 사랑(75) · EX(100)에서 순서대로 공개됩니다. 1단계는 처음부터 열립니다.",
+                MessageType.None);
+
+            EnsureBondRecords(_recipe);
+            string[] labels = { "1 · 낯섦", "2 · 호감", "3 · 기쁨", "4 · 사랑", "5 · EX" };
+            for (int i = 0; i < _recipe.bondRecords.Count; i++)
+            {
+                EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+                GUILayout.Label(labels[i], EditorStyles.miniBoldLabel);
+                _recipe.bondRecords[i].description = EditorGUILayout.TextArea(
+                    _recipe.bondRecords[i].description ?? string.Empty,
+                    GUILayout.MinHeight(62));
+                EditorGUILayout.EndVertical();
+            }
+
+            DrawSaveButton();
+        }
+
+        private static void EnsureBondRecords(OperatorAssetRecipe recipe)
+        {
+            recipe.bondRecords ??= new List<OperatorBondRecord>();
+            while (recipe.bondRecords.Count < 5)
+            {
+                recipe.bondRecords.Add(new OperatorBondRecord());
+            }
+
+            if (recipe.bondRecords.Count > 5)
+            {
+                recipe.bondRecords.RemoveRange(5, recipe.bondRecords.Count - 5);
+            }
+
+            for (int i = 0; i < recipe.bondRecords.Count; i++)
+            {
+                recipe.bondRecords[i] ??= new OperatorBondRecord();
+            }
+        }
+
         private static void EnsureIntListSize(List<int> values, int size)
         {
             while (values.Count < size) values.Add(0);
@@ -758,6 +818,7 @@ namespace RCCom.EditorTools
             }
 
             _dialogueSet = AssetDatabase.LoadAssetAtPath<OperatorDialogueSet>(_recipe.dialogueSetPath);
+            EnsureBondRecords(_recipe);
             _dialogueSerializedObject = _dialogueSet == null ? null : new SerializedObject(_dialogueSet);
             if (_dialogueSet != null)
             {
@@ -780,6 +841,8 @@ namespace RCCom.EditorTools
                 _recipe.dialogueSetPath = AssetDatabase.GetAssetPath(_dialogueSet);
                 EditorUtility.SetDirty(_dialogueSet);
             }
+
+            EnsureBondRecords(_recipe);
 
             string absolutePath = Path.GetFullPath(_selectedRecipePath);
             File.WriteAllText(absolutePath, JsonUtility.ToJson(_recipe, true), new UTF8Encoding(false));
