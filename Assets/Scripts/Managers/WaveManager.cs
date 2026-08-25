@@ -14,9 +14,8 @@ namespace RCCom.Managers
     /// 직접 리스트를 들고 자기 Update()에서 Tick()만 호출 — 각 EnemyInstance가 스스로
     /// 이동/효과를 처리한다.
     ///
-    /// GDD "웨이브 난이도 생성 규칙(예산 방식)" 반영. 정예/무리 수식어와 실제 보스 유닛은
-    /// GDD에도 "여유시"로 명시되어 있어 이번 단계에서는 제외 (보스 웨이브 "분기"는 만들되,
-    /// bossDefinition을 비워두면 일반 소환으로 대체됨).
+    /// GDD "웨이브 난이도 생성 규칙(예산 방식)" 반영. 무한 모드 매 5웨이브에는 별도 적
+    /// Definition을 추가하지 않고 이미 생성된 스폰 큐의 적 하나를 런타임 보스로 승급한다.
     /// </summary>
     public class WaveManager : MonoBehaviour
     {
@@ -38,10 +37,8 @@ namespace RCCom.Managers
         [SerializeField] private float spawnIntervalDecayPerWave = 0.05f;
         [SerializeField] private float minSpawnInterval = 0.5f;
 
-        [Header("보스 웨이브: n % bossWaveInterval == 0 → 예산 절반. bossDefinition 비우면 일반 소환으로 대체 (여유시 확장 지점)")]
+        [Header("무한 모드 보스 승급: 일반 웨이브 편성 중 1마리를 매 N웨이브마다 승급")]
         [SerializeField] private int bossWaveInterval = 5;
-        [SerializeField] private float bossBudgetMultiplier = 0.5f;
-        [SerializeField] private EnemyDefinition bossDefinition;
 
         [Header("웨이브 클리어 후 다음 웨이브 시작까지 대기(빌드 페이즈) — 첫 웨이브 전에도 동일하게 적용")]
         [SerializeField] private float buildPhaseDuration = 10f;
@@ -93,6 +90,9 @@ namespace RCCom.Managers
         private int _stageWaveIndex = -1;
         private float _stageHealthMultiplier = 1f;
         private bool _stageCompleted;
+        private int _nextSpawnQueueIndex;
+        private int _bossSpawnQueueIndex = -1;
+        private EnemyData _bossRuntimeData;
 
         /// <summary>현재 전투가 고정 스테이지 편성인지 HUD/결과 화면이 확인할 수 있다.</summary>
         public bool IsStageMode => _isStageMode;
@@ -142,15 +142,18 @@ namespace RCCom.Managers
             stateTimerRemaining = _stateTimer;
 
             queuedEnemyNames.Clear();
+            int queueIndex = _nextSpawnQueueIndex;
             foreach (EnemyDefinition definition in _spawnQueue)
             {
-                queuedEnemyNames.Add(definition.data.displayName);
+                string suffix = queueIndex == _bossSpawnQueueIndex ? " (BOSS)" : string.Empty;
+                queuedEnemyNames.Add(definition.data.displayName + suffix);
+                queueIndex++;
             }
 
             aliveEnemyNames.Clear();
             foreach (EnemyInstance enemy in _aliveEnemies)
             {
-                aliveEnemyNames.Add(enemy.Data.displayName);
+                aliveEnemyNames.Add(enemy.Data.displayName + (enemy.IsBoss ? " (BOSS)" : string.Empty));
             }
         }
 
@@ -175,13 +178,19 @@ namespace RCCom.Managers
 
             _waveNumber++;
             _spawnQueue.Clear();
+            ResetBossPromotion();
 
-            foreach (EnemyDefinition definition in BuildSpawnQueue(_waveNumber))
+            List<EnemyDefinition> wave = BuildSpawnQueue(_waveNumber);
+            PrepareBossPromotion(wave);
+            foreach (EnemyDefinition definition in wave)
             {
                 _spawnQueue.Enqueue(definition);
             }
 
-            Debug.Log($"[Wave] {_waveNumber} 웨이브 시작 (적 {_spawnQueue.Count}마리)");
+            string bossSummary = _bossRuntimeData != null
+                ? $", 보스 {_bossRuntimeData.displayName} 1마리 승급"
+                : string.Empty;
+            Debug.Log($"[Wave] {_waveNumber} 웨이브 시작 (적 {_spawnQueue.Count}마리{bossSummary})");
 
             _isWaiting = false;
             _stateTimer = 0f;
@@ -203,6 +212,7 @@ namespace RCCom.Managers
             _stageHealthMultiplier = Mathf.Max(0.01f, wave != null ? wave.healthMultiplier : 1f);
             _spawnQueue.Clear();
             _stageSpawnDelays.Clear();
+            ResetBossPromotion();
 
             if (wave != null && wave.spawns != null)
             {
@@ -274,7 +284,9 @@ namespace RCCom.Managers
                 return;
             }
 
-            SpawnOne(_spawnQueue.Dequeue());
+            bool isBoss = _nextSpawnQueueIndex == _bossSpawnQueueIndex && _bossRuntimeData != null;
+            SpawnOne(_spawnQueue.Dequeue(), isBoss ? _bossRuntimeData : null, isBoss);
+            _nextSpawnQueueIndex++;
             _stateTimer = _isStageMode
                 ? (_stageSpawnDelays.Count > 0 ? _stageSpawnDelays.Dequeue() : 0f)
                 : CalculateSpawnInterval(_waveNumber);
@@ -315,16 +327,7 @@ namespace RCCom.Managers
         private List<EnemyDefinition> BuildSpawnQueue(int waveNumber)
         {
             var queue = new List<EnemyDefinition>();
-
-            bool isBossWave = bossWaveInterval > 0 && waveNumber % bossWaveInterval == 0;
-
-            if (isBossWave && bossDefinition != null)
-            {
-                queue.Add(bossDefinition);
-                return queue;
-            }
-
-            float budget = CalculateBudget(waveNumber) * (isBossWave ? bossBudgetMultiplier : 1f);
+            float budget = CalculateBudget(waveNumber);
 
             var eligible = new List<EnemyDefinition>();
             if (enemyRoster == null || enemyRoster.enemies == null)
@@ -365,7 +368,35 @@ namespace RCCom.Managers
             return queue;
         }
 
-        private void SpawnOne(EnemyDefinition definition)
+        private void PrepareBossPromotion(IReadOnlyList<EnemyDefinition> wave)
+        {
+            if (!EndlessBossPromotion.ShouldPromote(
+                    BattleSession.Mode,
+                    _waveNumber,
+                    bossWaveInterval) || wave == null || wave.Count == 0)
+            {
+                return;
+            }
+
+            _bossSpawnQueueIndex = _rng.Next(wave.Count);
+            _bossRuntimeData = EndlessBossPromotion.CreateRuntimeData(wave, _bossSpawnQueueIndex);
+            if (_bossRuntimeData == null)
+            {
+                _bossSpawnQueueIndex = -1;
+            }
+        }
+
+        private void ResetBossPromotion()
+        {
+            _nextSpawnQueueIndex = 0;
+            _bossSpawnQueueIndex = -1;
+            _bossRuntimeData = null;
+        }
+
+        private void SpawnOne(
+            EnemyDefinition definition,
+            EnemyData runtimeData = null,
+            bool isBoss = false)
         {
             IReadOnlyList<Vector2> path = mapManager.Waypoints;
             if (path.Count == 0)
@@ -378,7 +409,7 @@ namespace RCCom.Managers
                 definition = definition,
                 position = path[0],
             };
-            instance.Spawn(path, baseController);
+            instance.Spawn(path, baseController, runtimeData, isBoss);
             instance.ApplyHealthMultiplier(CalculateHealthMultiplier(_waveNumber));
 
             instance.Died += () =>

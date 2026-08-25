@@ -31,7 +31,7 @@ namespace RCCom.Effects.Unit.Concrete
             target.TakeDamage(ctx.self.Data.attackDamage * ctx.self.CalculateDamageMultiplier(), ctx.self.Position);
             target.ApplyPoison(poisonDamagePerSecond, poisonDuration);
 
-            if (ctx.self.Data.attackRange > ctx.self.ContactRange)
+            if (ctx.self.Data.attackRange > target.GetContactRange(ctx.self))
             {
                 FakeProjectile.Spawn(fakeProjectilePrefab, ctx.self.Position, target.position, ctx.self.Data);
             }

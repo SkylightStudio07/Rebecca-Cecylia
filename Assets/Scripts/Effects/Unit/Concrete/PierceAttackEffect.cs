@@ -31,7 +31,9 @@ namespace RCCom.Effects.Unit.Concrete
 
             Vector2 origin = ctx.self.Position;
             Vector2 beamDirection = (target.position - origin).normalized;
-            float range = ctx.self.EffectiveAttackRange;
+            // 승급 보스와 맞닿는 중심점 거리는 일반 적보다 넓으므로 빔 길이도 대상별 실제
+            // 공격 범위를 사용해야 주 대상 직전에 끊기지 않는다.
+            float range = ctx.self.GetEffectiveAttackRange(target);
             float damage = ctx.self.Data.attackDamage * ctx.self.CalculateDamageMultiplier();
 
             List<EnemyInstance> targets = PierceAttackMath.GetTargetsInBeam(

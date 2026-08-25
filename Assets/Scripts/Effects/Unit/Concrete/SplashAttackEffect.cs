@@ -42,7 +42,7 @@ namespace RCCom.Effects.Unit.Concrete
             float damage = ctx.self.Data.attackDamage * ctx.self.CalculateDamageMultiplier();
             target.TakeDamage(damage, ctx.self.Position);
 
-            if (ctx.self.Data.attackRange > ctx.self.ContactRange)
+            if (ctx.self.Data.attackRange > target.GetContactRange(ctx.self))
             {
                 FakeProjectile.Spawn(
                     fakeProjectilePrefab, ctx.self.Position, target.position,

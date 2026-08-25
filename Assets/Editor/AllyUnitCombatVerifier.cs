@@ -34,6 +34,7 @@ namespace RCCom.EditorTools
                 VerifyFinalWaitPointAcrossShortFirstSegment(temporaryObjects);
                 VerifyAttackWhileAdvancing(temporaryObjects);
                 VerifyContactRangeStopsBothSides(temporaryObjects);
+                VerifyPromotedBossContactRangeStopsBothSides(temporaryObjects);
                 VerifyContactBoundaryOnLargeStep(temporaryObjects);
                 VerifySetEngagementTargetUsesContactRange(temporaryObjects);
                 VerifyAlliesFormSpawnOrderedLine(temporaryObjects);
@@ -58,7 +59,7 @@ namespace RCCom.EditorTools
                 VerifyPoisonAttackDamage(temporaryObjects);
                 VerifyTowerReinforcementAuraStackingAndExpiration(temporaryObjects);
 
-                Debug.Log("[AllyUnitCombatVerifier] 아군 유닛 전투 코어 29개 시나리오 검증 통과");
+                Debug.Log("[AllyUnitCombatVerifier] 아군 유닛 전투 코어 30개 시나리오 검증 통과");
             }
             finally
             {
@@ -190,6 +191,62 @@ namespace RCCom.EditorTools
             Assert(unit.State == AllyUnitState.Engaging, "contactRange 진입 후 아군이 Engaging이 아닙니다.");
             AssertNear(unit.Position.x, unitStart, "접촉 거리 안에서 아군이 이동했습니다.");
             AssertNear(enemy.position.x, enemyStart, "접촉 거리 안에서 적이 이동했습니다.");
+        }
+
+        private static void VerifyPromotedBossContactRangeStopsBothSides(
+            List<UnityEngine.Object> temporaryObjects)
+        {
+            AllyUnitDefinition allyDefinition = CreateAlly(
+                temporaryObjects,
+                100f,
+                10f,
+                0f,
+                0f,
+                false);
+            EnemyDefinition enemyDefinition = CreateEnemy(
+                temporaryObjects,
+                100f,
+                10f,
+                0f,
+                0f,
+                1f,
+                false);
+            var path = new List<Vector2> { new(0f, 0f), new(10f, 0f) };
+            var ally = new AllyUnitInstance();
+            ally.Spawn(allyDefinition, path);
+            EnemyInstance boss = SpawnEnemy(
+                enemyDefinition,
+                path,
+                new Vector2(8f, 0f),
+                true);
+            float expectedContactRange = ally.ContactRange * EndlessBossPromotion.VisualSizeMultiplier;
+
+            ally.Tick(1f, new[] { boss }, new[] { ally });
+            boss.Tick(1f);
+
+            AssertNear(Vector2.Distance(ally.Position, boss.position), expectedContactRange,
+                "아군이 승급 보스의 확대된 접촉 경계 안으로 파고들었습니다.");
+            Assert(ally.State == AllyUnitState.Engaging && ally.CurrentTarget == boss,
+                "확대된 접촉 경계의 승급 보스를 아군이 교전 대상으로 유지하지 않았습니다.");
+
+            var stationaryAlly = new AllyUnitInstance();
+            stationaryAlly.Spawn(
+                CreateAlly(temporaryObjects, 100f, 0f, 0f, 0f, false),
+                new[] { Vector2.zero, new Vector2(2f, 0f) });
+            EnemyInstance advancingBoss = SpawnEnemy(
+                enemyDefinition,
+                path,
+                Vector2.zero,
+                true);
+            // 스폰점과 첫 웨이포인트가 같으면 첫 Tick은 다음 이동 구간을 여는 데 사용된다.
+            advancingBoss.Tick(0f);
+            stationaryAlly.Tick(0f, new[] { advancingBoss }, new[] { stationaryAlly });
+            advancingBoss.Tick(1f);
+
+            AssertNear(
+                Vector2.Distance(advancingBoss.position, stationaryAlly.Position),
+                stationaryAlly.ContactRange * EndlessBossPromotion.VisualSizeMultiplier,
+                "승급 보스가 이동 중 아군의 확대된 접촉 경계를 관통했습니다.");
         }
 
         private static void VerifyContactBoundaryOnLargeStep(List<UnityEngine.Object> temporaryObjects)
@@ -857,14 +914,15 @@ namespace RCCom.EditorTools
         private static EnemyInstance SpawnEnemy(
             EnemyDefinition definition,
             IReadOnlyList<Vector2> path,
-            Vector2 position)
+            Vector2 position,
+            bool isPromotedBoss = false)
         {
             var enemy = new EnemyInstance
             {
                 definition = definition,
                 position = position,
             };
-            enemy.Spawn(path, null);
+            enemy.Spawn(path, null, null, isPromotedBoss);
             enemy.position = position;
             return enemy;
         }

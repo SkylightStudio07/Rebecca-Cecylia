@@ -99,12 +99,14 @@ namespace RCCom.Core
             }
 
             EnemyInstance best = null;
-            float attackRange = self.EffectiveAttackRange;
 
             foreach (EnemyInstance candidate in candidates)
             {
                 if (candidate == null || !candidate.IsAlive ||
-                    !IsWithinRange(self.Position, candidate.position, attackRange))
+                    !IsWithinRange(
+                        self.Position,
+                        candidate.position,
+                        self.GetEffectiveAttackRange(candidate)))
                 {
                     continue;
                 }
@@ -135,7 +137,10 @@ namespace RCCom.Core
             foreach (EnemyInstance candidate in candidates)
             {
                 if (candidate == null || !candidate.IsAlive ||
-                    !IsWithinRange(self.Position, candidate.position, self.ContactRange))
+                    !IsWithinRange(
+                        self.Position,
+                        candidate.position,
+                        candidate.GetContactRange(self)))
                 {
                     continue;
                 }

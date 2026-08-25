@@ -24,11 +24,9 @@ namespace RCCom.Effects.Unit.Concrete
 
             target.TakeDamage(ctx.self.Data.attackDamage * ctx.self.CalculateDamageMultiplier(), ctx.self.Position);
 
-            // 근접 유닛은 EffectiveAttackRange가 ContactRange로 보정돼 attackRange보다 커지므로
-            // (AllyUnitInstance.EffectiveAttackRange), attackRange가 ContactRange를 실제로 넘는
-            // 유닛만 "진짜 원거리"로 보고 투사체를 띄운다. 근접 유닛은 현행(연출 없는 즉발 타격)을
-            // 그대로 유지한다 — {{user}} 확인.
-            if (ctx.self.Data.attackRange > ctx.self.ContactRange)
+            // 승급 보스는 대상별 접촉 거리가 커진다. 고정 ContactRange와 비교하면 보스와 맞닿아
+            // 공격하는 유닛도 원거리로 오인하므로 실제 대상 접촉 경계를 기준으로 연출을 고른다.
+            if (ctx.self.Data.attackRange > target.GetContactRange(ctx.self))
             {
                 FakeProjectile.Spawn(fakeProjectilePrefab, ctx.self.Position, target.position, ctx.self.Data);
             }
