@@ -1,0 +1,1 @@
+{"partId":"thruster-boost-mk1","slot":0,"grade":1,"archetypeId":"boost","displayName":"부스트 추진기 Mk1","description":"평시 이동속도를 30% 높인다.","price":180,"statOverride":{"moveSpeed":6.5},"effects":[]}

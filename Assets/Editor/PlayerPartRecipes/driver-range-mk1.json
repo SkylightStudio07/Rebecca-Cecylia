@@ -1,0 +1,1 @@
+{"partId":"driver-range-mk1","slot":3,"grade":1,"archetypeId":"range","displayName":"사거리형 드라이버 Mk1","description":"스킬 사거리 6.5.","price":170,"statOverride":{"skillCooldown":12.0,"skillRange":6.5,"skillDamage":5.0,"skillBurstCount":4,"skillBurstInterval":0.3,"skillChargeCapacity":1},"effects":[]}

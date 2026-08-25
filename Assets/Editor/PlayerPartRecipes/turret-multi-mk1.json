@@ -1,0 +1,1 @@
+{"partId":"turret-multi-mk1","slot":1,"grade":1,"archetypeId":"multi-barrel","displayName":"다연장 포탑 Mk1","description":"0.12초 간격 2연사, 발당 피해 65%.","price":200,"statOverride":{"attackDamage":5.0,"attackRange":4.0,"attackInterval":1.0,"projectileSpeed":1.0},"effects":[{"type":"multi-barrel","shotCount":2,"shotInterval":0.12,"damageMultiplier":0.65}]}

@@ -1,0 +1,1 @@
+{"partId":"turret-chain-mk2","slot":1,"grade":2,"archetypeId":"chain-spark","displayName":"연쇄 스파크 포탑 Mk2","description":"최근접 적에게 최대 4회 전이하며 전이마다 피해가 20% 감소한다.","price":530,"statOverride":{"attackDamage":5.0,"attackRange":4.0,"attackInterval":1.0,"projectileSpeed":1.0},"effects":[{"type":"chain","jumpCount":4,"damageFalloff":0.2}]}

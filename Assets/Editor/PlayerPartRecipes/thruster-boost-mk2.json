@@ -1,0 +1,1 @@
+{"partId":"thruster-boost-mk2","slot":0,"grade":2,"archetypeId":"boost","displayName":"부스트 추진기 Mk2","description":"평시 이동속도를 70% 높인다.","price":460,"statOverride":{"moveSpeed":8.5},"effects":[]}

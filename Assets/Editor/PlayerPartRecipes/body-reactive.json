@@ -1,0 +1,1 @@
+{"partId":"body-reactive","slot":2,"grade":3,"archetypeId":"reactive","displayName":"리액티브 바디","description":"최대체력 45와 피격 후 0.5초 무적을 제공한다.","price":560,"statOverride":{"maxHealth":45.0,"hitInvulnerabilityDuration":0.5},"effects":[]}

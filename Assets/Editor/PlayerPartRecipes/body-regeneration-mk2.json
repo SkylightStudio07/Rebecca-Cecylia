@@ -1,0 +1,1 @@
+{"partId":"body-regeneration-mk2","slot":2,"grade":2,"archetypeId":"regenerative-armor","displayName":"재생장갑 바디 Mk2","description":"2초 무피격 뒤 초당 최대체력 4%를 회복한다.","price":460,"statOverride":{"maxHealth":42.0},"effects":[{"type":"regenerative-armor","delayAfterDamage":2.0,"maxHealthPerSecond":0.04}]}

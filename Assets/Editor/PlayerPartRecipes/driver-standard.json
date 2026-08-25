@@ -1,0 +1,1 @@
+{"partId":"driver-standard","slot":3,"grade":0,"archetypeId":"standard","displayName":"표준 드라이버","description":"12초 쿨다운, 4연타 기준 오버드라이브.","price":0,"statOverride":{"skillCooldown":12.0,"skillRange":5.0,"skillDamage":5.0,"skillBurstCount":4,"skillBurstInterval":0.3,"skillChargeCapacity":1},"effects":[]}

@@ -1,0 +1,1 @@
+{"partId":"thruster-standard","slot":0,"grade":0,"archetypeId":"standard","displayName":"표준 추진기","description":"기체 기준 이동속도를 재현하는 Common 폴백.","price":0,"statOverride":{"moveSpeed":5.0},"effects":[]}

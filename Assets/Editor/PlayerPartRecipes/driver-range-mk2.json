@@ -1,0 +1,1 @@
+{"partId":"driver-range-mk2","slot":3,"grade":2,"archetypeId":"range","displayName":"사거리형 드라이버 Mk2","description":"스킬 사거리 8.5.","price":420,"statOverride":{"skillCooldown":12.0,"skillRange":8.5,"skillDamage":5.0,"skillBurstCount":4,"skillBurstInterval":0.3,"skillChargeCapacity":1},"effects":[]}

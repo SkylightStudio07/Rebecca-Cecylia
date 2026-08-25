@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 75e0a4a5801f8e74d8b7ba1dd2e80799, type: 3}
+  m_Name: turret-standard
+  m_EditorClassIdentifier: Assembly-CSharp::RCCom.Definitions.PlayerPart.PlayerPartDefinition
+  partId: turret-standard
+  slot: 1
+  grade: 0
+  archetypeId: single
+  displayName: "\uD45C\uC900 \uD3EC\uD0D1"
+  description: "\uAE30\uC900 \uB2E8\uBC1C \uACF5\uACA9\uC744 \uC7AC\uD604\uD558\uB294
+    Common \uD3F4\uBC31."
+  price: 0
+  statOverride:
+    moveSpeed: 0
+    skillOverdriveMoveSpeedMultiplier: 0
+    attackDamage: 5
+    attackRange: 4
+    attackInterval: 1
+    projectileSpeed: 1
+    maxHealth: 0
+    hitInvulnerabilityDuration: 0
+    skillCooldown: 0
+    skillRange: 0
+    skillDamage: 0
+    skillBurstCount: 0
+    skillBurstInterval: 0
+    skillChargeCapacity: 0
+  effects:
+  - {fileID: 11400000, guid: 3fcf7989a139f02489b741850034bdfa, type: 2}
+  icon: {fileID: 0}
+  overlaySprite: {fileID: 0}

@@ -1,0 +1,1 @@
+{"partId":"turret-pierce-mk2","slot":1,"grade":2,"archetypeId":"pierce-laser","displayName":"관통 레이저 포탑 Mk2","description":"최대 6개체 관통, 관통마다 피해 12% 감소.","price":520,"statOverride":{"attackDamage":5.0,"attackRange":4.0,"attackInterval":1.0,"projectileSpeed":1.0},"effects":[{"type":"pierce","maxTargets":6,"damageFalloff":0.12,"beamHalfAngleDegrees":4.0}]}

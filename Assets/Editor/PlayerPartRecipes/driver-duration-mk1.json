@@ -1,0 +1,1 @@
+{"partId":"driver-duration-mk1","slot":3,"grade":1,"archetypeId":"duration","displayName":"지속형 드라이버 Mk1","description":"오버드라이브 타격 횟수 5회.","price":190,"statOverride":{"skillCooldown":12.0,"skillRange":5.0,"skillDamage":5.0,"skillBurstCount":5,"skillBurstInterval":0.3,"skillChargeCapacity":1},"effects":[]}

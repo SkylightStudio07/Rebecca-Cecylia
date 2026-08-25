@@ -1,0 +1,1 @@
+{"partId":"special-revival","slot":4,"grade":3,"archetypeId":"one-time-revival","displayName":"1회 부활 모듈","description":"플레이어 사망 또는 거점 파괴를 전투당 1회 무효화한다.","price":600,"statOverride":{},"effects":[{"type":"one-time-revival","restoredHealthRatio":0.5,"invulnerabilityDuration":1.5}]}

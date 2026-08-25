@@ -1,0 +1,1 @@
+{"partId":"thruster-inertia-mk2","slot":0,"grade":2,"archetypeId":"inertia","displayName":"관성 추진기 Mk2","description":"1초 직진 뒤 빠르게 가속해 최대 이동속도 9.5에 도달한다.","price":440,"statOverride":{"moveSpeed":6.75},"effects":[{"type":"inertia","accelerationDelay":1.0,"rampDuration":1.0,"maximumSpeedMultiplier":1.407407}]}

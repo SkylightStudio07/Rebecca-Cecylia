@@ -1,0 +1,1 @@
+{"partId":"driver-dual-core","slot":3,"grade":3,"archetypeId":"dual-core","displayName":"이중 코어 드라이버","description":"8초 쿨다운의 오버드라이브를 최대 2회 비축한다.","price":640,"statOverride":{"skillCooldown":8.0,"skillRange":5.0,"skillDamage":5.0,"skillBurstCount":4,"skillBurstInterval":0.3,"skillChargeCapacity":2},"effects":[]}

@@ -1,0 +1,1 @@
+{"partId":"special-shield-mk2","slot":4,"grade":2,"archetypeId":"rechargeable-shield","displayName":"충전형 보호막 모듈 Mk2","description":"피해 14를 흡수하는 배리어가 7초마다 재충전된다.","price":540,"statOverride":{},"effects":[{"type":"rechargeable-shield","barrierAmount":14.0,"rechargeInterval":7.0}]}

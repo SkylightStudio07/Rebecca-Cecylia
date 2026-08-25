@@ -1,0 +1,1 @@
+{"partId":"special-regeneration-mk2","slot":4,"grade":2,"archetypeId":"passive-regeneration","displayName":"패시브 재생 모듈 Mk2","description":"초당 4% 회복하고 스킬 사용 시 즉시 20% 회복한다.","price":520,"statOverride":{},"effects":[{"type":"passive-regeneration","maxHealthPerSecond":0.04,"healOnSkillRatio":0.2}]}

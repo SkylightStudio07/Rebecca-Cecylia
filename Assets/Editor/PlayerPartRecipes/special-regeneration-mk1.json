@@ -1,0 +1,1 @@
+{"partId":"special-regeneration-mk1","slot":4,"grade":1,"archetypeId":"passive-regeneration","displayName":"패시브 재생 모듈 Mk1","description":"초당 최대체력 3%를 회복한다.","price":240,"statOverride":{},"effects":[{"type":"passive-regeneration","maxHealthPerSecond":0.03}]}

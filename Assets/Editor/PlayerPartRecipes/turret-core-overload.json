@@ -1,0 +1,1 @@
+{"partId":"turret-core-overload","slot":1,"grade":3,"archetypeId":"overload","displayName":"코어 오버로드 포탑","description":"평시 피해 50% 상승, 오버드라이브 중 최대 3개체 관통.","price":650,"statOverride":{"attackDamage":7.5,"attackRange":4.0,"attackInterval":1.0,"projectileSpeed":1.0},"effects":[{"type":"overload-attack","maxTargets":3,"beamHalfAngleDegrees":4.0}]}

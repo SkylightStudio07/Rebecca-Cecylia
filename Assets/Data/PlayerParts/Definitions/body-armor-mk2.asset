@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 75e0a4a5801f8e74d8b7ba1dd2e80799, type: 3}
+  m_Name: body-armor-mk2
+  m_EditorClassIdentifier: Assembly-CSharp::RCCom.Definitions.PlayerPart.PlayerPartDefinition
+  partId: body-armor-mk2
+  slot: 2
+  grade: 2
+  archetypeId: reinforced-armor
+  displayName: "\uAC15\uD654\uC7A5\uAC11 \uBC14\uB514 Mk2"
+  description: "\uCD5C\uB300\uCCB4\uB825 51."
+  price: 430
+  statOverride:
+    moveSpeed: 0
+    skillOverdriveMoveSpeedMultiplier: 0
+    attackDamage: 0
+    attackRange: 0
+    attackInterval: 0
+    projectileSpeed: 0
+    maxHealth: 51
+    hitInvulnerabilityDuration: 0
+    skillCooldown: 0
+    skillRange: 0
+    skillDamage: 0
+    skillBurstCount: 0
+    skillBurstInterval: 0
+    skillChargeCapacity: 0
+  effects: []
+  icon: {fileID: 0}
+  overlaySprite: {fileID: 0}
