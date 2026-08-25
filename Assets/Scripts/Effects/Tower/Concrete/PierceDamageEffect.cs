@@ -44,23 +44,15 @@ namespace RCCom.Effects.Tower.Concrete
             Vector2 beamDirection = (nearest.position - ctx.self.Position).normalized;
             float damage = TowerDamageMath.CalculateDamage(ctx.self, data.damage);
 
-            // ctx.activeEnemies는 TowerInstance._enemiesInRange를 그대로 참조한다 — 이 루프 중
-            // enemy.TakeDamage()가 즉사시키면 EnemyView.HandleDied()가 콜라이더를 끄면서
-            // OnTriggerExit2D가 동기 발생해 같은 프레임에 그 리스트에서 항목이 빠질 수 있다.
-            // 원본을 직접 순회하면 "Collection was modified" 예외가 나므로 스냅샷을 떠서 돈다.
-            var targets = new List<EnemyInstance>(ctx.activeEnemies);
+            // PierceAttackMath.GetTargetsInBeam은 후보 목록을 읽기만 하는 순수 함수이므로, 아래
+            // 루프에서 enemy.TakeDamage()가 즉사시켜 ctx.activeEnemies(TowerInstance._enemiesInRange)
+            // 원본이 바뀌어도(콜라이더 비활성화 → OnTriggerExit2D) 이미 별도로 담아둔 targets
+            // 리스트는 영향을 받지 않는다.
+            List<EnemyInstance> targets = PierceAttackMath.GetTargetsInBeam(
+                ctx.activeEnemies, ctx.self.Position, beamDirection, data.attackRange, beamHalfAngleDegrees);
             foreach (EnemyInstance enemy in targets)
             {
-                Vector2 toEnemy = enemy.position - ctx.self.Position;
-                if (toEnemy.magnitude > data.attackRange)
-                {
-                    continue;
-                }
-
-                if (Vector2.Angle(beamDirection, toEnemy) <= beamHalfAngleDegrees)
-                {
-                    enemy.TakeDamage(damage, ctx.self.Position);
-                }
+                enemy.TakeDamage(damage, ctx.self.Position);
             }
 
             Vector3 beamEnd = ctx.self.Position + beamDirection * data.attackRange;

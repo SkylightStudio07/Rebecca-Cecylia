@@ -69,26 +69,18 @@ namespace RCCom.Effects.Tower.Concrete
             }
 
             float splashDamage = damage * splashDamageMultiplier;
-            float splashRadiusSqr = splashRadius * splashRadius;
 
-            // PierceDamageEffect와 동일한 이유(TakeDamage → 즉사 → 콜라이더 비활성화 →
-            // OnTriggerExit2D 동기 발생)로 ctx.activeEnemies 원본을 직접 순회하면 열거 도중
-            // 리스트가 바뀌어 예외가 난다 — 스냅샷을 떠서 순회한다.
-            var splashTargets = new List<EnemyInstance>(ctx.activeEnemies);
+            // SplashAttackMath.GetSplashTargets는 후보 목록을 읽기만 하는 순수 함수이므로,
+            // 앞서 target.TakeDamage()가 즉사시켜 ctx.activeEnemies 원본이 바뀌었더라도(콜라이더
+            // 비활성화 → OnTriggerExit2D) 이 호출 시점의 현재 상태를 그대로 안전하게 읽는다.
+            List<EnemyInstance> splashTargets = SplashAttackMath.GetSplashTargets(
+                ctx.activeEnemies, target, target.position, splashRadius);
             foreach (EnemyInstance enemy in splashTargets)
             {
-                if (enemy == target)
-                {
-                    continue;
-                }
-
-                if ((enemy.position - target.position).sqrMagnitude <= splashRadiusSqr)
-                {
-                    // 스플래시 2차 피해자는 타워가 아니라 폭발 지점(target.position, 충격파
-                    // 링/그을림 자국의 중심)에서 밀려나야 자연스럽다 — 넉백 방향이 실제
-                    // 시각효과(폭발 중심)와 일치한다.
-                    enemy.TakeDamage(splashDamage, target.position);
-                }
+                // 스플래시 2차 피해자는 타워가 아니라 폭발 지점(target.position, 충격파
+                // 링/그을림 자국의 중심)에서 밀려나야 자연스럽다 — 넉백 방향이 실제
+                // 시각효과(폭발 중심)와 일치한다.
+                enemy.TakeDamage(splashDamage, target.position);
             }
 
             ctx.self.cooldownRemaining = TowerDamageMath.CalculateAttackInterval(ctx.self, data.attackInterval);
