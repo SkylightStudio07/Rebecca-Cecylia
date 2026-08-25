@@ -1,10 +1,12 @@
 using System;
+using System.Collections.Generic;
 using RCCom.Definitions.Enemy;
 using RCCom.Definitions.Operator;
 using RCCom.Definitions.Unit;
 using UnityEditor;
 using UnityEditor.AddressableAssets;
 using UnityEditor.AddressableAssets.Settings;
+using UnityEditor.AddressableAssets.Settings.GroupSchemas;
 using UnityEngine;
 
 namespace RCCom.EditorTools
@@ -69,7 +71,88 @@ namespace RCCom.EditorTools
                 }
             }
 
+            ValidateGroupUpdatePolicy(settings);
+            ValidateLiveCatalogs(settings);
+
             Debug.Log($"[AddressablesBuildValidator] {target} 사전 검증 통과");
+        }
+
+        /// <summary>
+        /// 로컬 그룹이 static인지, 원격 그룹이 static이 아닌지 검사한다.
+        ///
+        /// 이 프로젝트는 원격 카탈로그를 켜 두고 시작 시 카탈로그 갱신도 막지 않아서, 이미
+        /// 배포된 플레이어가 부팅할 때마다 원격 카탈로그로 갈아탄다. 그 카탈로그에는 로컬 그룹
+        /// 엔트리까지 들어 있고 로드 경로가 플레이어 자신의 StreamingAssets를 가리키므로, 로컬
+        /// 그룹이 static이 아니면 콘텐츠 업데이트가 로컬 번들을 새 해시로 다시 굽고 새 카탈로그가
+        /// 구 플레이어에 없는 파일명을 가리키게 된다 — 잘 돌던 기존 콘텐츠까지 통째로 깨진다.
+        /// 플레이어를 굽기 전에 세우는 편이 배포 후에 겪는 것보다 압도적으로 싸다.
+        /// </summary>
+        private static void ValidateGroupUpdatePolicy(AddressableAssetSettings settings)
+        {
+            var wrong = new List<string>();
+            foreach (AddressableAssetGroup group in settings.groups)
+            {
+                if (group == null || group.ReadOnly)
+                {
+                    continue;
+                }
+
+                ContentUpdateGroupSchema updateSchema = group.GetSchema<ContentUpdateGroupSchema>();
+                if (updateSchema == null)
+                {
+                    wrong.Add($"{group.Name}: ContentUpdateGroupSchema 없음");
+                    continue;
+                }
+
+                bool remote = AddressableGroupPolicy.IsRemoteGroup(settings, group);
+                if (updateSchema.StaticContent == !remote)
+                {
+                    continue;
+                }
+
+                wrong.Add(remote
+                    ? $"{group.Name}: 원격 그룹인데 Prevent Updates가 켜져 있음"
+                    : $"{group.Name}: 로컬 그룹인데 Prevent Updates가 꺼져 있음");
+            }
+
+            if (wrong.Count > 0)
+            {
+                throw new InvalidOperationException(
+                    "Addressables 그룹 업데이트 정책이 어긋났습니다:\n  " + string.Join("\n  ", wrong) +
+                    "\nRCCom/Addressables/Apply Group Update Policy를 실행하세요.");
+            }
+        }
+
+        /// <summary>
+        /// 원격 콘텐츠가 있는데 라이브 카탈로그가 없으면, 그 콘텐츠는 배포해도 이미 나간 빌드의
+        /// 화면에 끝내 나타나지 않는다. 빌드는 성공하고 CDN 업로드도 성공하는데 결과만 없는
+        /// 상황이라 원인을 찾기가 특히 어려우므로 여기서 잡는다.
+        /// </summary>
+        private static void ValidateLiveCatalogs(AddressableAssetSettings settings)
+        {
+            OperatorCatalog liveOperators = AssetDatabase.LoadAssetAtPath<OperatorCatalog>(
+                OperatorLiveCatalogBuilder.LiveCatalogPath);
+            if (liveOperators == null)
+            {
+                throw new InvalidOperationException(
+                    $"라이브 오퍼레이터 카탈로그가 없습니다: {OperatorLiveCatalogBuilder.LiveCatalogPath}\n" +
+                    "RCCom/Operators/Build Operator Catalog And Addressables를 실행하세요.");
+            }
+
+            AddressableAssetEntry entry = settings.FindAssetEntry(
+                AssetDatabase.AssetPathToGUID(OperatorLiveCatalogBuilder.LiveCatalogPath));
+            if (entry == null || entry.address != OperatorCatalog.LiveCatalogAddress)
+            {
+                throw new InvalidOperationException(
+                    $"라이브 오퍼레이터 카탈로그가 {OperatorCatalog.LiveCatalogAddress} 주소로 등록되지 않았습니다.");
+            }
+
+            if (entry.parentGroup == null || !AddressableGroupPolicy.IsRemoteGroup(settings, entry.parentGroup))
+            {
+                throw new InvalidOperationException(
+                    "라이브 오퍼레이터 카탈로그가 원격 그룹에 있지 않습니다. 로컬 그룹에 있으면 " +
+                    "이미 배포된 빌드는 이 카탈로그를 영영 받지 못합니다.");
+            }
         }
     }
 }
