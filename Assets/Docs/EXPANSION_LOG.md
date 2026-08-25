@@ -1988,3 +1988,16 @@ Phase 0 자동화 경로를 실제로 열고, 이후 오퍼레이터별 원격 �
 - `EndlessBossPromotionVerifier`에서 무한/스테이지 모드 경계, 체력 합계 × 2.25, 고정 이동속도 0.75, 최대 접촉 공격력 × 3, 최고 골드·동률 고EXP 적의 골드/EXP × 3, 공통 웨이브 체력 배율 1회 적용, 원본 SO 불변성을 확인했다.
 - `EnemySelfDestructVerifier`와 `EnemyHealerVerifier`를 다시 실행해 선택 인자를 추가한 `EnemyInstance.Spawn`이 기존 접촉·자폭·회복 Effect 경로를 변경하지 않았음을 확인했으며, 해당 검증 이후 콘솔 오류는 0건이었다.
 
+## 2026-08-25 — 무한 모드 보스 크기·전투 수치 후속 조정
+
+### 결정
+
+- 사용자 플레이 밸런스 조정에 따라 보스 체력 계수를 웨이브 전체 체력의 2.25배에서 1.75배로, 공격력 계수를 웨이브 최대 `contactDamage`의 3배에서 1.75배로 낮췄다. 이동속도와 골드·EXP 보상 규칙은 유지한다.
+- 승급 보스의 스프라이트 drawing size는 선택된 적의 기존 크기를 기준으로 1.5배 확대한다. 적 스프라이트의 native bounds가 종류별로 다르고 일반 적은 현재 그 크기를 그대로 쓰므로, 공통 target size를 새로 강제하지 않고 `SpriteFit.CalculateUniformScale`에 각 스프라이트의 기존 최장축을 target으로 전달해 일반 적의 화면 크기를 보존했다.
+- `EnemyView` 루트 확대는 같은 오브젝트의 접촉 Collider와 자식 체력바도 함께 키운다. 보스의 전투 판정까지 넓어지는 것은 "크게 그리기" 범위를 벗어나므로 `CircleCollider2D` 반경·오프셋과 체력바 로컬 스케일을 역보정해 월드 판정 크기와 UI 크기는 그대로 유지한다.
+
+### 검증
+
+- `EndlessBossPromotionVerifier`가 체력 1.75배, 공격력 1.75배, 스프라이트 1.5배 균일 확대와 Collider 월드 반경·오프셋 불변성을 함께 검증한다.
+- Unity 스크립트 재컴파일이 오류 없이 완료됐고 `RCCom/Verify/Endless Boss Promotion`, `RCCom/Enemies/Verify Exploder Special Effect`, `RCCom/Verify/Enemy Healer` 검증이 모두 PASS했다. 검증 시작 시점 이후 콘솔 오류는 0건이었다.
+

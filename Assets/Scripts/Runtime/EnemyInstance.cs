@@ -72,6 +72,8 @@ namespace RCCom.Runtime
         /// </summary>
         public EnemyData Data => _runtimeData ?? definition.data;
         public bool IsSpawned => _isSpawned;
+        /// <summary>무한 모드 편성에서 런타임 승급된 보스인지 표시한다.</summary>
+        public bool IsPromotedBoss { get; private set; }
         public bool IsBoss { get; private set; }
         public bool IsDead => _isDead;
         public bool HasReachedGoal => _hasReachedGoal;
@@ -110,6 +112,7 @@ namespace RCCom.Runtime
             bool isBoss = false)
         {
             _runtimeData = runtimeData;
+            IsPromotedBoss = isBoss;
             IsBoss = isBoss || (Data != null && Data.kind == EnemyKind.Boss);
             MaxHealth = Mathf.Max(0f, Data.maxHealth);
             currentHealth = MaxHealth;

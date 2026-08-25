@@ -6,15 +6,16 @@ using UnityEngine;
 namespace RCCom.Runtime
 {
     /// <summary>
-    /// 무한 모드 보스의 런타임 전투 수치를 계산한다. 별도 EnemyDefinition을 만들지 않고 선택된
-    /// 적의 데이터만 복제하므로 외형·Effects·미지정 전투 수치는 원래 적 조립을 그대로 쓴다.
+    /// 무한 모드 보스의 런타임 승급 규칙을 계산한다. 별도 EnemyDefinition을 만들지 않고 선택된
+    /// 적의 데이터만 복제하므로 스프라이트·Effects·미지정 전투 수치는 원래 적 조립을 그대로 쓴다.
     /// </summary>
     public static class EndlessBossPromotion
     {
-        public const float HealthFromWaveMultiplier = 2.25f;
+        public const float HealthFromWaveMultiplier = 1.75f;
         public const float FixedMoveSpeed = 0.75f;
-        public const float DamageMultiplier = 3f;
+        public const float DamageMultiplier = 1.75f;
         public const float RewardMultiplier = 3f;
+        public const float VisualSizeMultiplier = 1.5f;
 
         public static bool ShouldPromote(BattleMode mode, int waveNumber, int interval)
         {
