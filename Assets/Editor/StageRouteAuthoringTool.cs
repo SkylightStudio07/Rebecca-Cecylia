@@ -6,6 +6,7 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.Tilemaps;
 
 namespace RCCom.EditorTools
 {
@@ -21,6 +22,8 @@ namespace RCCom.EditorTools
         private const string PointsRootName = "RoutePoints";
         private const string AuthoringBackgroundName = "AuthoringBattleBackground";
         private const string RuntimeBackgroundName = "StageBattleBackground";
+        private const string DefaultMapBackgroundName = "Square";
+        private const string BuildableSlotTilePath = "Assets/Data/Tilemaps/BuildableSlotTile.asset";
 
         public static void OpenAndLoad(StageDefinition stage)
         {
@@ -105,7 +108,12 @@ namespace RCCom.EditorTools
             mapSerialized.FindProperty("maxPointSpacing").floatValue = stage.maxPointSpacing;
             SerializedProperty previewStage = mapSerialized.FindProperty("editorPreviewStage");
             if (previewStage != null) { previewStage.objectReferenceValue = stage; }
+
+            Tilemap slotTilemap = mapSerialized.FindProperty("slotTilemap").objectReferenceValue as Tilemap;
+            TileBase slotTile = mapSerialized.FindProperty("buildableSlotTile").objectReferenceValue as TileBase;
             mapSerialized.ApplyModifiedPropertiesWithoutUndo();
+
+            LoadBuildableCells(stage, slotTilemap, slotTile);
 
             EditorUtility.SetDirty(mapManager);
             EditorSceneManager.MarkSceneDirty(scene);
@@ -115,7 +123,123 @@ namespace RCCom.EditorTools
             {
                 SceneView.lastActiveSceneView.FrameSelected();
             }
-            Debug.Log($"[StageRouteAuthoring] 테스트 씬 로드 완료: {stage.stageId} / {route.Count} points");
+            int loadedCellCount = stage.buildableCells?.Count ?? 0;
+            Debug.Log($"[StageRouteAuthoring] 테스트 씬 로드 완료: {stage.stageId} / " +
+                      $"{route.Count} points / {loadedCellCount} buildable cells " +
+                      $"({(loadedCellCount > 0 ? "stage 저장값" : "빈 상태 — 필요하면 Copy Default Layout을 눌러 시작점으로 쓰세요")})");
+        }
+
+        /// <summary>
+        /// stage.buildableCells가 있으면 그 좌표로 slotTilemap을 다시 칠한다. 없으면 DefenseScene
+        /// 기본 레이아웃을 몰래 채워 넣지 않고 비워 둔다 — 예전에는 여기서 자동으로 옛 기본
+        /// 214칸(사인파 도로 모양)을 미리 칠해 뒀는데, 맵 모양이 다른 새 스테이지를 그 위에 이어
+        /// 칠하고 Capture하면 사용자가 원치 않은 옛 도로 칸까지 함께 저장돼 버리는 문제가 있었다.
+        /// 옛 기본 레이아웃을 시작점으로 쓰고 싶으면 CopyDefaultLayoutIntoTestScene을 직접 눌러야
+        /// 한다(명시적 액션으로 분리).
+        /// </summary>
+        private static void LoadBuildableCells(StageDefinition stage, Tilemap slotTilemap, TileBase slotTile)
+        {
+            if (slotTilemap == null)
+            {
+                Debug.LogWarning("[StageRouteAuthoring] slotTilemap 배선이 없어 설치 슬롯을 불러오지 못했습니다.");
+                return;
+            }
+
+            slotTilemap.ClearAllTiles();
+
+            if (stage.buildableCells == null || stage.buildableCells.Count == 0)
+            {
+                EditorUtility.SetDirty(slotTilemap);
+                return;
+            }
+
+            if (slotTile == null)
+            {
+                Debug.LogWarning("[StageRouteAuthoring] buildableSlotTile 배선이 없어 설치 슬롯을 불러오지 못했습니다. " +
+                                  "RCCom/Stages/Setup Runtime Battlefield Background를 먼저 실행하세요.");
+                return;
+            }
+
+            foreach (Vector3Int cell in stage.buildableCells)
+            {
+                slotTilemap.SetTile(cell, slotTile);
+            }
+            EditorUtility.SetDirty(slotTilemap);
+        }
+
+        /// <summary>
+        /// DefenseScene에 원래 칠해진 기본 설치 슬롯 레이아웃을 현재 열린 Test Scene의 SlotMarkers에
+        /// 그대로 복사한다. Load와 달리 사용자가 명시적으로 눌렀을 때만 실행되며, 기존에 칠해진
+        /// 내용을 지우고 덮어쓴다 — "이 기본 레이아웃을 시작점으로 다시 쓰고 싶다"는 의도가 분명한
+        /// 경우에만 호출해야 한다.
+        /// </summary>
+        public static void CopyDefaultLayoutIntoTestScene()
+        {
+            EnsureEditMode();
+            Scene scene = SceneManager.GetActiveScene();
+            if (scene.path != TestScenePath)
+            {
+                throw new InvalidOperationException("StageRouteTestScene을 먼저 열어 주세요.");
+            }
+
+            MapManager mapManager = FindMapManager(scene);
+            if (mapManager == null) { throw new InvalidOperationException("테스트 씬에 MapManager가 없습니다."); }
+
+            var mapSerialized = new SerializedObject(mapManager);
+            Tilemap slotTilemap = mapSerialized.FindProperty("slotTilemap").objectReferenceValue as Tilemap;
+            TileBase slotTile = mapSerialized.FindProperty("buildableSlotTile").objectReferenceValue as TileBase;
+            if (slotTilemap == null)
+            {
+                throw new InvalidOperationException("테스트 씬의 slotTilemap 배선이 없습니다.");
+            }
+            if (slotTile == null)
+            {
+                throw new InvalidOperationException("buildableSlotTile 배선이 없습니다. " +
+                                                      "RCCom/Stages/Setup Runtime Battlefield Background를 먼저 실행하세요.");
+            }
+
+            List<Vector3Int> legacyCells = ReadLegacyBuildableCells();
+            slotTilemap.ClearAllTiles();
+            foreach (Vector3Int cell in legacyCells)
+            {
+                slotTilemap.SetTile(cell, slotTile);
+            }
+            EditorUtility.SetDirty(slotTilemap);
+            EditorSceneManager.MarkSceneDirty(scene);
+            Debug.Log($"[StageRouteAuthoring] DefenseScene 기본 슬롯 레이아웃 {legacyCells.Count}칸을 테스트 씬에 복사했습니다.");
+        }
+
+        private static List<Vector3Int> ReadPaintedCells(Tilemap tilemap)
+        {
+            tilemap.CompressBounds();
+            BoundsInt bounds = tilemap.cellBounds;
+            var cells = new List<Vector3Int>();
+            foreach (Vector3Int cell in bounds.allPositionsWithin)
+            {
+                if (tilemap.HasTile(cell)) { cells.Add(cell); }
+            }
+            return cells;
+        }
+
+        private static List<Vector3Int> ReadLegacyBuildableCells()
+        {
+            Scene active = SceneManager.GetActiveScene();
+            bool alreadyOpen = active.path == DefenseScenePath;
+            Scene source = alreadyOpen
+                ? active
+                : EditorSceneManager.OpenScene(DefenseScenePath, OpenSceneMode.Additive);
+            try
+            {
+                MapManager mapManager = FindMapManager(source);
+                if (mapManager == null) { return new List<Vector3Int>(); }
+                var serialized = new SerializedObject(mapManager);
+                Tilemap tilemap = serialized.FindProperty("slotTilemap").objectReferenceValue as Tilemap;
+                return tilemap != null ? ReadPaintedCells(tilemap) : new List<Vector3Int>();
+            }
+            finally
+            {
+                if (!alreadyOpen) { EditorSceneManager.CloseScene(source, true); }
+            }
         }
 
         public static void CaptureFromOpenTestScene(StageDefinition stage)
@@ -162,13 +286,20 @@ namespace RCCom.EditorTools
                 var mapSerialized = new SerializedObject(mapManager);
                 stage.pathSmoothness = mapSerialized.FindProperty("pathSmoothness").floatValue;
                 stage.maxPointSpacing = mapSerialized.FindProperty("maxPointSpacing").floatValue;
+
+                if (mapSerialized.FindProperty("slotTilemap").objectReferenceValue is Tilemap slotTilemap)
+                {
+                    stage.buildableCells = ReadPaintedCells(slotTilemap);
+                }
             }
 
             stage.schemaVersion = StageDefinition.CurrentSchemaVersion;
             EditorUtility.SetDirty(stage);
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
-            Debug.Log($"[StageRouteAuthoring] StageDefinition 캡처 완료: {stage.stageId} / {stage.routePoints.Count} points");
+            int cellCount = stage.buildableCells?.Count ?? 0;
+            Debug.Log($"[StageRouteAuthoring] StageDefinition 캡처 완료: {stage.stageId} / " +
+                      $"{stage.routePoints.Count} points / {cellCount} buildable cells");
         }
 
         [MenuItem("RCCom/Stages/Setup Runtime Battlefield Background")]
@@ -193,6 +324,35 @@ namespace RCCom.EditorTools
 
             var serialized = new SerializedObject(mapManager);
             serialized.FindProperty("battleBackgroundRenderer").objectReferenceValue = background;
+
+            // 엔드리스 모드용 기본 맵("Square")은 스테이지 배경이 적용되면 MapManager가 직접 꺼야
+            // 하므로 참조가 필요하다. 없으면 경고만 남기고 넘어간다 — 씬 구조가 달라진 상황을
+            // 여기서 새로 만들어 강제하지 않는다.
+            GameObject defaultMapBackground = FindRoot(scene, DefaultMapBackgroundName);
+            SpriteRenderer defaultMapRenderer = defaultMapBackground != null
+                ? defaultMapBackground.GetComponent<SpriteRenderer>()
+                : null;
+            if (defaultMapRenderer != null)
+            {
+                serialized.FindProperty("defaultMapBackgroundRenderer").objectReferenceValue = defaultMapRenderer;
+            }
+            else
+            {
+                Debug.LogWarning($"[StageRouteAuthoring] '{DefaultMapBackgroundName}' 오브젝트를 찾지 못해 " +
+                                  "defaultMapBackgroundRenderer 배선을 건너뜁니다.");
+            }
+
+            TileBase slotTile = AssetDatabase.LoadAssetAtPath<TileBase>(BuildableSlotTilePath);
+            if (slotTile != null)
+            {
+                serialized.FindProperty("buildableSlotTile").objectReferenceValue = slotTile;
+            }
+            else
+            {
+                Debug.LogWarning($"[StageRouteAuthoring] {BuildableSlotTilePath}를 찾지 못해 " +
+                                  "buildableSlotTile 배선을 건너뜁니다.");
+            }
+
             serialized.ApplyModifiedPropertiesWithoutUndo();
             EditorUtility.SetDirty(mapManager);
             EditorSceneManager.MarkSceneDirty(scene);
@@ -204,7 +364,7 @@ namespace RCCom.EditorTools
             }
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
-            Debug.Log("[StageRouteAuthoring] DefenseScene 전투 배경 렌더러 배선 완료");
+            Debug.Log("[StageRouteAuthoring] DefenseScene 전투 배경·기본 맵·설치 슬롯 타일 배선 완료");
         }
 
         [MenuItem("RCCom/Stages/Migrate Legacy Route To Missing Stages")]

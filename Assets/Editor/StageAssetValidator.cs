@@ -137,6 +137,11 @@ namespace RCCom.EditorTools
             {
                 errors.Add($"전투 배경 Scale은 0보다 커야 합니다: {path}");
             }
+
+            if (definition.buildableCells == null || definition.buildableCells.Count == 0)
+            {
+                warnings.Add($"설치 가능 슬롯이 비어 있어 DefenseScene 기본 레이아웃을 그대로 씁니다: {path}");
+            }
         }
 
         private static void ValidateWave(StageWaveDefinition wave, string path, int waveIndex,

@@ -20,6 +20,7 @@ MonoBehaviour:
   recommendedLevel: 1
   order: 1
   requiredBestWave: 1
+  remoteContent: 0
   description: "\uC801\uC758 \uC774\uB3D9 \uACBD\uB85C\uAC00 \uBC14\uB00C\uC5C8\uC2B5\uB2C8\uB2E4.
     \uBC29\uC5B4\uC120\uC744 \uC7AC\uBC30\uCE58\uD558\uC2ED\uC2DC\uC624."
   descriptionBackground: {fileID: 0}

@@ -8160,6 +8160,8 @@ MonoBehaviour:
   - {fileID: 1462024083}
   - {fileID: 1112663024}
   battleBackgroundRenderer: {fileID: 173278070}
+  defaultMapBackgroundRenderer: {fileID: 2033620420}
+  buildableSlotTile: {fileID: 11400000, guid: 36d7cf0357cf92bbed18f5567bacd87b, type: 2}
   editorPreviewStage: {fileID: 0}
   pathSmoothness: 1
   maxPointSpacing: 0.25

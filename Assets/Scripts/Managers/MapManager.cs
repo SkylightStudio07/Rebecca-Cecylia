@@ -32,6 +32,13 @@ namespace RCCom.Managers
 
         [Header("스테이지 전장 배경 (StageDefinition에서 Sprite와 Transform 주입)")]
         [SerializeField] private SpriteRenderer battleBackgroundRenderer;
+        [Tooltip("스테이지 배경이 없을 때(엔드리스 모드 등)만 켜지는 기본 맵 아트. 스테이지 배경이 " +
+                 "적용되면 이 렌더러를 꺼서 두 배경이 겹쳐 기본 맵이 스테이지 배경을 가리는 문제를 막는다.")]
+        [SerializeField] private SpriteRenderer defaultMapBackgroundRenderer;
+
+        [Tooltip("StageDefinition.buildableCells를 slotTilemap에 페인팅할 때 쓰는 공용 타일. " +
+                 "TilemapRenderer가 꺼져 있어 실제로 그려지지 않으므로 스프라이트는 필요 없다.")]
+        [SerializeField] private TileBase buildableSlotTile;
 #if UNITY_EDITOR
         [Tooltip("StageRouteTestScene에서만 사용한다. 플레이어 빌드에는 포함되지 않는다.")]
         [SerializeField] private StageDefinition editorPreviewStage;
@@ -82,6 +89,7 @@ namespace RCCom.Managers
             }
 #endif
             ApplyStageBackground(stage);
+            ApplyStageBuildableCells(stage);
 
             bool useStageRoute = stage != null && stage.routePoints != null && stage.routePoints.Count >= 2;
             if (!useStageRoute && (waypoints == null || waypoints.Length == 0))
@@ -126,12 +134,21 @@ namespace RCCom.Managers
 
         private void ApplyStageBackground(StageDefinition stage)
         {
+            bool hasBackground = stage != null && stage.battleBackground != null;
+
+            // 기본 맵 아트(엔드리스 모드용 "Square" 등)는 스테이지 배경이 없을 때만 켠다. 예전에는
+            // 이 렌더러가 항상 켜져 있어서 Order in Layer가 더 앞이면 -100인 StageBattleBackground를
+            // 항상 가려버렸다 — 배경 두 장이 같은 화면에 동시에 존재해서 생긴 문제였다.
+            if (defaultMapBackgroundRenderer != null)
+            {
+                defaultMapBackgroundRenderer.enabled = !hasBackground;
+            }
+
             if (battleBackgroundRenderer == null)
             {
                 return;
             }
 
-            bool hasBackground = stage != null && stage.battleBackground != null;
             battleBackgroundRenderer.enabled = hasBackground;
             if (!hasBackground)
             {
@@ -150,6 +167,39 @@ namespace RCCom.Managers
                 stage.battleBackgroundScale.x,
                 stage.battleBackgroundScale.y,
                 1f);
+        }
+
+        /// <summary>
+        /// StageDefinition.buildableCells가 있으면 slotTilemap을 비우고 그 좌표에만 타워 설치
+        /// 슬롯을 다시 칠한다. 비어 있으면(엔드리스 모드 포함) 씬에 이미 칠해진 기본 슬롯 레이아웃을
+        /// 그대로 둔다 — 스테이지마다 씬을 복제하지 않는 것과 같은 이유로, 빈 값을 "슬롯 없음"이
+        /// 아니라 "기본 레이아웃 사용"으로 해석해 하위호환을 지킨다.
+        /// </summary>
+        private void ApplyStageBuildableCells(StageDefinition stage)
+        {
+            bool hasCustomCells = stage != null && stage.buildableCells != null && stage.buildableCells.Count > 0;
+            if (!hasCustomCells)
+            {
+                return;
+            }
+
+            if (slotTilemap == null)
+            {
+                Debug.LogError("[Map] slotTilemap이 비어 있어 스테이지 설치 슬롯을 적용할 수 없다.");
+                return;
+            }
+
+            if (buildableSlotTile == null)
+            {
+                Debug.LogError("[Map] buildableSlotTile이 비어 있어 스테이지 설치 슬롯을 적용할 수 없다.");
+                return;
+            }
+
+            slotTilemap.ClearAllTiles();
+            foreach (Vector3Int cell in stage.buildableCells)
+            {
+                slotTilemap.SetTile(cell, buildableSlotTile);
+            }
         }
 
         /// <summary>
