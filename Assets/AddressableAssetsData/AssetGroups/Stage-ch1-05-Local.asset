@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: Stage-ch1-05-Local
+  m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
+  m_GroupName: Stage-ch1-05-Local
+  m_GUID: fe76309a44f335c42aac1892a77f5ab0
+  m_SerializeEntries:
+  - m_GUID: 725af784fef2d4b418a7262c978f6fc4
+    m_Address: stage/ch1-05
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - stage-definition
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 2afb846ca87b5fb4d915c11291554efd, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 90bd223319b47834bb0017b898995919, type: 2}
+    - {fileID: 11400000, guid: 6204b155945edaf4986eb85c56635889, type: 2}

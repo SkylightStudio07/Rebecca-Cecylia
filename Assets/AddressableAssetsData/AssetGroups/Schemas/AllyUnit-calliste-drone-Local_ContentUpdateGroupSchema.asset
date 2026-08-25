@@ -13,4 +13,4 @@ MonoBehaviour:
   m_Name: AllyUnit-calliste-drone-Local_ContentUpdateGroupSchema
   m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.GroupSchemas.ContentUpdateGroupSchema
   m_Group: {fileID: 11400000, guid: dd9eef3114031fe4e8652d5dd6063b11, type: 2}
-  m_StaticContent: 0
+  m_StaticContent: 1

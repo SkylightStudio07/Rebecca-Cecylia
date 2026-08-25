@@ -1,0 +1,63 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 60e3f0fd9f2bdbd4fbdd7ff4fef1c69b, type: 3}
+  m_Name: OperatorLiveCatalog
+  m_EditorClassIdentifier: Assembly-CSharp::RCCom.Definitions.Operator.OperatorCatalog
+  entries:
+  - operatorId: valentina
+    displayName: "\uBC1C\uB80C\uD2F0\uB098"
+    playStyleDescription: "\uBA54\uAC00\uCF54\uD504 \uD654\uD559 \uD3D0\uAE30\uBB3C
+      \uD2B9\uC218 \uCC98\uB9AC\uBC18 \uCD9C\uC2E0\uC758 \uD654\uD559\uACF5\uD559
+      \uD3ED\uD30C \uC804\uBB38\uAC00"
+    previewPortrait: {fileID: 0}
+    managementPortrait: {fileID: 0}
+    shopPortrait: {fileID: 0}
+    shopUpperBodyPortrait: {fileID: 0}
+    shopUpperBodyPortraitDimmed: {fileID: 0}
+    previewPortraitAddress: operator/valentina/portrait/selection
+    managementPortraitAddress: operator/valentina/portrait/management
+    shopPortraitAddress: operator/valentina/portrait/shop
+    shopUpperBodyPortraitAddress: operator/valentina/portrait/shop-upper
+    shopUpperBodyPortraitDimmedAddress: operator/valentina/portrait/shop-upper-dimmed
+    alternateName: Mad Scientist
+    shopDialogue: "\uC548\uC804 \uADDC\uC815? \uADF8\uB7F0 \uAC74 \uC2E4\uD5D8\uC2E4
+      \uCC45\uC0C1\uC5D0\uB098 \uAF42\uC544\uB450\uB77C\uACE0."
+    address: operator/valentina
+    remoteContent: 1
+    unlockType: 0
+    requiredBestWave: 0
+    purchasePrice: 0
+    requiredStageId: 
+    unlockConditions:
+    - type: 2
+      requiredBestWave: 0
+      purchasePrice: 500
+      requiredStageId: 
+    unlockRewardPortrait: {fileID: 0}
+    unlockRewardPortraitAddress: operator/valentina/portrait/unlock-reward
+    unitPreviews:
+    - unitId: valentina-pyro-crawler
+      displayName: "\uC18D\uC0AC \uBC15\uACA9\uD3EC \uD06C\uB864\uB7EC"
+      deployCost: 20
+      address: ally-unit/valentina-pyro-crawler
+      remoteContent: 1
+      previewIcon: {fileID: 0}
+      previewIconAddress: ally-unit/valentina-pyro-crawler/preview
+      fallbackColor: {r: 1, g: 1, b: 1, a: 1}
+    - unitId: valentina-sludge-rover
+      displayName: "\uC2AC\uB7EC\uC9C0 \uBC29\uCD9C \uD0F1\uD06C"
+      deployCost: 80
+      address: ally-unit/valentina-sludge-rover
+      remoteContent: 1
+      previewIcon: {fileID: 0}
+      previewIconAddress: ally-unit/valentina-sludge-rover/preview
+      fallbackColor: {r: 1, g: 1, b: 1, a: 1}

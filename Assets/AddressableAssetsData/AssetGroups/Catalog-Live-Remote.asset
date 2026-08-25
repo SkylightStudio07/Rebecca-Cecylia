@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: Catalog-Live-Remote
+  m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
+  m_GroupName: Catalog-Live-Remote
+  m_GUID: fb6e7c4ce816abe44921de5b2bac16e9
+  m_SerializeEntries:
+  - m_GUID: 084849a5ab0ae334e92246595b53dd43
+    m_Address: catalog/stage
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - live-catalog
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3c00b9e1636cbc74983ff5c20fa2e728
+    m_Address: catalog/operator
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - live-catalog
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 2afb846ca87b5fb4d915c11291554efd, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 67211cb1a0522be4ca8d8f9fb05d0132, type: 2}
+    - {fileID: 11400000, guid: 0ea19fd0260662844b6ce175ce49f64f, type: 2}
