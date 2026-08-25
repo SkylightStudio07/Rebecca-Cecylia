@@ -20,12 +20,13 @@ MonoBehaviour:
   recommendedLevel: 1
   order: 2
   requiredBestWave: 2
+  remoteContent: 0
   description: "\uB3C4\uC2DC \uC2EC\uBD80\uC5D0\uC11C \uB354 \uAC15\uD55C \uC2E0\uD638\uAC00
     \uAC10\uC9C0\uB429\uB2C8\uB2E4."
   descriptionBackground: {fileID: 0}
-  battleBackground: {fileID: 0}
+  battleBackground: {fileID: -3405211792428895623, guid: 88bc979c15050ad47a3a2a6fd3f561f2, type: 3}
   battleBackgroundPosition: {x: 0, y: 0}
-  battleBackgroundScale: {x: 1, y: 1}
+  battleBackgroundScale: {x: 2, y: 2}
   routePoints:
   - {x: -16.62, y: -3.63}
   - {x: -12.81, y: 1.11}
@@ -38,6 +39,7 @@ MonoBehaviour:
   - {x: 15.47, y: -2.78}
   pathSmoothness: 1
   maxPointSpacing: 0.25
+  buildableCells: []
   rewards: []
   waves:
   - displayName: WAVE 01
