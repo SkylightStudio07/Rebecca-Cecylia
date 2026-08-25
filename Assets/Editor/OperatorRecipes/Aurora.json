@@ -2,13 +2,18 @@
     "operatorId": "aurora",
     "catalogOrder": 3,
     "displayName": "오로라",
-    "playStyleDescription": "",
+    "playStyleDescription": "전자전과 디버프 드론으로 적의 방어선을 무력화하는 천재 해커",
     "selectionPortraitPath": "Assets/Art/Character Standing Arts/오로라/chibby_portrait_1.png",
     "managementPortraitPath": "Assets/Art/Character Standing Arts/오로라/레베카/Management.png",
+    "shopPortraitPath": "Assets/Art/Character Standing Arts/오로라/레베카/오로라.default-1.png",
+    "shopUpperBodyPortraitPath": "Assets/Art/Character Standing Arts/오로라/레베카/오로라.shop.highlight.png",
+    "shopUpperBodyPortraitDimmedPath": "Assets/Art/Character Standing Arts/오로라/레베카/오로라.shop.normal.png",
+    "alternateName": "Hacker",
+    "shopDialogue": "캐나다 최고의 해커, 영입할 준비는 됐어?\n특가 할인 중이라고~",
     "unlockRewardPortraitPath": "Assets/Art/Character Standing Arts/오로라/chibby_portrait_1.png",
     "sourceTowerRosterPath": "Assets/Data/Operators/calliste/TowerRoster.asset",
     "sourceCardRosterPath": "Assets/Data/Operators/cassia/CardRoster.asset",
-    "sourceAllyUnitRosterPath": "Assets/Data/Operators/cassia/AllyUnitRoster.asset",
+    "sourceAllyUnitRosterPath": "Assets/Data/Operators/aurora/AllyUnits/aurora-ally-unit-roster.asset",
     "dialogueSetPath": "Assets/Data/Operators/aurora/OperatorDialogueSet.asset",
     "remoteContent": false,
     "playerData": {
@@ -26,5 +31,293 @@
     "requiredBestWave": 2,
     "unlockType": 1,
     "purchasePrice": 0,
-    "requiredStageId": ""
+    "requiredStageId": "",
+    "unlockConditions": [
+        {
+            "type": 2,
+            "requiredBestWave": 0,
+            "purchasePrice": 500,
+            "requiredStageId": ""
+        }
+    ],
+    "upgradeTracks": [
+        {
+            "trackId": "aurora.vulnerable-multiplier",
+            "displayName": "취약 디버프 증폭",
+            "description": "취약 상태의 받는 피해 증가량을 높입니다.",
+            "category": 0,
+            "maxLevel": 8,
+            "levelCosts": [
+                20,
+                35,
+                55,
+                80,
+                120,
+                170,
+                230,
+                290
+            ],
+            "requiredAffinityByLevel": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            "modifiers": [
+                {
+                    "targetKind": 9,
+                    "targetUnitId": "aurora-debuff-drone",
+                    "levelDeltas": [
+                        0.029999999329447748,
+                        0.07000000029802323,
+                        0.10000000149011612,
+                        0.12999999523162843,
+                        0.1599999964237213,
+                        0.1899999976158142,
+                        0.2199999988079071,
+                        0.25
+                    ],
+                    "isInteger": false,
+                    "hasMinValue": false,
+                    "minValue": 0.0,
+                    "hasMaxValue": false,
+                    "maxValue": 0.0
+                }
+            ]
+        },
+        {
+            "trackId": "aurora.slow-strength",
+            "displayName": "감속 강화",
+            "description": "감속 드론이 적의 이동 속도를 더 낮춥니다.",
+            "category": 0,
+            "maxLevel": 8,
+            "levelCosts": [
+                20,
+                35,
+                55,
+                80,
+                120,
+                170,
+                230,
+                290
+            ],
+            "requiredAffinityByLevel": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            "modifiers": [
+                {
+                    "targetKind": 11,
+                    "targetUnitId": "aurora-slow-drone",
+                    "levelDeltas": [
+                        -0.02199999988079071,
+                        -0.04399999976158142,
+                        -0.06599999964237213,
+                        -0.08699999749660492,
+                        -0.10899999737739563,
+                        -0.13099999725818635,
+                        -0.15299999713897706,
+                        -0.17499999701976777
+                    ],
+                    "isInteger": false,
+                    "hasMinValue": true,
+                    "minValue": 0.0,
+                    "hasMaxValue": false,
+                    "maxValue": 0.0
+                }
+            ]
+        },
+        {
+            "trackId": "aurora.drone-mobility",
+            "displayName": "드론 순찰 기동성",
+            "description": "두 전자전 드론의 이동 속도를 높입니다.",
+            "category": 0,
+            "maxLevel": 8,
+            "levelCosts": [
+                20,
+                35,
+                55,
+                80,
+                120,
+                170,
+                230,
+                290
+            ],
+            "requiredAffinityByLevel": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            "modifiers": [
+                {
+                    "targetKind": 3,
+                    "targetUnitId": "aurora-debuff-drone",
+                    "levelDeltas": [
+                        0.125,
+                        0.25,
+                        0.375,
+                        0.5,
+                        0.625,
+                        0.75,
+                        0.875,
+                        1.0
+                    ],
+                    "isInteger": false,
+                    "hasMinValue": false,
+                    "minValue": 0.0,
+                    "hasMaxValue": false,
+                    "maxValue": 0.0
+                },
+                {
+                    "targetKind": 3,
+                    "targetUnitId": "aurora-slow-drone",
+                    "levelDeltas": [
+                        0.125,
+                        0.25,
+                        0.375,
+                        0.5,
+                        0.625,
+                        0.75,
+                        0.875,
+                        1.0
+                    ],
+                    "isInteger": false,
+                    "hasMinValue": false,
+                    "minValue": 0.0,
+                    "hasMaxValue": false,
+                    "maxValue": 0.0
+                }
+            ]
+        },
+        {
+            "trackId": "aurora.vulnerable-refresh",
+            "displayName": "디버프 재적용 유예 연장",
+            "description": "취약 디버프의 재적용 유지 시간을 늘립니다.",
+            "category": 1,
+            "maxLevel": 8,
+            "levelCosts": [
+                10,
+                15,
+                25,
+                40,
+                60,
+                90,
+                130,
+                180
+            ],
+            "requiredAffinityByLevel": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            "modifiers": [
+                {
+                    "targetKind": 10,
+                    "targetUnitId": "aurora-debuff-drone",
+                    "levelDeltas": [
+                        0.05999999865889549,
+                        0.12999999523162843,
+                        0.1899999976158142,
+                        0.25,
+                        0.3100000023841858,
+                        0.3799999952316284,
+                        0.4399999976158142,
+                        0.5
+                    ],
+                    "isInteger": false,
+                    "hasMinValue": false,
+                    "minValue": 0.0,
+                    "hasMaxValue": false,
+                    "maxValue": 0.0
+                }
+            ]
+        },
+        {
+            "trackId": "aurora.drone-armor",
+            "displayName": "전자전 드론 장갑 강화",
+            "description": "두 전자전 드론의 최대 체력을 각 기체에 맞게 높입니다.",
+            "category": 1,
+            "maxLevel": 8,
+            "levelCosts": [
+                10,
+                15,
+                25,
+                40,
+                60,
+                90,
+                130,
+                180
+            ],
+            "requiredAffinityByLevel": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            "modifiers": [
+                {
+                    "targetKind": 0,
+                    "targetUnitId": "aurora-debuff-drone",
+                    "levelDeltas": [
+                        4.0,
+                        8.0,
+                        12.0,
+                        16.0,
+                        20.0,
+                        24.0,
+                        28.0,
+                        32.0
+                    ],
+                    "isInteger": false,
+                    "hasMinValue": false,
+                    "minValue": 0.0,
+                    "hasMaxValue": false,
+                    "maxValue": 0.0
+                },
+                {
+                    "targetKind": 0,
+                    "targetUnitId": "aurora-slow-drone",
+                    "levelDeltas": [
+                        5.0,
+                        10.0,
+                        15.0,
+                        20.0,
+                        25.0,
+                        30.0,
+                        35.0,
+                        40.0
+                    ],
+                    "isInteger": false,
+                    "hasMinValue": false,
+                    "minValue": 0.0,
+                    "hasMaxValue": false,
+                    "maxValue": 0.0
+                }
+            ]
+        }
+    ]
 }

@@ -112,9 +112,7 @@ namespace RCCom.UI
             {
                 _pendingEntries.RemoveAll(entry =>
                     entry == null ||
-                    entry.unlockType != OperatorUnlockType.StageClearReward ||
-                    !string.Equals(entry.requiredStageId, stageId,
-                        System.StringComparison.OrdinalIgnoreCase));
+                    !entry.IsStageRewardFor(stageId));
             }
 
             if (_pendingEntries.Count > 0) { StartCoroutine(PresentNext()); }

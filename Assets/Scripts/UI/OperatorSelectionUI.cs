@@ -305,8 +305,8 @@ namespace RCCom.UI
             bool unlocked = entry.IsUnlocked(_profile);
             if (portraitImage != null)
             {
-                portraitImage.sprite = entry.previewPortrait;
-                portraitImage.enabled = entry.previewPortrait != null;
+                RemotePreviewSpriteLoader.LoadInto(
+                    portraitImage, entry.previewPortrait, entry.previewPortraitAddress, Color.clear);
             }
 
             if (nameText != null) { nameText.text = entry.displayName; }

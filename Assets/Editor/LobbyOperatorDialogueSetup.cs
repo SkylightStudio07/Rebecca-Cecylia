@@ -24,6 +24,7 @@ namespace RCCom.EditorTools
         [MenuItem("RCCom/UI/Build Lobby Operator Dialogue")]
         public static void Build()
         {
+            EnsureEditMode();
             Scene scene = OpenTitleSceneSafely();
             Canvas canvas = UnityEngine.Object.FindFirstObjectByType<Canvas>(FindObjectsInactive.Include);
             if (canvas == null)
@@ -45,6 +46,9 @@ namespace RCCom.EditorTools
             {
                 throw new InvalidOperationException("TitleScene에서 로비 OperatorImage를 찾지 못했습니다.");
             }
+
+            lobbyOperatorImage.preserveAspect = true;
+            EditorUtility.SetDirty(lobbyOperatorImage);
 
             OperatorDialogueSet dialogueSet = AssetDatabase.LoadAssetAtPath<OperatorDialogueSet>(DialogueSetPath);
             TMP_FontAsset koreanFont = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(KoreanFontPath);
@@ -106,6 +110,8 @@ namespace RCCom.EditorTools
             serialized.FindProperty("fallbackOperatorId").stringValue = "cassia";
             serialized.ApplyModifiedPropertiesWithoutUndo();
 
+            ConfigureAffinityElevation(mainMenu, controller);
+
             EditorUtility.SetDirty(controller);
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);
@@ -132,7 +138,8 @@ namespace RCCom.EditorTools
                 serialized.FindProperty("dialogueButton").objectReferenceValue == null ||
                 serialized.FindProperty("lobbyOperatorImage").objectReferenceValue == null ||
                 serialized.FindProperty("dialogueText").objectReferenceValue == null ||
-                serialized.FindProperty("dialogueGroup").objectReferenceValue == null)
+                serialized.FindProperty("dialogueGroup").objectReferenceValue == null ||
+                serialized.FindProperty("affinityElevationUI").objectReferenceValue == null)
             {
                 throw new InvalidOperationException("로비 오퍼레이터 대사 UI 필드가 올바르게 연결되지 않았습니다.");
             }
@@ -143,6 +150,103 @@ namespace RCCom.EditorTools
             }
 
             Debug.Log("[LobbyOperatorDialogueSetup] TitleScene 로비 대사 UI 검증 통과");
+        }
+
+        [MenuItem("RCCom/UI/Setup Lobby Affinity Elevation")]
+        public static void SetupAffinityElevation()
+        {
+            EnsureEditMode();
+            Scene scene = OpenTitleSceneSafely();
+            LobbyOperatorDialogueUI controller = UnityEngine.Object.FindFirstObjectByType<LobbyOperatorDialogueUI>(
+                FindObjectsInactive.Include);
+            Transform mainMenu = controller != null ? controller.transform.parent : null;
+            if (controller == null || mainMenu == null || mainMenu.name != MainMenuName)
+            {
+                throw new InvalidOperationException("TitleScene의 로비 대사 컨트롤러를 찾지 못했습니다.");
+            }
+
+            ConfigureAffinityElevation(mainMenu, controller);
+            EditorUtility.SetDirty(controller);
+            EditorSceneManager.MarkSceneDirty(scene);
+            EditorSceneManager.SaveScene(scene);
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+            Debug.Log("[LobbyOperatorDialogueSetup] 친밀도 상승 토스트 배선 완료");
+        }
+
+        private static void ConfigureAffinityElevation(Transform mainMenu,
+            LobbyOperatorDialogueUI controller)
+        {
+            Transform textTransform = mainMenu.Find("IntimacyElevationText");
+            TextMeshProUGUI text;
+            if (textTransform == null)
+            {
+                TMP_FontAsset koreanFont = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(KoreanFontPath);
+                if (koreanFont == null)
+                {
+                    throw new InvalidOperationException("친밀도 토스트에 사용할 TMP 글꼴을 찾지 못했습니다.");
+                }
+
+                var textObject = new GameObject("IntimacyElevationText",
+                    typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
+                textTransform = textObject.transform;
+                textTransform.SetParent(mainMenu, false);
+
+                RectTransform rect = (RectTransform)textTransform;
+                rect.anchorMin = new Vector2(0.5f, 0.5f);
+                rect.anchorMax = new Vector2(0.5f, 0.5f);
+                rect.pivot = new Vector2(0.5f, 0.5f);
+                rect.anchoredPosition = new Vector2(-334f, 213f);
+                rect.sizeDelta = new Vector2(200f, 50f);
+                rect.localScale = Vector3.one * 0.85858f;
+
+                text = textObject.GetComponent<TextMeshProUGUI>();
+                text.font = koreanFont;
+                text.fontSize = 36f;
+                text.color = Color.white;
+                text.alignment = TextAlignmentOptions.Center;
+                text.text = "친밀도 5 상승!";
+            }
+            else
+            {
+                text = textTransform.GetComponent<TextMeshProUGUI>();
+                if (text == null)
+                {
+                    throw new InvalidOperationException(
+                        "MainMenuBackground/IntimacyElevationText에 TextMeshProUGUI가 없습니다.");
+                }
+            }
+
+            CanvasGroup group = text.GetComponent<CanvasGroup>();
+            if (group == null) { group = text.gameObject.AddComponent<CanvasGroup>(); }
+            OperatorAffinityElevationUI toast = text.GetComponent<OperatorAffinityElevationUI>();
+            if (toast == null) { toast = text.gameObject.AddComponent<OperatorAffinityElevationUI>(); }
+
+            text.raycastTarget = false;
+            group.alpha = 0f;
+            group.interactable = false;
+            group.blocksRaycasts = false;
+
+            var toastSerialized = new SerializedObject(toast);
+            toastSerialized.FindProperty("messageText").objectReferenceValue = text;
+            toastSerialized.FindProperty("canvasGroup").objectReferenceValue = group;
+            toastSerialized.FindProperty("messageRect").objectReferenceValue = text.rectTransform;
+            toastSerialized.ApplyModifiedPropertiesWithoutUndo();
+
+            var controllerSerialized = new SerializedObject(controller);
+            controllerSerialized.FindProperty("affinityElevationUI").objectReferenceValue = toast;
+            controllerSerialized.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(text);
+            EditorUtility.SetDirty(toast);
+        }
+
+        private static void EnsureEditMode()
+        {
+            if (EditorApplication.isPlayingOrWillChangePlaymode)
+            {
+                throw new InvalidOperationException(
+                    "로비 UI 배선은 PlayMode에서 저장할 수 없습니다. Edit Mode에서 다시 실행해 주세요.");
+            }
         }
 
         private static Scene OpenTitleSceneSafely()

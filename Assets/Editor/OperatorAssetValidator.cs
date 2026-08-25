@@ -120,6 +120,7 @@ namespace RCCom.EditorTools
                     definition.unlockType != catalogEntry.unlockType ||
                     definition.requiredBestWave != catalogEntry.requiredBestWave ||
                     definition.purchasePrice != catalogEntry.purchasePrice ||
+                    !UnlockConditionsMatch(definition.unlockConditions, catalogEntry.unlockConditions) ||
                     !string.Equals(definition.alternateName, catalogEntry.alternateName,
                         StringComparison.Ordinal) ||
                     !string.Equals(definition.shopDialogue, catalogEntry.shopDialogue,
@@ -141,7 +142,8 @@ namespace RCCom.EditorTools
                 }
 
                 if (catalogEntry.remoteContent &&
-                    (catalogEntry.shopPortrait != null || catalogEntry.shopUpperBodyPortrait != null))
+                    (catalogEntry.shopPortrait != null || catalogEntry.shopUpperBodyPortrait != null ||
+                     catalogEntry.shopUpperBodyPortraitDimmed != null))
                 {
                     errors.Add($"원격 오퍼레이터의 상점 초상화가 로컬 카탈로그에 참조됩니다: {catalogEntry.operatorId}");
                 }
@@ -181,9 +183,28 @@ namespace RCCom.EditorTools
                     continue;
                 }
 
-                if (group.entries.Count != 1)
+                // Definition 1개는 필수고, 원격 오퍼레이터는 초상화 미리보기 항목을 몇 개든
+                // 같은 그룹에 PackSeparately로 함께 둘 수 있다(RemotePreviewSpriteLoader가
+                // 상점/선택 화면에서 Definition 전체를 당기지 않고 초상화만 받게 하기 위함).
+                // 그 두 라벨 중 어디에도 안 걸린 항목이 섞여 있으면 수작업 오염으로 본다.
+                int definitionEntryCount = 0;
+                int strayEntryCount = 0;
+                foreach (AddressableAssetEntry groupEntry in group.entries)
                 {
-                    errors.Add($"오퍼레이터 그룹은 명시적 Definition 1개만 가져야 합니다: {expectedGroup}");
+                    if (groupEntry.labels.Contains(OperatorCatalogBuilder.AddressablesLabel))
+                    {
+                        definitionEntryCount++;
+                    }
+                    else if (!groupEntry.labels.Contains(OperatorCatalogBuilder.PortraitAddressablesLabel))
+                    {
+                        strayEntryCount++;
+                    }
+                }
+
+                if (definitionEntryCount != 1 || strayEntryCount != 0)
+                {
+                    errors.Add(
+                        $"오퍼레이터 그룹은 명시적 Definition 1개와 초상화 미리보기 항목만 가져야 합니다: {expectedGroup}");
                 }
 
                 BundledAssetGroupSchema bundled = group.GetSchema<BundledAssetGroupSchema>();
@@ -313,26 +334,100 @@ namespace RCCom.EditorTools
                     errors.Add($"골드 구매 오퍼레이터의 가격은 1 이상이어야 합니다: {path}");
                 }
 
-                if (definition.unlockType == OperatorUnlockType.CommodityPurchase)
+                bool hasPurchaseCondition = HasUnlockCondition(definition,
+                    OperatorUnlockType.CommodityPurchase);
+                if (hasPurchaseCondition)
                 {
-                    if (definition.shopPortrait == null || definition.shopUpperBodyPortrait == null)
+                    if (definition.shopPortrait == null || definition.shopUpperBodyPortrait == null ||
+                        definition.shopUpperBodyPortraitDimmed == null)
                     {
-                        errors.Add($"골드 구매 오퍼레이터의 상점 초상화가 비어 있습니다: {path}");
+                        errors.Add($"골드 구매 오퍼레이터의 상점 초상화(메인/밝음/어두움)가 비어 있습니다: {path}");
                     }
 
                     if (string.IsNullOrWhiteSpace(definition.alternateName) ||
                         string.IsNullOrWhiteSpace(definition.shopDialogue))
                     {
-                        errors.Add($"골드 구매 오퍼레이터의 이명 또는 상점 대사가 비어 있습니다: {path}");
+                        // 창작 문구가 준비되지 않았다는 이유로 데이터/배선 검증 전체를 막지는 않는다.
+                        warnings.Add($"골드 구매 오퍼레이터의 이명 또는 상점 대사가 비어 있습니다: {path}");
                     }
                 }
 
-                if (definition.unlockType == OperatorUnlockType.StageClearReward &&
-                    string.IsNullOrWhiteSpace(definition.requiredStageId))
+                ValidateUnlockConditions(definition, path, errors);
+            }
+        }
+
+        private static bool HasUnlockCondition(OperatorDefinition definition, OperatorUnlockType type)
+        {
+            if (definition.unlockConditions != null && definition.unlockConditions.Count > 0)
+            {
+                return definition.unlockConditions.Exists(condition =>
+                    condition != null && condition.type == type);
+            }
+
+            return definition.unlockType == type;
+        }
+
+        private static void ValidateUnlockConditions(
+            OperatorDefinition definition,
+            string path,
+            List<string> errors)
+        {
+            if (definition.unlockConditions == null || definition.unlockConditions.Count == 0)
+            {
+                return;
+            }
+
+            var types = new HashSet<OperatorUnlockType>();
+            foreach (OperatorUnlockCondition condition in definition.unlockConditions)
+            {
+                if (condition == null || !types.Add(condition.type))
                 {
-                    errors.Add($"스테이지 보상 오퍼레이터의 Stage ID가 비어 있습니다: {path}");
+                    errors.Add($"해금 조건이 비어 있거나 종류가 중복됩니다: {path}");
+                    continue;
+                }
+
+                if (condition.requiredBestWave < 0 || condition.purchasePrice < 0)
+                {
+                    errors.Add($"해금 조건 수치는 음수일 수 없습니다: {path}");
+                }
+
+                if (condition.type == OperatorUnlockType.CommodityPurchase && condition.purchasePrice <= 0)
+                {
+                    errors.Add($"상점 구매 조건의 가격은 1 이상이어야 합니다: {path}");
+                }
+
+                if (condition.type == OperatorUnlockType.StageClearReward &&
+                    string.IsNullOrWhiteSpace(condition.requiredStageId))
+                {
+                    errors.Add($"스테이지 보상 조건의 Stage ID가 비어 있습니다: {path}");
                 }
             }
+        }
+
+        private static bool UnlockConditionsMatch(
+            List<OperatorUnlockCondition> left,
+            List<OperatorUnlockCondition> right)
+        {
+            int leftCount = left != null ? left.Count : 0;
+            int rightCount = right != null ? right.Count : 0;
+            if (leftCount != rightCount)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < leftCount; i++)
+            {
+                OperatorUnlockCondition a = left[i];
+                OperatorUnlockCondition b = right[i];
+                if (a == null || b == null || a.type != b.type ||
+                    a.requiredBestWave != b.requiredBestWave || a.purchasePrice != b.purchasePrice ||
+                    !string.Equals(a.requiredStageId, b.requiredStageId, StringComparison.Ordinal))
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         private static void ValidateTowerRoster(TowerRoster roster, List<string> errors)

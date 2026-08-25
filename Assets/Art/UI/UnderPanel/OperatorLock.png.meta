@@ -1,0 +1,1014 @@
+fileFormatVersion: 2
+guid: 6f142de408b033844866189cd76055c8
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 7560449611263331621
+    second: OperatorLock_0
+  - first:
+      213: 8087918998584431221
+    second: OperatorLock_1
+  - first:
+      213: -7608576377106751201
+    second: OperatorLock_2
+  - first:
+      213: 8642166093770668831
+    second: OperatorLock_3
+  - first:
+      213: 4420344761216967655
+    second: OperatorLock_4
+  - first:
+      213: -3006001448736723219
+    second: OperatorLock_5
+  - first:
+      213: -2442106554497278275
+    second: OperatorLock_6
+  - first:
+      213: 2658511762761135838
+    second: OperatorLock_7
+  - first:
+      213: 848081911991309027
+    second: OperatorLock_8
+  - first:
+      213: -8673751053061162536
+    second: OperatorLock_9
+  - first:
+      213: -1916115889507229561
+    second: OperatorLock_10
+  - first:
+      213: -1789967838412485764
+    second: OperatorLock_11
+  - first:
+      213: -7928013639162164760
+    second: OperatorLock_12
+  - first:
+      213: -8498174161357760527
+    second: OperatorLock_13
+  - first:
+      213: -9014658550298178760
+    second: OperatorLock_14
+  - first:
+      213: 3747333797822551531
+    second: OperatorLock_15
+  - first:
+      213: 129299401168425159
+    second: OperatorLock_16
+  - first:
+      213: -7924216433558329369
+    second: OperatorLock_17
+  - first:
+      213: 6737041321880812139
+    second: OperatorLock_18
+  - first:
+      213: 9137057885154342565
+    second: OperatorLock_19
+  - first:
+      213: 9222584092005191532
+    second: OperatorLock_20
+  - first:
+      213: -6605717258149110453
+    second: OperatorLock_21
+  - first:
+      213: 3603973462234896132
+    second: OperatorLock_22
+  - first:
+      213: 2142329048455702651
+    second: OperatorLock_23
+  - first:
+      213: -6109278918139974405
+    second: OperatorLock_24
+  - first:
+      213: 7831667488973230411
+    second: OperatorLock_25
+  - first:
+      213: -8537789305158007375
+    second: OperatorLock_26
+  - first:
+      213: -7847954171626973411
+    second: OperatorLock_27
+  - first:
+      213: 4544352611155387317
+    second: OperatorLock_28
+  - first:
+      213: 1538815716067928818
+    second: OperatorLock_29
+  - first:
+      213: 5326523598637386460
+    second: OperatorLock_30
+  - first:
+      213: -5755536595798639465
+    second: OperatorLock_31
+  - first:
+      213: -2606567848301770625
+    second: OperatorLock_32
+  - first:
+      213: -2812613686290287277
+    second: OperatorLock_33
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: OperatorLock_0
+      rect:
+        serializedVersion: 2
+        x: 263
+        y: 666
+        width: 928
+        height: 568
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 52d479d4ddc1ce860800000000000000
+      internalID: 7560449611263331621
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OperatorLock_1
+      rect:
+        serializedVersion: 2
+        x: 520
+        y: 1156
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 57212c24a7f0e3070800000000000000
+      internalID: 8087918998584431221
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OperatorLock_2
+      rect:
+        serializedVersion: 2
+        x: 104
+        y: 742
+        width: 66
+        height: 176
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f11af14d818e86690800000000000000
+      internalID: -7608576377106751201
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OperatorLock_3
+      rect:
+        serializedVersion: 2
+        x: 108
+        y: 769
+        width: 16
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f1b302d26442fe770800000000000000
+      internalID: 8642166093770668831
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OperatorLock_4
+      rect:
+        serializedVersion: 2
+        x: 211
+        y: 664
+        width: 101
+        height: 246
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7e3a81de328385d30800000000000000
+      internalID: 4420344761216967655
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OperatorLock_5
+      rect:
+        serializedVersion: 2
+        x: 368
+        y: 405
+        width: 489
+        height: 513
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: deeecbddb998846d0800000000000000
+      internalID: -3006001448736723219
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OperatorLock_6
+      rect:
+        serializedVersion: 2
+        x: 943
+        y: 662
+        width: 86
+        height: 203
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: dbe598b0705eb1ed0800000000000000
+      internalID: -2442106554497278275
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OperatorLock_7
+      rect:
+        serializedVersion: 2
+        x: 127
+        y: 706
+        width: 37
+        height: 20
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ed63392ec5ee4e420800000000000000
+      internalID: 2658511762761135838
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OperatorLock_8
+      rect:
+        serializedVersion: 2
+        x: 88
+        y: 73
+        width: 222
+        height: 527
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3e21da0710ef4cb00800000000000000
+      internalID: 848081911991309027
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OperatorLock_9
+      rect:
+        serializedVersion: 2
+        x: 96
+        y: 552
+        width: 30
+        height: 140
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8d97e1c6f55a0a780800000000000000
+      internalID: -8673751053061162536
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OperatorLock_10
+      rect:
+        serializedVersion: 2
+        x: 203
+        y: 623
+        width: 49
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 780a07120c69865e0800000000000000
+      internalID: -1916115889507229561
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OperatorLock_11
+      rect:
+        serializedVersion: 2
+        x: 884
+        y: 377
+        width: 288
+        height: 221
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c7bcc001cb1c827e0800000000000000
+      internalID: -1789967838412485764
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OperatorLock_12
+      rect:
+        serializedVersion: 2
+        x: 1005
+        y: 623
+        width: 47
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8e9894f79990af190800000000000000
+      internalID: -7928013639162164760
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OperatorLock_13
+      rect:
+        serializedVersion: 2
+        x: 1117
+        y: 545
+        width: 34
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1f71ed020ab601a80800000000000000
+      internalID: -8498174161357760527
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OperatorLock_14
+      rect:
+        serializedVersion: 2
+        x: 116
+        y: 449
+        width: 48
+        height: 31
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 83b0a0a6fcf75e280800000000000000
+      internalID: -9014658550298178760
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OperatorLock_15
+      rect:
+        serializedVersion: 2
+        x: 156
+        y: 413
+        width: 22
+        height: 47
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: be557022c34310430800000000000000
+      internalID: 3747333797822551531
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OperatorLock_16
+      rect:
+        serializedVersion: 2
+        x: 376
+        y: 437
+        width: 9
+        height: 20
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7c0905cce1d5bc100800000000000000
+      internalID: 129299401168425159
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OperatorLock_17
+      rect:
+        serializedVersion: 2
+        x: 382
+        y: 431
+        width: 7
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7e761725327870290800000000000000
+      internalID: -7924216433558329369
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OperatorLock_18
+      rect:
+        serializedVersion: 2
+        x: 249
+        y: 288
+        width: 7
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b6a75db4367ce7d50800000000000000
+      internalID: 6737041321880812139
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OperatorLock_19
+      rect:
+        serializedVersion: 2
+        x: 321
+        y: 8
+        width: 623
+        height: 395
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5a67ec08cb95dce70800000000000000
+      internalID: 9137057885154342565
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OperatorLock_20
+      rect:
+        serializedVersion: 2
+        x: 948
+        y: 260
+        width: 58
+        height: 31
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c6f432b4e533dff70800000000000000
+      internalID: 9222584092005191532
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OperatorLock_21
+      rect:
+        serializedVersion: 2
+        x: 1005
+        y: 170
+        width: 204
+        height: 144
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b4dda5df627c354a0800000000000000
+      internalID: -6605717258149110453
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OperatorLock_22
+      rect:
+        serializedVersion: 2
+        x: 938
+        y: 246
+        width: 6
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 407127ce4c2e30230800000000000000
+      internalID: 3603973462234896132
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OperatorLock_23
+      rect:
+        serializedVersion: 2
+        x: 941
+        y: 242
+        width: 25
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b78e3354be41bbd10800000000000000
+      internalID: 2142329048455702651
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OperatorLock_24
+      rect:
+        serializedVersion: 2
+        x: 500
+        y: 184
+        width: 16
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bfceb7a313b773ba0800000000000000
+      internalID: -6109278918139974405
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OperatorLock_25
+      rect:
+        serializedVersion: 2
+        x: 506
+        y: 128
+        width: 10
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b419937561cafac60800000000000000
+      internalID: 7831667488973230411
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OperatorLock_26
+      rect:
+        serializedVersion: 2
+        x: 758
+        y: 132
+        width: 7
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1b58de2bcdda38980800000000000000
+      internalID: -8537789305158007375
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OperatorLock_27
+      rect:
+        serializedVersion: 2
+        x: 762
+        y: 127
+        width: 7
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d1711aad247761390800000000000000
+      internalID: -7847954171626973411
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OperatorLock_28
+      rect:
+        serializedVersion: 2
+        x: 770
+        y: 127
+        width: 9
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5b329027f98c01f30800000000000000
+      internalID: 4544352611155387317
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OperatorLock_29
+      rect:
+        serializedVersion: 2
+        x: 778
+        y: 128
+        width: 17
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2fa6403adb8fa5510800000000000000
+      internalID: 1538815716067928818
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OperatorLock_30
+      rect:
+        serializedVersion: 2
+        x: 547
+        y: 103
+        width: 7
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cda4488edfc9be940800000000000000
+      internalID: 5326523598637386460
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OperatorLock_31
+      rect:
+        serializedVersion: 2
+        x: 548
+        y: 114
+        width: 6
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 79c39a3d5f93020b0800000000000000
+      internalID: -5755536595798639465
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OperatorLock_32
+      rect:
+        serializedVersion: 2
+        x: 553
+        y: 103
+        width: 7
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f78c4072a5c93dbd0800000000000000
+      internalID: -2606567848301770625
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OperatorLock_33
+      rect:
+        serializedVersion: 2
+        x: 940
+        y: 104
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 355f34211c697f8d0800000000000000
+      internalID: -2812613686290287277
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      OperatorLock_0: 7560449611263331621
+      OperatorLock_1: 8087918998584431221
+      OperatorLock_10: -1916115889507229561
+      OperatorLock_11: -1789967838412485764
+      OperatorLock_12: -7928013639162164760
+      OperatorLock_13: -8498174161357760527
+      OperatorLock_14: -9014658550298178760
+      OperatorLock_15: 3747333797822551531
+      OperatorLock_16: 129299401168425159
+      OperatorLock_17: -7924216433558329369
+      OperatorLock_18: 6737041321880812139
+      OperatorLock_19: 9137057885154342565
+      OperatorLock_2: -7608576377106751201
+      OperatorLock_20: 9222584092005191532
+      OperatorLock_21: -6605717258149110453
+      OperatorLock_22: 3603973462234896132
+      OperatorLock_23: 2142329048455702651
+      OperatorLock_24: -6109278918139974405
+      OperatorLock_25: 7831667488973230411
+      OperatorLock_26: -8537789305158007375
+      OperatorLock_27: -7847954171626973411
+      OperatorLock_28: 4544352611155387317
+      OperatorLock_29: 1538815716067928818
+      OperatorLock_3: 8642166093770668831
+      OperatorLock_30: 5326523598637386460
+      OperatorLock_31: -5755536595798639465
+      OperatorLock_32: -2606567848301770625
+      OperatorLock_33: -2812613686290287277
+      OperatorLock_4: 4420344761216967655
+      OperatorLock_5: -3006001448736723219
+      OperatorLock_6: -2442106554497278275
+      OperatorLock_7: 2658511762761135838
+      OperatorLock_8: 848081911991309027
+      OperatorLock_9: -8673751053061162536
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

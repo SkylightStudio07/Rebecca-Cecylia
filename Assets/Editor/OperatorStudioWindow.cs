@@ -59,6 +59,7 @@ namespace RCCom.EditorTools
             Identity,
             Loadout,
             Dialogue,
+            Upgrades,
             Package,
         }
 
@@ -164,7 +165,7 @@ namespace RCCom.EditorTools
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
             _tabIndex = GUILayout.Toolbar(
                 _tabIndex,
-                new[] { "Identity", "Loadout", "Dialogue", "Package" },
+                new[] { "Identity", "Loadout", "Dialogue", "Upgrades", "Package" },
                 EditorStyles.toolbarButton);
             EditorGUILayout.EndHorizontal();
 
@@ -179,6 +180,9 @@ namespace RCCom.EditorTools
                     break;
                 case StudioTab.Dialogue:
                     DrawDialogueTab();
+                    break;
+                case StudioTab.Upgrades:
+                    DrawUpgradesTab();
                     break;
                 case StudioTab.Package:
                     DrawPackageTab();
@@ -217,6 +221,8 @@ namespace RCCom.EditorTools
                 "Shop Portrait", _recipe.shopPortraitPath);
             _recipe.shopUpperBodyPortraitPath = DrawAssetPathField<Sprite>(
                 "Shop Upper-body Portrait", _recipe.shopUpperBodyPortraitPath);
+            _recipe.shopUpperBodyPortraitDimmedPath = DrawAssetPathField<Sprite>(
+                "Shop Upper-body Portrait (Dimmed)", _recipe.shopUpperBodyPortraitDimmedPath);
             _recipe.alternateName = EditorGUILayout.TextField(
                 "Another Name", _recipe.alternateName ?? string.Empty);
             EditorGUILayout.LabelField("Shop Dialogue");
@@ -230,24 +236,49 @@ namespace RCCom.EditorTools
                 MessageType.None);
             _recipe.remoteContent = EditorGUILayout.ToggleLeft("Remote Content", _recipe.remoteContent);
             GUILayout.Space(8);
-            GUILayout.Label("Unlock Condition", EditorStyles.boldLabel);
-            _recipe.unlockType = (OperatorUnlockType)EditorGUILayout.EnumPopup(
-                "Unlock Type", _recipe.unlockType);
-            switch (_recipe.unlockType)
+            GUILayout.Label("Unlock Conditions (OR)", EditorStyles.boldLabel);
+            _recipe.unlockConditions ??= new List<OperatorUnlockCondition>();
+            int removeCondition = -1;
+            for (int i = 0; i < _recipe.unlockConditions.Count; i++)
             {
-                case OperatorUnlockType.BestWave:
-                    _recipe.requiredBestWave = Mathf.Max(0,
-                        EditorGUILayout.IntField("Required Best Wave", _recipe.requiredBestWave));
-                    break;
-                case OperatorUnlockType.CommodityPurchase:
-                    _recipe.purchasePrice = Mathf.Max(1,
-                        EditorGUILayout.IntField("Purchase Price", _recipe.purchasePrice));
-                    break;
-                case OperatorUnlockType.StageClearReward:
-                    _recipe.requiredStageId = EditorGUILayout.TextField(
-                        "Required Stage ID", _recipe.requiredStageId ?? string.Empty).Trim();
-                    break;
+                OperatorUnlockCondition condition = _recipe.unlockConditions[i];
+                if (condition == null)
+                {
+                    _recipe.unlockConditions[i] = condition = new OperatorUnlockCondition();
+                }
+
+                EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+                EditorGUILayout.BeginHorizontal();
+                GUILayout.Label($"Condition {i + 1}", EditorStyles.miniBoldLabel);
+                GUILayout.FlexibleSpace();
+                if (GUILayout.Button("Remove", GUILayout.Width(62))) { removeCondition = i; }
+                EditorGUILayout.EndHorizontal();
+                condition.type = (OperatorUnlockType)EditorGUILayout.EnumPopup("Type", condition.type);
+                switch (condition.type)
+                {
+                    case OperatorUnlockType.BestWave:
+                        condition.requiredBestWave = Mathf.Max(0,
+                            EditorGUILayout.IntField("Required Best Wave", condition.requiredBestWave));
+                        break;
+                    case OperatorUnlockType.CommodityPurchase:
+                        condition.purchasePrice = Mathf.Max(1,
+                            EditorGUILayout.IntField("Purchase Price", condition.purchasePrice));
+                        break;
+                    case OperatorUnlockType.StageClearReward:
+                        condition.requiredStageId = EditorGUILayout.TextField(
+                            "Required Stage ID", condition.requiredStageId ?? string.Empty).Trim();
+                        break;
+                }
+                EditorGUILayout.EndVertical();
             }
+
+            if (removeCondition >= 0) { _recipe.unlockConditions.RemoveAt(removeCondition); }
+            if (GUILayout.Button("+ Add Unlock Condition", GUILayout.Height(24)))
+            {
+                _recipe.unlockConditions.Add(new OperatorUnlockCondition());
+            }
+            EditorGUILayout.HelpBox("조건 중 하나만 충족해도 해금됩니다. 구매 조건이 있으면 Recruit 상점 목록에 표시됩니다.",
+                MessageType.None);
 
             GUILayout.Space(12);
             DrawSaveButton();
@@ -288,6 +319,179 @@ namespace RCCom.EditorTools
                 MessageType.None);
             GUILayout.Space(8);
             DrawSaveButton();
+        }
+
+        private void DrawUpgradesTab()
+        {
+            GUILayout.Label("Upgrade Tracks", EditorStyles.boldLabel);
+            EditorGUILayout.HelpBox(
+                "오퍼레이터당 강화 트랙은 5개입니다. 각 트랙은 한 번의 구매로 여러 modifier를 " +
+                "적용할 수 있고, 비용·호감도 조건·수치는 Lv1부터 순서대로 정확한 표로 저장됩니다.",
+                MessageType.Info);
+
+            _recipe.upgradeTracks ??= new List<OperatorUpgradeTrack>();
+            int removeIndex = -1;
+            for (int i = 0; i < _recipe.upgradeTracks.Count; i++)
+            {
+                OperatorUpgradeTrack track = _recipe.upgradeTracks[i];
+                if (track == null)
+                {
+                    _recipe.upgradeTracks[i] = track = new OperatorUpgradeTrack();
+                }
+
+                EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+                EditorGUILayout.BeginHorizontal();
+                GUILayout.Label($"Track {i + 1}", EditorStyles.boldLabel, GUILayout.Width(60));
+                GUILayout.FlexibleSpace();
+                if (GUILayout.Button("Remove", GUILayout.Width(62)))
+                {
+                    removeIndex = i;
+                }
+
+                EditorGUILayout.EndHorizontal();
+
+                track.trackId = EditorGUILayout.TextField("Track ID", track.trackId ?? string.Empty);
+                track.displayName = EditorGUILayout.TextField("Display Name", track.displayName ?? string.Empty);
+                track.description = EditorGUILayout.TextArea(track.description ?? string.Empty,
+                    GUILayout.MinHeight(38));
+                track.category = (OperatorUpgradeCategory)EditorGUILayout.EnumPopup("Category", track.category);
+                track.maxLevel = Mathf.Max(1, EditorGUILayout.IntField("Max Level", track.maxLevel));
+                track.levelCosts ??= new List<int>();
+                track.requiredAffinityByLevel ??= new List<int>();
+                EnsureIntListSize(track.levelCosts, track.maxLevel);
+                EnsureIntListSize(track.requiredAffinityByLevel, track.maxLevel);
+
+                EditorGUILayout.BeginHorizontal();
+                GUILayout.Label("Level", EditorStyles.miniBoldLabel, GUILayout.Width(45));
+                GUILayout.Label("Cost", EditorStyles.miniBoldLabel, GUILayout.Width(70));
+                GUILayout.Label("Affinity", EditorStyles.miniBoldLabel, GUILayout.Width(70));
+                GUILayout.FlexibleSpace();
+                if (GUILayout.Button("Default Costs", GUILayout.Width(95)))
+                {
+                    ApplyDefaultCosts(track);
+                }
+                EditorGUILayout.EndHorizontal();
+
+                for (int levelIndex = 0; levelIndex < track.maxLevel; levelIndex++)
+                {
+                    EditorGUILayout.BeginHorizontal();
+                    GUILayout.Label($"Lv{levelIndex + 1}", GUILayout.Width(45));
+                    track.levelCosts[levelIndex] = Mathf.Max(0,
+                        EditorGUILayout.IntField(track.levelCosts[levelIndex], GUILayout.Width(70)));
+                    track.requiredAffinityByLevel[levelIndex] = Mathf.Clamp(
+                        EditorGUILayout.IntField(track.requiredAffinityByLevel[levelIndex], GUILayout.Width(70)),
+                        0, PlayerProfile.MaxOperatorAffinity);
+                    EditorGUILayout.EndHorizontal();
+                }
+
+                track.modifiers ??= new List<OperatorUpgradeModifier>();
+                int removeModifier = -1;
+                for (int modifierIndex = 0; modifierIndex < track.modifiers.Count; modifierIndex++)
+                {
+                    OperatorUpgradeModifier modifier = track.modifiers[modifierIndex];
+                    if (modifier == null)
+                    {
+                        track.modifiers[modifierIndex] = modifier = new OperatorUpgradeModifier();
+                    }
+
+                    EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+                    EditorGUILayout.BeginHorizontal();
+                    GUILayout.Label($"Modifier {modifierIndex + 1}", EditorStyles.miniBoldLabel);
+                    GUILayout.FlexibleSpace();
+                    if (GUILayout.Button("-", GUILayout.Width(24)))
+                    {
+                        removeModifier = modifierIndex;
+                    }
+                    EditorGUILayout.EndHorizontal();
+
+                    modifier.targetKind = (OperatorUpgradeTargetKind)EditorGUILayout.EnumPopup(
+                        "Target Kind", modifier.targetKind);
+                    modifier.targetUnitId = EditorGUILayout.TextField(
+                        "Target Unit ID", modifier.targetUnitId ?? string.Empty);
+                    modifier.isInteger = EditorGUILayout.ToggleLeft("Integer Result", modifier.isInteger);
+                    EnsureFloatListSize(modifier.levelDeltas, track.maxLevel);
+                    for (int levelIndex = 0; levelIndex < track.maxLevel; levelIndex++)
+                    {
+                        modifier.levelDeltas[levelIndex] = EditorGUILayout.FloatField(
+                            $"Lv{levelIndex + 1} Delta", modifier.levelDeltas[levelIndex]);
+                    }
+
+                    EditorGUILayout.BeginHorizontal();
+                    modifier.hasMinValue = EditorGUILayout.ToggleLeft("Min", modifier.hasMinValue,
+                        GUILayout.Width(50));
+                    using (new EditorGUI.DisabledGroupScope(!modifier.hasMinValue))
+                    {
+                        modifier.minValue = EditorGUILayout.FloatField(modifier.minValue);
+                    }
+                    modifier.hasMaxValue = EditorGUILayout.ToggleLeft("Max", modifier.hasMaxValue,
+                        GUILayout.Width(50));
+                    using (new EditorGUI.DisabledGroupScope(!modifier.hasMaxValue))
+                    {
+                        modifier.maxValue = EditorGUILayout.FloatField(modifier.maxValue);
+                    }
+                    EditorGUILayout.EndHorizontal();
+                    EditorGUILayout.EndVertical();
+                }
+
+                if (removeModifier >= 0)
+                {
+                    track.modifiers.RemoveAt(removeModifier);
+                }
+                if (GUILayout.Button("+ Add Modifier"))
+                {
+                    var modifier = new OperatorUpgradeModifier();
+                    EnsureFloatListSize(modifier.levelDeltas, track.maxLevel);
+                    track.modifiers.Add(modifier);
+                }
+                EditorGUILayout.EndVertical();
+            }
+
+            if (removeIndex >= 0)
+            {
+                _recipe.upgradeTracks.RemoveAt(removeIndex);
+            }
+
+            GUILayout.Space(6);
+            if (GUILayout.Button("+ Add Track", GUILayout.Height(26)))
+            {
+                _recipe.upgradeTracks.Add(new OperatorUpgradeTrack
+                {
+                    trackId = $"{_recipe.operatorId}.new-track-{_recipe.upgradeTracks.Count + 1}",
+                });
+                OperatorUpgradeTrack added = _recipe.upgradeTracks[^1];
+                ApplyDefaultCosts(added);
+                EnsureIntListSize(added.requiredAffinityByLevel, added.maxLevel);
+                var modifier = new OperatorUpgradeModifier();
+                EnsureFloatListSize(modifier.levelDeltas, added.maxLevel);
+                added.modifiers.Add(modifier);
+            }
+
+            GUILayout.Space(12);
+            DrawSaveButton();
+        }
+
+        private static void EnsureIntListSize(List<int> values, int size)
+        {
+            while (values.Count < size) values.Add(0);
+            if (values.Count > size) values.RemoveRange(size, values.Count - size);
+        }
+
+        private static void EnsureFloatListSize(List<float> values, int size)
+        {
+            while (values.Count < size) values.Add(0f);
+            if (values.Count > size) values.RemoveRange(size, values.Count - size);
+        }
+
+        private static void ApplyDefaultCosts(OperatorUpgradeTrack track)
+        {
+            int[] costs = track.category == OperatorUpgradeCategory.Core
+                ? new[] { 20, 35, 55, 80, 120, 170, 230, 290 }
+                : new[] { 10, 15, 25, 40, 60, 90, 130, 180 };
+            EnsureIntListSize(track.levelCosts, track.maxLevel);
+            for (int i = 0; i < track.maxLevel; i++)
+            {
+                track.levelCosts[i] = costs[Mathf.Min(i, costs.Length - 1)];
+            }
         }
 
         private void DrawDialogueTab()

@@ -16,7 +16,7 @@ MonoBehaviour:
     unitId: calliste-guard
     displayName: "\uC911\uC7A5\uAC11 \uC13C\uD2F0\uB12C"
     deployCost: 60
-    maxHealth: 50
+    maxHealth: 60
     moveSpeed: 0.8
     attackDamage: 10
     attackInterval: 1.5

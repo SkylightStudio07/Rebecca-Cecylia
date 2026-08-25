@@ -96,6 +96,7 @@ namespace RCCom.Managers
             OperatorLoadoutSession.PrepareForGameplay();
             towerRoster = OperatorLoadoutSession.ResolveTowerRoster(towerRoster);
             cardRoster = OperatorLoadoutSession.ResolveCardRoster(cardRoster);
+            BattleContentCache.ClearRuntimeUpgradeCache();
 
             // 재시작(Retry, SceneManager.LoadScene) 시 이전 세션의 잔여 static 캐시를 전부 초기화.
             // Editor Play 재시작은 도메인 리로드로 저절로 비워지지만, 런타임 씬 재로드는 그렇지

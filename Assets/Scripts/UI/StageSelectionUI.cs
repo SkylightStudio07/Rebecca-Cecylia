@@ -227,10 +227,13 @@ namespace RCCom.UI
 
             if (operatorRewardPortrait != null)
             {
-                operatorRewardPortrait.sprite = rewardEntry.unlockRewardPortrait != null
+                Sprite localSprite = rewardEntry.unlockRewardPortrait != null
                     ? rewardEntry.unlockRewardPortrait
                     : rewardEntry.previewPortrait;
-                operatorRewardPortrait.enabled = operatorRewardPortrait.sprite != null;
+                string remoteAddress = !string.IsNullOrEmpty(rewardEntry.unlockRewardPortraitAddress)
+                    ? rewardEntry.unlockRewardPortraitAddress
+                    : rewardEntry.previewPortraitAddress;
+                RemotePreviewSpriteLoader.LoadInto(operatorRewardPortrait, localSprite, remoteAddress, Color.clear);
             }
 
             if (operatorRewardNameText != null)
@@ -250,9 +253,7 @@ namespace RCCom.UI
             for (int i = 0; i < operatorCatalog.entries.Count; i++)
             {
                 OperatorCatalogEntry entry = operatorCatalog.entries[i];
-                if (entry != null && entry.unlockType == OperatorUnlockType.StageClearReward &&
-                    string.Equals(entry.requiredStageId, definition.stageId,
-                        System.StringComparison.Ordinal))
+                if (entry != null && entry.IsStageRewardFor(definition.stageId))
                 {
                     return entry;
                 }

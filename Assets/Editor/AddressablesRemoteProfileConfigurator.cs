@@ -38,21 +38,32 @@ namespace RCCom.EditorTools
                 : remoteBuildPath.Trim().TrimEnd('/', '\\');
 
             AddressableAssetProfileSettings profiles = settings.profileSettings;
-            var loadVariable = profiles.GetProfileDataByName(AddressableAssetSettings.kRemoteLoadPath);
-            var buildVariable = profiles.GetProfileDataByName(AddressableAssetSettings.kRemoteBuildPath);
-            string loadVariableId = loadVariable?.Id;
-            string buildVariableId = buildVariable?.Id;
-            if (string.IsNullOrEmpty(loadVariableId) || string.IsNullOrEmpty(buildVariableId))
+            if (profiles.GetProfileDataByName(AddressableAssetSettings.kRemoteLoadPath) == null ||
+                profiles.GetProfileDataByName(AddressableAssetSettings.kRemoteBuildPath) == null)
             {
                 throw new InvalidOperationException("Addressables 원격 경로 프로필 변수를 찾지 못했습니다.");
             }
 
-            profiles.SetValue(settings.activeProfileId, loadVariableId, normalizedLoadPath);
-            profiles.SetValue(settings.activeProfileId, buildVariableId, normalizedBuildPath);
+            // SetValue의 두 번째 인자는 변수 "이름"이다(예: "Remote.LoadPath"). id(GUID)를
+            // 넘기면 내부적으로 그 문자열을 이름으로 다시 검색하다 실패해, 예외 없이 콘솔
+            // 오류만 남기고 아무 것도 바뀌지 않는다 — 반드시 상수 이름 그대로 넘긴다.
+            profiles.SetValue(settings.activeProfileId, AddressableAssetSettings.kRemoteLoadPath, normalizedLoadPath);
+            profiles.SetValue(settings.activeProfileId, AddressableAssetSettings.kRemoteBuildPath, normalizedBuildPath);
             EnsureRemoteCatalogEnabled(settings);
             EditorUtility.SetDirty(settings);
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
+
+            // SetValue는 실패해도 예외를 던지지 않으므로, 실제로 반영됐는지 다시 읽어
+            // 검증하지 않으면 아래 성공 로그가 거짓말을 할 수 있다.
+            string appliedLoadPath = profiles.GetValueByName(settings.activeProfileId, AddressableAssetSettings.kRemoteLoadPath);
+            string appliedBuildPath = profiles.GetValueByName(settings.activeProfileId, AddressableAssetSettings.kRemoteBuildPath);
+            if (appliedLoadPath != normalizedLoadPath || appliedBuildPath != normalizedBuildPath)
+            {
+                throw new InvalidOperationException(
+                    "Addressables 원격 경로 반영에 실패했습니다. Remote.LoadPath/Remote.BuildPath 프로필 변수가 " +
+                    "활성 프로필에 있는지 확인하세요.");
+            }
 
             Debug.Log($"[AddressablesProfile] 활성 프로필 원격 경로 설정 완료: {normalizedLoadPath}");
         }
@@ -70,12 +81,18 @@ namespace RCCom.EditorTools
                 settings.BuildRemoteCatalog = true;
             }
 
-            if (settings.RemoteCatalogBuildPath.GetName(settings) != AddressableAssetSettings.kRemoteBuildPath)
+            // ProfileValueReference.GetName()은 참조가 아직 어떤 변수도 안 가리키고 있으면
+            // (최초 설정 시 Id가 비어 있으면) 콘솔에 경고를 남기고 빈 문자열을 반환한다.
+            // 여기서는 그 경고 없이 조용히 비교하기 위해 GetName 대신 Id를 직접 비교한다.
+            string remoteBuildId = settings.profileSettings.GetProfileDataByName(AddressableAssetSettings.kRemoteBuildPath)?.Id;
+            string remoteLoadId = settings.profileSettings.GetProfileDataByName(AddressableAssetSettings.kRemoteLoadPath)?.Id;
+
+            if (settings.RemoteCatalogBuildPath.Id != remoteBuildId)
             {
                 settings.RemoteCatalogBuildPath.SetVariableByName(settings, AddressableAssetSettings.kRemoteBuildPath);
             }
 
-            if (settings.RemoteCatalogLoadPath.GetName(settings) != AddressableAssetSettings.kRemoteLoadPath)
+            if (settings.RemoteCatalogLoadPath.Id != remoteLoadId)
             {
                 settings.RemoteCatalogLoadPath.SetVariableByName(settings, AddressableAssetSettings.kRemoteLoadPath);
             }

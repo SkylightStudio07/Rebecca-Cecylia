@@ -125,7 +125,12 @@ namespace RCCom.Runtime
             AllyUnitRoster resolved = SelectedDefinition != null
                 ? SelectedDefinition.allyUnitRoster
                 : fallback;
-            return BattleContentCache.CreateRuntimeAllyUnitRoster(resolved);
+            string operatorId = SelectedDefinition != null ? SelectedDefinition.operatorId : null;
+            OperatorUpgradeTrackSet upgradeTracks = SelectedDefinition != null
+                ? SelectedDefinition.upgradeTracks
+                : null;
+            PlayerProfile profile = OperatorUpgradeApplier.LoadProfile();
+            return BattleContentCache.CreateRuntimeAllyUnitRoster(resolved, operatorId, upgradeTracks, profile);
         }
 
         public static OperatorDialogueSet ResolveDialogueSet(OperatorDialogueSet fallback)

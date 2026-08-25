@@ -5,6 +5,11 @@
     "playStyleDescription": "레이싱걸 컨셉의 캐릭터",
     "selectionPortraitPath": "Assets/Art/Character Standing Arts/실비아/portrait/실비아.Chibby.default-1.png",
     "managementPortraitPath": "Assets/Art/Character Standing Arts/실비아/오퍼레이터관리_실비아.png",
+    "shopPortraitPath": "Assets/Art/Character Standing Arts/실비아/실비아.default-1.png",
+    "shopUpperBodyPortraitPath": "Assets/Art/Character Standing Arts/실비아/실비아.shop_highlight.png",
+    "shopUpperBodyPortraitDimmedPath": "Assets/Art/Character Standing Arts/실비아/실비아.shop.inactive.png",
+    "alternateName": "",
+    "shopDialogue": "Get, Set, GO!\n달려볼까요, 감독관!",
     "unlockRewardPortraitPath": "Assets/Art/Character Standing Arts/실비아/실비아.default-1.png",
     "sourceTowerRosterPath": "Assets/Data/Operators/cassia/TowerRoster.asset",
     "sourceCardRosterPath": "Assets/Data/Cards/Unlock/플레이어 카드 로스터.asset",
@@ -26,5 +31,261 @@
     "requiredBestWave": 0,
     "unlockType": 3,
     "purchasePrice": 0,
-    "requiredStageId": "ch1-02"
+    "requiredStageId": "ch1-02",
+    "unlockConditions": [
+        {
+            "type": 3,
+            "requiredBestWave": 0,
+            "purchasePrice": 0,
+            "requiredStageId": "ch1-02"
+        },
+        {
+            "type": 2,
+            "requiredBestWave": 0,
+            "purchasePrice": 500,
+            "requiredStageId": ""
+        }
+    ],
+    "upgradeTracks": [
+        {
+            "trackId": "racing.repair-rate",
+            "displayName": "피트스톱 수리력",
+            "description": "피트 크루의 초당 수리량을 높입니다.",
+            "category": 0,
+            "maxLevel": 8,
+            "levelCosts": [
+                20,
+                35,
+                55,
+                80,
+                120,
+                170,
+                230,
+                290
+            ],
+            "requiredAffinityByLevel": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            "modifiers": [
+                {
+                    "targetKind": 12,
+                    "targetUnitId": "racing-pitcrew",
+                    "levelDeltas": [
+                        0.20000000298023225,
+                        0.4000000059604645,
+                        0.6000000238418579,
+                        0.800000011920929,
+                        1.0,
+                        1.2000000476837159,
+                        1.399999976158142,
+                        1.600000023841858
+                    ],
+                    "isInteger": false,
+                    "hasMinValue": false,
+                    "minValue": 0.0,
+                    "hasMaxValue": false,
+                    "maxValue": 0.0
+                }
+            ]
+        },
+        {
+            "trackId": "racing.pit-stop-multiplier",
+            "displayName": "정지 피트스톱 배율",
+            "description": "정지 중인 아군에게 제공하는 수리 배율을 높입니다.",
+            "category": 0,
+            "maxLevel": 8,
+            "levelCosts": [
+                20,
+                35,
+                55,
+                80,
+                120,
+                170,
+                230,
+                290
+            ],
+            "requiredAffinityByLevel": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            "modifiers": [
+                {
+                    "targetKind": 13,
+                    "targetUnitId": "racing-pitcrew",
+                    "levelDeltas": [
+                        0.10000000149011612,
+                        0.20000000298023225,
+                        0.30000001192092898,
+                        0.4000000059604645,
+                        0.5,
+                        0.6000000238418579,
+                        0.699999988079071,
+                        0.800000011920929
+                    ],
+                    "isInteger": false,
+                    "hasMinValue": false,
+                    "minValue": 0.0,
+                    "hasMaxValue": false,
+                    "maxValue": 0.0
+                }
+            ]
+        },
+        {
+            "trackId": "racing.heavy-armor",
+            "displayName": "헤비 페이스카 차단선 보강",
+            "description": "헤비 페이스카의 최대 체력을 높입니다.",
+            "category": 0,
+            "maxLevel": 8,
+            "levelCosts": [
+                20,
+                35,
+                55,
+                80,
+                120,
+                170,
+                230,
+                290
+            ],
+            "requiredAffinityByLevel": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            "modifiers": [
+                {
+                    "targetKind": 0,
+                    "targetUnitId": "racing-heavy",
+                    "levelDeltas": [
+                        4.0,
+                        9.0,
+                        13.0,
+                        18.0,
+                        22.0,
+                        27.0,
+                        31.0,
+                        36.0
+                    ],
+                    "isInteger": false,
+                    "hasMinValue": false,
+                    "minValue": 0.0,
+                    "hasMaxValue": false,
+                    "maxValue": 0.0
+                }
+            ]
+        },
+        {
+            "trackId": "racing.pitcrew-mobility",
+            "displayName": "피트 크루 긴급 출동",
+            "description": "피트 크루의 이동 속도를 높입니다.",
+            "category": 1,
+            "maxLevel": 8,
+            "levelCosts": [
+                10,
+                15,
+                25,
+                40,
+                60,
+                90,
+                130,
+                180
+            ],
+            "requiredAffinityByLevel": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            "modifiers": [
+                {
+                    "targetKind": 3,
+                    "targetUnitId": "racing-pitcrew",
+                    "levelDeltas": [
+                        0.30000001192092898,
+                        0.6000000238418579,
+                        0.8999999761581421,
+                        1.2000000476837159,
+                        1.5,
+                        1.7999999523162842,
+                        2.0999999046325685,
+                        2.4000000953674318
+                    ],
+                    "isInteger": false,
+                    "hasMinValue": false,
+                    "minValue": 0.0,
+                    "hasMaxValue": false,
+                    "maxValue": 0.0
+                }
+            ]
+        },
+        {
+            "trackId": "racing.heavy-deploy-cost",
+            "displayName": "헤비 페이스카 배치 비용 절감",
+            "description": "헤비 페이스카의 배치 비용을 줄입니다.",
+            "category": 1,
+            "maxLevel": 8,
+            "levelCosts": [
+                10,
+                15,
+                25,
+                40,
+                60,
+                90,
+                130,
+                180
+            ],
+            "requiredAffinityByLevel": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            "modifiers": [
+                {
+                    "targetKind": 4,
+                    "targetUnitId": "racing-heavy",
+                    "levelDeltas": [
+                        -2.0,
+                        -4.0,
+                        -7.0,
+                        -9.0,
+                        -11.0,
+                        -13.0,
+                        -15.0,
+                        -15.0
+                    ],
+                    "isInteger": true,
+                    "hasMinValue": true,
+                    "minValue": 1.0,
+                    "hasMaxValue": false,
+                    "maxValue": 0.0
+                }
+            ]
+        }
+    ]
 }

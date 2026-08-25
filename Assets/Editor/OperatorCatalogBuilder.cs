@@ -19,8 +19,17 @@ namespace RCCom.EditorTools
         public const string CatalogPath = "Assets/Data/Operators/OperatorCatalog.asset";
         public const string OperatorGroupPrefix = "Operator-";
         public const string AddressablesLabel = "operator-definition";
+        public const string PortraitAddressablesLabel = "operator-portrait";
         private const string RecipeFolder = "Assets/Editor/OperatorRecipes";
         private const string GeneratedLabel = "RCCom.GeneratedOperator";
+
+        // RemotePreviewSpriteLoader가 부르는 주소와 반드시 같은 이름 규칙을 써야 한다.
+        private const string PortraitSlotSelection = "selection";
+        private const string PortraitSlotManagement = "management";
+        private const string PortraitSlotShop = "shop";
+        private const string PortraitSlotShopUpper = "shop-upper";
+        private const string PortraitSlotShopUpperDimmed = "shop-upper-dimmed";
+        private const string PortraitSlotUnlockReward = "unlock-reward";
 
         [MenuItem("RCCom/Operators/Build Operator Catalog And Addressables")]
         public static void BuildAll()
@@ -40,6 +49,7 @@ namespace RCCom.EditorTools
             }
 
             settings.AddLabel(AddressablesLabel, false);
+            settings.AddLabel(PortraitAddressablesLabel, false);
 
             foreach (OperatorAssetRecipe recipe in recipes)
             {
@@ -85,6 +95,7 @@ namespace RCCom.EditorTools
             }
 
             settings.AddLabel(AddressablesLabel, false);
+            settings.AddLabel(PortraitAddressablesLabel, false);
 
             string definitionPath = $"Assets/Data/Operators/{recipe.operatorId}/OperatorDefinition.asset";
             OperatorDefinition definition = AssetDatabase.LoadAssetAtPath<OperatorDefinition>(definitionPath);
@@ -127,6 +138,15 @@ namespace RCCom.EditorTools
 
         private static OperatorCatalogEntry CreateEntry(OperatorAssetRecipe recipe, OperatorDefinition definition)
         {
+            // 스테이지 보상 초상화는 아트가 없으면 선택 초상화를 대신 쓴다(아래 로컬 Sprite
+            // 폴백과 동일 규칙). 어떤 소스를 썼는지에 따라 주소도 같이 맞춰야 로드 시 실제로
+            // 존재하는 항목을 가리킨다.
+            bool hasDedicatedUnlockReward = !string.IsNullOrWhiteSpace(recipe.unlockRewardPortraitPath);
+            string unlockRewardSlot = hasDedicatedUnlockReward ? PortraitSlotUnlockReward : PortraitSlotSelection;
+            string unlockRewardSourcePath = hasDedicatedUnlockReward
+                ? recipe.unlockRewardPortraitPath
+                : recipe.selectionPortraitPath;
+
             return new OperatorCatalogEntry
             {
                 operatorId = recipe.operatorId,
@@ -139,18 +159,38 @@ namespace RCCom.EditorTools
                 managementPortrait = recipe.remoteContent ? null : definition.managementPortrait,
                 shopPortrait = recipe.remoteContent ? null : definition.shopPortrait,
                 shopUpperBodyPortrait = recipe.remoteContent ? null : definition.shopUpperBodyPortrait,
+                shopUpperBodyPortraitDimmed = recipe.remoteContent
+                    ? null
+                    : definition.shopUpperBodyPortraitDimmed,
+                // 위 Sprite가 원격이라 비어 있는 동안 상점/선택 화면이 초상화 한 장만 담긴
+                // 독립 번들을 내려받을 수 있도록 주소를 남긴다(ConfigureAddressable이 같은
+                // 이름 규칙으로 그 번들을 등록해 둔다). 경로가 없는 아트는 null로 둬 화면이
+                // 존재하지 않는 주소를 요청하지 않게 한다.
+                previewPortraitAddress = ResolvePortraitAddress(
+                    recipe, recipe.selectionPortraitPath, PortraitSlotSelection),
+                managementPortraitAddress = ResolvePortraitAddress(
+                    recipe, recipe.managementPortraitPath, PortraitSlotManagement),
+                shopPortraitAddress = ResolvePortraitAddress(
+                    recipe, recipe.shopPortraitPath, PortraitSlotShop),
+                shopUpperBodyPortraitAddress = ResolvePortraitAddress(
+                    recipe, recipe.shopUpperBodyPortraitPath, PortraitSlotShopUpper),
+                shopUpperBodyPortraitDimmedAddress = ResolvePortraitAddress(
+                    recipe, recipe.shopUpperBodyPortraitDimmedPath, PortraitSlotShopUpperDimmed),
                 alternateName = definition.alternateName,
                 shopDialogue = definition.shopDialogue,
                 unlockRewardPortrait = recipe.remoteContent ? null :
                     (definition.unlockRewardPortrait != null
                         ? definition.unlockRewardPortrait
                         : definition.selectionPortrait),
+                unlockRewardPortraitAddress = ResolvePortraitAddress(
+                    recipe, unlockRewardSourcePath, unlockRewardSlot),
                 address = GetAddress(recipe.operatorId),
                 remoteContent = recipe.remoteContent,
                 unlockType = recipe.unlockType,
                 requiredBestWave = recipe.requiredBestWave,
                 purchasePrice = recipe.purchasePrice,
                 requiredStageId = recipe.requiredStageId ?? string.Empty,
+                unlockConditions = OperatorAssetBuilder.CloneUnlockConditions(recipe.unlockConditions),
                 unitPreviews = BuildUnitPreviews(definition, recipe.remoteContent),
             };
         }
@@ -260,6 +300,9 @@ namespace RCCom.EditorTools
                     // 원격 오퍼레이터 또는 원격 유닛이면 실제 Sprite를 카탈로그에
                     // 남기지 않는다. fallbackColor는 값 타입이라 항상 복사한다.
                     previewIcon = remoteContent || source.remoteContent ? null : source.previewIcon,
+                    // 주소 문자열은 CDN 콘텐츠 자체가 아니라 참조일 뿐이라 항상 복사해도
+                    // 안전하다 — previewIcon이 null일 때만 RemotePreviewSpriteLoader가 쓴다.
+                    previewIconAddress = source.previewIconAddress,
                     fallbackColor = source.fallbackColor,
                 });
             }
@@ -325,9 +368,16 @@ namespace RCCom.EditorTools
                 schemaChanged = true;
             }
 
-            if (bundled.BundleMode != BundledAssetGroupSchema.BundlePackingMode.PackTogether)
+            // 원격 그룹은 PackSeparately로 묶는다: 아래에서 초상화를 Definition과 별개
+            // 항목으로 등록해도, PackTogether였다면 결국 한 번들에 다시 합쳐져 상점이
+            // 초상화 하나만 보려 해도 대사·이펙트가 딸린 Definition 전체를 받게 된다.
+            // 로컬 그룹은 어차피 본체 빌드에 통째로 들어가므로 번들 수를 굳이 늘리지 않는다.
+            BundledAssetGroupSchema.BundlePackingMode desiredBundleMode = recipe.remoteContent
+                ? BundledAssetGroupSchema.BundlePackingMode.PackSeparately
+                : BundledAssetGroupSchema.BundlePackingMode.PackTogether;
+            if (bundled.BundleMode != desiredBundleMode)
             {
-                bundled.BundleMode = BundledAssetGroupSchema.BundlePackingMode.PackTogether;
+                bundled.BundleMode = desiredBundleMode;
                 schemaChanged = true;
             }
 
@@ -344,7 +394,76 @@ namespace RCCom.EditorTools
                 changed = true;
             }
 
-            string guid = AssetDatabase.AssetPathToGUID(definitionPath);
+            if (AssignAddressableEntry(settings, group, definitionPath, address, AddressablesLabel))
+            {
+                changed = true;
+            }
+
+            if (recipe.remoteContent && ConfigurePortraitEntries(settings, group, recipe))
+            {
+                changed = true;
+            }
+
+            return changed;
+        }
+
+        /// <summary>
+        /// 초상화 원본이 있는 슬롯만 Definition과 같은 그룹에 별도 항목으로 등록한다.
+        /// PackSeparately 덕분에 이 항목들은 Definition과 다른 번들로 빌드돼, 상점처럼
+        /// 초상화만 필요한 화면이 대사·이펙트가 딸린 Definition 전체를 당기지 않고 이
+        /// 한 장만 내려받을 수 있다. 주소 이름 규칙은 CreateEntry의 ResolvePortraitAddress와
+        /// 반드시 맞춰야 한다.
+        /// </summary>
+        private static bool ConfigurePortraitEntries(
+            AddressableAssetSettings settings, AddressableAssetGroup group, OperatorAssetRecipe recipe)
+        {
+            bool changed = false;
+            changed |= AssignPortraitEntry(
+                settings, group, recipe.selectionPortraitPath, recipe.operatorId, PortraitSlotSelection);
+            changed |= AssignPortraitEntry(
+                settings, group, recipe.managementPortraitPath, recipe.operatorId, PortraitSlotManagement);
+            changed |= AssignPortraitEntry(
+                settings, group, recipe.shopPortraitPath, recipe.operatorId, PortraitSlotShop);
+            changed |= AssignPortraitEntry(
+                settings, group, recipe.shopUpperBodyPortraitPath, recipe.operatorId, PortraitSlotShopUpper);
+            changed |= AssignPortraitEntry(
+                settings, group, recipe.shopUpperBodyPortraitDimmedPath, recipe.operatorId,
+                PortraitSlotShopUpperDimmed);
+            // unlockRewardPortraitPath가 비어 있으면 CreateEntry가 selection 주소로
+            // 대신 채운다 — 이미 등록된 selection 항목을 재사용하므로 여기서는 등록하지 않는다.
+            if (!string.IsNullOrWhiteSpace(recipe.unlockRewardPortraitPath))
+            {
+                changed |= AssignPortraitEntry(
+                    settings, group, recipe.unlockRewardPortraitPath, recipe.operatorId, PortraitSlotUnlockReward);
+            }
+
+            return changed;
+        }
+
+        private static bool AssignPortraitEntry(
+            AddressableAssetSettings settings, AddressableAssetGroup group, string spritePath, string operatorId,
+            string slot)
+        {
+            if (string.IsNullOrWhiteSpace(spritePath))
+            {
+                return false;
+            }
+
+            return AssignAddressableEntry(
+                settings, group, spritePath, GetPortraitAddress(operatorId, slot), PortraitAddressablesLabel);
+        }
+
+        private static bool AssignAddressableEntry(
+            AddressableAssetSettings settings, AddressableAssetGroup group, string assetPath, string address,
+            string label)
+        {
+            string guid = AssetDatabase.AssetPathToGUID(assetPath);
+            if (string.IsNullOrEmpty(guid))
+            {
+                throw new InvalidOperationException($"Addressables 항목 경로가 실제 에셋을 가리키지 않습니다: {assetPath}");
+            }
+
+            bool changed = false;
             AddressableAssetEntry existing = settings.FindAssetEntry(guid);
             if (existing == null || existing.parentGroup != group)
             {
@@ -358,13 +477,25 @@ namespace RCCom.EditorTools
                 changed = true;
             }
 
-            if (!entry.labels.Contains(AddressablesLabel))
+            if (!entry.labels.Contains(label))
             {
-                entry.SetLabel(AddressablesLabel, true, true, false);
+                entry.SetLabel(label, true, true, false);
                 changed = true;
             }
 
             return changed;
+        }
+
+        private static string GetPortraitAddress(string operatorId, string slot)
+        {
+            return $"operator/{operatorId}/portrait/{slot}";
+        }
+
+        private static string ResolvePortraitAddress(OperatorAssetRecipe recipe, string spritePath, string slot)
+        {
+            return recipe.remoteContent && !string.IsNullOrWhiteSpace(spritePath)
+                ? GetPortraitAddress(recipe.operatorId, slot)
+                : null;
         }
 
         public static string GetGroupName(string operatorId, bool remoteContent)

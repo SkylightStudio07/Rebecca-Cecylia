@@ -70,8 +70,10 @@ namespace RCCom.EditorTools
             if (string.IsNullOrWhiteSpace(definition.subtitle)) { warnings.Add($"부제 누락: {path}"); }
             if (string.IsNullOrWhiteSpace(definition.description)) { warnings.Add($"설명 누락: {path}"); }
             if (definition.descriptionBackground == null) { warnings.Add($"설명 배경 누락: {path}"); }
+            if (definition.battleBackground == null) { warnings.Add($"전투 배경 누락: {path}"); }
             if (definition.recommendedLevel < 1) { errors.Add($"추천 레벨은 1 이상이어야 합니다: {path}"); }
             if (definition.requiredBestWave < 0) { errors.Add($"해금 웨이브는 음수일 수 없습니다: {path}"); }
+            ValidateRoute(definition, path, errors, warnings);
 
             if (definition.waves == null || definition.waves.Count == 0)
             {
@@ -103,6 +105,37 @@ namespace RCCom.EditorTools
                         errors.Add($"보상 {reward.rewardId}의 수량은 1 이상이어야 합니다: {path}");
                     }
                 }
+            }
+        }
+
+        private static void ValidateRoute(StageDefinition definition, string path,
+            ICollection<string> errors, ICollection<string> warnings)
+        {
+            if (definition.routePoints == null || definition.routePoints.Count < 2)
+            {
+                errors.Add($"전투 경로는 적 생성점과 거점까지 최소 2개 점이 필요합니다: {path}");
+                return;
+            }
+
+            float totalDistance = 0f;
+            for (int i = 1; i < definition.routePoints.Count; i++)
+            {
+                float distance = Vector2.Distance(definition.routePoints[i - 1], definition.routePoints[i]);
+                totalDistance += distance;
+                if (distance < 0.01f)
+                {
+                    warnings.Add($"전투 경로 {i}번과 {i + 1}번 점이 거의 같은 위치입니다: {path}");
+                }
+            }
+
+            if (totalDistance < 1f) { warnings.Add($"전투 경로 총 길이가 지나치게 짧습니다: {path}"); }
+            if (definition.maxPointSpacing < 0.25f)
+            {
+                errors.Add($"경로 점 간격은 0.25 이상이어야 합니다: {path}");
+            }
+            if (definition.battleBackgroundScale.x <= 0f || definition.battleBackgroundScale.y <= 0f)
+            {
+                errors.Add($"전투 배경 Scale은 0보다 커야 합니다: {path}");
             }
         }
 

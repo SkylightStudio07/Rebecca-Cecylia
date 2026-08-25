@@ -11,7 +11,7 @@ namespace RCCom.Definitions.Stage
     [CreateAssetMenu(menuName = "RCCom/Stage/Stage Definition")]
     public sealed class StageDefinition : ScriptableObject
     {
-        public const int CurrentSchemaVersion = 1;
+        public const int CurrentSchemaVersion = 2;
 
         [Header("식별·진행")]
         [HideInInspector] public int schemaVersion;
@@ -28,6 +28,16 @@ namespace RCCom.Definitions.Stage
         public string description = string.Empty;
         [Tooltip("스테이지 선택 화면의 STAGE DESCRIPTION 영역에 표시할 가로형 배경")]
         public Sprite descriptionBackground;
+
+        [Header("전장 구성")]
+        [Tooltip("DefenseScene 월드 공간에 표시할 전투 배경. 스테이지 선택 설명 배경과 별도다.")]
+        public Sprite battleBackground;
+        public Vector2 battleBackgroundPosition = Vector2.zero;
+        public Vector2 battleBackgroundScale = Vector2.one;
+        [Tooltip("첫 점은 적 생성점, 마지막 점은 거점과 아군 출격점이다.")]
+        public List<Vector2> routePoints = new();
+        [Range(0f, 1f)] public float pathSmoothness = 1f;
+        [Range(0.25f, 5f)] public float maxPointSpacing = 0.25f;
 
         [Header("클리어 보상")]
         public List<StageReward> rewards = new();

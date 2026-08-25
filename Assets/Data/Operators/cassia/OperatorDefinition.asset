@@ -19,6 +19,11 @@ MonoBehaviour:
     \uC624\uD37C\uB808\uC774\uD130"
   selectionPortrait: {fileID: 8101380904372118242, guid: 7692c1b2ac922604a964bcd1026289c7, type: 3}
   managementPortrait: {fileID: -9117580695321126117, guid: 5e950858e95008a4ca29ca70c69f3a01, type: 3}
+  shopPortrait: {fileID: 0}
+  shopUpperBodyPortrait: {fileID: 0}
+  shopUpperBodyPortraitDimmed: {fileID: 0}
+  alternateName: 
+  shopDialogue: 
   playerData:
     maxHealth: 30
     moveSpeed: 5
@@ -33,9 +38,15 @@ MonoBehaviour:
   towerRoster: {fileID: 11400000, guid: d659e71c0d7f7cf4b84aa457d6eeadaf, type: 2}
   cardRoster: {fileID: 11400000, guid: bc89c00a530cb1b478439ed1a1e16841, type: 2}
   allyUnitRoster: {fileID: 11400000, guid: 8c9cb0d7d35553b4da054e240f6fc513, type: 2}
+  upgradeTracks: {fileID: 11400000, guid: 5ec8efb54aea82b4382e4745feaa2789, type: 2}
   dialogueSet: {fileID: 11400000, guid: 993a8531fa925e94abb55a5603de6975, type: 2}
   unlockType: 0
   requiredBestWave: 0
   purchasePrice: 0
   requiredStageId: 
+  unlockConditions:
+  - type: 0
+    requiredBestWave: 0
+    purchasePrice: 0
+    requiredStageId: 
   unlockRewardPortrait: {fileID: 0}

@@ -11,7 +11,7 @@ namespace RCCom.Data
     [Serializable]
     public class PlayerProfile
     {
-        public const int CurrentSchemaVersion = 5;
+        public const int CurrentSchemaVersion = 6;
 
         public const int MaxOperatorAffinity = 100;
         public const int ReturnAffinityWithoutParticipation = 2;
@@ -33,6 +33,14 @@ namespace RCCom.Data
         public List<OperatorAffinityRecord> operatorAffinities = new List<OperatorAffinityRecord>();
 
         /// <summary>
+        /// 오퍼레이터별 업그레이드 트랙 레벨. JsonUtility 제약으로 목록 저장 방식은
+        /// operatorAffinities와 동일하다. 목록에 없는 (operatorId, trackId) 조합은 레벨 0(미강화)
+        /// 으로 간주한다. 상한(maxLevel)은 OperatorUpgradeTrackSet 쪽 데이터라 여기서는 모르므로,
+        /// 이 클래스는 0 이상만 보장하고 상한 클램프는 적용/디버그 쪽 책임이다.
+        /// </summary>
+        public List<OperatorUpgradeRecord> operatorUpgrades = new List<OperatorUpgradeRecord>();
+
+        /// <summary>
         /// 해금 여부 자체는 bestWave에서 계속 계산한다. 이 목록은 해금 상태를 중복 저장하는
         /// 값이 아니라, 획득 연출을 이미 끝까지 본 오퍼레이터만 기록해 재접속 때 같은 연출이
         /// 반복되는 것을 막는 표시 이력이다.
@@ -49,8 +57,8 @@ namespace RCCom.Data
         public List<string> clearedStageIds = new List<string>();
 
         /// <summary>
-        /// 결과 화면에서 귀환한 오퍼레이터. 실제 보상은 로비에서 해당 오퍼레이터를
-        /// 클릭할 때 정산해, 전투 직후 자동으로 호감도가 오르는 것을 막는다.
+        /// 결과 화면에서 귀환한 오퍼레이터. 실제 보상은 메인 로비가 열린 뒤 정산해,
+        /// 전투 결과 화면에서 즉시 호감도가 오르는 것을 막는다.
         /// </summary>
         public string pendingReturnOperatorId = string.Empty;
         public int pendingReturnCount;
@@ -180,9 +188,9 @@ namespace RCCom.Data
         }
 
         /// <summary>
-        /// 로비 클릭 한 번으로 미수령 귀환 보상을 소비한다. 참전 오퍼레이터를 클릭하면
-        /// +5, 다른 오퍼레이터를 클릭하면 +2이며, 현재 로비는 참전 오퍼레이터를
-        /// 표시하므로 기본 흐름은 +5다.
+        /// 로비 진입 또는 클릭 폴백에서 미수령 귀환 보상을 소비한다. 참전 오퍼레이터면
+        /// +5, 다른 오퍼레이터면 +2이며, 현재 로비는 참전 오퍼레이터를 표시하므로
+        /// 기본 흐름은 +5다.
         /// </summary>
         public bool TryClaimBattleReturn(string interactedOperatorId, out int grantedAffinity,
             out bool participated)
@@ -200,8 +208,10 @@ namespace RCCom.Data
             int perReturn = participated
                 ? ReturnAffinityWithParticipation
                 : ReturnAffinityWithoutParticipation;
-            grantedAffinity = perReturn * pendingReturnCount;
-            AddOperatorAffinity(interactedOperatorId, grantedAffinity);
+            int previousAffinity = GetOperatorAffinity(interactedOperatorId);
+            AddOperatorAffinity(interactedOperatorId, perReturn * pendingReturnCount);
+            // 상한에 막힌 값을 알림에 표시하지 않도록 요청량이 아닌 실제 증가량을 반환한다.
+            grantedAffinity = GetOperatorAffinity(interactedOperatorId) - previousAffinity;
 
             pendingReturnOperatorId = string.Empty;
             pendingReturnCount = 0;
@@ -227,6 +237,95 @@ namespace RCCom.Data
             }
 
             return OperatorAffinityTier.Unfamiliar;
+        }
+
+        public int GetUpgradeLevel(string operatorId, string trackId)
+        {
+            OperatorUpgradeRecord record = FindUpgradeRecord(operatorId, trackId);
+            return record == null ? 0 : Math.Max(0, record.level);
+        }
+
+        public int SetUpgradeLevel(string operatorId, string trackId, int level)
+        {
+            if (string.IsNullOrWhiteSpace(operatorId) || string.IsNullOrWhiteSpace(trackId))
+            {
+                return 0;
+            }
+
+            OperatorUpgradeRecord record = FindOrCreateUpgradeRecord(operatorId, trackId);
+            record.level = Math.Max(0, level);
+            return record.level;
+        }
+
+        public int AddUpgradeLevel(string operatorId, string trackId, int delta)
+        {
+            return SetUpgradeLevel(operatorId, trackId, GetUpgradeLevel(operatorId, trackId) + delta);
+        }
+
+        /// <summary>
+        /// 강화 한 레벨의 조건 확인·재화 차감·레벨 기록을 한 번에 처리한다. UI가 각 단계를
+        /// 따로 호출하면 중복 클릭 중 재화만 빠지는 중간 상태가 생길 수 있어 Profile이 원자적으로
+        /// 소유한다. 트랙 데이터 타입을 참조하지 않아 저장 계층과 콘텐츠 계층의 결합은 만들지 않는다.
+        /// </summary>
+        public bool TryPurchaseUpgradeLevel(
+            string operatorId,
+            string trackId,
+            int maxLevel,
+            int cost,
+            int requiredAffinity)
+        {
+            if (string.IsNullOrWhiteSpace(operatorId) || string.IsNullOrWhiteSpace(trackId) ||
+                maxLevel < 1)
+            {
+                return false;
+            }
+
+            int currentLevel = GetUpgradeLevel(operatorId, trackId);
+            if (currentLevel >= maxLevel ||
+                GetOperatorAffinity(operatorId) < Math.Max(0, requiredAffinity) ||
+                !TrySpendCommodity(Math.Max(0, cost)))
+            {
+                return false;
+            }
+
+            SetUpgradeLevel(operatorId, trackId, currentLevel + 1);
+            return true;
+        }
+
+        private OperatorUpgradeRecord FindUpgradeRecord(string operatorId, string trackId)
+        {
+            if (string.IsNullOrWhiteSpace(operatorId) || string.IsNullOrWhiteSpace(trackId) ||
+                operatorUpgrades == null)
+            {
+                return null;
+            }
+
+            for (int i = 0; i < operatorUpgrades.Count; i++)
+            {
+                OperatorUpgradeRecord record = operatorUpgrades[i];
+                if (record != null &&
+                    string.Equals(record.operatorId, operatorId, StringComparison.Ordinal) &&
+                    string.Equals(record.trackId, trackId, StringComparison.Ordinal))
+                {
+                    return record;
+                }
+            }
+
+            return null;
+        }
+
+        private OperatorUpgradeRecord FindOrCreateUpgradeRecord(string operatorId, string trackId)
+        {
+            operatorUpgrades ??= new List<OperatorUpgradeRecord>();
+            OperatorUpgradeRecord existing = FindUpgradeRecord(operatorId, trackId);
+            if (existing != null)
+            {
+                return existing;
+            }
+
+            var created = new OperatorUpgradeRecord { operatorId = operatorId, trackId = trackId };
+            operatorUpgrades.Add(created);
+            return created;
         }
 
         public bool HasPresentedOperatorAcquisition(string operatorId)

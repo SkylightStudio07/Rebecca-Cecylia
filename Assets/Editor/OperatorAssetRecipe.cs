@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using RCCom.Data;
 using RCCom.Definitions.Operator;
 
@@ -20,6 +21,7 @@ namespace RCCom.EditorTools
         public string managementPortraitPath;
         public string shopPortraitPath;
         public string shopUpperBodyPortraitPath;
+        public string shopUpperBodyPortraitDimmedPath;
         public string alternateName;
         public string shopDialogue;
         public string unlockRewardPortraitPath;
@@ -33,5 +35,9 @@ namespace RCCom.EditorTools
         public OperatorUnlockType unlockType;
         public int purchasePrice;
         public string requiredStageId;
+        public List<OperatorUnlockCondition> unlockConditions = new();
+
+        /// <summary>오퍼레이터 영구 강화 트랙 목록. 상점 UI가 없어도 비어 있으면 그대로 미강화로 동작한다.</summary>
+        public List<OperatorUpgradeTrack> upgradeTracks = new();
     }
 }

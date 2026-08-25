@@ -114,16 +114,17 @@ namespace RCCom.UI
         public void Purchase()
         {
             if (_isLoading || !TryGetBrowsingEntry(out OperatorCatalogEntry entry) ||
-                entry.unlockType != OperatorUnlockType.CommodityPurchase || entry.IsUnlocked(_profile))
+                !entry.HasUnlockCondition(OperatorUnlockType.CommodityPurchase) || entry.IsUnlocked(_profile))
             {
                 return;
             }
 
-            if (!_profile.TryPurchaseOperator(entry.operatorId, entry.purchasePrice))
+            int purchasePrice = entry.GetPurchasePrice();
+            if (!_profile.TryPurchaseOperator(entry.operatorId, purchasePrice))
             {
                 if (statusText != null)
                 {
-                    statusText.text = $"골드가 부족합니다. 필요 {entry.purchasePrice} / 보유 {_profile.commodity}";
+                    statusText.text = $"골드가 부족합니다. 필요 {purchasePrice} / 보유 {_profile.commodity}";
                 }
                 UpdateButtons();
                 return;
@@ -295,8 +296,8 @@ namespace RCCom.UI
             {
                 statusText.text = unlocked
                     ? "DEPLOY를 눌러 활성 오퍼레이터로 지정합니다."
-                    : entry.unlockType == OperatorUnlockType.CommodityPurchase
-                        ? $"PURCHASE를 눌러 {entry.purchasePrice} 골드로 영입합니다."
+                    : entry.HasUnlockCondition(OperatorUnlockType.CommodityPurchase)
+                        ? $"PURCHASE를 눌러 {entry.GetPurchasePrice()} 골드로 영입합니다."
                         : "잠금 조건을 충족해야 배치할 수 있습니다.";
             }
             if (downloadProgress != null) { downloadProgress.value = 0f; }
@@ -348,10 +349,10 @@ namespace RCCom.UI
             if (purchaseButton != null)
             {
                 bool canPurchase = TryGetBrowsingEntry(out OperatorCatalogEntry entry) &&
-                    entry.unlockType == OperatorUnlockType.CommodityPurchase && !entry.IsUnlocked(_profile);
+                    entry.HasUnlockCondition(OperatorUnlockType.CommodityPurchase) && !entry.IsUnlocked(_profile);
                 purchaseButton.gameObject.SetActive(canPurchase);
                 purchaseButton.interactable = canPurchase && !_isLoading &&
-                    _profile != null && _profile.commodity >= entry.purchasePrice;
+                    _profile != null && _profile.commodity >= entry.GetPurchasePrice();
             }
             if (backButton != null) { backButton.interactable = !_isLoading; }
         }

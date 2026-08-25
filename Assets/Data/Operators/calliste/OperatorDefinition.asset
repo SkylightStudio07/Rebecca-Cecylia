@@ -19,6 +19,7 @@ MonoBehaviour:
   managementPortrait: {fileID: 5667498768502238285, guid: cd384616f9666b341bc8163e96db5136, type: 3}
   shopPortrait: {fileID: 5667498768502238285, guid: cd384616f9666b341bc8163e96db5136, type: 3}
   shopUpperBodyPortrait: {fileID: 21300000, guid: 15ef76899e629894c8484e42fe738bbc, type: 3}
+  shopUpperBodyPortraitDimmed: {fileID: 3748452310637042673, guid: 489e9269d72c4a84b8e8d6ee5d1bd8ed, type: 3}
   alternateName: Bartender
   shopDialogue: "\uC6B0\uB9AC\uB294 \uBE5B\uC774 \uC5C6\uB294 \uACF3\uC5D0\uC11C\n\uB2E4\uC2DC
     \uB9CC\uB0A0 \uAC70\uC57C."
@@ -36,9 +37,15 @@ MonoBehaviour:
   towerRoster: {fileID: 11400000, guid: b971b9f547ee6264b9af2dd636033c66, type: 2}
   cardRoster: {fileID: 11400000, guid: 999a75556a8afb941a1bd7805605c1b5, type: 2}
   allyUnitRoster: {fileID: 11400000, guid: ab2309218941da0429f235d979637d0d, type: 2}
+  upgradeTracks: {fileID: 11400000, guid: a5699273acdf951488c51ffcc0550596, type: 2}
   dialogueSet: {fileID: 11400000, guid: a65cb253d031a6440a5ffcbc8e33aa35, type: 2}
   unlockType: 2
   requiredBestWave: 0
   purchasePrice: 100
   requiredStageId: 
+  unlockConditions:
+  - type: 2
+    requiredBestWave: 0
+    purchasePrice: 100
+    requiredStageId: 
   unlockRewardPortrait: {fileID: 0}

@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using RCCom.Data;
+using RCCom.Definitions.Operator;
 using RCCom.Definitions.Unit;
 using RCCom.Managers;
 using UnityEngine;
@@ -68,9 +70,39 @@ namespace RCCom.Runtime
             // 타워형 오퍼레이터는 유닛 로스터가 없는 것이 정상이다. 이 경우 비어 있는 기본
             // 로스터를 섞지 않고 Controller를 안전한 비활성 상태로 유지해 로드아웃 경계를 지킨다.
             allyUnitRoster = OperatorLoadoutSession.ResolveAllyUnitRoster(allyUnitRoster);
+            ApplyOperatorUpgrades();
             maxCommandPoints = Mathf.Max(1, maxCommandPoints);
             _commandPoints = Mathf.Clamp(startingCommandPoints, 0, maxCommandPoints);
             _commandPointRecoveryRemainder = 0f;
+        }
+
+        /// <summary>
+        /// SO가 아닌 씬 컴포넌트 필드(startingCommandPoints 등)는 BattleContentCache의 Definition
+        /// 클론 경로로는 닿지 않으므로, 여기서 직접 오퍼레이터 강화 델타를 더한다. 강화 트랙이
+        /// 없거나 레벨 0이면 델타가 0이라 기존 동작과 완전히 동일하다.
+        /// </summary>
+        private void ApplyOperatorUpgrades()
+        {
+            OperatorDefinition definition = OperatorLoadoutSession.SelectedDefinition;
+            OperatorUpgradeTrackSet upgradeTracks = definition != null ? definition.upgradeTracks : null;
+            if (upgradeTracks == null || string.IsNullOrWhiteSpace(definition.operatorId))
+            {
+                return;
+            }
+
+            PlayerProfile profile = OperatorUpgradeApplier.LoadProfile();
+            startingCommandPoints = Mathf.RoundToInt(OperatorUpgradeApplier.ResolveValue(
+                upgradeTracks, profile, definition.operatorId,
+                OperatorUpgradeTargetKind.DeployStartingCommandPoints, null,
+                startingCommandPoints));
+            maxCommandPoints = Mathf.RoundToInt(OperatorUpgradeApplier.ResolveValue(
+                upgradeTracks, profile, definition.operatorId,
+                OperatorUpgradeTargetKind.DeployMaxCommandPoints, null,
+                maxCommandPoints));
+            commandPointRecoveryPerSecond = OperatorUpgradeApplier.ResolveValue(
+                upgradeTracks, profile, definition.operatorId,
+                OperatorUpgradeTargetKind.DeployCommandPointRecoveryPerSecond, null,
+                commandPointRecoveryPerSecond);
         }
 
         private void OnEnable()

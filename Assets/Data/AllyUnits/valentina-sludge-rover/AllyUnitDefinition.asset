@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a2662b906e76a244ba5a59ae4e877a4f, type: 3}
+  m_Name: AllyUnitDefinition
+  m_EditorClassIdentifier: Assembly-CSharp::RCCom.Definitions.Unit.AllyUnitDefinition
+  data:
+    unitId: valentina-sludge-rover
+    displayName: "\uC2AC\uB7EC\uC9C0 \uBC29\uCD9C \uD0F1\uD06C"
+    deployCost: 80
+    maxHealth: 80
+    moveSpeed: 1
+    attackDamage: 0
+    attackInterval: 10
+    attackRange: 10
+    detectionRange: 10
+    projectileSpeed: 8
+  effects:
+  - {fileID: 11400000, guid: c5424bb8e474b2797b57cd6abf2bedab, type: 2}
+  - {fileID: 11400000, guid: a01d8656682899bf9f5fa7a0fa1fda91, type: 2}
+  visualEffects:
+  - {fileID: 11400000, guid: b2d31038cd0d4df49904824adb134dbd, type: 2}
+  sprite: {fileID: -2744770120319149338, guid: 475d97b04e88d9849b1af26f8e0da96b, type: 3}
+  tint: {r: 1, g: 1, b: 1, a: 1}
+  spriteForwardOffsetDegrees: -90

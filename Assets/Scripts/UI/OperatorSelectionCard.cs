@@ -1,5 +1,6 @@
 using System;
 using RCCom.Definitions.Operator;
+using RCCom.Runtime;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -29,8 +30,8 @@ namespace RCCom.UI
 
             if (portraitImage != null)
             {
-                portraitImage.sprite = entry.previewPortrait;
-                portraitImage.enabled = entry.previewPortrait != null;
+                RemotePreviewSpriteLoader.LoadInto(
+                    portraitImage, entry.previewPortrait, entry.previewPortraitAddress, Color.clear);
             }
 
             if (nameText != null)

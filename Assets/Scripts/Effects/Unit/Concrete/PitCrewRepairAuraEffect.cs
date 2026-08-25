@@ -21,6 +21,19 @@ namespace RCCom.Effects.Unit.Concrete
         [Tooltip("정지하여 교전 중(Engaging)인 아군에게 적용할 수리량 배율")]
         [SerializeField, Min(1f)] private float pitStopMultiplier = 2.0f;
 
+        public float RepairPerSecond => repairPerSecond;
+        public float PitStopMultiplier => pitStopMultiplier;
+
+        /// <summary>
+        /// 오퍼레이터 강화 적용 전용. 공유 원본 에셋이 아니라 OperatorUpgradeApplier가
+        /// Instantiate로 만든 런타임 복제본에만 호출해야 한다.
+        /// </summary>
+        internal void ApplyRuntimeOverride(float repairPerSecond, float pitStopMultiplier)
+        {
+            this.repairPerSecond = Mathf.Max(0f, repairPerSecond);
+            this.pitStopMultiplier = Mathf.Max(1f, pitStopMultiplier);
+        }
+
         public override void OnTick(AllyUnitContext ctx)
         {
             if (ctx == null || ctx.self == null || ctx.self.Data == null || ctx.activeAllies == null ||

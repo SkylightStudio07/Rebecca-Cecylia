@@ -299,9 +299,27 @@ namespace RCCom.EditorTools
                     continue;
                 }
 
-                if (group.entries.Count != 1)
+                // Definition 1개는 필수고, 원격 유닛은 미리보기 아이콘 항목을 같은 그룹에
+                // PackSeparately로 함께 둘 수 있다(RemotePreviewSpriteLoader가 Definition
+                // 전체를 당기지 않고 아이콘만 받게 하기 위함). 두 라벨 중 어디에도 안 걸린
+                // 항목이 섞여 있으면 수작업 오염으로 본다.
+                int definitionEntryCount = 0;
+                int strayEntryCount = 0;
+                foreach (AddressableAssetEntry groupEntry in group.entries)
                 {
-                    errors.Add($"아군 유닛 그룹은 Definition 1개만 가져야 합니다: {expectedGroup}");
+                    if (groupEntry.labels.Contains(AllyUnitCatalogBuilder.AddressablesLabel))
+                    {
+                        definitionEntryCount++;
+                    }
+                    else if (!groupEntry.labels.Contains(AllyUnitCatalogBuilder.PreviewAddressablesLabel))
+                    {
+                        strayEntryCount++;
+                    }
+                }
+
+                if (definitionEntryCount != 1 || strayEntryCount != 0)
+                {
+                    errors.Add($"아군 유닛 그룹은 Definition 1개와 미리보기 아이콘 항목만 가져야 합니다: {expectedGroup}");
                 }
 
                 BundledAssetGroupSchema bundled = group.GetSchema<BundledAssetGroupSchema>();

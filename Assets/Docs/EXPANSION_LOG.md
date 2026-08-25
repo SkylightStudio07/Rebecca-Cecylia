@@ -1608,12 +1608,103 @@ Phase 0 자동화 경로를 실제로 열고, 이후 오퍼레이터별 원격 �
 
 - 구매형 오퍼레이터가 이미 프로필에 소유된 경우 `RecruitOperatorButton_AlreadyPurchased`를 고정 표시하고 버튼 입력을 막는다. 구매 전에는 기존 Normal/Hover SpriteSwap을 복원하므로, 향후 구매형 오퍼레이터가 여러 명으로 늘어나 선택을 이동해도 각 항목의 소유 상태에 맞춰 버튼 외형이 갱신된다.
 
-## 2026-08-25 — Enemy Studio 적 역할 분류 확장
+## 2026-08-25 — 로비 귀환 친밀도 상승 토스트
 
-- `EnemyKind`에 `Drone`, `Explode`, `Heal`, `HeavyTanker`를 추가했다. Enemy Studio가 enum을 직접 그리므로 별도 Studio 분기 없이 Kind 선택지가 자동으로 확장된다.
-- 기존 JSON과 SO가 Kind를 정수로 직렬화하므로 기존 `Normal`~`Boss`의 값은 0~3으로 고정하고 신규 값은 뒤에 4~7로 추가했다. 항목 순서 변경으로 기존 적의 의미가 바뀌는 일을 막기 위함이다.
-- Kind는 역할 분류 데이터로만 유지하고 종류별 C# 분기를 추가하지 않았다. 자폭·회복·비행 같은 실제 행동은 기존 `EnemyEffectBase` 에셋을 레시피에 조립하는 구조로 구현해야 데이터만으로 적을 확장할 수 있다.
+- 전투 귀환 보상은 TitleScene의 메인 로비 전환이 끝난 직후 정산하고, 기존 `MainMenuBackground/IntimacyElevationText`를 위로 떠오르며 사라지는 알림으로 재사용한다. 결과 화면에서 바로 올리지 않아 귀환이라는 흐름을 유지하면서도, 오퍼레이터를 클릭하기 전 상승 사실을 확인할 수 있게 하기 위함이다.
+- 정산된 귀환 대사 종류는 메모리에 보존해 다음 오퍼레이터 클릭에서 기존 참전/비참전 대사가 그대로 출력된다. 디버그처럼 이미 열린 로비에서 귀환을 예약한 경우에는 클릭 시 정산하는 기존 폴백도 유지한다.
+- 알림에는 요청 보상량이 아니라 100 상한 적용 후의 실제 증가량만 표시한다. 이미 최대 친밀도라 증가량이 0이면 귀환 예약은 소비하되 잘못된 상승 알림은 띄우지 않는다.
+- 토스트 애니메이션은 `Time.unscaledDeltaTime` 기반 수동 타이머로 처리하고 입력을 차단하지 않는다. 별도 매니저나 영속 알림 상태는 만들지 않았다.
 
+## 2026-08-25 — Stage Studio 전투 배경·경로 제작 작업대
+
+### 결정
+- `StageDefinition`이 선택 화면의 `descriptionBackground`와 별도로 전투용 `battleBackground`, 위치·크기, `routePoints`, 곡선 보간 설정을 소유한다. 첫 점은 적 생성점, 마지막 점은 거점 및 아군 출격점으로 고정해 별도 랠리 좌표와 경로 끝이 어긋나는 상태를 만들지 않는다.
+- 스테이지마다 DefenseScene을 복제해 런타임 콘텐츠로 사용하지 않는다. `StageRouteTestScene` 한 장만 제작 작업대로 두고, Scene View에서 옮긴 Transform 좌표를 최종 제작 원본인 `StageDefinition`으로 캡처한다.
+- `MapManager`는 스테이지 모드에서 `StageDefinition.routePoints`와 전투 배경을 우선 적용하고, 엔드리스 모드에서는 기존 씬 Transform 경로를 유지한다. 적·아군은 계속 공용 `MapManager.Waypoints`만 소비하므로 전투 인스턴스 코드는 변경하지 않았다.
+- 테스트 씬의 경로 표시는 MonoBehaviour를 붙이지 않고 Editor의 Scene View 콜백으로 그린다. 테스트용 시각화가 플레이어 빌드와 씬 직렬화 계약에 들어가지 않게 하기 위함이다.
+
+### 제작 도구
+- Stage Studio에 `Map` 탭을 추가해 전투 배경, 위치·크기, 경로 보간값과 좌표 목록을 편집한다.
+- `Open Test Scene & Load Selected Stage`는 공용 DefenseScene 복사본에 선택 스테이지의 배경과 경로 점을 생성한다. `Capture Test Scene Into Selected Stage`는 Scene View에서 수정한 좌표·배경 Transform·보간값을 SO에 되돌려 저장한다.
+- 기존 DefenseScene의 9개 웨이포인트를 CH1 7개 StageDefinition의 초기 경로로 이관했다. 런타임 DefenseScene에는 스테이지 배경을 표시할 공용 SpriteRenderer 하나만 추가했다.
+
+### 검증
+- Unity 6000.3.13f1 재컴파일 결과 `failed=false`, `errors=[]`를 확인했다.
+- 1-1의 9개 경로 점을 테스트 씬에 로드한 뒤 다시 Definition으로 캡처하는 왕복을 확인했다.
+- Stage Validator는 7개 스테이지에서 오류 0건을 확인했다. 아직 제작되지 않은 설명 배경·전투 배경·보상은 각 스테이지별 경고로 유지한다.
+- Play Mode와 플레이어 빌드는 실행하지 않았다. 이번 검증은 Edit Mode 에셋 왕복, 씬 배선, 컴파일과 데이터 검증 범위다.
+
+## 2026-08-25 — 오로라(Aurora) 대사 스크립트 및 상황별 표정 스프라이트 바인딩
+
+### 결정
+- 오로라(Aurora)의 천재 해커/전자전 스페셜리스트 컨셉에 맞춰 전체 18개 상황 슬롯(로비 상호작용, 귀환, 호감도 5단계 터치, 전투 개시, 스킬 발동, 거점 피격, 플레이어 일반/위기 피격, 건설 실패 2종, 패배 2종)의 대사 스크립트를 완성했다.
+- `Assets/Art/Character Standing Arts/오로라/레베카/`의 감정별 스탠딩 스프라이트(`smile-1`, `curious-1`, `annoyed-1/2/3`, `happy smile`, `smug`, `flustered-1`, `blushing shyly-1/2/3`, `fidgeting shyly`, `aroused-1` 등)와 전투 치비 포트레잇(`chibby_portrait_1~12.png`)을 각 대사의 감정에 맞춰 1:1로 매핑했다.
+- 자동화 빌더 `AuroraDialogueBuilder`를 추가해 `RCCom/Operators/Build Aurora Dialogue` 메뉴로 언제든 `OperatorDialogueSet.asset`을 멱등하게 재생성·갱신할 수 있게 했다.
+- `Aurora.json` 레시피에 `playStyleDescription`, `alternateName`("Cyber Hacker"), `shopDialogue`를 함께 동기화했다.
+
+### 의도적으로 하지 않은 것
+- 기존 타워/카드/유닛 SO나 다른 오퍼레이터의 대사 데이터를 임의로 수정하지 않았다.
+- 불필요한 C# 클래스 분기를 만들지 않고 기존 `OperatorDialogueSet` 및 `OperatorDialogueEntry` 직렬화 구조를 그대로 따랐다.
+
+## 2026-08-25 — 오퍼레이터 강화 트랙 정밀 데이터화
+
+### 결정
+- 강화 한 행을 `OperatorUpgradeTrack`, 실제 전투 수치 변경을 그 안의 `OperatorUpgradeModifier` 목록으로 분리했다. 한 번의 구매로 여러 유닛에 서로 다른 수치를 적용할 수 있어 오로라의 드론 장갑처럼 UI에서는 한 트랙이지만 대상별 증가량이 다른 기획도 별도 트랙으로 쪼개지 않는다.
+- 레벨 수치는 `레벨 × 고정 델타`가 아니라 Lv1~Lv8의 정확한 누적 델타 표로 저장한다. 정수 반올림이 있는 CP·배치 비용과 비선형 기획값이 설계표와 어긋나지 않게 하기 위함이다.
+- Core/Support별 레벨 비용표와 호감도 요구 표를 트랙 데이터에 포함했다. 현재 호감도 요구는 전부 0으로 두되, 이후 콘텐츠 조정은 코드 수정 없이 Operator Studio에서 가능하다.
+- 구매 조건 확인, 재화 차감, 레벨 상승은 `PlayerProfile.TryPurchaseUpgradeLevel` 한 호출에서 처리한다. UI 중복 클릭으로 재화만 차감되는 중간 상태를 만들지 않는다.
+- 전투용 강화 Definition 캐시는 DefenseScene 진입마다 복제 효과 SO와 함께 제거한다. 같은 실행 중 상점에서 올린 강화가 다음 전투에 즉시 반영되고 Retry 누적 메모리가 남지 않게 하기 위함이다.
+
+### 도구와 검증
+- Operator Studio의 Upgrades 탭에서 5개 트랙, 비용·호감도 표, 복수 modifier와 레벨별 델타를 편집하도록 확장했다. 빌더는 트랙 수, 표 길이, 비용, 호감도 범위, Roster Unit ID, 중복 대상을 검증한다.
+- Cassia, Calliste, Aurora, Racing 레시피를 5트랙·8레벨 데이터로 변환했고 Racing의 이동 강화 대상을 Heavy가 아닌 Pit Crew로 바로잡았다.
+- Unity 6000.3.13f1 재컴파일 결과 `failed=false`, `errors=[]`를 확인했다. Play Mode와 플레이어 빌드는 실행하지 않았다.
+
+## 2026-08-25 — 복수 해금 조건과 리크루트 Shop 순환 선택
+
+### 결정
+- 오퍼레이터 해금 조건을 단일 열거형에서 조건 목록으로 확장하고, 목록 안의 어느 하나라도 만족하면 획득되는 OR 규칙으로 통일했다. 기존 Definition과 저장 데이터의 호환을 위해 목록이 비어 있을 때만 구형 단일 필드를 읽는다.
+- 칼리스테는 골드 구매, 오로라는 최고 웨이브 또는 골드 구매, 실비아는 `ch1-02` 클리어 또는 골드 구매로 설정했다. 따라서 스테이지 보상으로 먼저 획득한 오퍼레이터를 Shop에서 다시 구매할 수 없다.
+- 리크루트 Shop 목록은 골드 구매 조건을 포함한 카탈로그 항목을 자동 수집한다. 중앙에는 선택된 밝은 상반신 이미지를, 좌우에는 각 오퍼레이터별로 미리 전처리한 어두운 상반신 이미지를 표시하며 버튼으로 인덱스를 순환한다.
+- 어두운 상반신 이미지는 밝은 이미지에 런타임 색상을 곱해 흉내 내지 않고 `OperatorDefinition`의 독립 에셋으로 둔다. 아트가 이미 전처리되어 있고 오퍼레이터마다 명암 표현이 다르므로, Operator Studio와 JSON 레시피 양쪽에서 직접 지정하게 했다.
+- 상점 이명과 짧은 대사는 창작 데이터이므로 비어 있어도 구조 검증을 실패시키지 않고 경고한다. 반면 구매 가격과 메인·밝은·어두운 초상화는 기능에 필요한 값이라 계속 오류로 취급한다.
+
+### 검증
+- 카시아·칼리스테·오로라·실비아 Definition과 OperatorCatalog를 에디터 빌더로 갱신했다.
+- `LobbyShopPanelSetup`으로 TitleScene의 중앙/좌/우 슬롯, 잠금 표시, 이름, 좌우 버튼을 연결했고 Edit Mode 배선 검증을 통과했다.
+- Play Mode와 플레이어 빌드는 실행하지 않았다.
+
+## 2026-08-25 — 로비·Shop 전신 이미지 종횡비 보호
+
+- 로비 `OperatorImage`와 리크루트 Shop 중앙 `OperatorPortrait`가 원본 전신 비율을 유지하도록 `Image.preserveAspect`를 씬과 런타임 양쪽에서 강제했다. 현재 오로라 원본과 RectTransform은 모두 832×1216이고 상위 X/Y 배율도 동일했으므로, 기존 데이터 자체를 재가공하지 않고 이후 해상도·레이아웃 변화에서 발생할 수 있는 비균일 확대만 차단했다.
+- TitleScene 저장값에서 두 Image 모두 `m_PreserveAspect: 1`임을 확인했고 로비 대사·Shop 배선 검증을 통과했다. Play Mode와 플레이어 빌드는 실행하지 않았다.
+
+## 2026-08-25 — 보유 오퍼레이터 강화 uGUI
+
+### 결정
+- 강화 화면은 별도 전신·하단 카드 UI를 복제하지 않고 `ShopPanelBackground/OperatorPanel`과 `UnderPanel`을 리크루트 화면과 공유한다. 탭별 컨트롤러만 교대로 활성화해 같은 아트의 위치와 크기가 두 화면에서 갈라지지 않게 했다.
+- 강화 대상 목록에는 현재 프로필에서 해금된 오퍼레이터만 포함한다. 보유자가 1명이면 중앙 슬롯만 채우고 좌우는 기존 `LockSprite`만 표시하며, 2명이면 실제 이웃 한 칸과 빈 잠금 한 칸, 3명 이상이면 이전·다음 오퍼레이터를 순환 표시한다.
+- 중앙과 좌우 카드는 기존 상점용 밝은·전처리된 어두운 상반신 이미지를 재사용한다. 전용 이미지가 아직 없는 카시아 등은 관리/미리보기 초상화로 폴백하므로 기능 구현과 최종 아트 교체를 분리했다.
+- 강화 데이터 열람은 선택 중인 전투 오퍼레이터를 변경하지 않고 해당 카탈로그 주소의 `OperatorDefinition`만 Addressables로 읽는다. 탭 종료·대상 변경 시 소유한 핸들을 해제해 로비 탐색이 세션 로드아웃이나 메모리 수명을 바꾸지 않게 했다.
+- 실제 강화 구매는 기존 `PlayerProfile.TryPurchaseUpgradeLevel`의 원자적 조건 확인·재화 차감·레벨 상승 계약을 그대로 사용한다. UI가 강화 규칙을 재구현하지 않으며 구매 후 로비 재화 표시만 즉시 갱신한다.
+
+### uGUI와 검증
+- 우측 임시 강화 패널에 트랙 5개, 현재/다음 레벨, 설명, 비용·보유 재화, 상태, Enhance/Back 버튼을 생성했다. 최종 스프라이트가 준비되면 이 오브젝트들의 Image와 RectTransform만 교체할 수 있도록 기능 배선을 분리했다.
+- 로비 하단 Enhance 버튼은 로딩 트랜지션을 거쳐 강화 탭으로 진입하고, Shop의 Recruit/Enhance 좌측 탭은 `LeftPanelSheet`의 기존 Normal/Selected 스프라이트를 유지하며 즉시 전환한다.
+- `OperatorEnhancePanelSetup`을 멱등한 Edit Mode 생성·검증 도구로 추가했다. 모든 카탈로그, 공용 패널, 트랙 행, 버튼과 탭 스프라이트 참조 및 TitleScene 기본 비활성 상태를 검사한다.
+- Unity 6000.3.13f1 재컴파일 결과 `failed=false`, `errors=[]`, 강화 UI 전용 배선 검증 통과를 확인했다. Play Mode와 플레이어 빌드는 실행하지 않았다.
+
+## 2026-08-25 — 발렌티나 대사 표정 Missing 참조 복구
+
+### 결정
+- `valentina-dialogue-set.md`의 번호가 붙은 대사 행에서 Primary 표정 121개를 순서대로 읽어 `OperatorDialogueSet.asset`의 18개 상황·121개 문장에 연결했다.
+- 전신은 `발렌티나.{표정}.png`, 전투 포트레잇은 `portrait/발렌티나.Chibby.{표정}.png`라는 실제 에셋 경로에서만 로드한다. 어느 하나라도 없거나 표의 행 수와 대사 수가 다르면 저장 전에 예외를 내므로, 존재하지 않는 파일을 추측해 Missing 참조를 만들지 않는다.
+- `ValentinaDialogueBuilder`를 남겨 문서 또는 아트가 갱신된 뒤에도 `RCCom/Operators/Build Valentina Dialogue`로 같은 데이터 배선을 재현할 수 있게 했다.
+
+### 검증
+- Unity 에디터 API로 `OperatorDialogueSet.asset`을 저장했다.
+- 18개 상황의 기본 전신·포트레잇과 121개 문장별 전신·포트레잇 참조가 모두 비어 있지 않음을 검증했다.
+- Unity 6000.3.13f1 재컴파일 결과 `failed=false`, `errors=[]`를 확인했다. Play Mode와 플레이어 빌드는 실행하지 않았다.
 ## 2026-08-25 — Enemy Studio 생성물의 전투 Roster 자동 등록
 
 - 적 전체/단일 빌드가 생성된 Definition의 `enemyId`를 전투용 `EnemyRoster`에 함께 등록하도록 묶었다. 레시피·Definition·Addressables는 정상인데 Roster 수작업 누락 때문에 절차적 웨이브에 나오지 않는 반쪽 상태를 방지하기 위함이다.
@@ -1664,3 +1755,9 @@ Phase 0 자동화 경로를 실제로 열고, 이후 오퍼레이터별 원격 �
 
 - 사용자 검수 결과에 따라 리크루트 반복곡을 `Rare_Item_Bgm`에서 `Late_Hours_Rainfall`로 교체했다. 런타임 전환·반복·로비곡 복귀 계약은 그대로 유지하고 데이터 참조만 바꿨다.
 - Editor 도구는 새 참조가 TitleScene에 저장됐는지 먼저 검증한 뒤 이전 MP3를 `AssetDatabase.DeleteAsset`으로 제거한다. 교체 중 실패하더라도 씬에 Missing 오디오 참조가 남지 않도록 삭제 순서를 보수적으로 잡았다.
+
+## 2026-08-25 — PR #20 최신 main 통합과 생성 에셋 재배선
+
+- 충돌한 `TitleScene`과 Addressables 설정은 최신 main 산출물을 정본으로 선택한 뒤 PR의 `UISelectSoundAssetBuilder`, `ShopBgmAssetBuilder`, `EnemyCatalogBuilder`를 다시 실행해 기능을 재배선했다. Unity YAML의 fileID와 Addressables 그룹 GUID를 손으로 합치지 않고, 이미 검증 가능한 에디터 자동화를 재사용하기 위함이다.
+- `LobbyShopPanelUI`는 main의 Recruit/Enhance 탭 상태 전환을 유지하면서 PR의 임시 반복 BGM 진입·복귀를 같은 로딩 커버 구간에 결합했다. 두 기능이 서로 다른 화면 상태를 소유하므로 어느 한쪽을 버릴 이유가 없다.
+- 통합 후 TitleScene 80개와 DefenseScene 9개 버튼의 공용 선택음, 리크루트 BGM 참조, 적 6종 카탈로그·Roster, 자폭·힐러 전투 계약을 Unity 6000.3.13f1에서 다시 검증했으며 콘솔 오류는 없었다.

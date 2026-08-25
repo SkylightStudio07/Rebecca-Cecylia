@@ -22,6 +22,12 @@ MonoBehaviour:
     managementPortrait: {fileID: -9117580695321126117, guid: 5e950858e95008a4ca29ca70c69f3a01, type: 3}
     shopPortrait: {fileID: 0}
     shopUpperBodyPortrait: {fileID: 0}
+    shopUpperBodyPortraitDimmed: {fileID: 0}
+    previewPortraitAddress: 
+    managementPortraitAddress: 
+    shopPortraitAddress: 
+    shopUpperBodyPortraitAddress: 
+    shopUpperBodyPortraitDimmedAddress: 
     alternateName: 
     shopDialogue: 
     address: operator/cassia
@@ -30,7 +36,13 @@ MonoBehaviour:
     requiredBestWave: 0
     purchasePrice: 0
     requiredStageId: 
+    unlockConditions:
+    - type: 0
+      requiredBestWave: 0
+      purchasePrice: 0
+      requiredStageId: 
     unlockRewardPortrait: {fileID: 8101380904372118242, guid: 7692c1b2ac922604a964bcd1026289c7, type: 3}
+    unlockRewardPortraitAddress: 
     unitPreviews:
     - unitId: cassia-guard
       displayName: "\uBC29\uD638 \uC694\uC6D0"
@@ -38,6 +50,7 @@ MonoBehaviour:
       address: ally-unit/cassia-guard
       remoteContent: 0
       previewIcon: {fileID: -8413095918329177645, guid: 7e35eecaac8a90f438d090c8352af8c9, type: 3}
+      previewIconAddress: 
       fallbackColor: {r: 1, g: 1, b: 1, a: 1}
     - unitId: cassia-vanguard
       displayName: "\uC804\uC9C4 \uC0AC\uC218"
@@ -45,6 +58,7 @@ MonoBehaviour:
       address: ally-unit/cassia-vanguard
       remoteContent: 0
       previewIcon: {fileID: -641549399214325815, guid: 4741539cc7d4c6944b24877efe88e424, type: 3}
+      previewIconAddress: 
       fallbackColor: {r: 1, g: 1, b: 1, a: 1}
   - operatorId: calliste
     displayName: "\uCE7C\uB9AC\uC2A4\uD14C"
@@ -53,6 +67,12 @@ MonoBehaviour:
     managementPortrait: {fileID: 5667498768502238285, guid: cd384616f9666b341bc8163e96db5136, type: 3}
     shopPortrait: {fileID: 5667498768502238285, guid: cd384616f9666b341bc8163e96db5136, type: 3}
     shopUpperBodyPortrait: {fileID: 21300000, guid: 15ef76899e629894c8484e42fe738bbc, type: 3}
+    shopUpperBodyPortraitDimmed: {fileID: 3748452310637042673, guid: 489e9269d72c4a84b8e8d6ee5d1bd8ed, type: 3}
+    previewPortraitAddress: 
+    managementPortraitAddress: 
+    shopPortraitAddress: 
+    shopUpperBodyPortraitAddress: 
+    shopUpperBodyPortraitDimmedAddress: 
     alternateName: Bartender
     shopDialogue: "\uC6B0\uB9AC\uB294 \uBE5B\uC774 \uC5C6\uB294 \uACF3\uC5D0\uC11C\n\uB2E4\uC2DC
       \uB9CC\uB0A0 \uAC70\uC57C."
@@ -62,7 +82,13 @@ MonoBehaviour:
     requiredBestWave: 0
     purchasePrice: 100
     requiredStageId: 
+    unlockConditions:
+    - type: 2
+      requiredBestWave: 0
+      purchasePrice: 100
+      requiredStageId: 
     unlockRewardPortrait: {fileID: 8573740378125166142, guid: 93979212c860bc740a289e3b210e4fdf, type: 3}
+    unlockRewardPortraitAddress: 
     unitPreviews:
     - unitId: calliste-drone
       displayName: "\uC11C\uD3EC\uD2B8 \uB4DC\uB860"
@@ -70,6 +96,7 @@ MonoBehaviour:
       address: ally-unit/calliste-drone
       remoteContent: 0
       previewIcon: {fileID: -2236739543955786705, guid: a4e49e29c671100468f2165a179ea335, type: 3}
+      previewIconAddress: 
       fallbackColor: {r: 1, g: 1, b: 1, a: 1}
     - unitId: calliste-guard
       displayName: "\uC911\uC7A5\uAC11 \uC13C\uD2F0\uB12C"
@@ -77,23 +104,40 @@ MonoBehaviour:
       address: ally-unit/calliste-guard
       remoteContent: 0
       previewIcon: {fileID: -7446801812974973004, guid: 5af903ec0309d704d84ed95be71926e5, type: 3}
+      previewIconAddress: 
       fallbackColor: {r: 1, g: 1, b: 1, a: 1}
   - operatorId: racing
     displayName: "\uC2E4\uBE44\uC544"
     playStyleDescription: "\uB808\uC774\uC2F1\uAC78 \uCEE8\uC149\uC758 \uCE90\uB9AD\uD130"
     previewPortrait: {fileID: -5444712353710830913, guid: a13fbdb6118b92346afad784d8f984f9, type: 3}
     managementPortrait: {fileID: 4831207923975717834, guid: 86f456bec9ddbf940b3f7d082e6425a3, type: 3}
-    shopPortrait: {fileID: 0}
-    shopUpperBodyPortrait: {fileID: 0}
+    shopPortrait: {fileID: 5771864889448805728, guid: 5b49084e49d23c9439bdffe7e3b23f8f, type: 3}
+    shopUpperBodyPortrait: {fileID: 5213403170487169785, guid: f025c6e990d1a354891fb2f4188bab81, type: 3}
+    shopUpperBodyPortraitDimmed: {fileID: 4485910227987535040, guid: f079c1ff310953f48a5c5772d15af6a2, type: 3}
+    previewPortraitAddress: 
+    managementPortraitAddress: 
+    shopPortraitAddress: 
+    shopUpperBodyPortraitAddress: 
+    shopUpperBodyPortraitDimmedAddress: 
     alternateName: 
-    shopDialogue: 
+    shopDialogue: "Get, Set, GO!\n\uB2EC\uB824\uBCFC\uAE4C\uC694, \uAC10\uB3C5\uAD00!"
     address: operator/racing
     remoteContent: 0
     unlockType: 3
     requiredBestWave: 0
     purchasePrice: 0
     requiredStageId: ch1-02
+    unlockConditions:
+    - type: 3
+      requiredBestWave: 0
+      purchasePrice: 0
+      requiredStageId: ch1-02
+    - type: 2
+      requiredBestWave: 0
+      purchasePrice: 500
+      requiredStageId: 
     unlockRewardPortrait: {fileID: 5771864889448805728, guid: 5b49084e49d23c9439bdffe7e3b23f8f, type: 3}
+    unlockRewardPortraitAddress: 
     unitPreviews:
     - unitId: racing-heavy
       displayName: "\uD5E4\uBE44 \uD398\uC774\uC2A4\uCE74"
@@ -101,6 +145,7 @@ MonoBehaviour:
       address: ally-unit/racing-heavy
       remoteContent: 0
       previewIcon: {fileID: 6109579792004994430, guid: 8365d1dbc9f600f40a892c6012b74e3a, type: 3}
+      previewIconAddress: 
       fallbackColor: {r: 1, g: 1, b: 1, a: 1}
     - unitId: racing-pitcrew
       displayName: "\uD53C\uD2B8\uD06C\uB8E8 \uB85C\uBC84"
@@ -108,4 +153,101 @@ MonoBehaviour:
       address: ally-unit/racing-pitcrew
       remoteContent: 0
       previewIcon: {fileID: 650332114069399369, guid: 4ea8fe6b3a9a37d4ebcae94d2ddff187, type: 3}
+      previewIconAddress: 
+      fallbackColor: {r: 1, g: 1, b: 1, a: 1}
+  - operatorId: aurora
+    displayName: "\uC624\uB85C\uB77C"
+    playStyleDescription: "\uC804\uC790\uC804\uACFC \uB514\uBC84\uD504 \uB4DC\uB860\uC73C\uB85C
+      \uC801\uC758 \uBC29\uC5B4\uC120\uC744 \uBB34\uB825\uD654\uD558\uB294 \uCC9C\uC7AC
+      \uD574\uCEE4"
+    previewPortrait: {fileID: 5289064701412196668, guid: bb1abba075bbd6d4ead988923493eb6d, type: 3}
+    managementPortrait: {fileID: 3339152671587006292, guid: f1835f90c9e5d27469c36ff53f78fe2d, type: 3}
+    shopPortrait: {fileID: 5558651059094571980, guid: fbf0aa06b56c04c428b157a771df7796, type: 3}
+    shopUpperBodyPortrait: {fileID: -2565678213714093970, guid: b3025d6bfe0364940869a9a91bc27071, type: 3}
+    shopUpperBodyPortraitDimmed: {fileID: 5426730094900957068, guid: 78e34ada9ec1051478b5564069bf747a, type: 3}
+    previewPortraitAddress: 
+    managementPortraitAddress: 
+    shopPortraitAddress: 
+    shopUpperBodyPortraitAddress: 
+    shopUpperBodyPortraitDimmedAddress: 
+    alternateName: Hacker
+    shopDialogue: "\uCE90\uB098\uB2E4 \uCD5C\uACE0\uC758 \uD574\uCEE4, \uC601\uC785\uD560
+      \uC900\uBE44\uB294 \uB410\uC5B4?\n\uD2B9\uAC00 \uD560\uC778 \uC911\uC774\uB77C\uACE0~"
+    address: operator/aurora
+    remoteContent: 0
+    unlockType: 1
+    requiredBestWave: 2
+    purchasePrice: 0
+    requiredStageId: 
+    unlockConditions:
+    - type: 2
+      requiredBestWave: 0
+      purchasePrice: 500
+      requiredStageId: 
+    unlockRewardPortrait: {fileID: 5289064701412196668, guid: bb1abba075bbd6d4ead988923493eb6d, type: 3}
+    unlockRewardPortraitAddress: 
+    unitPreviews:
+    - unitId: aurora-debuff-drone
+      displayName: "\uC911\uC7A5\uAC11 \uC57D\uD654 \uB4DC\uB860"
+      deployCost: 60
+      address: ally-unit/aurora-debuff-drone
+      remoteContent: 0
+      previewIcon: {fileID: -4417582713298616247, guid: a7433232eec441b44b6fed99d2e48ce9, type: 3}
+      previewIconAddress: 
+      fallbackColor: {r: 1, g: 1, b: 1, a: 1}
+    - unitId: aurora-slow-drone
+      displayName: "\uC911\uC7A5\uAC11 \uAC10\uC18D \uB4DC\uB860"
+      deployCost: 60
+      address: ally-unit/aurora-slow-drone
+      remoteContent: 0
+      previewIcon: {fileID: -7489246896140172759, guid: 7cf264685bdfa6b4da89d1794ee316b0, type: 3}
+      previewIconAddress: 
+      fallbackColor: {r: 1, g: 1, b: 1, a: 1}
+  - operatorId: valentina
+    displayName: "\uBC1C\uB80C\uD2F0\uB098"
+    playStyleDescription: "\uBA54\uAC00\uCF54\uD504 \uD654\uD559 \uD3D0\uAE30\uBB3C
+      \uD2B9\uC218 \uCC98\uB9AC\uBC18 \uCD9C\uC2E0\uC758 \uD654\uD559\uACF5\uD559
+      \uD3ED\uD30C \uC804\uBB38\uAC00"
+    previewPortrait: {fileID: 0}
+    managementPortrait: {fileID: 0}
+    shopPortrait: {fileID: 0}
+    shopUpperBodyPortrait: {fileID: 0}
+    shopUpperBodyPortraitDimmed: {fileID: 0}
+    previewPortraitAddress: operator/valentina/portrait/selection
+    managementPortraitAddress: operator/valentina/portrait/management
+    shopPortraitAddress: operator/valentina/portrait/shop
+    shopUpperBodyPortraitAddress: operator/valentina/portrait/shop-upper
+    shopUpperBodyPortraitDimmedAddress: operator/valentina/portrait/shop-upper-dimmed
+    alternateName: Mad Scientist
+    shopDialogue: "\uC548\uC804 \uADDC\uC815? \uADF8\uB7F0 \uAC74 \uC2E4\uD5D8\uC2E4
+      \uCC45\uC0C1\uC5D0\uB098 \uAF42\uC544\uB450\uB77C\uACE0."
+    address: operator/valentina
+    remoteContent: 1
+    unlockType: 0
+    requiredBestWave: 0
+    purchasePrice: 0
+    requiredStageId: 
+    unlockConditions:
+    - type: 2
+      requiredBestWave: 0
+      purchasePrice: 500
+      requiredStageId: 
+    unlockRewardPortrait: {fileID: 0}
+    unlockRewardPortraitAddress: operator/valentina/portrait/unlock-reward
+    unitPreviews:
+    - unitId: valentina-pyro-crawler
+      displayName: "\uC18D\uC0AC \uBC15\uACA9\uD3EC \uD06C\uB864\uB7EC"
+      deployCost: 20
+      address: ally-unit/valentina-pyro-crawler
+      remoteContent: 1
+      previewIcon: {fileID: 0}
+      previewIconAddress: ally-unit/valentina-pyro-crawler/preview
+      fallbackColor: {r: 1, g: 1, b: 1, a: 1}
+    - unitId: valentina-sludge-rover
+      displayName: "\uC2AC\uB7EC\uC9C0 \uBC29\uCD9C \uD0F1\uD06C"
+      deployCost: 80
+      address: ally-unit/valentina-sludge-rover
+      remoteContent: 1
+      previewIcon: {fileID: 0}
+      previewIconAddress: ally-unit/valentina-sludge-rover/preview
       fallbackColor: {r: 1, g: 1, b: 1, a: 1}
