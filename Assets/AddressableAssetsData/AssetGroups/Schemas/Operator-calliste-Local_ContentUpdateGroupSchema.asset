@@ -13,4 +13,4 @@ MonoBehaviour:
   m_Name: Operator-calliste-Local_ContentUpdateGroupSchema
   m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.GroupSchemas.ContentUpdateGroupSchema
   m_Group: {fileID: 11400000, guid: fd034023be31cb944afd38c0cb38dca2, type: 2}
-  m_StaticContent: 0
+  m_StaticContent: 1

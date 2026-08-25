@@ -207,77 +207,18 @@ namespace RCCom.EditorTools
         {
             bool changed = false;
             string groupName = GetGroupName(recipe.unitId, recipe.remoteContent);
-            AddressableAssetGroup group = settings.FindGroup(groupName);
-            if (group == null)
-            {
-                group = settings.CreateGroup(
-                    groupName,
-                    false,
-                    false,
-                    true,
-                    null,
-                    typeof(BundledAssetGroupSchema),
-                    typeof(ContentUpdateGroupSchema));
-                changed = true;
-            }
-
-            BundledAssetGroupSchema bundled = group.GetSchema<BundledAssetGroupSchema>();
-            if (bundled == null)
-            {
-                bundled = group.AddSchema<BundledAssetGroupSchema>();
-                changed = true;
-            }
-
-            if (group.GetSchema<ContentUpdateGroupSchema>() == null)
-            {
-                group.AddSchema<ContentUpdateGroupSchema>();
-                changed = true;
-            }
-
-            string buildPath = recipe.remoteContent
-                ? AddressableAssetSettings.kRemoteBuildPath
-                : AddressableAssetSettings.kLocalBuildPath;
-            string loadPath = recipe.remoteContent
-                ? AddressableAssetSettings.kRemoteLoadPath
-                : AddressableAssetSettings.kLocalLoadPath;
-            bool schemaChanged = false;
-            if (bundled.BuildPath.GetName(settings) != buildPath)
-            {
-                bundled.BuildPath.SetVariableByName(settings, buildPath);
-                schemaChanged = true;
-            }
-
-            if (bundled.LoadPath.GetName(settings) != loadPath)
-            {
-                bundled.LoadPath.SetVariableByName(settings, loadPath);
-                schemaChanged = true;
-            }
-
             // 원격 그룹은 PackSeparately로 묶는다: 미리보기 아이콘을 Definition과 별개
             // 항목으로 등록해도 PackTogether면 결국 한 번들로 합쳐져, 상점/로스터가 아이콘
             // 하나만 보려 해도 프리팹·이펙트가 딸린 Definition 전체를 받게 된다. 로컬
             // 그룹은 어차피 본체 빌드에 통째로 들어가므로 번들 수를 굳이 늘리지 않는다.
-            BundledAssetGroupSchema.BundlePackingMode desiredBundleMode = recipe.remoteContent
-                ? BundledAssetGroupSchema.BundlePackingMode.PackSeparately
-                : BundledAssetGroupSchema.BundlePackingMode.PackTogether;
-            if (bundled.BundleMode != desiredBundleMode)
-            {
-                bundled.BundleMode = desiredBundleMode;
-                schemaChanged = true;
-            }
-
-            if (!bundled.IncludeInBuild)
-            {
-                bundled.IncludeInBuild = true;
-                schemaChanged = true;
-            }
-
-            if (schemaChanged)
-            {
-                EditorUtility.SetDirty(bundled);
-                EditorUtility.SetDirty(group);
-                changed = true;
-            }
+            AddressableAssetGroup group = AddressableGroupPolicy.EnsureGroup(
+                settings,
+                groupName,
+                recipe.remoteContent,
+                recipe.remoteContent
+                    ? BundledAssetGroupSchema.BundlePackingMode.PackSeparately
+                    : BundledAssetGroupSchema.BundlePackingMode.PackTogether,
+                ref changed);
 
             string guid = AssetDatabase.AssetPathToGUID(definitionPath);
             AddressableAssetEntry entry = settings.CreateOrMoveEntry(guid, group, false, true);

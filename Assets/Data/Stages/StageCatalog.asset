@@ -22,6 +22,12 @@ MonoBehaviour:
       \uD6C8\uB828. "
     order: 0
     requiredBestWave: 0
+    recommendedLevel: 1
+    descriptionBackground: {fileID: 0}
+    descriptionBackgroundAddress: 
+    hasWaves: 1
+    address: stage/ch1-01
+    remoteContent: 0
     stageDefinition: {fileID: 11400000, guid: 1a1c0ff1d5a3a5542b19ff059d43d5e6, type: 2}
   - stageId: ch1-02
     chapterId: ch1
@@ -31,6 +37,12 @@ MonoBehaviour:
       \uBC29\uC5B4\uC120\uC744 \uC7AC\uBC30\uCE58\uD558\uC2ED\uC2DC\uC624."
     order: 1
     requiredBestWave: 1
+    recommendedLevel: 1
+    descriptionBackground: {fileID: 0}
+    descriptionBackgroundAddress: 
+    hasWaves: 1
+    address: stage/ch1-02
+    remoteContent: 0
     stageDefinition: {fileID: 11400000, guid: 05124672d13eb9741956d39e7a2bb14e, type: 2}
   - stageId: ch1-03
     chapterId: ch1
@@ -40,6 +52,12 @@ MonoBehaviour:
       \uAC10\uC9C0\uB429\uB2C8\uB2E4."
     order: 2
     requiredBestWave: 2
+    recommendedLevel: 1
+    descriptionBackground: {fileID: 0}
+    descriptionBackgroundAddress: 
+    hasWaves: 1
+    address: stage/ch1-03
+    remoteContent: 0
     stageDefinition: {fileID: 11400000, guid: c29c9ca653fb4404bb0bd81920a2e05f, type: 2}
   - stageId: ch1-04
     chapterId: ch1
@@ -49,6 +67,12 @@ MonoBehaviour:
       \uC788\uC2B5\uB2C8\uB2E4."
     order: 3
     requiredBestWave: 3
+    recommendedLevel: 1
+    descriptionBackground: {fileID: 0}
+    descriptionBackgroundAddress: 
+    hasWaves: 1
+    address: stage/ch1-04
+    remoteContent: 0
     stageDefinition: {fileID: 11400000, guid: 354873302ecaeab4fa9515e82192abd7, type: 2}
   - stageId: ch1-05
     chapterId: ch1
@@ -58,6 +82,12 @@ MonoBehaviour:
       \uC9C0\uD0A4\uC2ED\uC2DC\uC624."
     order: 4
     requiredBestWave: 4
+    recommendedLevel: 1
+    descriptionBackground: {fileID: 0}
+    descriptionBackgroundAddress: 
+    hasWaves: 1
+    address: stage/ch1-05
+    remoteContent: 0
     stageDefinition: {fileID: 11400000, guid: 725af784fef2d4b418a7262c978f6fc4, type: 2}
   - stageId: ch1-06
     chapterId: ch1
@@ -67,6 +97,12 @@ MonoBehaviour:
       \uBD09\uC1C4\uD558\uC2ED\uC2DC\uC624."
     order: 5
     requiredBestWave: 5
+    recommendedLevel: 21
+    descriptionBackground: {fileID: 0}
+    descriptionBackgroundAddress: 
+    hasWaves: 1
+    address: stage/ch1-06
+    remoteContent: 0
     stageDefinition: {fileID: 11400000, guid: ae2eff284fd55944da3df33a3d6e7f36, type: 2}
   - stageId: ch1-07
     chapterId: ch1
@@ -76,4 +112,10 @@ MonoBehaviour:
       \uC791\uC804\uC744 \uC885\uACB0\uD558\uC2ED\uC2DC\uC624."
     order: 6
     requiredBestWave: 6
+    recommendedLevel: 25
+    descriptionBackground: {fileID: 0}
+    descriptionBackgroundAddress: 
+    hasWaves: 1
+    address: stage/ch1-07
+    remoteContent: 0
     stageDefinition: {fileID: 11400000, guid: 18d5af02fe1fcdc45ba65f65285f8c52, type: 2}

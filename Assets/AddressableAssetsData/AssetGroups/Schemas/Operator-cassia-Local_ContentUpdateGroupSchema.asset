@@ -13,4 +13,4 @@ MonoBehaviour:
   m_Name: Operator-cassia-Local_ContentUpdateGroupSchema
   m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.GroupSchemas.ContentUpdateGroupSchema
   m_Group: {fileID: 11400000, guid: 0f158fc46f1a7404eb98e04a931a1d57, type: 2}
-  m_StaticContent: 0
+  m_StaticContent: 1

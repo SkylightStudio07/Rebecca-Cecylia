@@ -1705,6 +1705,89 @@ Phase 0 자동화 경로를 실제로 열고, 이후 오퍼레이터별 원격 �
 - Unity 에디터 API로 `OperatorDialogueSet.asset`을 저장했다.
 - 18개 상황의 기본 전신·포트레잇과 121개 문장별 전신·포트레잇 참조가 모두 비어 있지 않음을 검증했다.
 - Unity 6000.3.13f1 재컴파일 결과 `failed=false`, `errors=[]`를 확인했다. Play Mode와 플레이어 빌드는 실행하지 않았다.
+
+## 2026-08-25 — 라이브 드랍: 플레이어 재빌드 없이 신규 콘텐츠 제공
+
+### 배경 — 무엇이 막혀 있었나
+
+"Addressable만 빌드해 서빙하면 신규 오퍼레이터를 제공할 수 있는가"를 실제 저장소 상태로
+확인한 결과 **불가능**이었다. 차단점이 두 개였다.
+
+1. **발견 인덱스가 빌드에 박혀 있었다.** `OperatorCatalog`는 씬 UI 6곳이
+   `[SerializeField]`로 직접 참조해 플레이어 데이터에 통째로 직렬화된다(클래스 주석도
+   "빌드에 항상 포함되어"라고 명시). Definition과 초상화는 원격 그룹에 있어 CDN에서
+   받을 수 있었지만, "그런 오퍼레이터가 존재한다"는 사실이 빌드 안에 있어서 원격 번들을
+   아무리 잘 올려도 구 플레이어의 선택 화면에는 끝내 나타나지 않았다. 스테이지는 더해서
+   `StageCatalogEntry`가 `StageDefinition`을 하드 참조하고 있어 Addressables에 아예
+   올라가 있지도 않았다.
+2. **Content Update 워크플로가 없었다.** `BuildScript`는 `BuildPlayerContent`(=New Build)만
+   호출했고 저장소 전체에 `ContentUpdateScript` 참조가 0건이었다. New Build는 카탈로그를
+   통째로 새로 만드는데, `BuildRemoteCatalog=1` / `DisableCatalogUpdateOnStart=0`이라
+   구 플레이어가 부팅 때 그 카탈로그로 갈아탄다. 그 카탈로그에는 로컬 그룹 엔트리까지
+   들어 있고 로드 경로가 플레이어 자신의 StreamingAssets를 가리킨다.
+
+두 번째는 이론이 아니라 이미 벌어져 있었다. `Builds/WebGL`(08-24)의 monoscripts 번들은
+`…_cbdfbb56…`인데 서빙 중이던 `ServerData/WebGL/catalog_1.0.bin`(08-25)은
+`…_466d9331…`을 가리키고 있었다. 그 상태로 배포됐다면 적 3종을 뺀 오퍼레이터·유닛
+로딩이 광범위하게 깨졌을 것이다.
+
+### 결정
+
+- **로컬 그룹은 StaticContent(Prevent Updates)로 묶는다.** 원격 카탈로그가 로컬 번들 해시를
+  흔들지 못하게 하는 유일한 장치다. 세 카탈로그 빌더에 똑같이 복사되어 있던 그룹 설정
+  블록(약 70줄 × 3)을 `AddressableGroupPolicy` 하나로 모으고 그 정책을 거기에 뒀다.
+  그룹의 로컬·원격 판정은 이름(`-Remote` 접미사)이 아니라 실제 BuildPath 변수로 한다 —
+  빌더가 만들지 않은 손수 만든 그룹도 같은 기준으로 다뤄야 하기 때문이다.
+- **콘텐츠 상태 파일을 릴리스별로 커밋한다.** `addressables_content_state.bin`이 없으면
+  이미 배포된 빌드에는 두 번 다시 콘텐츠를 내려보낼 수 없는데, 기본 경로의 그 파일은
+  `.gitignore` 대상이고 콘텐츠를 다시 구울 때마다 덮어써진다. 플레이어 빌드가 **성공한
+  뒤에만** `ReleaseStates/{타깃}/{bundleVersion}/`으로 복사한다. 실패한 빌드의 상태를
+  남기면 이후 드랍이 배포된 적 없는 기준으로 나가기 때문이다.
+- **라이브 카탈로그는 원격 항목만 담는다.** 정본 카탈로그를 통째로 원격에 올리는 쪽이
+  단순하지만, 그러면 로컬 오퍼레이터가 직접 참조하는 스프라이트가 전부 원격 번들의
+  의존으로 딸려 들어가 번들이 비대해지고 static으로 묶은 로컬 그룹과 교차 의존이 생긴다.
+  원격 항목은 `CreateEntry`가 이미 모든 Sprite 참조를 null로 비우고 주소 문자열만 남기므로
+  (원격 콘텐츠가 본체 빌드로 새어 나가지 않게 하려던 기존 규칙이 여기서 그대로 값을 한다)
+  라이브 카탈로그는 로컬 에셋 의존이 0이 된다. 그 불변식이 깨지면 빌드가 서도록 검사를 넣었다.
+- **병합은 추가 전용이다.** 이미 빌드에 있는 항목은 내장본을 그대로 쓴다. 기존 항목까지
+  원격본으로 갈아치우면 위의 교차 의존 문제가 그대로 돌아온다. 즉 이 구조로 되는 것은
+  "신규 항목 추가"이고, "기존 항목의 원격 교체"는 의도적으로 범위 밖이다.
+- **`LiveCatalogService`는 어떤 MonoBehaviour에도 매달지 않는다.** 앱 수명 전체를 사는
+  것이라 `RuntimeInitializeOnLoadMethod`로 시작하고 완료 콜백만 쓴다(코루틴 호스트 불필요).
+  씬 재로드 시 캐시를 비우지 않는데, 담고 있는 것이 세션 상태가 아니라 계정 단위 콘텐츠
+  목록이라 전투 씬을 오갈 때마다 다시 받는 쪽이 오히려 잘못된 동작이기 때문이다.
+- **스테이지도 오퍼레이터와 같은 구조로 맞춘다.** 표시용 경량 메타데이터(권장 레벨, 배경,
+  웨이브 유무)는 카탈로그에 복사하고 실행 데이터는 `stage/{id}` 주소로 받는다. 선택 화면이
+  목록을 그리는 것만으로 모든 스테이지의 웨이브·적 참조가 메모리에 올라오던 문제도 같이
+  없어진다. `stageDefinition` 직접 참조는 로컬 스테이지용으로 남겼다 — 카탈로그를 아직 다시
+  굽지 않은 저장소에서도 기존 스테이지가 돌아야 하고, 이미 빌드에 든 스테이지를 굳이
+  Addressables 왕복으로 다시 얻을 이유도 없다.
+- **의도적으로 하지 않은 것**: `AllyUnitCatalog`와 `EnemyCatalog`는 런타임에서 아무도 읽지
+  않는 에디터 저작 산출물이라(유닛·적은 `ally-unit/{id}`, `enemy/{id}` 주소로 직접 해결한다)
+  라이브 대상에서 제외했다. 신규 유닛·적은 오퍼레이터/스테이지에 딸려 이미 배송된다.
+
+### 남은 경계선
+
+새 C# 클래스가 필요한 콘텐츠는 여전히 플레이어 재빌드가 필요하다. 번들 안의 SO는 스크립트를
+`MonoScript` 참조로 직렬화하고, 그것을 해결하는 monoscripts 번들의 로드 경로가
+`{Addressables.RuntimePath}` — 즉 로컬이기 때문이다. WebGL은 IL2CPP AOT라 어셈블리 동적
+로드라는 우회로도 없다. 더 강하게는, **C# 코드를 한 줄이라도 바꾸면** monoscripts 번들 해시가
+바뀌므로 드랍 전용 작업 중에는 런타임 어셈블리를 건드리면 안 된다.
+
+따라서 재빌드 없이 되는 것: 기존 효과 SO 조립만으로 만든 신규 오퍼레이터·아군 유닛·적·스테이지,
+그리고 그들의 아트·대사·수치·강화 트랙. 재빌드가 필요한 것: 새 카드 로직(`CardEffectBase` 파생),
+새 타워 종류(`TowerData` 파생), 그 밖의 모든 런타임 코드 변경.
+
+### 검증
+
+- Unity 에디터가 실행 중이 아니어서 이 커밋 시점에는 재컴파일·에셋 생성·빌드를 수행하지 못했다.
+  코드 변경만 반영되어 있고, `.asset` 갱신(그룹 정책 적용, 라이브 카탈로그 생성, 스테이지
+  Addressables 등록)은 아래 순서로 에디터에서 실행해야 한다.
+  1. `RCCom/Operators/Build Operator Catalog And Addressables`
+  2. `RCCom/Stages/Rebuild Stage Catalog`
+  3. `RCCom/Addressables/Apply Group Update Policy`
+  4. `RCCom/Addressables/Validate Active Build Configuration`
+
 ## 2026-08-25 — Enemy Studio 생성물의 전투 Roster 자동 등록
 
 - 적 전체/단일 빌드가 생성된 Definition의 `enemyId`를 전투용 `EnemyRoster`에 함께 등록하도록 묶었다. 레시피·Definition·Addressables는 정상인데 Roster 수작업 누락 때문에 절차적 웨이브에 나오지 않는 반쪽 상태를 방지하기 위함이다.
@@ -1761,3 +1844,9 @@ Phase 0 자동화 경로를 실제로 열고, 이후 오퍼레이터별 원격 �
 - 충돌한 `TitleScene`과 Addressables 설정은 최신 main 산출물을 정본으로 선택한 뒤 PR의 `UISelectSoundAssetBuilder`, `ShopBgmAssetBuilder`, `EnemyCatalogBuilder`를 다시 실행해 기능을 재배선했다. Unity YAML의 fileID와 Addressables 그룹 GUID를 손으로 합치지 않고, 이미 검증 가능한 에디터 자동화를 재사용하기 위함이다.
 - `LobbyShopPanelUI`는 main의 Recruit/Enhance 탭 상태 전환을 유지하면서 PR의 임시 반복 BGM 진입·복귀를 같은 로딩 커버 구간에 결합했다. 두 기능이 서로 다른 화면 상태를 소유하므로 어느 한쪽을 버릴 이유가 없다.
 - 통합 후 TitleScene 80개와 DefenseScene 9개 버튼의 공용 선택음, 리크루트 BGM 참조, 적 6종 카탈로그·Roster, 자폭·힐러 전투 계약을 Unity 6000.3.13f1에서 다시 검증했으며 콘솔 오류는 없었다.
+
+## 2026-08-25 — PR #20과 Addressables 라이브 드랍 브랜치 통합
+
+- PR #20을 먼저 최신 main에 통합한 뒤 그 main을 라이브 드랍 브랜치로 가져왔다. 적 기능의 충돌 해결을 PR 안에 귀속시키고, 라이브 드랍 브랜치에는 Addressables 정책 결합만 남겨 두어 두 작업의 증빙과 되돌림 경계를 섞지 않기 위함이다.
+- `EnemyCatalogBuilder`의 Roster 자동 등록과 `AddressableGroupPolicy` 기반 그룹 생성은 자동 병합 결과에 둘 다 보존했다. Addressables 설정은 라이브 카탈로그·스테이지 그룹이 있는 브랜치 버전을 정본으로 삼고 적 빌더를 다시 실행해 신규 적 3종 그룹을 에디터 API로 등록했다.
+- Unity 6000.3.13f1에서 스크립트 재컴파일, 35개 Addressables 그룹 정책, StandaloneWindows64·WebGL 사전 검증, 적 6종 에셋, 자폭·힐러 전투 계약을 확인했다. 그룹 정책은 재실행 시 갱신 0개였고 콘솔 오류도 0건이어서 생성 결과가 현재 정책과 이미 일치한다.

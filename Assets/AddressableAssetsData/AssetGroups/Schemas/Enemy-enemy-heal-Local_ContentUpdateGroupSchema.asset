@@ -13,4 +13,4 @@ MonoBehaviour:
   m_Name: Enemy-enemy-heal-Local_ContentUpdateGroupSchema
   m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.GroupSchemas.ContentUpdateGroupSchema
   m_Group: {fileID: 11400000, guid: 73633956832adc340a8acf53be7f2b92, type: 2}
-  m_StaticContent: 0
+  m_StaticContent: 1

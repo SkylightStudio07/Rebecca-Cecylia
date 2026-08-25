@@ -68,6 +68,7 @@ namespace RCCom.EditorTools
             RemoveStaleGeneratedGroups(settings, expectedGroupNames);
 
             ApplyEntriesIfChanged(catalog, entries, null);
+            BuildLiveCatalog(null);
             EditorUtility.SetDirty(settings);
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
@@ -130,10 +131,42 @@ namespace RCCom.EditorTools
 
             SortEntriesByRecipeOrder(entries);
             ApplyEntriesIfChanged(catalog, entries, changedAssets);
+            BuildLiveCatalog(changedAssets);
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
 
             Debug.Log($"[OperatorCatalogBuilder] {recipe.operatorId} 카탈로그 항목과 Addressables 그룹 갱신 완료");
+        }
+
+        /// <summary>
+        /// 원격 오퍼레이터만 담은 라이브 카탈로그를 레시피에서 다시 만든다.
+        ///
+        /// 정본 카탈로그의 항목 객체를 재사용하지 않고 CreateEntry를 다시 부르는 이유는, 같은
+        /// [Serializable] 인스턴스를 두 에셋이 공유하면 한쪽 편집이 다른 쪽에 조용히 새어
+        /// 들어가기 때문이다. 레시피와 Definition은 이미 AssetDatabase 캐시에 있어 비용도 거의 없다.
+        /// </summary>
+        private static void BuildLiveCatalog(List<string> changedAssets)
+        {
+            var remoteEntries = new List<OperatorCatalogEntry>();
+            foreach (OperatorAssetRecipe recipe in LoadRecipes())
+            {
+                if (!recipe.remoteContent)
+                {
+                    continue;
+                }
+
+                string definitionPath = $"Assets/Data/Operators/{recipe.operatorId}/OperatorDefinition.asset";
+                OperatorDefinition definition = AssetDatabase.LoadAssetAtPath<OperatorDefinition>(definitionPath);
+                if (definition == null)
+                {
+                    throw new InvalidOperationException($"먼저 오퍼레이터 에셋을 생성해야 합니다: {definitionPath}");
+                }
+
+                remoteEntries.Add(CreateEntry(recipe, definition));
+            }
+
+            SortEntriesByRecipeOrder(remoteEntries);
+            OperatorLiveCatalogBuilder.Build(remoteEntries, changedAssets);
         }
 
         private static OperatorCatalogEntry CreateEntry(OperatorAssetRecipe recipe, OperatorDefinition definition)
@@ -322,77 +355,18 @@ namespace RCCom.EditorTools
         {
             bool changed = false;
             string groupName = GetGroupName(recipe.operatorId, recipe.remoteContent);
-            AddressableAssetGroup group = settings.FindGroup(groupName);
-            if (group == null)
-            {
-                group = settings.CreateGroup(
-                    groupName,
-                    false,
-                    false,
-                    true,
-                    null,
-                    typeof(BundledAssetGroupSchema),
-                    typeof(ContentUpdateGroupSchema));
-                changed = true;
-            }
-
-            BundledAssetGroupSchema bundled = group.GetSchema<BundledAssetGroupSchema>();
-            if (bundled == null)
-            {
-                bundled = group.AddSchema<BundledAssetGroupSchema>();
-                changed = true;
-            }
-
-            if (group.GetSchema<ContentUpdateGroupSchema>() == null)
-            {
-                group.AddSchema<ContentUpdateGroupSchema>();
-                changed = true;
-            }
-
-            string buildPath = recipe.remoteContent
-                ? AddressableAssetSettings.kRemoteBuildPath
-                : AddressableAssetSettings.kLocalBuildPath;
-            string loadPath = recipe.remoteContent
-                ? AddressableAssetSettings.kRemoteLoadPath
-                : AddressableAssetSettings.kLocalLoadPath;
-            bool schemaChanged = false;
-            if (bundled.BuildPath.GetName(settings) != buildPath)
-            {
-                bundled.BuildPath.SetVariableByName(settings, buildPath);
-                schemaChanged = true;
-            }
-
-            if (bundled.LoadPath.GetName(settings) != loadPath)
-            {
-                bundled.LoadPath.SetVariableByName(settings, loadPath);
-                schemaChanged = true;
-            }
-
             // 원격 그룹은 PackSeparately로 묶는다: 아래에서 초상화를 Definition과 별개
             // 항목으로 등록해도, PackTogether였다면 결국 한 번들에 다시 합쳐져 상점이
             // 초상화 하나만 보려 해도 대사·이펙트가 딸린 Definition 전체를 받게 된다.
             // 로컬 그룹은 어차피 본체 빌드에 통째로 들어가므로 번들 수를 굳이 늘리지 않는다.
-            BundledAssetGroupSchema.BundlePackingMode desiredBundleMode = recipe.remoteContent
-                ? BundledAssetGroupSchema.BundlePackingMode.PackSeparately
-                : BundledAssetGroupSchema.BundlePackingMode.PackTogether;
-            if (bundled.BundleMode != desiredBundleMode)
-            {
-                bundled.BundleMode = desiredBundleMode;
-                schemaChanged = true;
-            }
-
-            if (!bundled.IncludeInBuild)
-            {
-                bundled.IncludeInBuild = true;
-                schemaChanged = true;
-            }
-
-            if (schemaChanged)
-            {
-                EditorUtility.SetDirty(bundled);
-                EditorUtility.SetDirty(group);
-                changed = true;
-            }
+            AddressableAssetGroup group = AddressableGroupPolicy.EnsureGroup(
+                settings,
+                groupName,
+                recipe.remoteContent,
+                recipe.remoteContent
+                    ? BundledAssetGroupSchema.BundlePackingMode.PackSeparately
+                    : BundledAssetGroupSchema.BundlePackingMode.PackTogether,
+                ref changed);
 
             if (AssignAddressableEntry(settings, group, definitionPath, address, AddressablesLabel))
             {

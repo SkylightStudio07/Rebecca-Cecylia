@@ -1,0 +1,1 @@
+RCCom.EditorTools.AddressablesContentUpdateBuilder.ArchiveContentState(UnityEditor.EditorUserBuildSettings.activeBuildTarget);

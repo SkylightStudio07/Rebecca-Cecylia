@@ -249,70 +249,12 @@ namespace RCCom.EditorTools
         {
             bool changed = false;
             string groupName = GetGroupName(recipe.enemyId, recipe.remoteContent);
-            AddressableAssetGroup group = settings.FindGroup(groupName);
-            if (group == null)
-            {
-                group = settings.CreateGroup(
-                    groupName,
-                    false,
-                    false,
-                    true,
-                    null,
-                    typeof(BundledAssetGroupSchema),
-                    typeof(ContentUpdateGroupSchema));
-                changed = true;
-            }
-
-            BundledAssetGroupSchema bundled = group.GetSchema<BundledAssetGroupSchema>();
-            if (bundled == null)
-            {
-                bundled = group.AddSchema<BundledAssetGroupSchema>();
-                changed = true;
-            }
-
-            if (group.GetSchema<ContentUpdateGroupSchema>() == null)
-            {
-                group.AddSchema<ContentUpdateGroupSchema>();
-                changed = true;
-            }
-
-            string buildPath = recipe.remoteContent
-                ? AddressableAssetSettings.kRemoteBuildPath
-                : AddressableAssetSettings.kLocalBuildPath;
-            string loadPath = recipe.remoteContent
-                ? AddressableAssetSettings.kRemoteLoadPath
-                : AddressableAssetSettings.kLocalLoadPath;
-            bool schemaChanged = false;
-            if (bundled.BuildPath.GetName(settings) != buildPath)
-            {
-                bundled.BuildPath.SetVariableByName(settings, buildPath);
-                schemaChanged = true;
-            }
-
-            if (bundled.LoadPath.GetName(settings) != loadPath)
-            {
-                bundled.LoadPath.SetVariableByName(settings, loadPath);
-                schemaChanged = true;
-            }
-
-            if (bundled.BundleMode != BundledAssetGroupSchema.BundlePackingMode.PackTogether)
-            {
-                bundled.BundleMode = BundledAssetGroupSchema.BundlePackingMode.PackTogether;
-                schemaChanged = true;
-            }
-
-            if (!bundled.IncludeInBuild)
-            {
-                bundled.IncludeInBuild = true;
-                schemaChanged = true;
-            }
-
-            if (schemaChanged)
-            {
-                EditorUtility.SetDirty(bundled);
-                EditorUtility.SetDirty(group);
-                changed = true;
-            }
+            AddressableAssetGroup group = AddressableGroupPolicy.EnsureGroup(
+                settings,
+                groupName,
+                recipe.remoteContent,
+                BundledAssetGroupSchema.BundlePackingMode.PackTogether,
+                ref changed);
 
             string guid = AssetDatabase.AssetPathToGUID(definitionPath);
             AddressableAssetEntry existing = settings.FindAssetEntry(guid);

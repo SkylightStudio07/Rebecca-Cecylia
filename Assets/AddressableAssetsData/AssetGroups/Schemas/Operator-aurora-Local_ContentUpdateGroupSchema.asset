@@ -13,4 +13,4 @@ MonoBehaviour:
   m_Name: Operator-aurora-Local_ContentUpdateGroupSchema
   m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.GroupSchemas.ContentUpdateGroupSchema
   m_Group: {fileID: 11400000, guid: ae42161a82b80f84dafba69c5be87aaa, type: 2}
-  m_StaticContent: 0
+  m_StaticContent: 1

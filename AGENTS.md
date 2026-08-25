@@ -258,6 +258,7 @@ unity command console --project-path .
 | `Assets/Docs/EXPANSION_LOG.md` | 이번 확장의 기존 결정 확인. **작업 후 여기에 기록** |
 | `Assets/Docs/ARCHITECTURE.md` | 기존 시스템을 건드리기 전. 약 1,100줄이므로 **관련 섹션만 검색해서** 읽을 것 |
 | `Assets/Docs/GDD.md` | 기획 의도·시스템 명세·밸런싱 공식 |
+| `Assets/Docs/ADDRESSABLES_LIVE_DROP.md` | **Addressables를 건드리기 전 필수.** 콘텐츠 빌드·서빙의 정본. 플레이어 재빌드 없이 콘텐츠를 내려보내는 절차와 그 경계선(런타임 C#을 한 줄이라도 고치면 재빌드 필수) |
 | `Assets/Docs/구현_체크리스트.md` | 기존 개발 진행 순서와 각 단계의 판단 근거 |
 | `Assets/Docs/제작과정.md` | AI 협업 이력 (참고용) |
 | `보고서.md` | 넥슨 제출 리포트. 프로젝트 전체 요약이 필요할 때 가장 빠른 진입점 |

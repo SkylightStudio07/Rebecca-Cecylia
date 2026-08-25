@@ -13,4 +13,4 @@ MonoBehaviour:
   m_Name: AllyUnit-racing-pitcrew-Local_ContentUpdateGroupSchema
   m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.GroupSchemas.ContentUpdateGroupSchema
   m_Group: {fileID: 11400000, guid: 4f4c4ba36b5484d4aa00586137b89aad, type: 2}
-  m_StaticContent: 0
+  m_StaticContent: 1

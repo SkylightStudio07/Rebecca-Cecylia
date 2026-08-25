@@ -13,4 +13,4 @@ MonoBehaviour:
   m_Name: AllyUnit-aurora-debuff-drone-Local_ContentUpdateGroupSchema
   m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.GroupSchemas.ContentUpdateGroupSchema
   m_Group: {fileID: 11400000, guid: 71899235ba127d845af1468caaf1a296, type: 2}
-  m_StaticContent: 0
+  m_StaticContent: 1

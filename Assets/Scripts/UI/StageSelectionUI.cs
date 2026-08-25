@@ -44,9 +44,14 @@ namespace RCCom.UI
         private IProfileStorage _profileStorage;
         private PlayerProfile _profile;
         private int _selectedIndex;
+        private bool _isLoadingStage;
 
         private void Awake()
         {
+            // 빌드 이후 원격으로 추가된 오퍼레이터까지 포함한 카탈로그로 바꾼다.
+            // 원격 카탈로그가 아직 안 왔거나 추가분이 없으면 내장본을 그대로 돌려준다.
+            operatorCatalog = LiveCatalogService.Resolve(operatorCatalog);
+            catalog = LiveCatalogService.Resolve(catalog);
             _profileStorage = new PlayerPrefsProfileStorage();
             if (nodeScrollRect != null) { nodeScrollRect.onValueChanged.AddListener(HandleScrollChanged); }
             SetPanelVisible(false);
@@ -59,6 +64,8 @@ namespace RCCom.UI
 
         public void Open()
         {
+            operatorCatalog = LiveCatalogService.Resolve(operatorCatalog);
+            catalog = LiveCatalogService.Resolve(catalog);
             _profile = _profileStorage.Load();
             _selectedIndex = FindLatestUnlockedIndex();
             SetPanelVisible(true);
@@ -94,13 +101,41 @@ namespace RCCom.UI
                 return;
             }
 
-            BattleSession.SelectStage(entry.stageDefinition);
+            // 원격 스테이지는 이 시점에야 Definition을 내려받는다. 로딩 중 버튼을 다시 눌러
+            // 코루틴이 겹치면 씬을 두 번 로드하게 되므로 게이트를 둔다.
+            if (_isLoadingStage)
+            {
+                return;
+            }
+
+            _isLoadingStage = true;
             Time.timeScale = 1f;
-            StartCoroutine(PreloadStageAndLoad());
+            StartCoroutine(LoadStageAndEnter(entry));
         }
 
-        private System.Collections.IEnumerator PreloadStageAndLoad()
+        private System.Collections.IEnumerator LoadStageAndEnter(StageCatalogEntry entry)
         {
+            StageDefinition definition = null;
+            string failure = null;
+            yield return StageContentLoader.Load(
+                entry,
+                (message, _) => { if (statusText != null) { statusText.text = message; } },
+                loaded => definition = loaded,
+                error => failure = error);
+
+            if (definition == null)
+            {
+                _isLoadingStage = false;
+                if (statusText != null)
+                {
+                    statusText.text = failure ?? "스테이지를 불러오지 못했습니다.";
+                }
+
+                RenderSelection();
+                yield break;
+            }
+
+            BattleSession.SelectStage(definition);
             // 스테이지 전용 적을 먼저 확보해야 원격 Definition도 첫 웨이브부터 즉시 해석할 수 있다.
             yield return BattleContentCache.PreloadEnemiesForStage(BattleSession.SelectedStage, null, null);
             SceneManager.LoadScene("DefenseScene");
@@ -185,21 +220,22 @@ namespace RCCom.UI
             if (selectedTitleText != null) { selectedTitleText.text = entry.displayName; }
             if (selectedSubtitleText != null) { selectedSubtitleText.text = entry.subtitle; }
             if (selectedDescriptionText != null) { selectedDescriptionText.text = entry.description; }
-            StageDefinition definition = entry.stageDefinition;
+            // Definition은 읽지 않는다. 원격 스테이지는 선택을 확정해야 내려받으므로,
+            // 목록과 브리핑은 카탈로그에 복사해 둔 경량 값만으로 그려져야 한다.
             if (recommendedLevelText != null)
             {
-                recommendedLevelText.text = definition != null
-                    ? $"RECOMMENDED LV.  {definition.recommendedLevel}"
-                    : string.Empty;
+                recommendedLevelText.text = $"RECOMMENDED LV.  {entry.recommendedLevel}";
             }
 
             if (descriptionBackgroundImage != null)
             {
-                Sprite background = definition != null ? definition.descriptionBackground : null;
-                descriptionBackgroundImage.sprite = background;
-                descriptionBackgroundImage.enabled = background != null;
+                // 원격 스테이지의 배경은 Definition과 다른 번들에 있어 한 장만 먼저 받을 수 있다.
+                RemotePreviewSpriteLoader.LoadInto(
+                    descriptionBackgroundImage, entry.descriptionBackground,
+                    entry.descriptionBackgroundAddress, Color.clear);
             }
-            RenderOperatorReward(definition);
+
+            RenderOperatorReward(entry.stageId);
             if (statusText != null)
             {
                 statusText.text = "스테이지를 선택하면 작전 정보가 표시됩니다.";
@@ -207,7 +243,7 @@ namespace RCCom.UI
 
             if (startStageButton != null)
             {
-                startStageButton.interactable = entry.IsPlayable(_profile?.bestWave ?? 0);
+                startStageButton.interactable = !_isLoadingStage && entry.IsPlayable(_profile?.bestWave ?? 0);
             }
             for (int i = 0; i < _nodes.Count; i++)
             {
@@ -215,9 +251,9 @@ namespace RCCom.UI
             }
         }
 
-        private void RenderOperatorReward(StageDefinition definition)
+        private void RenderOperatorReward(string stageId)
         {
-            OperatorCatalogEntry rewardEntry = FindOperatorReward(definition);
+            OperatorCatalogEntry rewardEntry = FindOperatorReward(stageId);
             bool hasReward = rewardEntry != null;
             if (operatorRewardPanel != null) { operatorRewardPanel.SetActive(hasReward); }
             if (!hasReward)
@@ -243,9 +279,9 @@ namespace RCCom.UI
             }
         }
 
-        private OperatorCatalogEntry FindOperatorReward(StageDefinition definition)
+        private OperatorCatalogEntry FindOperatorReward(string stageId)
         {
-            if (definition == null || operatorCatalog == null || operatorCatalog.entries == null)
+            if (string.IsNullOrWhiteSpace(stageId) || operatorCatalog == null || operatorCatalog.entries == null)
             {
                 return null;
             }
@@ -253,7 +289,7 @@ namespace RCCom.UI
             for (int i = 0; i < operatorCatalog.entries.Count; i++)
             {
                 OperatorCatalogEntry entry = operatorCatalog.entries[i];
-                if (entry != null && entry.IsStageRewardFor(definition.stageId))
+                if (entry != null && entry.IsStageRewardFor(stageId))
                 {
                     return entry;
                 }

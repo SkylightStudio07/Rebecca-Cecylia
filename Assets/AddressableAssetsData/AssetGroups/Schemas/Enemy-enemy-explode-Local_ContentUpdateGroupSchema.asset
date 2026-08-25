@@ -13,4 +13,4 @@ MonoBehaviour:
   m_Name: Enemy-enemy-explode-Local_ContentUpdateGroupSchema
   m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.GroupSchemas.ContentUpdateGroupSchema
   m_Group: {fileID: 11400000, guid: aa5c26befb6ea864a904141578138f39, type: 2}
-  m_StaticContent: 0
+  m_StaticContent: 1

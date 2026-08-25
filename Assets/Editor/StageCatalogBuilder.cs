@@ -2,6 +2,9 @@ using System;
 using System.Collections.Generic;
 using RCCom.Definitions.Stage;
 using UnityEditor;
+using UnityEditor.AddressableAssets;
+using UnityEditor.AddressableAssets.Settings;
+using UnityEditor.AddressableAssets.Settings.GroupSchemas;
 using UnityEngine;
 
 namespace RCCom.EditorTools
@@ -13,7 +16,25 @@ namespace RCCom.EditorTools
     public static class StageCatalogBuilder
     {
         public const string CatalogPath = "Assets/Data/Stages/StageCatalog.asset";
+        public const string StageGroupPrefix = "Stage-";
+        public const string AddressablesLabel = "stage-definition";
+        public const string BackgroundAddressablesLabel = "stage-background";
         private const string StageRoot = "Assets/Data/Stages";
+
+        public static string GetAddress(string stageId)
+        {
+            return $"stage/{stageId}";
+        }
+
+        public static string GetBackgroundAddress(string stageId)
+        {
+            return $"stage/{stageId}/description-background";
+        }
+
+        public static string GetGroupName(string stageId, bool remoteContent)
+        {
+            return $"{StageGroupPrefix}{stageId}-{(remoteContent ? "Remote" : "Local")}";
+        }
 
         [MenuItem("RCCom/Stages/Rebuild Stage Catalog")]
         public static void Build()
@@ -42,26 +63,139 @@ namespace RCCom.EditorTools
             }
 
             definitions.Sort(CompareDefinitions);
-            catalog.entries = new List<StageCatalogEntry>(definitions.Count);
-            foreach (StageDefinition definition in definitions)
+            AddressableAssetSettings settings = AddressableAssetSettingsDefaultObject.GetSettings(true);
+            if (settings == null)
             {
-                catalog.entries.Add(new StageCatalogEntry
-                {
-                    stageId = definition.stageId,
-                    chapterId = definition.chapterId,
-                    displayName = definition.displayName,
-                    subtitle = definition.subtitle,
-                    description = definition.description,
-                    order = definition.order,
-                    requiredBestWave = definition.requiredBestWave,
-                    stageDefinition = definition
-                });
+                throw new InvalidOperationException("Addressables Settings를 만들지 못했습니다.");
             }
 
+            settings.AddLabel(AddressablesLabel, false);
+            settings.AddLabel(BackgroundAddressablesLabel, false);
+
+            catalog.entries = new List<StageCatalogEntry>(definitions.Count);
+            var liveEntries = new List<StageCatalogEntry>();
+            var expectedGroupNames = new HashSet<string>(StringComparer.Ordinal);
+            foreach (StageDefinition definition in definitions)
+            {
+                ConfigureAddressable(settings, definition);
+                expectedGroupNames.Add(GetGroupName(definition.stageId, definition.remoteContent));
+                catalog.entries.Add(CreateEntry(definition));
+                if (definition.remoteContent)
+                {
+                    // 정본 카탈로그와 라이브 카탈로그가 같은 객체를 공유하면 한쪽 편집이 다른
+                    // 쪽에 새어 들어가므로 별도 인스턴스를 만든다.
+                    liveEntries.Add(CreateEntry(definition));
+                }
+            }
+
+            RemoveStaleGeneratedGroups(settings, expectedGroupNames);
+            StageLiveCatalogBuilder.Build(liveEntries);
+
+            EditorUtility.SetDirty(settings);
             EditorUtility.SetDirty(catalog);
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
             return catalog;
+        }
+
+        private static StageCatalogEntry CreateEntry(StageDefinition definition)
+        {
+            bool remote = definition.remoteContent;
+            bool hasBackground = definition.descriptionBackground != null;
+            return new StageCatalogEntry
+            {
+                stageId = definition.stageId,
+                chapterId = definition.chapterId,
+                displayName = definition.displayName,
+                subtitle = definition.subtitle,
+                description = definition.description,
+                order = definition.order,
+                requiredBestWave = definition.requiredBestWave,
+                recommendedLevel = definition.recommendedLevel,
+                // 원격 스테이지의 배경을 카탈로그가 직접 참조하면 CDN 콘텐츠가 본체 빌드로
+                // 새어 나간다(오퍼레이터 초상화와 같은 규칙). 원격은 주소만 남긴다.
+                descriptionBackground = remote ? null : definition.descriptionBackground,
+                descriptionBackgroundAddress = remote && hasBackground
+                    ? GetBackgroundAddress(definition.stageId)
+                    : string.Empty,
+                hasWaves = definition.waves != null && definition.waves.Count > 0,
+                address = GetAddress(definition.stageId),
+                remoteContent = remote,
+                // 원격 스테이지는 직접 참조를 비워야 한다. 남겨두면 Definition이 본체 빌드에
+                // 딸려 들어가 원격으로 뺀 의미가 사라진다.
+                stageDefinition = remote ? null : definition,
+            };
+        }
+
+        /// <summary>
+        /// 스테이지 하나를 "스테이지 1개 = 그룹 1개"로 배선한다. 오퍼레이터·유닛과 같은 규칙이라
+        /// 원격으로 돌릴 스테이지만 remoteContent를 켜면 배포 단위가 그대로 분리된다.
+        /// </summary>
+        private static void ConfigureAddressable(AddressableAssetSettings settings, StageDefinition definition)
+        {
+            string definitionPath = AssetDatabase.GetAssetPath(definition);
+            if (string.IsNullOrEmpty(definitionPath))
+            {
+                throw new InvalidOperationException($"StageDefinition의 에셋 경로를 찾을 수 없습니다: {definition.stageId}");
+            }
+
+            bool changed = false;
+            AddressableAssetGroup group = AddressableGroupPolicy.EnsureGroup(
+                settings,
+                GetGroupName(definition.stageId, definition.remoteContent),
+                definition.remoteContent,
+                // 원격 스테이지는 배경 한 장만 먼저 받아 브리핑을 그릴 수 있어야 하므로
+                // Definition과 배경을 다른 번들로 쪼갠다(오퍼레이터 초상화와 같은 이유).
+                definition.remoteContent
+                    ? BundledAssetGroupSchema.BundlePackingMode.PackSeparately
+                    : BundledAssetGroupSchema.BundlePackingMode.PackTogether,
+                ref changed);
+
+            AddressableGroupPolicy.AssignEntry(
+                settings, group, definitionPath, GetAddress(definition.stageId), AddressablesLabel);
+
+            if (!definition.remoteContent || definition.descriptionBackground == null)
+            {
+                return;
+            }
+
+            string backgroundPath = AssetDatabase.GetAssetPath(definition.descriptionBackground);
+            if (string.IsNullOrEmpty(backgroundPath))
+            {
+                return;
+            }
+
+            AddressableGroupPolicy.AssignEntry(
+                settings, group, backgroundPath, GetBackgroundAddress(definition.stageId),
+                BackgroundAddressablesLabel);
+        }
+
+        /// <summary>
+        /// 더 이상 StageDefinition이 없는 자동 생성 그룹을 지운다. 남겨두면 빈 그룹이 계속
+        /// 빌드되고, 이름만 보고 존재하지 않는 스테이지가 있다고 착각하게 된다.
+        /// </summary>
+        private static void RemoveStaleGeneratedGroups(
+            AddressableAssetSettings settings, HashSet<string> expectedGroupNames)
+        {
+            var stale = new List<AddressableAssetGroup>();
+            foreach (AddressableAssetGroup group in settings.groups)
+            {
+                if (group == null || group.ReadOnly || !group.Name.StartsWith(StageGroupPrefix, StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                if (!expectedGroupNames.Contains(group.Name))
+                {
+                    stale.Add(group);
+                }
+            }
+
+            foreach (AddressableAssetGroup group in stale)
+            {
+                Debug.Log($"[StageCatalogBuilder] 사라진 스테이지의 그룹 제거: {group.Name}");
+                settings.RemoveGroup(group);
+            }
         }
 
         public static List<StageDefinition> LoadDefinitions()

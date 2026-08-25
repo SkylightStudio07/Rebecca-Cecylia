@@ -85,6 +85,12 @@ public static class BuildScript
             }
 
             Debug.Log($"[BuildScript] {target} 빌드 완료: {outputPath} ({report.summary.totalSize} bytes)");
+
+            // 콘텐츠 상태 파일은 이 플레이어 빌드와 짝을 이룰 때만 의미가 있으므로 빌드가
+            // 성공한 뒤에만 보관한다. 기본 경로의 상태 파일은 콘텐츠를 다시 구울 때마다
+            // 덮어써지고 .gitignore 대상이라, 여기서 버전 폴더로 복사해두지 않으면 이 빌드에는
+            // 두 번 다시 라이브 드랍을 내려보낼 수 없게 된다.
+            AddressablesContentUpdateBuilder.ArchiveContentState(target);
         }
         finally
         {

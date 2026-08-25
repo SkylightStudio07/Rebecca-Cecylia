@@ -13,4 +13,4 @@ MonoBehaviour:
   m_Name: Enemy-enemy-heavytanker-Local_ContentUpdateGroupSchema
   m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.GroupSchemas.ContentUpdateGroupSchema
   m_Group: {fileID: 11400000, guid: f05a8e5c24c7b934680182ad6297a8ee, type: 2}
-  m_StaticContent: 0
+  m_StaticContent: 1

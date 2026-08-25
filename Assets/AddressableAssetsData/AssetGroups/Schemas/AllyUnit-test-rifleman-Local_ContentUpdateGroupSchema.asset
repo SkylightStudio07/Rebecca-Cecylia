@@ -13,4 +13,4 @@ MonoBehaviour:
   m_Name: AllyUnit-test-rifleman-Local_ContentUpdateGroupSchema
   m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.GroupSchemas.ContentUpdateGroupSchema
   m_Group: {fileID: 11400000, guid: 7e7b54fcb5ad8f743b45857941361d63, type: 2}
-  m_StaticContent: 0
+  m_StaticContent: 1

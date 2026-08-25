@@ -13,4 +13,4 @@ MonoBehaviour:
   m_Name: AllyUnit-aurora-slow-drone-Local_ContentUpdateGroupSchema
   m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.GroupSchemas.ContentUpdateGroupSchema
   m_Group: {fileID: 11400000, guid: bcef73053d86da049b3a469cdd2bf55b, type: 2}
-  m_StaticContent: 0
+  m_StaticContent: 1

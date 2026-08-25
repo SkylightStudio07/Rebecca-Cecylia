@@ -13,4 +13,4 @@ MonoBehaviour:
   m_Name: AllyUnit-cassia-vanguard-Local_ContentUpdateGroupSchema
   m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.GroupSchemas.ContentUpdateGroupSchema
   m_Group: {fileID: 11400000, guid: 2eb9c7efe87003a42999ed1afc474408, type: 2}
-  m_StaticContent: 0
+  m_StaticContent: 1
