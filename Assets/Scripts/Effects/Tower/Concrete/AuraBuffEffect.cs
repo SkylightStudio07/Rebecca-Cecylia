@@ -19,7 +19,7 @@ namespace RCCom.Effects.Tower.Concrete
     [CreateAssetMenu(menuName = "RCCom/Tower/Effects/Aura Buff Effect")]
     public class AuraBuffEffect : TowerEffectBase
     {
-        private readonly Dictionary<(TowerInstance provider, TowerInstance ally), Aura> _activeAuras = new();
+        private readonly Dictionary<(TowerInstance provider, TowerInstance ally), SimpleTowerAura> _activeAuras = new();
 
         public override void OnAllyEnterRange(TowerContext ctx, TowerInstance ally)
         {
@@ -28,7 +28,7 @@ namespace RCCom.Effects.Tower.Concrete
                 return;
             }
 
-            var aura = new Aura(data.damageBuffMultiplier, data.attackSpeedBuffMultiplier);
+            var aura = new SimpleTowerAura(data.damageBuffMultiplier, data.attackSpeedBuffMultiplier);
             _activeAuras[(ctx.self, ally)] = aura;
             ally.activeAuras.Add(aura);
         }
@@ -36,29 +36,13 @@ namespace RCCom.Effects.Tower.Concrete
         public override void OnAllyExitRange(TowerContext ctx, TowerInstance ally)
         {
             (TowerInstance, TowerInstance) key = (ctx.self, ally);
-            if (!_activeAuras.TryGetValue(key, out Aura aura))
+            if (!_activeAuras.TryGetValue(key, out SimpleTowerAura aura))
             {
                 return;
             }
 
             ally.activeAuras.Remove(aura);
             _activeAuras.Remove(key);
-        }
-
-        private class Aura : ITowerAura
-        {
-            private readonly float _damageMultiplier;
-            private readonly float _attackSpeedMultiplier;
-
-            public Aura(float damageMultiplier, float attackSpeedMultiplier)
-            {
-                _damageMultiplier = damageMultiplier;
-                _attackSpeedMultiplier = attackSpeedMultiplier;
-            }
-
-            public float ModifyOutgoingDamage(float baseDamage) => baseDamage * _damageMultiplier;
-
-            public float ModifyAttackInterval(float baseInterval) => baseInterval / _attackSpeedMultiplier;
         }
     }
 }

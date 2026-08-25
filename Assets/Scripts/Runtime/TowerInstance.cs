@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using RCCom.Core;
 using RCCom.Data;
 using RCCom.Definitions.Tower;
 using RCCom.Effects.Tower;
@@ -46,6 +47,14 @@ namespace RCCom.Runtime
         /// 건드리지 않는다. 스킬 타워가 OnAllyEnterRange/OnAllyExitRange에서 Add/Remove한다.
         /// </summary>
         public List<ITowerAura> activeAuras = new();
+
+        /// <summary>
+        /// 유닛이 시전하는 임시(지속시간 기반) 오라 저장소. activeAuras(콜라이더 출입 이벤트로
+        /// 상시 등록되는 스킬 타워 오라)와는 메커니즘이 달라 별개로 둔다 — 유닛은 이동하며
+        /// 타워처럼 트리거 콜라이더를 갖지 않으므로, 매 틱 사거리 내 타워를 스캔해 짧은 버프를
+        /// 계속 갱신하는 폴링 방식(AllyUnitInstance.ApplyStatMultipliers와 동일한 철학)만 가능하다.
+        /// </summary>
+        private readonly RefreshableAuraBag<object, object, ITowerAura> _temporaryAuras = new();
 
         private readonly List<EnemyInstance> _enemiesInRange = new();
         private bool _isBuilt;
@@ -95,6 +104,8 @@ namespace RCCom.Runtime
                 return;
             }
 
+            _temporaryAuras.Tick(Time.deltaTime);
+
             TowerContext ctx = MakeContext();
             foreach (ITowerEffect effect in definition.effects)
             {
@@ -141,6 +152,21 @@ namespace RCCom.Runtime
                 _enemiesInRange.Remove(enemyView.Instance);
             }
         }
+
+        /// <summary>
+        /// 유닛이 시전하는 임시 버프(예: TowerReinforcementAuraEffect)가 사용하는 진입점.
+        /// source/effect는 (제공자, 효과) 키로 여러 시전자의 버프가 서로 값을 덮어쓰지 않게
+        /// 구분하는 용도일 뿐, 이 클래스는 그 실제 타입(AllyUnitInstance/SO 등)을 알 필요가
+        /// 없어 object로 받는다. duration 동안만 유지되며, 매 틱 다시 호출해 갱신하지 않으면
+        /// 자연 만료된다.
+        /// </summary>
+        public void ApplyTemporaryAura(object source, object effect, ITowerAura aura, float duration)
+        {
+            _temporaryAuras.Set(source, effect, aura, duration);
+        }
+
+        /// <summary>TowerDamageMath가 activeAuras/GlobalTowerAuraRegistry와 나란히 조회한다.</summary>
+        public IEnumerable<ITowerAura> TemporaryAuras => _temporaryAuras.Values;
 
         /// <summary>
         /// 사거리 관련 업그레이드 카드(사거리 확장, 오라 확장)가 Data를 바꾼 뒤 호출해서

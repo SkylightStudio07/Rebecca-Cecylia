@@ -8,7 +8,7 @@ namespace RCCom.Effects.Unit.Concrete
     /// 결정하고, 이 효과는 공격 훅에서 실제 피해만 적용해 SO를 상태 없이 유지한다.
     /// </summary>
     [CreateAssetMenu(menuName = "RCCom/Ally Unit/Effects/Basic Attack Effect")]
-    public class BasicAttackEffect : AllyUnitEffectBase
+    public class BasicAttackEffect : AllyUnitEffectBase, IAllyUnitPrimaryAttackEffect
     {
         [Tooltip("원거리 유닛(attackRange가 ContactRange보다 큰 경우)에만 재생하는 가짜 투사체. " +
                  "attackRange가 ContactRange 이하로 보정되는 근접 유닛은 지금처럼 연출 없이 즉발 타격을 유지한다.")]
@@ -22,7 +22,7 @@ namespace RCCom.Effects.Unit.Concrete
                 return;
             }
 
-            target.TakeDamage(ctx.self.Data.attackDamage, ctx.self.Position);
+            target.TakeDamage(ctx.self.Data.attackDamage * ctx.self.CalculateDamageMultiplier(), ctx.self.Position);
 
             // 근접 유닛은 EffectiveAttackRange가 ContactRange로 보정돼 attackRange보다 커지므로
             // (AllyUnitInstance.EffectiveAttackRange), attackRange가 ContactRange를 실제로 넘는
