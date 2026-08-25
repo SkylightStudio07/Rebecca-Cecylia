@@ -1,0 +1,126 @@
+using System;
+using System.Collections.Generic;
+using RCCom.Data;
+using RCCom.Definitions.Enemy;
+using RCCom.Runtime;
+using UnityEditor;
+using UnityEngine;
+
+namespace RCCom.EditorTools
+{
+    /// <summary>무한 모드 보스 승급의 모드 경계·수식·SO 불변성을 순수 런타임 데이터로 검증한다.</summary>
+    public static class EndlessBossPromotionVerifier
+    {
+        private const float Epsilon = 0.001f;
+
+        [MenuItem("RCCom/Verify/Endless Boss Promotion")]
+        public static void Verify()
+        {
+            var definitions = new List<EnemyDefinition>
+            {
+                CreateDefinition("light", 100f, 1.2f, 10f, 8, 4),
+                CreateDefinition("selected", 250f, 2.4f, 30f, 12, 5),
+                CreateDefinition("reward-tie", 50f, 3.1f, 20f, 12, 9),
+            };
+
+            try
+            {
+                if (!EndlessBossPromotion.ShouldPromote(BattleMode.Endless, 5, 5) ||
+                    EndlessBossPromotion.ShouldPromote(BattleMode.Endless, 4, 5) ||
+                    EndlessBossPromotion.ShouldPromote(BattleMode.Stage, 5, 5))
+                {
+                    throw new InvalidOperationException("무한 모드 매 5웨이브 전용 승급 조건이 깨졌습니다.");
+                }
+
+                EnemyData selectedOriginal = definitions[1].data;
+                EnemyData bossData = EndlessBossPromotion.CreateRuntimeData(definitions, 1);
+                if (bossData == null || ReferenceEquals(bossData, selectedOriginal))
+                {
+                    throw new InvalidOperationException("보스 전투 데이터가 런타임 복제본으로 생성되지 않았습니다.");
+                }
+
+                AssertNear(900f, bossData.maxHealth, "웨이브 총 체력 400 × 2.25가 아닙니다.");
+                AssertNear(0.75f, bossData.moveSpeed, "보스 고정 이동속도가 다릅니다.");
+                AssertNear(90f, bossData.contactDamage, "최대 접촉 공격력 30 × 3이 아닙니다.");
+                AssertEqual(36, bossData.goldReward, "최고 골드 보상의 3배가 아닙니다.");
+                AssertEqual(27, bossData.expReward, "골드 동률 중 높은 EXP의 3배가 아닙니다.");
+                AssertNear(selectedOriginal.attackRange, bossData.attackRange, "선택된 적의 공격 범위를 유지하지 않았습니다.");
+                AssertNear(selectedOriginal.attackInterval, bossData.attackInterval, "선택된 적의 공격 주기를 유지하지 않았습니다.");
+
+                var instance = new EnemyInstance
+                {
+                    definition = definitions[1],
+                    position = Vector2.zero,
+                };
+                instance.Spawn(new[] { Vector2.zero, Vector2.right }, null, bossData, true);
+                instance.ApplyHealthMultiplier(1.5f);
+
+                if (!instance.IsBoss || instance.definition != definitions[1])
+                {
+                    throw new InvalidOperationException("승급 인스턴스가 선택된 EnemyDefinition을 유지하지 않았습니다.");
+                }
+
+                AssertNear(1350f, instance.MaxHealth, "무한 웨이브 체력 배율이 보스 체력에 한 번 적용되지 않았습니다.");
+                AssertNear(250f, selectedOriginal.maxHealth, "EnemyDefinition 원본 체력이 변경되었습니다.");
+                AssertNear(2.4f, selectedOriginal.moveSpeed, "EnemyDefinition 원본 이동속도가 변경되었습니다.");
+                AssertEqual(5, selectedOriginal.expReward, "EnemyDefinition 원본 보상이 변경되었습니다.");
+
+                Debug.Log("[EndlessBossPromotionVerifier] PASS — 무한 모드 5웨이브 조건, 랜덤 슬롯 승급용 " +
+                          "런타임 복제, 체력·속도·공격·골드/EXP 수식, 원본 SO 불변성 확인");
+            }
+            finally
+            {
+                for (int i = 0; i < definitions.Count; i++)
+                {
+                    if (definitions[i] != null)
+                    {
+                        UnityEngine.Object.DestroyImmediate(definitions[i]);
+                    }
+                }
+            }
+        }
+
+        private static EnemyDefinition CreateDefinition(
+            string enemyId,
+            float maxHealth,
+            float moveSpeed,
+            float contactDamage,
+            int goldReward,
+            int expReward)
+        {
+            EnemyDefinition definition = ScriptableObject.CreateInstance<EnemyDefinition>();
+            definition.data = new EnemyData
+            {
+                enemyId = enemyId,
+                displayName = enemyId,
+                kind = EnemyKind.Normal,
+                maxHealth = maxHealth,
+                moveSpeed = moveSpeed,
+                contactDamage = contactDamage,
+                attackRange = 1.75f,
+                attackInterval = 1.25f,
+                waveCost = 2f,
+                minWave = 1,
+                goldReward = goldReward,
+                expReward = expReward,
+            };
+            return definition;
+        }
+
+        private static void AssertNear(float expected, float actual, string message)
+        {
+            if (Mathf.Abs(expected - actual) > Epsilon)
+            {
+                throw new InvalidOperationException($"{message} expected={expected}, actual={actual}");
+            }
+        }
+
+        private static void AssertEqual(int expected, int actual, string message)
+        {
+            if (expected != actual)
+            {
+                throw new InvalidOperationException($"{message} expected={expected}, actual={actual}");
+            }
+        }
+    }
+}

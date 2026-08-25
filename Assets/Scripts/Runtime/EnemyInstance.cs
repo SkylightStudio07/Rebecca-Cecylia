@@ -28,6 +28,7 @@ namespace RCCom.Runtime
         private bool _isSpawned;
         private bool _isDead;
         private bool _hasReachedGoal;
+        private EnemyData _runtimeData;
         private AllyUnitInstance _currentTarget;
         private AllyUnitInstance _currentMovementTarget;
         private float _attackCooldownRemaining;
@@ -65,8 +66,13 @@ namespace RCCom.Runtime
         /// </summary>
         public event Action ReachedGoal;
 
-        public EnemyData Data => definition.data;
+        /// <summary>
+        /// 보스처럼 한 스폰만 전투 수치를 덮어쓸 때는 런타임 복제본을 반환한다. Definition과
+        /// Effect 목록은 그대로 유지해 원본 SO를 수정하거나 별도 적 종류를 만들지 않는다.
+        /// </summary>
+        public EnemyData Data => _runtimeData ?? definition.data;
         public bool IsSpawned => _isSpawned;
+        public bool IsBoss { get; private set; }
         public bool IsDead => _isDead;
         public bool HasReachedGoal => _hasReachedGoal;
         public bool IsAlive => _isSpawned && !_isDead && !_hasReachedGoal;
@@ -97,8 +103,14 @@ namespace RCCom.Runtime
         /// path: 이동할 웨이포인트 목록 (MapManager.Waypoints). goal: 경로 끝에 도달했을 때
         /// 접촉 피해를 받을 대상 (거점). 그리드와 무관한 자유 좌표 이동임에 유의.
         /// </summary>
-        public void Spawn(IReadOnlyList<Vector2> path, IDamageable goal)
+        public void Spawn(
+            IReadOnlyList<Vector2> path,
+            IDamageable goal,
+            EnemyData runtimeData = null,
+            bool isBoss = false)
         {
+            _runtimeData = runtimeData;
+            IsBoss = isBoss || (Data != null && Data.kind == EnemyKind.Boss);
             MaxHealth = Mathf.Max(0f, Data.maxHealth);
             currentHealth = MaxHealth;
             _path = path;
