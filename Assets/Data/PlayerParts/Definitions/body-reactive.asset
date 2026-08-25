@@ -36,5 +36,4 @@ MonoBehaviour:
     skillBurstInterval: 0
     skillChargeCapacity: 0
   effects: []
-  icon: {fileID: 0}
-  overlaySprite: {fileID: 0}
+  icon: {fileID: 21300000, guid: 71f00be5e030ac141802231a88922317, type: 3}

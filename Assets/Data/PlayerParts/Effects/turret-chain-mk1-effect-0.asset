@@ -14,3 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RCCom.Effects.PlayerPart.Concrete.PlayerChainAttackEffect
   jumpCount: 2
   damageFalloffPerJump: 0.3
+  laserBeamPrefab: {fileID: 3603092667416590185, guid: 3581f3ca444d96d4bbd75ebb2aad29c5, type: 3}
+  laserBeamVisual: {fileID: 11400000, guid: b268bb57fdb87c84e8950901c3304c1f, type: 2}

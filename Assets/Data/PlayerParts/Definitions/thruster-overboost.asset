@@ -37,5 +37,4 @@ MonoBehaviour:
     skillChargeCapacity: 0
   effects:
   - {fileID: 11400000, guid: bb50948b2cf5e624fa75771acef05214, type: 2}
-  icon: {fileID: 0}
-  overlaySprite: {fileID: 0}
+  icon: {fileID: 21300000, guid: e78f96f4d60885342938f630f36c9ec4, type: 3}

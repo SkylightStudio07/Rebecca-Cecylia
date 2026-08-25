@@ -14,3 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RCCom.Effects.PlayerPart.Concrete.PlayerSplashAttackEffect
   radius: 1.2
   splashDamageMultiplier: 0.4
+  fakeProjectilePrefab: {fileID: 6302134341187759493, guid: 49e7cc62646cd804da79a8c0732e2abf, type: 3}
+  lobHeight: 0.6
+  explosionBurstPrefab: {fileID: 2993197373419359902, guid: 3fdcad316f1ac33458382a1b6be26e93, type: 3}
+  shockwaveRingPrefab: {fileID: 197888289518874147, guid: e0161f33581fa3d41952fa261343797b, type: 3}
+  shockwaveVisual: {fileID: 11400000, guid: 5c41f1f8aef3bb0499d50493dba17fd0, type: 2}
+  scorchDecalPrefab: {fileID: 1910614936167183548, guid: dbe0c2d0494f5d2499e5d7fb0952da8f, type: 3}
