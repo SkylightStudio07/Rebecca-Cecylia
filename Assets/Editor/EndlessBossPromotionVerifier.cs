@@ -43,12 +43,18 @@ namespace RCCom.EditorTools
                 }
 
                 AssertNear(700f, bossData.maxHealth, "웨이브 총 체력 400 × 1.75가 아닙니다.");
-                AssertNear(0.75f, bossData.moveSpeed, "보스 고정 이동속도가 다릅니다.");
-                AssertNear(52.5f, bossData.contactDamage, "최대 접촉 공격력 30 × 1.75가 아닙니다.");
+                AssertNear(0.5f, bossData.moveSpeed, "보스 고정 이동속도가 다릅니다.");
+                AssertNear(30f, bossData.contactDamage, "평균 접촉 공격력 20 × 1.5가 아닙니다.");
                 AssertEqual(36, bossData.goldReward, "최고 골드 보상의 3배가 아닙니다.");
                 AssertEqual(27, bossData.expReward, "골드 동률 중 높은 EXP의 3배가 아닙니다.");
                 AssertNear(selectedOriginal.attackRange, bossData.attackRange, "선택된 적의 공격 범위를 유지하지 않았습니다.");
                 AssertNear(selectedOriginal.attackInterval, bossData.attackInterval, "선택된 적의 공격 주기를 유지하지 않았습니다.");
+
+                EnemyData duplicateWeightedData = EndlessBossPromotion.CreateRuntimeData(
+                    new[] { definitions[0], definitions[0], definitions[1] },
+                    2);
+                AssertNear(25f, duplicateWeightedData.contactDamage,
+                    "같은 적이 여러 슬롯에 편성된 웨이브의 마릿수 가중 평균이 아닙니다.");
 
                 var instance = new EnemyInstance
                 {

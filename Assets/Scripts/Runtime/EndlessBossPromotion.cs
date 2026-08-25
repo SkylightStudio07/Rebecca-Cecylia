@@ -12,8 +12,8 @@ namespace RCCom.Runtime
     public static class EndlessBossPromotion
     {
         public const float HealthFromWaveMultiplier = 1.75f;
-        public const float FixedMoveSpeed = 0.75f;
-        public const float DamageMultiplier = 1.75f;
+        public const float FixedMoveSpeed = 0.5f;
+        public const float AverageDamageMultiplier = 1.5f;
         public const float RewardMultiplier = 3f;
         public const float VisualSizeMultiplier = 1.5f;
 
@@ -43,7 +43,8 @@ namespace RCCom.Runtime
             }
 
             float totalHealth = 0f;
-            float strongestDamage = 0f;
+            float totalDamage = 0f;
+            int damageSourceCount = 0;
             EnemyData rewardSource = null;
 
             for (int i = 0; i < wave.Count; i++)
@@ -55,7 +56,8 @@ namespace RCCom.Runtime
                 }
 
                 totalHealth += Mathf.Max(0f, candidate.maxHealth);
-                strongestDamage = Mathf.Max(strongestDamage, Mathf.Max(0f, candidate.contactDamage));
+                totalDamage += Mathf.Max(0f, candidate.contactDamage);
+                damageSourceCount++;
 
                 if (rewardSource == null || candidate.goldReward > rewardSource.goldReward ||
                     (candidate.goldReward == rewardSource.goldReward &&
@@ -66,6 +68,9 @@ namespace RCCom.Runtime
             }
 
             EnemyData selected = selectedDefinition.data;
+            float averageDamage = damageSourceCount > 0
+                ? totalDamage / damageSourceCount
+                : 0f;
             var runtimeData = new EnemyData
             {
                 enemyId = selected.enemyId,
@@ -73,7 +78,7 @@ namespace RCCom.Runtime
                 kind = selected.kind,
                 maxHealth = totalHealth * HealthFromWaveMultiplier,
                 moveSpeed = FixedMoveSpeed,
-                contactDamage = strongestDamage * DamageMultiplier,
+                contactDamage = averageDamage * AverageDamageMultiplier,
                 attackRange = selected.attackRange,
                 attackInterval = selected.attackInterval,
                 waveCost = selected.waveCost,
