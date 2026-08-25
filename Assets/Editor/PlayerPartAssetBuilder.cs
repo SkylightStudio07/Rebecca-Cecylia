@@ -3,18 +3,31 @@ using System.Collections.Generic;
 using RCCom.Definitions.PlayerPart;
 using RCCom.Effects.PlayerPart;
 using RCCom.Effects.PlayerPart.Concrete;
+using RCCom.Runtime;
 using RCCom.Runtime.Visuals;
 using UnityEditor;
+using UnityEditor.AddressableAssets;
+using UnityEditor.AddressableAssets.Settings;
+using UnityEditor.AddressableAssets.Settings.GroupSchemas;
 using UnityEngine;
 
 namespace RCCom.EditorTools
 {
+    /// <summary>Studio 창처럼 예외로 흐름을 끊지 말아야 하는 호출부를 위한 단일 빌드 결과.</summary>
+    public sealed class PlayerPartBuildReport
+    {
+        public string partId;
+        public bool validationPassed;
+    }
+
     public static class PlayerPartAssetBuilder
     {
         public const string RecipeFolder = "Assets/Editor/PlayerPartRecipes";
         public const string DefinitionFolder = "Assets/Data/PlayerParts/Definitions";
         public const string EffectFolder = "Assets/Data/PlayerParts/Effects";
         public const string CatalogPath = "Assets/Resources/PlayerParts/PlayerPartCatalog.asset";
+        public const string AddressableGroupName = "PlayerParts-Local";
+        public const string AddressablesLabel = "playerpart-catalog";
 
         [MenuItem("RCCom/Player Parts/Build All Player Part Assets")]
         public static void BuildAll()
@@ -31,9 +44,109 @@ namespace RCCom.EditorTools
             }
 
             BuildCatalog(definitions);
+            ConfigureCatalogAddressable();
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
             Debug.Log($"[PlayerPartAssetBuilder] 파츠 {definitions.Count}개와 카탈로그를 생성/갱신했습니다.");
+        }
+
+        /// <summary>
+        /// 레시피 한 개만 다시 만든다. 작업 중이 아닌 파츠의 Definition은 다시 쓰지 않아 형상관리
+        /// 잡음을 줄인다 — 카탈로그는 파츠 전체가 한 에셋에 들어가는 구조라 다른 파츠들은 디스크의
+        /// 기존 Definition을 그대로 읽어 붙이며, 하나도 빌드된 적 없는 새 레시피가 섞여 있으면
+        /// "먼저 Build All을 실행하라"는 메시지로 막는다. Studio의 저장 버튼이 호출하는 진입점이다.
+        /// </summary>
+        public static PlayerPartBuildReport BuildSingle(string recipePath)
+        {
+            TextAsset recipeAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(recipePath);
+            if (recipeAsset == null)
+            {
+                throw new InvalidOperationException($"플레이어 파츠 레시피를 찾지 못했습니다: {recipePath}");
+            }
+
+            PlayerPartAssetRecipe recipe = JsonUtility.FromJson<PlayerPartAssetRecipe>(recipeAsset.text);
+            if (recipe == null || string.IsNullOrWhiteSpace(recipe.partId))
+            {
+                throw new InvalidOperationException($"유효하지 않은 플레이어 파츠 레시피입니다: {recipePath}");
+            }
+
+            AssetDatabase.Refresh();
+            EnsureFolders();
+            ConfigureIconImports(new List<PlayerPartAssetRecipe> { recipe });
+            BuildDefinition(recipe);
+
+            BuildCatalog(LoadAllDefinitionsForCatalog());
+            ConfigureCatalogAddressable();
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+
+            var report = new PlayerPartBuildReport
+            {
+                partId = recipe.partId,
+                validationPassed = PlayerPartAssetValidator.ValidateAll(false),
+            };
+            Debug.Log(
+                $"[PlayerPartAssetBuilder] {recipe.partId} 단일 빌드 완료 " +
+                $"(검증 {(report.validationPassed ? "통과" : "실패")})");
+            return report;
+        }
+
+        /// <summary>
+        /// 카탈로그 재조립에 필요한 전체 Definition 목록. 지금 건드리는 레시피 외 나머지는
+        /// 디스크에 이미 있는 생성물을 그대로 읽어, 손대지 않은 파츠까지 다시 쓰는 것을 피한다.
+        /// </summary>
+        private static List<PlayerPartDefinition> LoadAllDefinitionsForCatalog()
+        {
+            var definitions = new List<PlayerPartDefinition>();
+            foreach (PlayerPartAssetRecipe recipe in LoadRecipes())
+            {
+                string path = GetDefinitionPath(recipe.partId);
+                PlayerPartDefinition definition = AssetDatabase.LoadAssetAtPath<PlayerPartDefinition>(path);
+                if (definition == null)
+                {
+                    throw new InvalidOperationException(
+                        $"{recipe.partId}의 Definition이 없습니다. 먼저 Build All Player Part Assets를 실행하세요: {path}");
+                }
+
+                definitions.Add(definition);
+            }
+
+            return definitions;
+        }
+
+        /// <summary>
+        /// 카탈로그 한 에셋(중첩 참조된 38개 Definition·Effect·아이콘 포함)을 로컬 Addressables
+        /// 항목 하나로 등록한다. 오퍼레이터별 Definition을 그룹 하나에 묶는 것과 같은 단위 —
+        /// 파츠별 개별 원격 배포는 상점/영속 장착이 붙는 후속 작업으로 남겨 둔다. 로컬 그룹으로
+        /// 묶는 이유는 파츠가 아직 전부 본체 빌드 콘텐츠라 원격 배포 대상이 없기 때문이다.
+        /// </summary>
+        private static void ConfigureCatalogAddressable()
+        {
+            AddressableAssetSettings settings = AddressableAssetSettingsDefaultObject.GetSettings(true);
+            if (settings == null)
+            {
+                throw new InvalidOperationException("Addressables Settings를 만들지 못했습니다.");
+            }
+
+            settings.AddLabel(AddressablesLabel, false);
+            bool changed = false;
+            AddressableAssetGroup group = AddressableGroupPolicy.EnsureGroup(
+                settings,
+                AddressableGroupName,
+                remoteContent: false,
+                BundledAssetGroupSchema.BundlePackingMode.PackTogether,
+                ref changed);
+
+            if (AddressableGroupPolicy.AssignEntry(
+                    settings, group, CatalogPath, PlayerPartContentLoader.CatalogAddress, AddressablesLabel))
+            {
+                changed = true;
+            }
+
+            if (changed)
+            {
+                EditorUtility.SetDirty(settings);
+            }
         }
 
         public static List<PlayerPartAssetRecipe> LoadRecipes()

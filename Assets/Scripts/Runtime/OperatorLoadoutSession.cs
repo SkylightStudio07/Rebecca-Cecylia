@@ -92,13 +92,24 @@ namespace RCCom.Runtime
             PlayerPartCatalog catalog = PlayerPartDebugSession.Catalog;
             if (catalog == null)
             {
-                catalog = Resources.Load<PlayerPartCatalog>("PlayerParts/PlayerPartCatalog");
+                catalog = ResolvePartCatalog();
                 PlayerPartDebugSession.SetCatalog(catalog);
             }
 
             // 플레이어 강화 카드는 data를 직접 수정하므로 Definition과 파츠 SO 원본을 넘기지
             // 않고 매 게임플레이 씬마다 새 값 객체와 Effect 목록을 조립한다.
             return PlayerLoadoutBuilder.Compose(source, catalog);
+        }
+
+        /// <summary>
+        /// 어드레서블 조회(PlayerPartContentLoader)를 우선 쓰고, 아직 콘텐츠가 빌드되지
+        /// 않았거나 조회가 안 끝났으면 빌드에 항상 포함되는 Resources 카탈로그로 폴백한다.
+        /// 개발 중에도, 어드레서블 파이프라인이 갖춰진 뒤에도 같은 호출부가 그대로 동작한다.
+        /// </summary>
+        private static PlayerPartCatalog ResolvePartCatalog()
+        {
+            PlayerPartCatalog resourceFallback = Resources.Load<PlayerPartCatalog>("PlayerParts/PlayerPartCatalog");
+            return PlayerPartContentLoader.Resolve(resourceFallback);
         }
 
         public static TowerRoster ResolveTowerRoster(TowerRoster fallback)

@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: PlayerParts-Local
+  m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
+  m_GroupName: PlayerParts-Local
+  m_GUID: 5f2b5f9dc34a03840ac5a0de79ba6555
+  m_SerializeEntries:
+  - m_GUID: 4908c548b73cde444bd02fe3f2958cf2
+    m_Address: playerparts/catalog
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - playerpart-catalog
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 2afb846ca87b5fb4d915c11291554efd, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 5c854f2391b3a0041a3379885e87c45c, type: 2}
+    - {fileID: 11400000, guid: 59b094fe1b05aeb46bd5418644362d9a, type: 2}

@@ -13,6 +13,15 @@ namespace RCCom.EditorTools
         [MenuItem("RCCom/Player Parts/Validate Player Part Assets")]
         public static void ValidateAll()
         {
+            ValidateAll(true);
+        }
+
+        /// <summary>
+        /// Studio 창처럼 예외로 흐름을 끊지 말고 결과를 다이얼로그로만 보여줘야 하는 호출부를
+        /// 위한 오버로드. throwOnError가 false면 실패해도 예외 대신 false를 반환한다.
+        /// </summary>
+        public static bool ValidateAll(bool throwOnError)
+        {
             var errors = new List<string>();
             var warnings = new List<string>();
             var ids = new HashSet<string>(StringComparer.Ordinal);
@@ -101,10 +110,17 @@ namespace RCCom.EditorTools
             foreach (string warning in warnings) { Debug.LogWarning($"[PlayerPartValidator] {warning}"); }
             if (errors.Count > 0)
             {
-                throw new InvalidOperationException(string.Join("\n", errors));
+                if (throwOnError)
+                {
+                    throw new InvalidOperationException(string.Join("\n", errors));
+                }
+
+                foreach (string error in errors) { Debug.LogError($"[PlayerPartValidator] {error}"); }
+                return false;
             }
 
             Debug.Log($"[PlayerPartValidator] {catalog.parts.Count}개 검증 통과, 아트 경고 {warnings.Count}건.");
+            return true;
         }
 
         private static void ValidateAttackVisuals(PlayerPartDefinition part, List<string> errors)
