@@ -23,6 +23,10 @@ namespace RCCom.Definitions.Stage
         [Min(0)] public int order;
         [Min(0)] public int requiredBestWave;
 
+        [Tooltip("켜면 이 스테이지를 원격 그룹으로 패키징해 CDN에서 내려받는다. " +
+                 "오퍼레이터는 JSON 레시피에 같은 값이 있지만 스테이지는 이 SO가 제작 원본이라 여기에 둔다.")]
+        public bool remoteContent;
+
         [Header("작전 브리핑")]
         [TextArea(2, 4)]
         public string description = string.Empty;
