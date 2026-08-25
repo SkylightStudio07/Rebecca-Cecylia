@@ -16,3 +16,6 @@ MonoBehaviour:
   - enemy-normal
   - enemy-rusher
   - enemy-tanker
+  - enemy-heal
+  - enemy-explode
+  - enemy-heavytanker

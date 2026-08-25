@@ -12,7 +12,7 @@
         "enemyId": "enemy-rusher",
         "displayName": "스피드",
         "kind": 1,
-        "maxHealth": 23.0,
+        "maxHealth": 20.0,
         "moveSpeed": 3.0,
         "contactDamage": 3.0,
         "attackRange": 0.0,

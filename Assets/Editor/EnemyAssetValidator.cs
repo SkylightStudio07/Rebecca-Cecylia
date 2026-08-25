@@ -37,6 +37,7 @@ namespace RCCom.EditorTools
             List<EnemyAssetRecipe> recipes = LoadRecipes(errors);
             ValidateRecipeIdsAndDefinitions(recipes, errors);
             ValidateRecipeAssetPaths(recipes, errors);
+            ValidateRoster(recipes, errors);
             ValidateCatalogAndAddressables(recipes, errors);
 
             foreach (string error in errors)
@@ -149,6 +150,40 @@ namespace RCCom.EditorTools
                     {
                         errors.Add($"효과 경로가 실제 에셋을 가리키지 않습니다: {effectPath} ({recipe.enemyId})");
                     }
+                }
+            }
+        }
+
+        private static void ValidateRoster(List<EnemyAssetRecipe> recipes, List<string> errors)
+        {
+            EnemyRoster roster = AssetDatabase.LoadAssetAtPath<EnemyRoster>(EnemyCatalogBuilder.RosterPath);
+            if (roster == null)
+            {
+                errors.Add($"전투용 EnemyRoster가 없습니다: {EnemyCatalogBuilder.RosterPath}");
+                return;
+            }
+
+            var registeredIds = new HashSet<string>(StringComparer.Ordinal);
+            if (roster.enemyIds != null)
+            {
+                foreach (string enemyId in roster.enemyIds)
+                {
+                    if (string.IsNullOrWhiteSpace(enemyId))
+                    {
+                        errors.Add("EnemyRoster에 비어 있는 enemyId가 있습니다.");
+                    }
+                    else if (!registeredIds.Add(enemyId))
+                    {
+                        errors.Add($"EnemyRoster의 enemyId가 중복됩니다: {enemyId}");
+                    }
+                }
+            }
+
+            foreach (EnemyAssetRecipe recipe in recipes)
+            {
+                if (!registeredIds.Contains(recipe.enemyId))
+                {
+                    errors.Add($"적 레시피가 EnemyRoster에 등록되지 않았습니다: {recipe.enemyId}");
                 }
             }
         }

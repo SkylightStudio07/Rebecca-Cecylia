@@ -5779,6 +5779,7 @@ GameObject:
   - component: {fileID: 549709484}
   - component: {fileID: 549709483}
   - component: {fileID: 549709482}
+  - component: {fileID: 549709485}
   m_Layer: 5
   m_Name: "\uACF5\uACA9\uCE74\uB4DC"
   m_TagString: Untagged
@@ -5901,6 +5902,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 549709480}
   m_CullTransparentMesh: 1
+--- !u!114 &549709485
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 549709480}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3bd7235e25e4e024b887cf4bbe2ec70f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RCCom.UI.UISelectSoundEmitter
 --- !u!1 &551780302
 GameObject:
   m_ObjectHideFlags: 0
@@ -6125,6 +6138,7 @@ GameObject:
   - component: {fileID: 664114321}
   - component: {fileID: 664114320}
   - component: {fileID: 664114319}
+  - component: {fileID: 664114323}
   m_Layer: 5
   m_Name: Retry
   m_TagString: Untagged
@@ -6247,6 +6261,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 664114317}
   m_CullTransparentMesh: 1
+--- !u!114 &664114323
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 664114317}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3bd7235e25e4e024b887cf4bbe2ec70f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RCCom.UI.UISelectSoundEmitter
 --- !u!1 &686825362
 GameObject:
   m_ObjectHideFlags: 0
@@ -8276,6 +8302,8 @@ MonoBehaviour:
   buttonClickClip: {fileID: 8300000, guid: b75518c1b7dbebd40a3c10f617990e23, type: 3}
   towerBuildClip: {fileID: 8300000, guid: db7645c80efc2f2498169a6c5d51b28b, type: 3}
   towerDemolishClip: {fileID: 8300000, guid: 9a9e4d0a38b162f4dbf556ddf34d7fff, type: 3}
+  uiSelectClip: {fileID: 8300000, guid: 9c890b76bcbba0344ba0309410c45587, type: 3}
+  uiSelectCutoffDuration: 1
   titleClickClip: {fileID: 0}
   mainMenuClickClip: {fileID: 0}
   settingsButtonClickClip: {fileID: 0}
@@ -8497,7 +8525,10 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 421940819549096405, guid: 8731a84ba0cad3645872fb12513485b6, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1048121064}
   m_SourcePrefab: {fileID: 100100000, guid: 8731a84ba0cad3645872fb12513485b6, type: 3}
 --- !u!224 &1048121061 stripped
 RectTransform:
@@ -8509,12 +8540,29 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 8111019499989747720, guid: 8731a84ba0cad3645872fb12513485b6, type: 3}
   m_PrefabInstance: {fileID: 1048121060}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
+  m_GameObject: {fileID: 1048121063}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ccdcd878e499f0342a86abc600e5cf7a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RCCom.UI.OperatorAcquisitionUI
+--- !u!1 &1048121063 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 421940819549096405, guid: 8731a84ba0cad3645872fb12513485b6, type: 3}
+  m_PrefabInstance: {fileID: 1048121060}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1048121064
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1048121063}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3bd7235e25e4e024b887cf4bbe2ec70f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RCCom.UI.UISelectSoundEmitter
 --- !u!1 &1095230999
 GameObject:
   m_ObjectHideFlags: 0
@@ -9093,6 +9141,7 @@ GameObject:
   - component: {fileID: 1292918858}
   - component: {fileID: 1292918857}
   - component: {fileID: 1292918856}
+  - component: {fileID: 1292918859}
   m_Layer: 5
   m_Name: "\uD30C\uC6CC \uCE74\uB4DC"
   m_TagString: Untagged
@@ -9215,6 +9264,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1292918854}
   m_CullTransparentMesh: 1
+--- !u!114 &1292918859
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1292918854}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3bd7235e25e4e024b887cf4bbe2ec70f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RCCom.UI.UISelectSoundEmitter
 --- !u!1 &1296130463
 GameObject:
   m_ObjectHideFlags: 0
@@ -9655,6 +9716,7 @@ GameObject:
   - component: {fileID: 1374866259}
   - component: {fileID: 1374866258}
   - component: {fileID: 1374866257}
+  - component: {fileID: 1374866260}
   m_Layer: 5
   m_Name: "\uC2A4\uD0AC \uCE74\uB4DC"
   m_TagString: Untagged
@@ -9777,6 +9839,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1374866255}
   m_CullTransparentMesh: 1
+--- !u!114 &1374866260
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1374866255}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3bd7235e25e4e024b887cf4bbe2ec70f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RCCom.UI.UISelectSoundEmitter
 --- !u!1 &1376143331
 GameObject:
   m_ObjectHideFlags: 0
@@ -11149,6 +11223,7 @@ GameObject:
   - component: {fileID: 1595105180}
   - component: {fileID: 1595105179}
   - component: {fileID: 1595105182}
+  - component: {fileID: 1595105183}
   m_Layer: 5
   m_Name: Image
   m_TagString: Untagged
@@ -11271,6 +11346,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RCCom.UI.UIHoverScale
   hoverScale: 1.1
   transitionSpeed: 12
+--- !u!114 &1595105183
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1595105177}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3bd7235e25e4e024b887cf4bbe2ec70f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RCCom.UI.UISelectSoundEmitter
 --- !u!1 &1602443999
 GameObject:
   m_ObjectHideFlags: 0
@@ -11412,6 +11499,7 @@ GameObject:
   - component: {fileID: 1672479385}
   - component: {fileID: 1672479384}
   - component: {fileID: 1672479383}
+  - component: {fileID: 1672479387}
   m_Layer: 5
   m_Name: Title
   m_TagString: Untagged
@@ -11534,6 +11622,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1672479381}
   m_CullTransparentMesh: 1
+--- !u!114 &1672479387
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1672479381}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3bd7235e25e4e024b887cf4bbe2ec70f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RCCom.UI.UISelectSoundEmitter
 --- !u!1 &1689790902
 GameObject:
   m_ObjectHideFlags: 0
@@ -13411,6 +13511,7 @@ GameObject:
   - component: {fileID: 2113318393}
   - component: {fileID: 2113318392}
   - component: {fileID: 2113318391}
+  - component: {fileID: 2113318394}
   m_Layer: 0
   m_Name: DeployButton
   m_TagString: Untagged
@@ -13532,6 +13633,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2113318389}
   m_CullTransparentMesh: 1
+--- !u!114 &2113318394
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2113318389}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3bd7235e25e4e024b887cf4bbe2ec70f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RCCom.UI.UISelectSoundEmitter
 --- !u!1 &2115991730
 GameObject:
   m_ObjectHideFlags: 0
@@ -14133,8 +14246,28 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 1839969496114279511, guid: 849fcbef30a79b8438b9216c6643dc69, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 751381413802172593}
   m_SourcePrefab: {fileID: 100100000, guid: 849fcbef30a79b8438b9216c6643dc69, type: 3}
+--- !u!1 &751381413802172592 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1839969496114279511, guid: 849fcbef30a79b8438b9216c6643dc69, type: 3}
+  m_PrefabInstance: {fileID: 751381413802172591}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &751381413802172593
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 751381413802172592}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3bd7235e25e4e024b887cf4bbe2ec70f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RCCom.UI.UISelectSoundEmitter
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

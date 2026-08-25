@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace RCCom.Runtime
 {
     /// <summary>
@@ -7,5 +9,6 @@ namespace RCCom.Runtime
     {
         public EnemyInstance self;
         public float deltaTime;
+        public IReadOnlyList<EnemyInstance> activeEnemies;
     }
 }

@@ -1705,3 +1705,59 @@ Phase 0 자동화 경로를 실제로 열고, 이후 오퍼레이터별 원격 �
 - Unity 에디터 API로 `OperatorDialogueSet.asset`을 저장했다.
 - 18개 상황의 기본 전신·포트레잇과 121개 문장별 전신·포트레잇 참조가 모두 비어 있지 않음을 검증했다.
 - Unity 6000.3.13f1 재컴파일 결과 `failed=false`, `errors=[]`를 확인했다. Play Mode와 플레이어 빌드는 실행하지 않았다.
+## 2026-08-25 — Enemy Studio 생성물의 전투 Roster 자동 등록
+
+- 적 전체/단일 빌드가 생성된 Definition의 `enemyId`를 전투용 `EnemyRoster`에 함께 등록하도록 묶었다. 레시피·Definition·Addressables는 정상인데 Roster 수작업 누락 때문에 절차적 웨이브에 나오지 않는 반쪽 상태를 방지하기 위함이다.
+- 자동화는 기존 Roster ID를 삭제하거나 재정렬하지 않고 실제 Definition이 존재하는 레시피 ID만 추가한다. 사람이 만든 편성이나 기존 직렬화 순서를 자동 빌드가 침범하지 않게 하기 위한 보수적 동기화다.
+- 적 검증기는 레시피의 Roster 미등록, 빈 ID, 중복 ID를 오류로 보고한다. Kind는 여전히 출현 조건이 아니며, 실제 출현 가능 여부는 Definition 생성·Roster 등록·`minWave` 조건으로 결정된다.
+
+## 2026-08-25 — Enemy Studio 안전 삭제 경로
+
+- Enemy Studio에 선택 적 삭제 기능을 추가했다. 삭제 전에 모든 StageDefinition의 웨이브 참조를 검사하고, 참조가 있으면 데이터 유실 대신 삭제를 중단한다.
+- 삭제가 허용되면 레시피, 생성 Definition 폴더, EnemyRoster ID, EnemyCatalog 항목, 로컬·원격 Addressables 그룹을 함께 제거한 뒤 남은 레시피 전체를 다시 빌드·검증한다. 레시피만 지워 고아 그룹 때문에 다음 Build All이 막히는 상태를 방지하기 위함이다.
+- 원본 스프라이트는 다른 적이나 후속 디자인에서 재사용할 수 있으므로 자동 삭제하지 않는다. 아트 제거는 참조 여부를 사람이 별도로 확인한 뒤 수행한다.
+
+## 2026-08-25 — 자폭 적의 치명 접촉 Effect
+
+- 자폭 적은 기존 `ContactDamageEffect`로 Studio의 `contactDamage`를 정확히 한 번 적용하고, 별도 `SelfDestructOnCriticalContactEffect`가 대상이 플레이어 또는 최종 거점일 때만 남은 체력과 무관하게 즉사시킨다. 피해 수치를 Effect SO에 중복 저장하지 않아 Studio가 단일 진실 공급원으로 남는다.
+- 아군 유닛과 조우하면 기존 접촉 공격을 계속하고 자폭하지 않는다. 플레이어·거점만 치명 접촉으로 본다는 기획을 지키면서, 아군 전열에 막힌 자폭 적이 아무 행동도 하지 않는 상태를 피하기 위함이다.
+- 거점 접촉 효과가 적 자신을 사망시킬 수 있도록 `EnemyInstance`는 접촉 효과를 도달 완료 플래그보다 먼저 실행한다. 효과가 사망시켰다면 `Died`만 발생하고 `ReachedGoal`은 중복 발생하지 않아 View와 WaveManager의 제거 경로가 하나로 유지된다.
+- 자폭 Effect SO 생성, 레시피 효과 순서 배선, Definition 재생성은 에디터 빌더로 자동화했다. 검증기는 거점과 DefenseScene 플레이어의 체력을 각각 100으로 준비하고 Studio 피해 40 적용 후 60이 되는지, 자폭 적 체력이 즉시 0이 되는지, `Died`가 정확히 1회인지 확인한다. 거점 경로에서는 `ReachedGoal`이 0회인지도 함께 검증한다.
+
+## 2026-08-25 — 힐러 적의 범위 주기 회복 Effect
+
+- 힐러를 `EnemyKind` 분기나 별도 행동 클래스가 아니라 상태 없는 `HealNearbyEnemiesEffect` SO로 구현했다. `WaveManager`가 기존 활성 적 목록을 `EnemyContext`로 전달하고 Effect가 Studio의 `attackRange` 안에 있는 살아 있는 적만 고르므로, 적 목록의 소유권은 계속 `WaveManager`에 남고 별도 EnemyManager는 만들지 않았다.
+- 회복 주기는 별도 중복 필드 대신 Studio의 `attackInterval`을 재사용한다. 힐러 레시피의 초기값은 범위 3, 주기 1.5초, 접촉 피해 0이며, 회복량 5와 자기 회복 여부(false)는 Effect SO에 직렬화했다. 모두 이후 Inspector/Studio에서 조정 가능한 회색상자 값이고 전투 코드에 밸런스 상수를 하드코딩하지 않았다.
+- 여러 힐러가 같은 Effect SO를 공유해도 주기가 섞이지 않도록 Effect별 남은 시간은 각 `EnemyInstance`의 런타임 딕셔너리가 소유한다. 첫 회복은 스폰 즉시가 아니라 1.5초 뒤 발생하며 프레임 초과분은 다음 주기로 이월한다.
+- 웨이브 체력 배율이 현재 체력에만 적용되던 경로를 런타임 `MaxHealth`까지 함께 갱신하도록 정리했다. 치유는 이 런타임 상한으로 캡핑하므로 후반 웨이브 적이 Definition 원본 체력까지만 회복되는 문제를 막고, SO 원본은 수정하지 않는다.
+- 에디터 빌더가 힐러 Effect SO 생성, 접촉 피해 Effect 제거, 레시피 배선, Definition 재생성을 한 번에 수행한다. Unity 6000.3.13f1 배치 검증에서 실제 생성 SO/Definition 참조, 공격력 0, 범위 3, 1.5초 주기, 회복량 5, 범위 밖 제외, 자기 제외, 최대 체력 캡을 확인했다.
+
+## 2026-08-25 — 힐러 회복 발동 원형 파장 연출
+
+- 힐러 전용 프리팹을 새로 복제하지 않고 기존 위치 기반 공용 `ShockwaveRing` 프리팹과 `RangePulseAura` 셰이더를 재사용했다. 회복 발동 시 힐러 중심에서 Studio의 `attackRange`까지 얇은 연두색 링이 한 번 확산한 뒤 셰이더의 수명 페이드로 사라진다.
+- 폭발용 붉은 파장 설정과 힐 파장을 분리하기 위해 `Enemy_HealingPulseVisual` SO를 추가했다. 초기값은 확산 0.45초, 선 두께 0.012, 녹색 HDR 색상이며 인스펙터에서 조정 가능하다. 빌더 재실행은 이미 존재하는 SO의 사람이 튜닝한 값을 덮어쓰지 않는다.
+- 기존 `ShockwaveRing`의 최대 재생 시간이 0.2초로 고정돼 지원 스킬의 부드러운 파장을 표현할 수 없어서 상한만 1초로 확장했다. 폭발 SO는 계속 0.18초를 요청하므로 기존 스플래시 연출의 실제 재생 시간은 바뀌지 않는다.
+- 시각 참조가 누락되어도 회복 판정은 정상 동작하도록 VFX 호출을 선택 경로로 유지했다. Unity 6000.3.13f1 배치 검증에서 컴파일, 실제 힐러 Effect의 공용 파장 프리팹·힐 전용 시각 SO 배선, 기존 1.5초 회복 계약을 함께 확인했다.
+
+## 2026-08-25 — 공용 UI 선택 효과음
+
+- 제공된 `Ui_select.wav`를 기존 횡단 관심사인 `SoundManager`의 공용 UI 선택음으로 추가했다. 일반 Button은 `UISelectSoundEmitter`가 포인터 누름과 키보드/패드 Submit을 감지하고, 기존 타이틀·결과·튜토리얼의 명시적 클릭음 호출도 같은 재생 경로로 모아 화면마다 음향 계약이 갈라지지 않게 했다. 포인터는 실제 onClick보다 앞선 Down 시점에 재생해 버튼 동작이 패널을 즉시 닫더라도 피드백이 유실되지 않는다.
+- 한 Button에 기존 명시적 호출과 공용 Emitter가 함께 있는 과도기 상태에서도 같은 프레임에는 한 번만 재생한다. 비활성 또는 비용 부족 등으로 `interactable=false`인 버튼은 소리를 내지 않아 시각적 차단 상태와 피드백이 일치한다.
+- 전투 효과음의 0.5초 강제 컷오프는 유지하고 UI 선택음만 별도 1초 컷오프를 사용한다. 두 플레이 씬의 SoundManager 참조와 모든 일반 Button 컴포넌트 배선은 Editor 도구가 수행해 `.unity`를 직접 편집하지 않고 재실행 가능하게 만들었다.
+
+## 2026-08-25 — 리크루트 상점 전용 반복 BGM
+
+- 제공된 `Rare_Item_Bgm.mp3`를 리크루트 화면 전용 BGM으로 추가했다. `LobbyShopPanelUI`가 로딩 커버 안에서 실제 패널을 여는 순간 `SoundManager`에 임시 반복 재생을 요청하므로 상점 화면과 음악의 전환 시점이 일치한다.
+- 상점 진입 전 로비 BGM의 클립과 재생 위치를 `SoundManager` 런타임 상태로 보존한다. 뒤로 나갈 때 랜덤 곡을 새로 시작하지 않고 기존 로비곡의 같은 위치로 복귀해 메뉴 이동 때문에 청취 흐름이 매번 초기화되지 않게 했다.
+- 상점 BGM은 기존 BGM AudioSource와 Mixer 그룹을 그대로 사용하므로 사용자의 Master/BGM 볼륨 설정이 별도 처리 없이 적용된다. MP3 참조는 전용 Editor 도구가 TitleScene에 배선해 `.unity` 텍스트 직접 편집을 피했다.
+
+## 2026-08-25 — 리크루트 상점 BGM 교체
+
+- 사용자 검수 결과에 따라 리크루트 반복곡을 `Rare_Item_Bgm`에서 `Late_Hours_Rainfall`로 교체했다. 런타임 전환·반복·로비곡 복귀 계약은 그대로 유지하고 데이터 참조만 바꿨다.
+- Editor 도구는 새 참조가 TitleScene에 저장됐는지 먼저 검증한 뒤 이전 MP3를 `AssetDatabase.DeleteAsset`으로 제거한다. 교체 중 실패하더라도 씬에 Missing 오디오 참조가 남지 않도록 삭제 순서를 보수적으로 잡았다.
+
+## 2026-08-25 — PR #20 최신 main 통합과 생성 에셋 재배선
+
+- 충돌한 `TitleScene`과 Addressables 설정은 최신 main 산출물을 정본으로 선택한 뒤 PR의 `UISelectSoundAssetBuilder`, `ShopBgmAssetBuilder`, `EnemyCatalogBuilder`를 다시 실행해 기능을 재배선했다. Unity YAML의 fileID와 Addressables 그룹 GUID를 손으로 합치지 않고, 이미 검증 가능한 에디터 자동화를 재사용하기 위함이다.
+- `LobbyShopPanelUI`는 main의 Recruit/Enhance 탭 상태 전환을 유지하면서 PR의 임시 반복 BGM 진입·복귀를 같은 로딩 커버 구간에 결합했다. 두 기능이 서로 다른 화면 상태를 소유하므로 어느 한쪽을 버릴 이유가 없다.
+- 통합 후 TitleScene 80개와 DefenseScene 9개 버튼의 공용 선택음, 리크루트 BGM 참조, 적 6종 카탈로그·Roster, 자폭·힐러 전투 계약을 Unity 6000.3.13f1에서 다시 검증했으며 콘솔 오류는 없었다.
