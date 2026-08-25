@@ -16,7 +16,7 @@ MonoBehaviour:
     enemyId: enemy-rusher
     displayName: "\uC2A4\uD53C\uB4DC"
     kind: 1
-    maxHealth: 23
+    maxHealth: 20
     moveSpeed: 3
     contactDamage: 3
     attackRange: 0

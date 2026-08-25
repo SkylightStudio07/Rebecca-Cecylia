@@ -17,6 +17,7 @@ namespace RCCom.EditorTools
     public static class EnemyCatalogBuilder
     {
         public const string CatalogPath = "Assets/Data/Enemies/EnemyCatalog.asset";
+        public const string RosterPath = "Assets/Data/Definition/EnemyRoster.asset";
         public const string EnemyGroupPrefix = "Enemy-";
         public const string AddressablesLabel = "enemy-definition";
         private const string RecipeFolder = "Assets/Editor/EnemyRecipes";
@@ -63,6 +64,7 @@ namespace RCCom.EditorTools
             RemoveStaleGeneratedGroups(settings, expectedGroupNames);
 
             ApplyEntriesIfChanged(catalog, entries, null);
+            RegisterBuiltEnemiesInRoster(recipes, null);
             EditorUtility.SetDirty(settings);
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
@@ -121,6 +123,7 @@ namespace RCCom.EditorTools
 
             SortEntriesByRecipeOrder(entries);
             ApplyEntriesIfChanged(catalog, entries, changedAssets);
+            RegisterBuiltEnemiesInRoster(LoadRecipes(), changedAssets);
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
 
@@ -165,6 +168,50 @@ namespace RCCom.EditorTools
 
             EditorUtility.SetDirty(catalog);
             EnemyAssetBuilder.RecordChange(CatalogPath, changedAssets);
+        }
+
+        /// <summary>
+        /// Definition 생성과 전투 출현 후보 등록을 같은 빌드 경로로 묶는다. 레시피만 추가하고
+        /// Roster 수작업을 빠뜨리면 에셋은 정상인데 웨이브에는 영원히 나오지 않는 상태가 되기 때문이다.
+        /// 기존 수동 ID는 보존하고, 실제 Definition까지 생성된 레시피만 뒤에 추가한다.
+        /// </summary>
+        private static void RegisterBuiltEnemiesInRoster(
+            List<EnemyAssetRecipe> recipes,
+            List<string> changedAssets)
+        {
+            EnemyRoster roster = AssetDatabase.LoadAssetAtPath<EnemyRoster>(RosterPath);
+            if (roster == null)
+            {
+                throw new InvalidOperationException($"전투용 EnemyRoster를 찾지 못했습니다: {RosterPath}");
+            }
+
+            var registeredIds = roster.enemyIds == null
+                ? new List<string>()
+                : new List<string>(roster.enemyIds);
+            var uniqueIds = new HashSet<string>(registeredIds, StringComparer.Ordinal);
+            bool changed = false;
+
+            foreach (EnemyAssetRecipe recipe in recipes)
+            {
+                string definitionPath = $"Assets/Data/Enemies/{recipe.enemyId}/EnemyDefinition.asset";
+                if (AssetDatabase.LoadAssetAtPath<EnemyDefinition>(definitionPath) == null ||
+                    !uniqueIds.Add(recipe.enemyId))
+                {
+                    continue;
+                }
+
+                registeredIds.Add(recipe.enemyId);
+                changed = true;
+            }
+
+            if (!changed)
+            {
+                return;
+            }
+
+            roster.enemyIds = registeredIds;
+            EditorUtility.SetDirty(roster);
+            EnemyAssetBuilder.RecordChange(RosterPath, changedAssets);
         }
 
         private static void SortEntriesByRecipeOrder(List<EnemyCatalogEntry> entries)

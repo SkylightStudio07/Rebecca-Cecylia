@@ -1,0 +1,25 @@
+{
+    "enemyId": "enemy-heavytanker",
+    "catalogOrder": 6,
+    "displayName": "헤비탱커",
+    "spritePath": "Assets/Art/Enemies/heavy tanker.png",
+    "spriteForwardOffsetDegrees": -90.0,
+    "effectPaths": [
+        "Assets/Data/Effects/Enemy_ContactDamageEffect_Default.asset"
+    ],
+    "remoteContent": false,
+    "data": {
+        "enemyId": "enemy-heavytanker",
+        "displayName": "헤비탱커",
+        "kind": 7,
+        "maxHealth": 55.0,
+        "moveSpeed": 2.0,
+        "contactDamage": 9.0,
+        "attackRange": 0.0,
+        "attackInterval": 1.0,
+        "waveCost": 4.0,
+        "minWave": 1,
+        "goldReward": 45,
+        "expReward": 18
+    }
+}

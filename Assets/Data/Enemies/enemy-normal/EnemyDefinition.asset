@@ -16,9 +16,9 @@ MonoBehaviour:
     enemyId: enemy-normal
     displayName: "\uAE30\uBCF8 \uC801"
     kind: 0
-    maxHealth: 32
-    moveSpeed: 2
-    contactDamage: 5
+    maxHealth: 25
+    moveSpeed: 1.5
+    contactDamage: 4
     attackRange: 0
     attackInterval: 1
     waveCost: 1

@@ -1,3 +1,4 @@
+using RCCom.Managers;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -28,6 +29,9 @@ namespace RCCom.UI
         [SerializeField] private Sprite recruitSelectedSprite;
         [SerializeField] private Sprite enhanceNormalSprite;
         [SerializeField] private Sprite enhanceSelectedSprite;
+
+        [Header("상점 사운드")]
+        [SerializeField] private AudioClip shopBgmClip;
 
         private bool _enhanceMode;
 
@@ -95,12 +99,23 @@ namespace RCCom.UI
             if (mainMenuBackground != null) { mainMenuBackground.SetActive(false); }
             if (shopPanelBackground != null) { shopPanelBackground.SetActive(true); }
             ApplyMode();
+
+            // 화면이 로딩 연출에 완전히 덮인 뒤 음악을 교체해 시각·청각 전환이 어긋나지 않게 한다.
+            if (SoundManager.Instance != null)
+            {
+                SoundManager.Instance.PlayTemporaryLoopingBgm(shopBgmClip);
+            }
         }
 
         private void CloseCovered()
         {
             if (shopPanelBackground != null) { shopPanelBackground.SetActive(false); }
             if (mainMenuBackground != null) { mainMenuBackground.SetActive(true); }
+
+            if (SoundManager.Instance != null)
+            {
+                SoundManager.Instance.RestoreBgmAfterTemporaryLoop();
+            }
         }
 
         private void ApplyMode()

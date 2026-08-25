@@ -379,7 +379,7 @@ namespace RCCom.Managers
                 position = path[0],
             };
             instance.Spawn(path, baseController);
-            instance.currentHealth *= CalculateHealthMultiplier(_waveNumber);
+            instance.ApplyHealthMultiplier(CalculateHealthMultiplier(_waveNumber));
 
             instance.Died += () =>
             {
@@ -399,7 +399,7 @@ namespace RCCom.Managers
             // Tick 도중 Died/ReachedGoal로 리스트에서 빠질 수 있어 역순으로 순회한다.
             for (int i = _aliveEnemies.Count - 1; i >= 0; i--)
             {
-                _aliveEnemies[i].Tick(deltaTime);
+                _aliveEnemies[i].Tick(deltaTime, _aliveEnemies);
             }
         }
 
