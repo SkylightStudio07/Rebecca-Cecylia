@@ -11,7 +11,7 @@ namespace RCCom.Effects.Unit.Concrete
     /// Definition에 하나만 붙인다 — 이 효과 자체가 주 타격(즉발 피해)까지 겸한다.
     /// </summary>
     [CreateAssetMenu(menuName = "RCCom/Ally Unit/Effects/Poison Attack Effect")]
-    public class PoisonAttackEffect : AllyUnitEffectBase
+    public class PoisonAttackEffect : AllyUnitEffectBase, IAllyUnitPrimaryAttackEffect
     {
         [SerializeField] private float poisonDamagePerSecond = 3f;
         [SerializeField] private float poisonDuration = 3f;

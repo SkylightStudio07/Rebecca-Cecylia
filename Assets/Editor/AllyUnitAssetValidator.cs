@@ -153,6 +153,16 @@ namespace RCCom.EditorTools
                             break;
                         }
                     }
+
+                    // 서포트 전용 유닛은 주 공격 0개가 정상이다. 둘 이상만 막아야 오라 조립만으로
+                    // 만든 드론을 강제로 공격형으로 바꾸지 않으면서 중복 피해는 차단할 수 있다.
+                    int primaryAttackCount = CountPrimaryAttackEffects(definition.effects);
+                    if (primaryAttackCount > 1)
+                    {
+                        errors.Add(
+                            $"아군 유닛 주 공격 Effect는 최대 1개만 조립할 수 있습니다 " +
+                            $"(현재 {primaryAttackCount}개): {definitionPath}");
+                    }
                 }
 
                 if (definition.visualEffects == null)
@@ -399,6 +409,30 @@ namespace RCCom.EditorTools
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// 메모리 임시 SO로 실제 Validator의 역할 판정을 회귀 검증하기 위한 진입점.
+        /// 정책은 ValidateRecipeIdsAndDefinitions에 남기고, 타입 판정만 공유해 검증 규칙이
+        /// 구체 Effect 이름 목록과 따로 놀지 않게 한다.
+        /// </summary>
+        internal static int CountPrimaryAttackEffects(IReadOnlyList<AllyUnitEffectBase> effects)
+        {
+            if (effects == null)
+            {
+                return 0;
+            }
+
+            int count = 0;
+            foreach (AllyUnitEffectBase effect in effects)
+            {
+                if (effect is IAllyUnitPrimaryAttackEffect)
+                {
+                    count++;
+                }
+            }
+
+            return count;
         }
     }
 }

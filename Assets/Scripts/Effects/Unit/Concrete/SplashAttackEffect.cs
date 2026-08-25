@@ -14,7 +14,7 @@ namespace RCCom.Effects.Unit.Concrete
     /// PierceAttackEffect와 배타적으로 한 유닛 Definition에 하나만 붙인다.
     /// </summary>
     [CreateAssetMenu(menuName = "RCCom/Ally Unit/Effects/Splash Attack Effect")]
-    public class SplashAttackEffect : AllyUnitEffectBase
+    public class SplashAttackEffect : AllyUnitEffectBase, IAllyUnitPrimaryAttackEffect
     {
         [SerializeField] private float splashRadius = 1.5f;
         [SerializeField] private float splashDamageMultiplier = 0.5f;

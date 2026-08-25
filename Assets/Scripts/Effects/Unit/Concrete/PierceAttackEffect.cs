@@ -15,7 +15,7 @@ namespace RCCom.Effects.Unit.Concrete
     /// (여러 개를 같이 붙이면 주 타격이 중복 적용된다).
     /// </summary>
     [CreateAssetMenu(menuName = "RCCom/Ally Unit/Effects/Pierce Attack Effect")]
-    public class PierceAttackEffect : AllyUnitEffectBase
+    public class PierceAttackEffect : AllyUnitEffectBase, IAllyUnitPrimaryAttackEffect
     {
         [SerializeField] private float beamHalfAngleDegrees = 10f;
         [SerializeField] private GameObject laserBeamPrefab;

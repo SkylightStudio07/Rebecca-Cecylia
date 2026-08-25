@@ -1,10 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using RCCom.Core;
 using RCCom.Data;
 using RCCom.Definitions.Enemy;
 using RCCom.Definitions.Unit;
 using RCCom.Effects.Enemy.Concrete;
+using RCCom.Effects.Tower;
+using RCCom.Effects.Unit;
 using RCCom.Effects.Unit.Concrete;
 using RCCom.Runtime;
 using UnityEditor;
@@ -48,8 +51,14 @@ namespace RCCom.EditorTools
                 VerifyEnemyContactDamageEffectPath(temporaryObjects);
                 VerifyTacticalRelayAuraRangeAndExpiration(temporaryObjects);
                 VerifyTemporaryAttackSpeedMultiplier(temporaryObjects);
+                VerifyPrimaryAttackComposition(temporaryObjects);
+                VerifyDamageBuffAuraStackingAndExpiration(temporaryObjects);
+                VerifyPierceAttackDamage(temporaryObjects);
+                VerifySplashAttackDamage(temporaryObjects);
+                VerifyPoisonAttackDamage(temporaryObjects);
+                VerifyTowerReinforcementAuraStackingAndExpiration(temporaryObjects);
 
-                Debug.Log("[AllyUnitCombatVerifier] 아군 유닛 전투 코어 23개 시나리오 검증 통과");
+                Debug.Log("[AllyUnitCombatVerifier] 아군 유닛 전투 코어 29개 시나리오 검증 통과");
             }
             finally
             {
@@ -573,6 +582,202 @@ namespace RCCom.EditorTools
                 "임시 공격 속도 배율이 현재 공격 쿨다운의 진행 속도에 적용되지 않았습니다.");
         }
 
+        private static void VerifyPrimaryAttackComposition(List<UnityEngine.Object> temporaryObjects)
+        {
+            var basic = ScriptableObject.CreateInstance<BasicAttackEffect>();
+            var pierce = ScriptableObject.CreateInstance<PierceAttackEffect>();
+            var aura = ScriptableObject.CreateInstance<DamageBuffAuraEffect>();
+            temporaryObjects.Add(basic);
+            temporaryObjects.Add(pierce);
+            temporaryObjects.Add(aura);
+
+            Assert(AllyUnitAssetValidator.CountPrimaryAttackEffects(new AllyUnitEffectBase[] { aura }) == 0,
+                "서포트 전용 Effect 조합이 주 공격으로 잘못 분류되었습니다.");
+            Assert(AllyUnitAssetValidator.CountPrimaryAttackEffects(
+                    new AllyUnitEffectBase[] { basic, aura }) == 1,
+                "정상적인 주 공격 1개 조합을 Validator가 식별하지 못했습니다.");
+            Assert(AllyUnitAssetValidator.CountPrimaryAttackEffects(
+                    new AllyUnitEffectBase[] { basic, pierce, aura }) == 2,
+                "중복 주 공격 조합을 Validator가 식별하지 못했습니다.");
+        }
+
+        private static void VerifyDamageBuffAuraStackingAndExpiration(
+            List<UnityEngine.Object> temporaryObjects)
+        {
+            AllyUnitDefinition attackerDefinition =
+                CreateAlly(temporaryObjects, 100f, 0f, 5f, 3f, true);
+            AllyUnitDefinition sourceDefinition =
+                CreateAlly(temporaryObjects, 100f, 0f, 0f, 3f, false);
+            var aura = ScriptableObject.CreateInstance<DamageBuffAuraEffect>();
+            temporaryObjects.Add(aura);
+            SetPrivateFloat(aura, "damageMultiplier", 2f);
+            SetPrivateFloat(aura, "refreshDuration", 0.2f);
+            sourceDefinition.effects.Add(aura);
+
+            var path = new[] { new Vector2(0f, 0f), new Vector2(10f, 0f) };
+            var attacker = new AllyUnitInstance();
+            var firstSource = new AllyUnitInstance();
+            var secondSource = new AllyUnitInstance();
+            attacker.Spawn(attackerDefinition, path);
+            firstSource.Spawn(sourceDefinition, path);
+            secondSource.Spawn(sourceDefinition, path);
+            var allies = new[] { firstSource, secondSource, attacker };
+
+            firstSource.Tick(0f, Array.Empty<EnemyInstance>(), allies);
+            secondSource.Tick(0f, Array.Empty<EnemyInstance>(), allies);
+            AssertNear(attacker.CalculateDamageMultiplier(), 4f,
+                "서로 다른 두 공급자의 피해량 오라가 곱연산 중첩되지 않았습니다.");
+
+            EnemyDefinition enemyDefinition =
+                CreateEnemy(temporaryObjects, 100f, 0f, 0f, 0f, 1f, false);
+            EnemyInstance buffedTarget = SpawnEnemy(enemyDefinition, path, new Vector2(8f, 0f));
+            attacker.TriggerAttack(buffedTarget);
+            AssertNear(buffedTarget.currentHealth, 80f,
+                "중첩된 피해량 오라가 BasicAttackEffect에 반영되지 않았습니다.");
+
+            attacker.Tick(0.21f, Array.Empty<EnemyInstance>(), new[] { attacker });
+            AssertNear(attacker.CalculateDamageMultiplier(), 1f,
+                "피해량 오라 갱신 중단 뒤 배율이 자연 만료되지 않았습니다.");
+
+            EnemyInstance expiredTarget = SpawnEnemy(enemyDefinition, path, new Vector2(8f, 0f));
+            attacker.TriggerAttack(expiredTarget);
+            AssertNear(expiredTarget.currentHealth, 95f,
+                "만료된 피해량 오라가 후속 공격에 남았습니다.");
+        }
+
+        private static void VerifyPierceAttackDamage(List<UnityEngine.Object> temporaryObjects)
+        {
+            AllyUnitDefinition definition =
+                CreateAlly(temporaryObjects, 100f, 0f, 5f, 5f, false);
+            var effect = ScriptableObject.CreateInstance<PierceAttackEffect>();
+            temporaryObjects.Add(effect);
+            SetPrivateFloat(effect, "beamHalfAngleDegrees", 5f);
+            definition.effects.Add(effect);
+
+            EnemyDefinition enemyDefinition =
+                CreateEnemy(temporaryObjects, 100f, 0f, 0f, 0f, 1f, false);
+            var path = new[] { new Vector2(0f, 0f), new Vector2(10f, 0f) };
+            var unit = new AllyUnitInstance();
+            unit.Spawn(definition, path);
+            EnemyInstance primary = SpawnEnemy(enemyDefinition, path, new Vector2(8f, 0f));
+            EnemyInstance aligned = SpawnEnemy(enemyDefinition, path, new Vector2(6f, 0f));
+            EnemyInstance offBeam = SpawnEnemy(enemyDefinition, path, new Vector2(8f, 1f));
+            EnemyInstance outOfRange = SpawnEnemy(enemyDefinition, path, new Vector2(4f, 0f));
+            var enemies = new[] { primary, aligned, offBeam, outOfRange };
+
+            unit.AttackCooldownRemaining = 1f;
+            unit.Tick(0f, enemies, new[] { unit });
+            unit.TriggerAttack(primary);
+
+            AssertNear(primary.currentHealth, 95f, "관통 공격이 주 타겟을 타격하지 않았습니다.");
+            AssertNear(aligned.currentHealth, 95f, "관통 공격이 빔 안의 후속 타겟을 타격하지 않았습니다.");
+            AssertNear(offBeam.currentHealth, 100f, "관통 공격이 빔 각도 밖 타겟을 타격했습니다.");
+            AssertNear(outOfRange.currentHealth, 100f, "관통 공격이 사거리 밖 타겟을 타격했습니다.");
+        }
+
+        private static void VerifySplashAttackDamage(List<UnityEngine.Object> temporaryObjects)
+        {
+            AllyUnitDefinition definition =
+                CreateAlly(temporaryObjects, 100f, 0f, 5f, 5f, false);
+            var effect = ScriptableObject.CreateInstance<SplashAttackEffect>();
+            temporaryObjects.Add(effect);
+            SetPrivateFloat(effect, "splashRadius", 1.5f);
+            SetPrivateFloat(effect, "splashDamageMultiplier", 0.5f);
+            definition.effects.Add(effect);
+
+            EnemyDefinition enemyDefinition =
+                CreateEnemy(temporaryObjects, 100f, 0f, 0f, 0f, 1f, false);
+            var path = new[] { new Vector2(0f, 0f), new Vector2(10f, 0f) };
+            var unit = new AllyUnitInstance();
+            unit.Spawn(definition, path);
+            EnemyInstance primary = SpawnEnemy(enemyDefinition, path, new Vector2(8f, 0f));
+            EnemyInstance nearby = SpawnEnemy(enemyDefinition, path, new Vector2(7f, 0f));
+            EnemyInstance distant = SpawnEnemy(enemyDefinition, path, new Vector2(6f, 0f));
+            var enemies = new[] { primary, nearby, distant };
+
+            unit.AttackCooldownRemaining = 1f;
+            unit.Tick(0f, enemies, new[] { unit });
+            unit.TriggerAttack(primary);
+
+            AssertNear(primary.currentHealth, 95f, "스플래시 공격의 주 타겟 피해가 잘못되었습니다.");
+            AssertNear(nearby.currentHealth, 97.5f, "스플래시 반경 안 감쇠 피해가 적용되지 않았습니다.");
+            AssertNear(distant.currentHealth, 100f, "스플래시 반경 밖 타겟이 피해를 받았습니다.");
+        }
+
+        private static void VerifyPoisonAttackDamage(List<UnityEngine.Object> temporaryObjects)
+        {
+            AllyUnitDefinition definition =
+                CreateAlly(temporaryObjects, 100f, 0f, 5f, 3f, false);
+            var effect = ScriptableObject.CreateInstance<PoisonAttackEffect>();
+            temporaryObjects.Add(effect);
+            SetPrivateFloat(effect, "poisonDamagePerSecond", 3f);
+            SetPrivateFloat(effect, "poisonDuration", 2f);
+            definition.effects.Add(effect);
+
+            EnemyDefinition enemyDefinition =
+                CreateEnemy(temporaryObjects, 100f, 0f, 0f, 0f, 1f, false);
+            var path = new[] { new Vector2(0f, 0f), new Vector2(10f, 0f) };
+            var unit = new AllyUnitInstance();
+            unit.Spawn(definition, path);
+            EnemyInstance enemy = SpawnEnemy(enemyDefinition, path, new Vector2(8f, 0f));
+
+            unit.TriggerAttack(enemy);
+            AssertNear(enemy.currentHealth, 95f, "맹독 공격의 즉발 피해가 적용되지 않았습니다.");
+            enemy.Tick(1f);
+            AssertNear(enemy.currentHealth, 92f, "맹독 공격의 초당 지속 피해가 적용되지 않았습니다.");
+        }
+
+        private static void VerifyTowerReinforcementAuraStackingAndExpiration(
+            List<UnityEngine.Object> temporaryObjects)
+        {
+            var nearbyObject = new GameObject("검증 임시 타워");
+            var distantObject = new GameObject("검증 사거리 밖 타워");
+            nearbyObject.hideFlags = HideFlags.HideAndDontSave;
+            distantObject.hideFlags = HideFlags.HideAndDontSave;
+            temporaryObjects.Add(nearbyObject);
+            temporaryObjects.Add(distantObject);
+            TowerInstance nearbyTower = nearbyObject.AddComponent<TowerInstance>();
+            TowerInstance distantTower = distantObject.AddComponent<TowerInstance>();
+            nearbyObject.transform.position = Vector3.zero;
+            distantObject.transform.position = new Vector3(5f, 0f, 0f);
+
+            AllyUnitDefinition sourceDefinition =
+                CreateAlly(temporaryObjects, 100f, 0f, 0f, 2f, false);
+            var aura = ScriptableObject.CreateInstance<TowerReinforcementAuraEffect>();
+            temporaryObjects.Add(aura);
+            SetPrivateFloat(aura, "damageMultiplier", 2f);
+            SetPrivateFloat(aura, "attackSpeedMultiplier", 2f);
+            SetPrivateFloat(aura, "refreshDuration", 0.2f);
+            sourceDefinition.effects.Add(aura);
+
+            var path = new[] { new Vector2(-10f, 0f), Vector2.zero };
+            var firstSource = new AllyUnitInstance();
+            var secondSource = new AllyUnitInstance();
+            firstSource.Spawn(sourceDefinition, path);
+            secondSource.Spawn(sourceDefinition, path);
+            var towers = new[] { nearbyTower, distantTower };
+            float baselineDamage = TowerDamageMath.CalculateDamage(nearbyTower, 10f);
+            float baselineInterval = TowerDamageMath.CalculateAttackInterval(nearbyTower, 1f);
+            float distantBaselineDamage = TowerDamageMath.CalculateDamage(distantTower, 10f);
+
+            aura.OnTick(new AllyUnitContext { self = firstSource, activeTowers = towers });
+            aura.OnTick(new AllyUnitContext { self = secondSource, activeTowers = towers });
+
+            AssertNear(TowerDamageMath.CalculateDamage(nearbyTower, 10f), baselineDamage * 4f,
+                "서로 다른 두 유닛의 타워 피해량 오라가 곱연산 중첩되지 않았습니다.");
+            AssertNear(TowerDamageMath.CalculateAttackInterval(nearbyTower, 1f), baselineInterval / 4f,
+                "서로 다른 두 유닛의 타워 공속 오라가 곱연산 중첩되지 않았습니다.");
+            AssertNear(TowerDamageMath.CalculateDamage(distantTower, 10f), distantBaselineDamage,
+                "사거리 밖 타워가 지원 오라를 받았습니다.");
+
+            RefreshableAuraBag<object, object, ITowerAura> auraBag = GetTemporaryTowerAuras(nearbyTower);
+            auraBag.Tick(0.21f);
+            AssertNear(TowerDamageMath.CalculateDamage(nearbyTower, 10f), baselineDamage,
+                "타워 지원 오라 갱신 중단 뒤 피해량 버프가 만료되지 않았습니다.");
+            AssertNear(TowerDamageMath.CalculateAttackInterval(nearbyTower, 1f), baselineInterval,
+                "타워 지원 오라 갱신 중단 뒤 공속 버프가 만료되지 않았습니다.");
+        }
+
         private static UnitCombatSettings CreateSettings(
             List<UnityEngine.Object> temporaryObjects,
             float contactRange,
@@ -669,6 +874,20 @@ namespace RCCom.EditorTools
             var serializedObject = new SerializedObject(target);
             serializedObject.FindProperty(fieldName).floatValue = value;
             serializedObject.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        private static RefreshableAuraBag<object, object, ITowerAura> GetTemporaryTowerAuras(
+            TowerInstance tower)
+        {
+            FieldInfo field = typeof(TowerInstance).GetField(
+                "_temporaryAuras",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            if (field?.GetValue(tower) is RefreshableAuraBag<object, object, ITowerAura> auraBag)
+            {
+                return auraBag;
+            }
+
+            throw new InvalidOperationException("TowerInstance의 임시 오라 저장소를 찾지 못했습니다.");
         }
 
         private static void Assert(bool condition, string message)

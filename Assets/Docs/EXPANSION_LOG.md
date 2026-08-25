@@ -1850,3 +1850,23 @@ Phase 0 자동화 경로를 실제로 열고, 이후 오퍼레이터별 원격 �
 - PR #20을 먼저 최신 main에 통합한 뒤 그 main을 라이브 드랍 브랜치로 가져왔다. 적 기능의 충돌 해결을 PR 안에 귀속시키고, 라이브 드랍 브랜치에는 Addressables 정책 결합만 남겨 두어 두 작업의 증빙과 되돌림 경계를 섞지 않기 위함이다.
 - `EnemyCatalogBuilder`의 Roster 자동 등록과 `AddressableGroupPolicy` 기반 그룹 생성은 자동 병합 결과에 둘 다 보존했다. Addressables 설정은 라이브 카탈로그·스테이지 그룹이 있는 브랜치 버전을 정본으로 삼고 적 빌더를 다시 실행해 신규 적 3종 그룹을 에디터 API로 등록했다.
 - Unity 6000.3.13f1에서 스크립트 재컴파일, 35개 Addressables 그룹 정책, StandaloneWindows64·WebGL 사전 검증, 적 6종 에셋, 자폭·힐러 전투 계약을 확인했다. 그룹 정책은 재실행 시 갱신 0개였고 콘솔 오류도 0건이어서 생성 결과가 현재 정책과 이미 일치한다.
+
+## 2026-08-25 — 아군 유닛 Effect 조합 안전망과 사전 구비 효과 회귀 검증
+
+### 결정
+
+- 기본·관통·스플래시·맹독 공격에 `IAllyUnitPrimaryAttackEffect` 표식 계약을 붙이고 `AllyUnitAssetValidator`가 Definition당 구현 수를 센다. `AllyUnitInstance`는 모든 `OnAttack` 훅을 호출하므로 주 공격 두 개를 조립하면 피해가 중복되지만, 구체 클래스 이름 목록으로 막으면 후속 주 공격을 추가할 때 검증기 갱신을 빠뜨릴 수 있어 역할 계약을 단일 판정 기준으로 삼았다.
+- 주 공격은 최대 1개만 허용하고 최소 1개는 강제하지 않는다. 오라만 조립한 지원 드론이 이미 정상 콘텐츠이므로 중복 피해만 차단하고 서포트 전용 데이터 계약은 유지한다.
+- 기존 `AllyUnitCombatVerifier`를 29개 시나리오로 확장했다. 메모리 임시 SO와 저장되지 않는 임시 GameObject만 사용해 주 공격 역할 판정, 피해량 버프의 서로 다른 공급자 곱연산·만료, 관통 각도/사거리, 스플래시 반경/감쇠, 맹독 즉발/DoT, 타워 지원 오라의 사거리/중첩/만료를 실제 런타임 진입점으로 검증한다.
+
+### 의도적으로 하지 않은 것
+
+- `AllyUnitInstance.TriggerAttack`에서 두 번째 주 공격을 런타임에 무시하는 분기는 넣지 않았다. 잘못된 라이브 콘텐츠를 조용히 다른 동작으로 바꾸기보다 제작·빌드 단계에서 명시적인 오류로 중단해야 데이터 원본과 실제 전투가 일치한다.
+- 새 asmdef나 테스트 어셈블리는 도입하지 않았다. 기존 Assembly-CSharp 구조와 Editor 메뉴 검증 경로를 유지해 전체 참조 구조를 흔들지 않았다.
+
+### 검증
+
+- Unity 6000.3.13f1 Pipeline 재컴파일 결과 `completed`, `failed=false`, `errors=[]`.
+- `AllyUnitCombatVerifier`의 기존 23개와 신규 6개를 합친 29개 시나리오가 통과했다.
+- `AllyUnitFoundationVerifier`의 기존 배치·전투 기반 계약과 `AllyUnitAssetValidator`의 레시피
+  12개·경고 0건 검증이 함께 통과했다.
