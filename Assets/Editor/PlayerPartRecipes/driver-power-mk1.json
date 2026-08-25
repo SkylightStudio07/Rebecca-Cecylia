@@ -1,0 +1,1 @@
+{"partId":"driver-power-mk1","slot":3,"grade":1,"archetypeId":"power","displayName":"화력 드라이버 Mk1","description":"스킬 타격 피해 6.5.","price":200,"statOverride":{"skillCooldown":12.0,"skillRange":5.0,"skillDamage":6.5,"skillBurstCount":4,"skillBurstInterval":0.3,"skillChargeCapacity":1},"effects":[]}

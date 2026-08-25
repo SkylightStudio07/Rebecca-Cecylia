@@ -1,0 +1,1 @@
+{"partId":"driver-power-mk2","slot":3,"grade":2,"archetypeId":"power","displayName":"화력 드라이버 Mk2","description":"스킬 타격 피해 8.5.","price":470,"statOverride":{"skillCooldown":12.0,"skillRange":5.0,"skillDamage":8.5,"skillBurstCount":4,"skillBurstInterval":0.3,"skillChargeCapacity":1},"effects":[]}

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using RCCom.Core;
 using RCCom.Data;
+using RCCom.Effects.PlayerPart;
 using RCCom.Managers;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -44,12 +45,6 @@ namespace RCCom.Runtime
         [Tooltip("스프라이트 아트가 기본적으로 바라보는 방향 보정각 (오른쪽 기준 0, 위쪽 기준 90, 아래쪽 -90, 왼쪽 180)")]
         [SerializeField] private float spriteForwardOffsetDegrees = 90f;
 
-        [Header("스킬: 오버드라이브 모드 (일정 간격으로 연속 공격 N회)")]
-        [SerializeField] private int skillBurstCount = 4;
-        [SerializeField] private float skillBurstInterval = 0.3f;
-        [Tooltip("스킬(오버드라이브 모드) 발동 중 이동속도 배율")]
-        [SerializeField] private float skillMoveSpeedMultiplier = 1.5f;
-
         [Header("피격/스킬 시각 피드백 (EnemyView 피격 틴트와 같은 방식)")]
         [Tooltip("스프라이트가 루트에 바로 있으면 이 오브젝트의 SpriteRenderer, spriteTransform 자식에 있으면 그쪽의 SpriteRenderer를 연결")]
         [SerializeField] private SpriteRenderer spriteRenderer;
@@ -59,6 +54,9 @@ namespace RCCom.Runtime
         [SerializeField] private Color skillTintColor = new(0.5f, 0.8f, 1f, 1f);
 
         public float CurrentHealth { get; private set; }
+        public float MaxHealth => data != null ? data.maxHealth : 0f;
+        public bool IsDead => _isDead;
+        public Vector2 LastMoveInput { get; private set; }
 
         /// <summary>피격이 실제로 적용됐을 때(무적 중이 아닐 때) 알림 — 오퍼레이터 대사 등 UI가 구독.</summary>
         public event Action<float> Damaged;
@@ -75,7 +73,7 @@ namespace RCCom.Runtime
         public bool IsSkillActive { get; private set; }
 
         /// <summary>HUD가 "준비" 텍스트 표시 여부 판단에 사용 — 쿨다운도 다 됐고 지금 사용 중도 아닐 때.</summary>
-        public bool IsSkillReady => !IsSkillActive && _skillCooldownRemaining <= 0f;
+        public bool IsSkillReady => !IsSkillActive && _skillChargesAvailable > 0;
 
         /// <summary>HUD 스킬 게이지바가 참조 (0 = 방금 사용, SkillCooldownDuration = 완전 충전).</summary>
         public float SkillCooldownRemaining => Mathf.Max(0f, _skillCooldownRemaining);
@@ -88,18 +86,44 @@ namespace RCCom.Runtime
         private float _skillBurstTimer;
         private float _hitFlashRemaining;
         private Color _baseColor = Color.white;
+        private float _forcedDashRemaining;
+        private Vector2 _forcedDashDirection = Vector2.right;
+        private int _skillChargesAvailable;
+
+        private readonly List<PlayerPartEffectBase> _partEffects = new();
+        private readonly Dictionary<PlayerPartEffectBase, PlayerPartRuntimeState> _partStates = new();
+        private readonly List<PlayerAttackShot> _queuedAttackShots = new();
+        private IPlayerPrimaryAttackEffect _primaryAttackEffect;
 
         private readonly List<EnemyInstance> _enemiesInRange = new();
 
         private void Awake()
         {
-            data = OperatorLoadoutSession.CreatePlayerData(data);
+            PlayerLoadoutResult loadout = OperatorLoadoutSession.ComposePlayerLoadout(data);
+            data = loadout.data;
+            _partEffects.AddRange(loadout.effects);
             attackRangeTrigger.SetWorldRadius(data.attackRange);
             CurrentHealth = data.maxHealth;
+            _skillChargesAvailable = Mathf.Max(1, data.skillChargeCapacity);
+
+            foreach (PlayerPartEffectBase effect in _partEffects)
+            {
+                if (effect is IPlayerPrimaryAttackEffect primaryAttack)
+                {
+                    _primaryAttackEffect = primaryAttack;
+                    break;
+                }
+            }
 
             if (spriteRenderer != null)
             {
                 _baseColor = spriteRenderer.color;
+            }
+
+            PlayerPartContext spawnContext = MakePartContext(0f);
+            foreach (PlayerPartEffectBase effect in _partEffects)
+            {
+                effect.OnSpawn(spawnContext);
             }
         }
 
@@ -131,6 +155,8 @@ namespace RCCom.Runtime
 
             float deltaTime = Time.deltaTime;
 
+            TickQueuedAttackShots(deltaTime);
+            TickPartEffects(deltaTime);
             Move(deltaTime);
             TickTimers(deltaTime);
             TryAutoAttack();
@@ -140,8 +166,23 @@ namespace RCCom.Runtime
         private void Move(float deltaTime)
         {
             Vector2 input = moveAction.action.ReadValue<Vector2>();
-            float moveSpeed = data.moveSpeed * (IsSkillActive ? skillMoveSpeedMultiplier : 1f);
-            Vector3 nextPosition = transform.position + (Vector3)(input.normalized * moveSpeed * deltaTime);
+            LastMoveInput = input;
+            Vector2 moveDirection = input.normalized;
+            if (_forcedDashRemaining > 0f)
+            {
+                _forcedDashRemaining -= deltaTime;
+                moveDirection = _forcedDashDirection;
+            }
+
+            float moveSpeed = data.moveSpeed *
+                (IsSkillActive ? data.skillOverdriveMoveSpeedMultiplier : 1f);
+            PlayerPartContext context = MakePartContext(deltaTime);
+            foreach (PlayerPartEffectBase effect in _partEffects)
+            {
+                moveSpeed = effect.ModifyMoveSpeed(context, moveSpeed);
+            }
+
+            Vector3 nextPosition = transform.position + (Vector3)(moveDirection * moveSpeed * deltaTime);
 
             if (levelBounds != null)
             {
@@ -151,7 +192,7 @@ namespace RCCom.Runtime
             }
 
             transform.position = nextPosition;
-            UpdateFacing(input);
+            UpdateFacing(moveDirection);
         }
 
         /// <summary>
@@ -183,6 +224,15 @@ namespace RCCom.Runtime
             _invulnerabilityRemaining -= deltaTime;
             _attackCooldownRemaining -= deltaTime;
             _skillCooldownRemaining -= deltaTime;
+
+            if (_skillChargesAvailable < Mathf.Max(1, data.skillChargeCapacity) &&
+                _skillCooldownRemaining <= 0f && !IsSkillActive)
+            {
+                _skillChargesAvailable++;
+                _skillCooldownRemaining = _skillChargesAvailable < data.skillChargeCapacity
+                    ? data.skillCooldown
+                    : 0f;
+            }
 
             if (_hitFlashRemaining > 0f)
             {
@@ -237,12 +287,22 @@ namespace RCCom.Runtime
                 return;
             }
 
-            target.TakeDamage(data.attackDamage, transform.position);
-            FakeProjectile.Spawn(fakeProjectilePrefab, transform.position, target.position, data);
-
-            if (SoundManager.Instance != null)
+            var context = new PlayerAttackContext
             {
-                SoundManager.Instance.PlayPlayerAttack();
+                self = this,
+                data = data,
+                activeEnemies = new List<EnemyInstance>(_enemiesInRange),
+                origin = transform.position,
+            };
+
+            if (_primaryAttackEffect != null)
+            {
+                _primaryAttackEffect.OnAttack(context, target);
+            }
+            else
+            {
+                // 카탈로그/에셋이 아직 없는 씬 단독 테스트에서도 기존 단발 공격은 유지한다.
+                context.Fire(target);
             }
 
             _attackCooldownRemaining = data.attackInterval;
@@ -262,15 +322,22 @@ namespace RCCom.Runtime
             }
 
             bool skillPressed = Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame;
-            if (_skillCooldownRemaining > 0f || !skillPressed)
+            if (_skillChargesAvailable <= 0 || !skillPressed)
             {
                 return;
             }
 
             IsSkillActive = true;
-            _skillBurstRemaining = skillBurstCount;
+            _skillChargesAvailable--;
+            _skillBurstRemaining = data.skillBurstCount;
             _skillBurstTimer = 0f; // 첫 타는 즉시 발동
             SkillUsed?.Invoke();
+
+            PlayerPartContext context = MakePartContext(0f);
+            foreach (PlayerPartEffectBase effect in _partEffects)
+            {
+                effect.OnSkillUsed(context);
+            }
 
             if (SoundManager.Instance != null)
             {
@@ -288,12 +355,16 @@ namespace RCCom.Runtime
 
             FireSkillPulse();
             _skillBurstRemaining--;
-            _skillBurstTimer = skillBurstInterval;
+            _skillBurstTimer = data.skillBurstInterval;
 
             if (_skillBurstRemaining <= 0)
             {
                 IsSkillActive = false;
-                _skillCooldownRemaining = data.skillCooldown;
+                if (_skillChargesAvailable < Mathf.Max(1, data.skillChargeCapacity) &&
+                    _skillCooldownRemaining <= 0f)
+                {
+                    _skillCooldownRemaining = data.skillCooldown;
+                }
             }
         }
 
@@ -340,16 +411,167 @@ namespace RCCom.Runtime
                 return;
             }
 
-            CurrentHealth = Mathf.Max(0f, CurrentHealth - amount);
+            PlayerPartContext context = MakePartContext(0f);
+            float appliedDamage = Mathf.Max(0f, amount);
+            foreach (PlayerPartEffectBase effect in _partEffects)
+            {
+                appliedDamage = Mathf.Max(0f, effect.ModifyIncomingDamage(context, appliedDamage));
+            }
+
+            if (appliedDamage <= 0f)
+            {
+                return;
+            }
+
+            CurrentHealth = Mathf.Max(0f, CurrentHealth - appliedDamage);
             _invulnerabilityRemaining = data.hitInvulnerabilityDuration;
             _hitFlashRemaining = hitFlashDuration;
-            Damaged?.Invoke(amount);
+            Damaged?.Invoke(appliedDamage);
+
+            foreach (PlayerPartEffectBase effect in _partEffects)
+            {
+                effect.OnDamaged(context, appliedDamage);
+            }
 
             if (CurrentHealth <= 0f)
             {
+                foreach (PlayerPartEffectBase effect in _partEffects)
+                {
+                    if (effect.TryPreventPlayerDeath(context))
+                    {
+                        return;
+                    }
+                }
+
                 _isDead = true;
                 Died?.Invoke();
             }
         }
+
+        public PlayerPartRuntimeState GetPartRuntimeState(PlayerPartEffectBase effect)
+        {
+            if (!_partStates.TryGetValue(effect, out PlayerPartRuntimeState state))
+            {
+                state = new PlayerPartRuntimeState();
+                _partStates[effect] = state;
+            }
+
+            return state;
+        }
+
+        public void QueueAttackShot(EnemyInstance target, float damage, float delay)
+        {
+            if (delay <= 0f)
+            {
+                ResolveAttackShot(target, damage);
+                return;
+            }
+
+            _queuedAttackShots.Add(new PlayerAttackShot
+            {
+                target = target,
+                damage = damage,
+                delay = delay,
+            });
+        }
+
+        public void Heal(float amount)
+        {
+            if (_isDead || amount <= 0f)
+            {
+                return;
+            }
+
+            CurrentHealth = Mathf.Min(MaxHealth, CurrentHealth + amount);
+        }
+
+        public void GrantInvulnerability(float duration)
+        {
+            _invulnerabilityRemaining = Mathf.Max(_invulnerabilityRemaining, duration);
+        }
+
+        public void RestoreFromPartEffect(float healthRatio, float invulnerabilityDuration)
+        {
+            _isDead = false;
+            CurrentHealth = Mathf.Max(0.01f, MaxHealth * Mathf.Clamp01(healthRatio));
+            GrantInvulnerability(invulnerabilityDuration);
+        }
+
+        public void BeginForcedDash(float duration)
+        {
+            _forcedDashDirection = LastMoveInput.sqrMagnitude > 0.0001f
+                ? LastMoveInput.normalized
+                : _forcedDashDirection;
+            _forcedDashRemaining = Mathf.Max(_forcedDashRemaining, duration);
+        }
+
+        public bool TryPreventBaseDefeat(BaseController baseController)
+        {
+            PlayerPartContext context = MakePartContext(0f);
+            foreach (PlayerPartEffectBase effect in _partEffects)
+            {
+                if (effect.TryPreventBaseDefeat(context, baseController))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private void TickPartEffects(float deltaTime)
+        {
+            PlayerPartContext context = MakePartContext(deltaTime);
+            foreach (PlayerPartEffectBase effect in _partEffects)
+            {
+                effect.OnTick(context);
+            }
+        }
+
+        private void TickQueuedAttackShots(float deltaTime)
+        {
+            for (int index = _queuedAttackShots.Count - 1; index >= 0; index--)
+            {
+                PlayerAttackShot shot = _queuedAttackShots[index];
+                shot.delay -= deltaTime;
+                if (shot.delay > 0f)
+                {
+                    continue;
+                }
+
+                _queuedAttackShots.RemoveAt(index);
+                EnemyInstance target = shot.target != null && shot.target.IsAlive
+                    ? shot.target
+                    : EnemyTargeting.FindNearestInRange(
+                        _enemiesInRange, transform.position, data.attackRange);
+                ResolveAttackShot(target, shot.damage);
+            }
+        }
+
+        private void ResolveAttackShot(EnemyInstance target, float damage)
+        {
+            if (target == null || !target.IsAlive)
+            {
+                return;
+            }
+
+            target.TakeDamage(damage, transform.position);
+            FakeProjectile.Spawn(fakeProjectilePrefab, transform.position, target.position, data);
+            if (SoundManager.Instance != null)
+            {
+                SoundManager.Instance.PlayPlayerAttack();
+            }
+        }
+
+        private PlayerPartContext MakePartContext(float deltaTime)
+        {
+            return new PlayerPartContext
+            {
+                self = this,
+                deltaTime = deltaTime,
+                activeEnemies = _enemiesInRange,
+            };
+        }
+
     }
 }

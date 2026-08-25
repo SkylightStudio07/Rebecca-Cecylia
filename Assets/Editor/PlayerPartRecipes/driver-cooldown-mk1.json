@@ -1,0 +1,1 @@
+{"partId":"driver-cooldown-mk1","slot":3,"grade":1,"archetypeId":"cooldown","displayName":"쿨감 드라이버 Mk1","description":"오버드라이브 쿨다운 9초.","price":200,"statOverride":{"skillCooldown":9.0,"skillRange":5.0,"skillDamage":5.0,"skillBurstCount":4,"skillBurstInterval":0.3,"skillChargeCapacity":1},"effects":[]}

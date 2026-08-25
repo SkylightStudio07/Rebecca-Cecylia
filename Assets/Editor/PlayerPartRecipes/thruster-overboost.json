@@ -1,0 +1,1 @@
+{"partId":"thruster-overboost","slot":0,"grade":3,"archetypeId":"overboost","displayName":"오버부스트 추진기","description":"오버드라이브 중 이동속도 3배와 0.6초 강제 대시를 제공한다.","price":620,"statOverride":{"moveSpeed":7.5,"skillOverdriveMoveSpeedMultiplier":3.0},"effects":[{"type":"overboost","dashDuration":0.6}]}

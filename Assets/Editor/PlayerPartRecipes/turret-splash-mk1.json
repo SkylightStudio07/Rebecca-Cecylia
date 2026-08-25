@@ -1,0 +1,1 @@
+{"partId":"turret-splash-mk1","slot":1,"grade":1,"archetypeId":"splash","displayName":"스플래시 포탑 Mk1","description":"주 타격과 반경 1.2의 40% 스플래시 피해.","price":210,"statOverride":{"attackDamage":5.0,"attackRange":4.0,"attackInterval":1.0,"projectileSpeed":1.0},"effects":[{"type":"splash","radius":1.2,"splashDamageMultiplier":0.4}]}

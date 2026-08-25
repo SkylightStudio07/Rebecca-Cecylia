@@ -1,0 +1,1 @@
+{"partId":"turret-standard","slot":1,"grade":0,"archetypeId":"single","displayName":"표준 포탑","description":"기준 단발 공격을 재현하는 Common 폴백.","price":0,"statOverride":{"attackDamage":5.0,"attackRange":4.0,"attackInterval":1.0,"projectileSpeed":1.0},"effects":[{"type":"basic"}]}

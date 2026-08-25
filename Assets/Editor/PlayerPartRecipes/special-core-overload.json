@@ -1,0 +1,1 @@
+{"partId":"special-core-overload","slot":4,"grade":3,"archetypeId":"core-overload","displayName":"코어 오버로드 모듈","description":"지속 회복과 저체력 위기 시 회복·무적을 45초마다 제공한다.","price":630,"statOverride":{},"effects":[{"type":"core-overload","maxHealthPerSecond":0.035,"triggerHealthRatio":0.3,"instantHealRatio":0.25,"invulnerabilityDuration":3.0,"cooldown":45.0}]}

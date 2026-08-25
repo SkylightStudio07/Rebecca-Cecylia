@@ -2,6 +2,7 @@ using System;
 using RCCom.Data;
 using RCCom.Definitions.Card;
 using RCCom.Definitions.Operator;
+using RCCom.Definitions.PlayerPart;
 using RCCom.Definitions.Tower;
 using RCCom.Definitions.Unit;
 using RCCom.UI;
@@ -77,27 +78,38 @@ namespace RCCom.Runtime
 
         public static PlayerData CreatePlayerData(PlayerData fallback)
         {
+            return ComposePlayerLoadout(fallback).data;
+        }
+
+        public static PlayerLoadoutResult ComposePlayerLoadout(PlayerData fallback)
+        {
             PlayerData source = SelectedDefinition != null ? SelectedDefinition.playerData : fallback;
             if (source == null)
             {
                 throw new InvalidOperationException("플레이어 로드아웃 데이터가 없습니다.");
             }
 
-            // 플레이어 강화 카드는 data를 직접 수정하므로 Definition 안의 원본을 그대로
-            // 넘기지 않고 매 게임플레이 씬마다 새 값 객체를 만든다.
-            return new PlayerData
+            PlayerPartCatalog catalog = PlayerPartDebugSession.Catalog;
+            if (catalog == null)
             {
-                maxHealth = source.maxHealth,
-                moveSpeed = source.moveSpeed,
-                hitInvulnerabilityDuration = source.hitInvulnerabilityDuration,
-                attackDamage = source.attackDamage,
-                attackRange = source.attackRange,
-                attackInterval = source.attackInterval,
-                projectileSpeed = source.projectileSpeed,
-                skillCooldown = source.skillCooldown,
-                skillRange = source.skillRange,
-                skillDamage = source.skillDamage,
-            };
+                catalog = ResolvePartCatalog();
+                PlayerPartDebugSession.SetCatalog(catalog);
+            }
+
+            // 플레이어 강화 카드는 data를 직접 수정하므로 Definition과 파츠 SO 원본을 넘기지
+            // 않고 매 게임플레이 씬마다 새 값 객체와 Effect 목록을 조립한다.
+            return PlayerLoadoutBuilder.Compose(source, catalog);
+        }
+
+        /// <summary>
+        /// 어드레서블 조회(PlayerPartContentLoader)를 우선 쓰고, 아직 콘텐츠가 빌드되지
+        /// 않았거나 조회가 안 끝났으면 빌드에 항상 포함되는 Resources 카탈로그로 폴백한다.
+        /// 개발 중에도, 어드레서블 파이프라인이 갖춰진 뒤에도 같은 호출부가 그대로 동작한다.
+        /// </summary>
+        private static PlayerPartCatalog ResolvePartCatalog()
+        {
+            PlayerPartCatalog resourceFallback = Resources.Load<PlayerPartCatalog>("PlayerParts/PlayerPartCatalog");
+            return PlayerPartContentLoader.Resolve(resourceFallback);
         }
 
         public static TowerRoster ResolveTowerRoster(TowerRoster fallback)
