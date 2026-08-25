@@ -42,6 +42,10 @@ namespace RCCom.Definitions.Stage
         public List<Vector2> routePoints = new();
         [Range(0f, 1f)] public float pathSmoothness = 1f;
         [Range(0.25f, 5f)] public float maxPointSpacing = 0.25f;
+        [Tooltip("타워를 설치할 수 있는 슬롯 타일 좌표(Tilemap 셀 좌표). 비어 있으면 DefenseScene에 " +
+                 "기본으로 칠해진 슬롯 레이아웃을 그대로 쓴다(엔드리스 모드와 동일한 하위호환 경로). " +
+                 "Stage Studio의 Map 탭에서 Test Scene을 열어 Tile Palette로 칠한 뒤 Capture한다.")]
+        public List<Vector3Int> buildableCells = new();
 
         [Header("클리어 보상")]
         public List<StageReward> rewards = new();

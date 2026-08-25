@@ -2030,3 +2030,63 @@ Phase 0 자동화 경로를 실제로 열고, 이후 오퍼레이터별 원격 �
 - `EndlessBossPromotionVerifier`의 공격력 표본 `10, 30, 20`에서 평균 20 × 1.5 = 30, 고정 이동속도 0.5를 검증하도록 갱신했다. 추가로 `10, 10, 30` 편성을 넣어 같은 적이 여러 슬롯에 등장할 때도 마릿수 가중 평균 16.666… × 1.5 = 25가 계산되는지 확인한다.
 - Unity `6000.3.13f1` 스크립트 재컴파일이 `failed=false`, `errors=[]`로 완료됐고 `EndlessBossPromotionVerifier`와 아군 전투 코어 30개 시나리오가 모두 PASS했다. 최종 검증 구간의 콘솔 오류는 0건이었다.
 
+## 2026-08-26 — 스테이지별 설치 슬롯 타일맵 + 기본 맵 배경 가림 수정
+
+**맥락** — 스테이지마다 배경 아트와 경로는 Stage Studio로 편집할 수 있었지만(2026-08-25 항목), 타워를
+설치할 수 있는 칠해진 타일(`slotTilemap`)은 `StageDefinition`이 전혀 소유하지 않았다. DefenseScene에
+고정으로 칠해진 엔드리스 모드용 레이아웃 하나만 모든 스테이지가 공유했으므로, 맵 모양이 다른 스테이지를
+만들어도 설치 가능 영역은 항상 같았다. 별개로, `MapManager.ApplyStageBackground`가 스테이지 배경
+스프라이트를 `StageBattleBackground`(Order in Layer -100)에 올바르게 주입하고 있었지만, 엔드리스 모드용
+기본 맵 아트를 그리는 `Square`(Order in Layer 0)가 스테이지 유무와 무관하게 항상 켜져 있어 항상 그
+앞을 가렸다 — 배경 로딩 자체가 아니라 두 배경이 동시에 존재할 때의 표시 순서 문제였다.
+
+**결정**
+- `StageDefinition`에 `buildableCells`(`List<Vector3Int>`, Tilemap 셀 좌표)를 추가했다. 비어 있으면
+  "슬롯 없음"이 아니라 "DefenseScene 기본 레이아웃 사용"으로 해석해, 기존 스테이지와 엔드리스 모드를
+  하나도 건드리지 않는다.
+- `MapManager.Awake()`가 `ApplyStageBuildableCells()`로 `buildableCells`가 있을 때만 `slotTilemap`을
+  비우고 공용 `buildableSlotTile`(신규 `Assets/Data/Tilemaps/BuildableSlotTile.asset`, `TilemapRenderer`가
+  꺼져 있어 스프라이트 불필요)로 다시 칠한다. 비어 있으면 아무것도 하지 않아 씬에 이미 칠해진 레이아웃이
+  그대로 유지된다.
+- `MapManager`에 `defaultMapBackgroundRenderer` 참조(= `Square`)를 추가하고, `ApplyStageBackground`가
+  스테이지 배경이 있을 때만 이 렌더러를 끈다. 엔드리스 모드(`stage == null`)에서는 계속 켜져 있으므로
+  기존 화면과 동일하다.
+- `StageRouteAuthoringTool`의 Load/Capture 왕복에 타일 캡처를 얹었다. `LoadIntoOpenTestScene`은
+  `stage.buildableCells`(없으면 DefenseScene 기존 레이아웃)로 테스트 씬의 `SlotMarkers`를 다시 칠하고,
+  `CaptureFromOpenTestScene`은 그 씬에서 `HasTile`인 셀을 모두 읽어 되돌려 저장한다. 디자이너는 Load 후
+  Hierarchy에서 `SlotMarkers`를 선택해 Tile Palette로 칠하거나 지우면 된다. `TilemapRenderer`가 꺼져 있어
+  Scene View에서 안 보이는 문제는 `StageBuildableCellGizmo`(신규, `StageRouteTestScene`에서만 동작)가
+  칠해진 셀을 청록색 와이어큐브로 그려 대신 보여준다.
+- `SetupRuntimeBattlefieldBackground` 메뉴가 `battleBackgroundRenderer`뿐 아니라
+  `defaultMapBackgroundRenderer`·`buildableSlotTile` 배선까지 함께(멱등하게) 복구하도록 넓혔다 — 씬을
+  다시 만들거나 배선이 끊겨도 이 메뉴 하나로 되돌릴 수 있게 하기 위함이다.
+- `StageAssetValidator`에 `buildableCells`가 비어 있으면 경고(에러 아님)를 남기도록 추가했다.
+
+**근거** — 웨이포인트 경로를 스테이지별 자유 좌표로, 타워 설치는 그리드로 분리한 기존 설계
+(`MapManager` 클래스 주석)를 그대로 따랐다. 슬롯 정보도 같은 이유로 "그리드 셀 좌표 목록"이라는 가장
+단순한 자료형으로만 저장하고, 타일의 시각 정보(스프라이트·색)는 다루지 않는다 — 어차피 런타임에는
+`TilemapRenderer`가 꺼져 있어 그려지지 않기 때문이다. 배경 가림 문제는 새 배경 오브젝트를 만드는 대신
+기존 `Square`를 MapManager가 제어하는 쪽을 택해, 씬에 이미 배치된 아트와 좌표를 재사용했다.
+
+**의도적으로 하지 않은 것**
+- `slotTilemap` 자체를 스테이지별로 교체하거나 씬을 복제하지 않았다. 배경·경로와 같은 패턴으로 좌표
+  목록만 `StageDefinition`이 소유한다.
+- Stage Studio Map 탭에 `buildableCells` 전체를 인라인 리스트로 노출하지 않았다. 수백 개가 될 수 있는
+  좌표를 IMGUI 리스트로 펼치면 편집성이 떨어지므로, 개수 요약과 Tile Palette 안내만 표시하고 실제 편집은
+  Test Scene의 표준 Tile Palette 워크플로에 맡긴다.
+- `buildableSlotTile`에 실제 시각 스프라이트를 넣지 않았다. 런타임에 보이지 않는 순수 마커 타일이라
+  필요하지 않다.
+
+**사람 액션**
+- Unity 에디터를 열어 스크립트 재컴파일 오류가 없는지 확인해야 한다(이번 세션은 Unity 에디터 라이브
+  연결 없이 스크립트와 씬 YAML을 직접 편집했다 — MapManager의 새 필드 3개(`defaultMapBackgroundRenderer`,
+  `buildableSlotTile`, 그리고 기존 `editorPreviewStage`와의 순서)가 `DefenseScene.unity`·
+  `StageRouteTestScene.unity`에 올바르게 배선됐는지 인스펙터에서 육안 확인 필요).
+- 각 CH1 스테이지(1-1~1-7)는 아직 `buildableCells`가 비어 있어 기존 DefenseScene 레이아웃을 그대로
+  쓴다. 맵 모양이 다른 스테이지마다 Stage Studio → Map 탭 → `Open Test Scene & Load Selected Stage` →
+  `SlotMarkers`를 Tile Palette로 칠함 → `Capture Test Scene Into Selected Stage` 순서로 실제 슬롯을
+  제작해야 한다.
+- Play Mode에서 스테이지 모드로 진입해 설치 슬롯이 배경 위 원하는 위치에만 나타나는지, 엔드리스 모드는
+  기존과 동일하게 동작하는지 확인이 필요하다. 이번 세션은 Edit Mode 코드·데이터 변경만 했고 Play Mode는
+  실행하지 않았다.
+

@@ -181,8 +181,26 @@ namespace RCCom.EditorTools
             DrawProperty("routePoints", "Route Points", true);
 
             GUILayout.Space(12f);
+            GUILayout.Label("Buildable Tower Slots", EditorStyles.boldLabel);
+            int buildableCellCount = _serializedStage.FindProperty("buildableCells").arraySize;
+            EditorGUILayout.HelpBox(
+                buildableCellCount > 0
+                    ? $"이 스테이지 전용 설치 슬롯 {buildableCellCount}칸이 저장되어 있습니다."
+                    : "설치 슬롯이 비어 있습니다. Test Scene을 Load하면 빈 상태로 시작하니, " +
+                      "SlotMarkers를 Tile Palette로 칠한 뒤 Capture하세요. (Runtime에서는 비어 있으면 " +
+                      "DefenseScene 기본 레이아웃을 그대로 쓰지만, 그건 Play 폴백일 뿐 Studio에서 자동으로 " +
+                      "채워주지 않습니다 — 맵이 다른 스테이지에 옛 레이아웃이 섞여 들어가는 걸 막기 위함.)",
+                MessageType.Info);
+
+            GUILayout.Space(12f);
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
             GUILayout.Label("DefenseScene Route Workspace", EditorStyles.boldLabel);
+            EditorGUILayout.HelpBox(
+                "Load하면 SlotMarkers가 이 스테이지의 저장값(없으면 빈 상태)으로 초기화됩니다. " +
+                "Hierarchy에서 SlotMarkers를 선택하고 Window > 2D > Tile Palette로 설치 가능 타일을 " +
+                "칠하거나 지운 뒤 Capture하면 지금 칠해진 칸이 정확히 그대로 이 스테이지 전용 슬롯으로 " +
+                "저장됩니다 — 다른 레이아웃이 섞여 들어가지 않습니다.",
+                MessageType.None);
             if (GUILayout.Button("Open Test Scene & Load Selected Stage", GUILayout.Height(32f)))
             {
                 SaveCurrent(false);
@@ -192,6 +210,10 @@ namespace RCCom.EditorTools
             {
                 SaveCurrent(false);
                 StageRouteAuthoringTool.LoadIntoOpenTestScene(_stage);
+            }
+            if (GUILayout.Button("Copy DefenseScene Default Layout Into Test Scene", GUILayout.Height(26f)))
+            {
+                StageRouteAuthoringTool.CopyDefaultLayoutIntoTestScene();
             }
             if (GUILayout.Button("Capture Test Scene Into Selected Stage", GUILayout.Height(32f)))
             {
