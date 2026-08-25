@@ -1,0 +1,1 @@
+RCCom.EditorTools.StageCatalogBuilder.Build();

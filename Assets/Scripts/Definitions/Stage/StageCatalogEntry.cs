@@ -54,21 +54,20 @@ namespace RCCom.Definitions.Stage
             return bestWave >= requiredBestWave;
         }
 
+        /// <summary>
+        /// 전투 데이터를 확보할 수 있는 상태인지(해금 여부와는 무관).
+        /// 직접 참조가 있으면 그것이 가장 확실한 판정 근거다. 없으면(원격 스테이지는 Definition을
+        /// 본체 빌드로 새어 나가지 않게 하려고 의도적으로 비운다) 카탈로그에 복사해 둔 경량
+        /// 값으로 판정한다.
+        /// </summary>
+        public bool HasBattleData =>
+            stageDefinition != null
+                ? stageDefinition.IsPlayable
+                : hasWaves && !string.IsNullOrWhiteSpace(address);
+
         public bool IsPlayable(int bestWave)
         {
-            if (!IsUnlocked(bestWave))
-            {
-                return false;
-            }
-
-            // 직접 참조가 있으면 그것이 가장 확실한 판정 근거다. 없으면(원격이거나 아직 로드하지
-            // 않은 스테이지) 카탈로그에 복사해 둔 경량 값으로 판정한다.
-            if (stageDefinition != null)
-            {
-                return stageDefinition.IsPlayable;
-            }
-
-            return hasWaves && !string.IsNullOrWhiteSpace(address);
+            return IsUnlocked(bestWave) && HasBattleData;
         }
     }
 }

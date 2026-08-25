@@ -170,9 +170,11 @@ namespace RCCom.EditorTools
 
             foreach (StageCatalogEntry entry in catalog.entries)
             {
-                if (entry == null || entry.stageDefinition == null || !entry.stageDefinition.IsPlayable)
+                // 원격 스테이지는 Definition 직접 참조가 의도적으로 비어 있으므로 그것으로
+                // 판정하면 안 된다. HasBattleData가 로컬·원격 두 경우를 함께 본다.
+                if (entry == null || !entry.HasBattleData)
                 {
-                    throw new InvalidOperationException($"스테이지 전투 Definition 연결이 누락되었습니다: {entry?.stageId}");
+                    throw new InvalidOperationException($"스테이지 전투 데이터 연결이 누락되었습니다: {entry?.stageId}");
                 }
             }
 
