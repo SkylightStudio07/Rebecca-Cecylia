@@ -30,13 +30,13 @@ namespace RCCom.Runtime
         private bool _hasReachedFinalWaitPoint;
         private IReadOnlyList<EnemyInstance> _lastEnemies = EmptyEnemies;
         private IReadOnlyList<AllyUnitInstance> _lastAllies = EmptyAllies;
-        private Dictionary<(AllyUnitInstance source, AllyUnitEffectBase effect), Vector2>
-            _statMultipliers;
-        private Dictionary<(AllyUnitInstance source, AllyUnitEffectBase effect), float>
-            _statMultiplierExpirations;
-        private List<(AllyUnitInstance source, AllyUnitEffectBase effect)>
-            _expiredStatMultiplierKeys;
-        private float _statMultiplierTime;
+
+        /// <summary>
+        /// 오라형 Effect가 매 틱 갱신하는 짧은 지속시간 버프 저장소. (source, effect) 키로
+        /// RCCom.Core.RefreshableAuraBag이 만료를 관리한다 — TowerInstance._temporaryAuras와
+        /// 같은 부품을 공유하는 아군 유닛 쪽 인스턴스.
+        /// </summary>
+        private RefreshableAuraBag<AllyUnitInstance, AllyUnitEffectBase, StatMultiplierSet> _statMultipliers;
 
         public AllyUnitDefinition Definition { get; private set; }
         public AllyUnitData Data => Definition != null ? Definition.data : null;
@@ -124,10 +124,9 @@ namespace RCCom.Runtime
             State = AllyUnitState.Advancing;
             CurrentTarget = null;
             AttackCooldownRemaining = 0f;
-            _statMultipliers?.Clear();
-            _statMultiplierExpirations?.Clear();
-            _expiredStatMultiplierKeys?.Clear();
-            _statMultiplierTime = 0f;
+            // 풀에서 재사용되는 인스턴스이므로 이전 스폰의 버프가 새 스폰으로 새지 않게 초기화한다.
+            // RefreshableAuraBag에는 Clear가 없어 다음 ApplyStatMultipliers 호출 때 새로 만들게 둔다.
+            _statMultipliers = null;
             _contactRange = settings != null ? settings.ContactRange : DefaultContactRange;
             _separationMargin = settings != null ? settings.SeparationMargin : DefaultSeparationMargin;
             float totalPathLength = AllyUnitTargeting.CalculatePathLength(path);
@@ -327,9 +326,8 @@ namespace RCCom.Runtime
         }
 
         /// <summary>
-        /// 짧은 지속시간 버프를 적용한다. 공급 유닛과 효과를 키로 삼아 같은 오라의 매 프레임
-        /// 갱신은 한 항목만 연장하고, 서로 다른 오라는 기존 아군 버프 규칙대로 곱연산 중첩한다.
-        /// SO에는 상태를 두지 않아 여러 드론이 같은 효과 에셋을 안전하게 공유할 수 있다.
+        /// 이동/공속 2축 버프를 적용한다(TacticalRelayAuraEffect 등 기존 호출부 호환용). 내부적으로
+        /// 3축 오버로드에 damageMultiplier=1을 넘겨 위임한다.
         /// </summary>
         public void ApplyStatMultipliers(
             AllyUnitInstance source,
@@ -338,20 +336,37 @@ namespace RCCom.Runtime
             float attackSpeedMultiplier,
             float duration)
         {
+            ApplyStatMultipliers(source, effect, moveSpeedMultiplier, attackSpeedMultiplier, 1f, duration);
+        }
+
+        /// <summary>
+        /// 이동/공속/피해량 3축 버프를 적용한다. 공급 유닛과 효과를 키로 삼아 같은 오라의 매 프레임
+        /// 갱신은 한 항목만 연장하고, 서로 다른 오라는 기존 아군 버프 규칙대로 곱연산 중첩한다.
+        /// SO에는 상태를 두지 않아 여러 드론이 같은 효과 에셋을 안전하게 공유할 수 있다.
+        /// </summary>
+        public void ApplyStatMultipliers(
+            AllyUnitInstance source,
+            AllyUnitEffectBase effect,
+            float moveSpeedMultiplier,
+            float attackSpeedMultiplier,
+            float damageMultiplier,
+            float duration)
+        {
             if (!_isSpawned || IsDead || duration <= 0f)
             {
                 return;
             }
 
-            var key = (source ?? this, effect);
-            _statMultipliers ??= new Dictionary<
-                (AllyUnitInstance source, AllyUnitEffectBase effect), Vector2>();
-            _statMultiplierExpirations ??= new Dictionary<
-                (AllyUnitInstance source, AllyUnitEffectBase effect), float>();
-            _statMultipliers[key] = new Vector2(
-                Mathf.Max(0.01f, moveSpeedMultiplier),
-                Mathf.Max(0.01f, attackSpeedMultiplier));
-            _statMultiplierExpirations[key] = _statMultiplierTime + duration;
+            _statMultipliers ??=
+                new RefreshableAuraBag<AllyUnitInstance, AllyUnitEffectBase, StatMultiplierSet>();
+            _statMultipliers.Set(
+                source ?? this,
+                effect,
+                new StatMultiplierSet(
+                    Mathf.Max(0.01f, moveSpeedMultiplier),
+                    Mathf.Max(0.01f, attackSpeedMultiplier),
+                    Mathf.Max(0.01f, damageMultiplier)),
+                duration);
         }
 
         private void RefreshTargetAndState()
@@ -476,30 +491,7 @@ namespace RCCom.Runtime
 
         private void TickStatMultipliers(float deltaTime)
         {
-            _statMultiplierTime += deltaTime;
-            if (_statMultipliers == null || _statMultipliers.Count == 0)
-            {
-                return;
-            }
-
-            _expiredStatMultiplierKeys ??=
-                new List<(AllyUnitInstance source, AllyUnitEffectBase effect)>();
-            _expiredStatMultiplierKeys.Clear();
-            foreach (KeyValuePair<(AllyUnitInstance source, AllyUnitEffectBase effect), float> pair
-                     in _statMultiplierExpirations)
-            {
-                if (pair.Value <= _statMultiplierTime)
-                {
-                    _expiredStatMultiplierKeys.Add(pair.Key);
-                }
-            }
-
-            foreach ((AllyUnitInstance source, AllyUnitEffectBase effect) key
-                     in _expiredStatMultiplierKeys)
-            {
-                _statMultipliers.Remove(key);
-                _statMultiplierExpirations.Remove(key);
-            }
+            _statMultipliers?.Tick(deltaTime);
         }
 
         private float CalculateMoveSpeedMultiplier()
@@ -510,9 +502,9 @@ namespace RCCom.Runtime
                 return multiplier;
             }
 
-            foreach (Vector2 statMultiplier in _statMultipliers.Values)
+            foreach (StatMultiplierSet statMultiplier in _statMultipliers.Values)
             {
-                multiplier *= statMultiplier.x;
+                multiplier *= statMultiplier.moveSpeedMultiplier;
             }
 
             return multiplier;
@@ -526,9 +518,30 @@ namespace RCCom.Runtime
                 return multiplier;
             }
 
-            foreach (Vector2 statMultiplier in _statMultipliers.Values)
+            foreach (StatMultiplierSet statMultiplier in _statMultipliers.Values)
             {
-                multiplier *= statMultiplier.y;
+                multiplier *= statMultiplier.attackSpeedMultiplier;
+            }
+
+            return multiplier;
+        }
+
+        /// <summary>
+        /// DamageBuffAuraEffect 등 피해량 버프 축의 누적 배율. BasicAttackEffect/PierceAttackEffect/
+        /// SplashAttackEffect가 OnAttack에서 실제 피해 계산에 곱한다(효과 SO 자체는 상태가 없으므로
+        /// 배율은 항상 이 인스턴스에서 읽어야 한다).
+        /// </summary>
+        public float CalculateDamageMultiplier()
+        {
+            float multiplier = 1f;
+            if (_statMultipliers == null)
+            {
+                return multiplier;
+            }
+
+            foreach (StatMultiplierSet statMultiplier in _statMultipliers.Values)
+            {
+                multiplier *= statMultiplier.damageMultiplier;
             }
 
             return multiplier;
@@ -613,6 +626,9 @@ namespace RCCom.Runtime
                 deltaTime = deltaTime,
                 activeEnemies = activeEnemies,
                 activeAllies = activeAllies,
+                // TowerInstance.All은 이미 씬에 지어진 모든 타워를 담은 정적 목록이라(TowerInstance.cs),
+                // Tick() 시그니처를 바꿔 별도로 전달받을 필요 없이 여기서 바로 읽는다.
+                activeTowers = TowerInstance.All,
             };
         }
     }

@@ -19,6 +19,11 @@ namespace RCCom.Effects.Tower
                 damage = aura.ModifyOutgoingDamage(damage);
             }
 
+            foreach (ITowerAura aura in self.TemporaryAuras)
+            {
+                damage = aura.ModifyOutgoingDamage(damage);
+            }
+
             foreach (ITowerAura aura in GlobalTowerAuraRegistry.Auras)
             {
                 damage = aura.ModifyOutgoingDamage(damage);
@@ -32,6 +37,11 @@ namespace RCCom.Effects.Tower
             float interval = baseInterval;
 
             foreach (ITowerAura aura in self.activeAuras)
+            {
+                interval = aura.ModifyAttackInterval(interval);
+            }
+
+            foreach (ITowerAura aura in self.TemporaryAuras)
             {
                 interval = aura.ModifyAttackInterval(interval);
             }

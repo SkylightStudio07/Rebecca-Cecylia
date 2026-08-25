@@ -22,7 +22,7 @@ namespace RCCom.Effects.Unit.Concrete
                 return;
             }
 
-            target.TakeDamage(ctx.self.Data.attackDamage, ctx.self.Position);
+            target.TakeDamage(ctx.self.Data.attackDamage * ctx.self.CalculateDamageMultiplier(), ctx.self.Position);
 
             // 근접 유닛은 EffectiveAttackRange가 ContactRange로 보정돼 attackRange보다 커지므로
             // (AllyUnitInstance.EffectiveAttackRange), attackRange가 ContactRange를 실제로 넘는

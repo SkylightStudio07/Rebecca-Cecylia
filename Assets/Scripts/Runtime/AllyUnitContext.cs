@@ -12,5 +12,12 @@ namespace RCCom.Runtime
         public float deltaTime;
         public IReadOnlyList<EnemyInstance> activeEnemies;
         public IReadOnlyList<AllyUnitInstance> activeAllies;
+
+        /// <summary>
+        /// 현재 씬에 지어진 모든 타워(TowerInstance.All을 그대로 대입). 유닛→타워 버프
+        /// (TowerReinforcementAuraEffect 등)가 사거리 필터링을 스스로 하도록 가공 없이 넘긴다 —
+        /// activeAllies와 동일하게 사거리로 미리 걸러져 있지 않다.
+        /// </summary>
+        public IReadOnlyList<TowerInstance> activeTowers;
     }
 }
