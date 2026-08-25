@@ -1,0 +1,1 @@
+RCCom.EditorTools.AddressablesContentUpdateBuilder.BuildContentUpdate(UnityEditor.EditorUserBuildSettings.activeBuildTarget);
