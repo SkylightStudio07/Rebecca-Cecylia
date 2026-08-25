@@ -2,6 +2,7 @@ using System;
 using RCCom.Data;
 using RCCom.Definitions.Card;
 using RCCom.Definitions.Operator;
+using RCCom.Definitions.PlayerPart;
 using RCCom.Definitions.Tower;
 using RCCom.Definitions.Unit;
 using RCCom.UI;
@@ -77,27 +78,27 @@ namespace RCCom.Runtime
 
         public static PlayerData CreatePlayerData(PlayerData fallback)
         {
+            return ComposePlayerLoadout(fallback).data;
+        }
+
+        public static PlayerLoadoutResult ComposePlayerLoadout(PlayerData fallback)
+        {
             PlayerData source = SelectedDefinition != null ? SelectedDefinition.playerData : fallback;
             if (source == null)
             {
                 throw new InvalidOperationException("플레이어 로드아웃 데이터가 없습니다.");
             }
 
-            // 플레이어 강화 카드는 data를 직접 수정하므로 Definition 안의 원본을 그대로
-            // 넘기지 않고 매 게임플레이 씬마다 새 값 객체를 만든다.
-            return new PlayerData
+            PlayerPartCatalog catalog = PlayerPartDebugSession.Catalog;
+            if (catalog == null)
             {
-                maxHealth = source.maxHealth,
-                moveSpeed = source.moveSpeed,
-                hitInvulnerabilityDuration = source.hitInvulnerabilityDuration,
-                attackDamage = source.attackDamage,
-                attackRange = source.attackRange,
-                attackInterval = source.attackInterval,
-                projectileSpeed = source.projectileSpeed,
-                skillCooldown = source.skillCooldown,
-                skillRange = source.skillRange,
-                skillDamage = source.skillDamage,
-            };
+                catalog = Resources.Load<PlayerPartCatalog>("PlayerParts/PlayerPartCatalog");
+                PlayerPartDebugSession.SetCatalog(catalog);
+            }
+
+            // 플레이어 강화 카드는 data를 직접 수정하므로 Definition과 파츠 SO 원본을 넘기지
+            // 않고 매 게임플레이 씬마다 새 값 객체와 Effect 목록을 조립한다.
+            return PlayerLoadoutBuilder.Compose(source, catalog);
         }
 
         public static TowerRoster ResolveTowerRoster(TowerRoster fallback)

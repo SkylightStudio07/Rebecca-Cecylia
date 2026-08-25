@@ -30,5 +30,17 @@ namespace RCCom.Data
         public float skillCooldown;
         public float skillRange;
         public float skillDamage;
+
+        [Tooltip("오버드라이브 1회에 발생하는 범위 공격 횟수")]
+        public int skillBurstCount = 4;
+
+        [Tooltip("오버드라이브 범위 공격 사이의 간격")]
+        public float skillBurstInterval = 0.3f;
+
+        [Tooltip("오버드라이브 활성 중 이동속도 배율")]
+        public float skillOverdriveMoveSpeedMultiplier = 1.5f;
+
+        [Tooltip("충전해 둘 수 있는 오버드라이브 횟수. 기존 동작은 1이다.")]
+        public int skillChargeCapacity = 1;
     }
 }

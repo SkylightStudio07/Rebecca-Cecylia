@@ -71,6 +71,15 @@ namespace RCCom.Runtime
         }
 
         /// <summary>
+        /// 패배 인터셉트 Effect만 사용하는 복구 경로. 일반 Heal은 파괴된 거점을 되살리지
+        /// 못하게 유지하고, 전투당 1회 같은 규칙을 소유한 파츠만 이 명시적 API를 호출한다.
+        /// </summary>
+        public void Revive(float health)
+        {
+            CurrentHealth = Mathf.Clamp(health, 0.01f, maxHealth);
+        }
+
+        /// <summary>
         /// 거점 보강 카드용 — 최대체력을 늘리고, 늘어난 만큼 현재체력도 함께 채워준다
         /// (증가분만큼 보너스 회복되는 느낌을 주기 위한 설계 선택).
         /// </summary>

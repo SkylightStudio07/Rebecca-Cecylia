@@ -156,6 +156,12 @@ namespace RCCom.Managers
         /// <summary>플레이어 사망/거점 파괴 공용 핸들러 — 어느 쪽이 먼저 오든 1회만 처리.</summary>
         private void HandleGameOver()
         {
+            if (player != null && baseController != null && baseController.CurrentHealth <= 0f &&
+                player.TryPreventBaseDefeat(baseController))
+            {
+                return;
+            }
+
             EndBattle(BattleOutcome.Defeat);
         }
 
