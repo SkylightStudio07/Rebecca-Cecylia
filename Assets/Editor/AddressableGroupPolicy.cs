@@ -105,6 +105,45 @@ namespace RCCom.EditorTools
         }
 
         /// <summary>
+        /// 에셋을 그룹에 넣고 주소와 라벨을 맞춘다. 실제로 바꾼 것이 있으면 true.
+        /// </summary>
+        public static bool AssignEntry(
+            AddressableAssetSettings settings,
+            AddressableAssetGroup group,
+            string assetPath,
+            string address,
+            string label)
+        {
+            string guid = AssetDatabase.AssetPathToGUID(assetPath);
+            if (string.IsNullOrEmpty(guid))
+            {
+                throw new InvalidOperationException($"Addressables 항목 경로가 실제 에셋을 가리키지 않습니다: {assetPath}");
+            }
+
+            bool changed = false;
+            AddressableAssetEntry existing = settings.FindAssetEntry(guid);
+            if (existing == null || existing.parentGroup != group)
+            {
+                changed = true;
+            }
+
+            AddressableAssetEntry entry = settings.CreateOrMoveEntry(guid, group, false, true);
+            if (entry.address != address)
+            {
+                entry.address = address;
+                changed = true;
+            }
+
+            if (!string.IsNullOrEmpty(label) && !entry.labels.Contains(label))
+            {
+                entry.SetLabel(label, true, true, false);
+                changed = true;
+            }
+
+            return changed;
+        }
+
+        /// <summary>
         /// 콘텐츠 업데이트 정책을 맞춘다. 실제로 바꿨으면 true.
         ///
         /// 로컬 그룹은 StaticContent(인스펙터의 "Prevent Updates")로 묶는다. 이 프로젝트는

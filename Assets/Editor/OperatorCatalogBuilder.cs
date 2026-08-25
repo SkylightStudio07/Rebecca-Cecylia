@@ -68,6 +68,7 @@ namespace RCCom.EditorTools
             RemoveStaleGeneratedGroups(settings, expectedGroupNames);
 
             ApplyEntriesIfChanged(catalog, entries, null);
+            BuildLiveCatalog(null);
             EditorUtility.SetDirty(settings);
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
@@ -130,10 +131,42 @@ namespace RCCom.EditorTools
 
             SortEntriesByRecipeOrder(entries);
             ApplyEntriesIfChanged(catalog, entries, changedAssets);
+            BuildLiveCatalog(changedAssets);
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
 
             Debug.Log($"[OperatorCatalogBuilder] {recipe.operatorId} 카탈로그 항목과 Addressables 그룹 갱신 완료");
+        }
+
+        /// <summary>
+        /// 원격 오퍼레이터만 담은 라이브 카탈로그를 레시피에서 다시 만든다.
+        ///
+        /// 정본 카탈로그의 항목 객체를 재사용하지 않고 CreateEntry를 다시 부르는 이유는, 같은
+        /// [Serializable] 인스턴스를 두 에셋이 공유하면 한쪽 편집이 다른 쪽에 조용히 새어
+        /// 들어가기 때문이다. 레시피와 Definition은 이미 AssetDatabase 캐시에 있어 비용도 거의 없다.
+        /// </summary>
+        private static void BuildLiveCatalog(List<string> changedAssets)
+        {
+            var remoteEntries = new List<OperatorCatalogEntry>();
+            foreach (OperatorAssetRecipe recipe in LoadRecipes())
+            {
+                if (!recipe.remoteContent)
+                {
+                    continue;
+                }
+
+                string definitionPath = $"Assets/Data/Operators/{recipe.operatorId}/OperatorDefinition.asset";
+                OperatorDefinition definition = AssetDatabase.LoadAssetAtPath<OperatorDefinition>(definitionPath);
+                if (definition == null)
+                {
+                    throw new InvalidOperationException($"먼저 오퍼레이터 에셋을 생성해야 합니다: {definitionPath}");
+                }
+
+                remoteEntries.Add(CreateEntry(recipe, definition));
+            }
+
+            SortEntriesByRecipeOrder(remoteEntries);
+            OperatorLiveCatalogBuilder.Build(remoteEntries, changedAssets);
         }
 
         private static OperatorCatalogEntry CreateEntry(OperatorAssetRecipe recipe, OperatorDefinition definition)

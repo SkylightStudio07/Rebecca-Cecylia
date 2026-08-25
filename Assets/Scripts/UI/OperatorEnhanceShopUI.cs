@@ -57,12 +57,16 @@ namespace RCCom.UI
 
         private void Awake()
         {
+            // 빌드 이후 원격으로 추가된 오퍼레이터까지 포함한 카탈로그로 바꾼다.
+            // 원격 카탈로그가 아직 안 왔거나 추가분이 없으면 내장본을 그대로 돌려준다.
+            catalog = LiveCatalogService.Resolve(catalog);
             _storage = new PlayerPrefsProfileStorage();
             if (operatorPortrait != null) { operatorPortrait.preserveAspect = true; }
         }
 
         private void OnEnable()
         {
+            catalog = LiveCatalogService.Resolve(catalog);
             if (previousButton != null) { previousButton.onClick.AddListener(PreviousOperator); }
             if (nextButton != null) { nextButton.onClick.AddListener(NextOperator); }
             if (enhanceButton != null) { enhanceButton.onClick.AddListener(PurchaseSelectedTrack); }
