@@ -1870,3 +1870,71 @@ Phase 0 자동화 경로를 실제로 열고, 이후 오퍼레이터별 원격 �
 - `AllyUnitCombatVerifier`의 기존 23개와 신규 6개를 합친 29개 시나리오가 통과했다.
 - `AllyUnitFoundationVerifier`의 기존 배치·전투 기반 계약과 `AllyUnitAssetValidator`의 레시피
   12개·경고 0건 검증이 함께 통과했다.
+
+## 2026-08-25 — 오퍼레이터 강화 디버그 UI Home 키 토글
+
+### 맥락
+- `OperatorUpgradeDebugOverlay`가 TitleScene에서 항상 활성 상태라, 강화값을 확인한 뒤에도 로비 UI를 가리고 입력을 가로챘다.
+- 루트 `GameObject` 자체를 비활성화하면 같은 오브젝트의 `OperatorUpgradeDebugPanel.Update()`도 멈춰 Home 키로 다시 열 수 없다.
+
+### 결정
+- `OperatorUpgradeDebugPanel`이 Editor Play Mode에서 신규 Input System의 Home 키를 직접 폴링해 루트 `CanvasGroup`의 `alpha`·`interactable`·`blocksRaycasts`를 함께 토글한다.
+- 씬에 이미 배치된 `CanvasGroup`을 재사용하고, 누락된 환경에서도 디버그 경로가 끊기지 않도록 런타임에만 보완한다. 초기 표시 여부는 씬에 저장된 alpha 값을 유지한다.
+- 디버그 입력과 패널 조작은 기존처럼 `UNITY_EDITOR` 안에만 두어 플레이어 빌드에는 노출하지 않는다.
+
+## 2026-08-25 — 플레이어 기체 파츠 전투 기반과 디버그 테스트 드라이버
+
+### 결정
+
+- 추진기·포탑·바디·드라이버·특수 소켓을 `PlayerPartDefinition`과 상태 없는
+  `PlayerPartEffectBase` 조립으로 표현한다. 쿨다운·보호막 잔량·부활 사용 여부 같은 전투별 상태는
+  `PlayerController`의 `PlayerPartRuntimeState`가 소유한다. 신규 파츠를 데이터와 기존 Effect의
+  조립만으로 추가하고 SO 원본을 런타임에 수정하지 않기 위한 경계다.
+- `PlayerController`의 단발 공격 판정을 `IPlayerPrimaryAttackEffect`로 분리하고, 오버드라이브의
+  버스트 횟수·간격·이동 배율·충전 용량을 `PlayerData`로 승격했다. 이중 배럴·관통·스플래시·연쇄와
+  2스택 드라이버를 파츠별 전투 클래스 분기 없이 같은 호출 지점에서 구동하기 위함이다.
+- 설계안의 38개 파츠를 JSON 레시피로 작성하고 `PlayerPartAssetBuilder`가 Definition·Effect·Resources
+  카탈로그를 재현 가능하게 생성한다. 검증기는 Common 폴백, ID/슬롯/가격, 포탑의 주 공격 계약과
+  상점 아이콘 참조를 확인한다. 상점 아이콘은 현재 범위의 필수 데이터라 누락 시 오류로 중단한다.
+- **인게임 기체 3레이어 비주얼 시스템은 이번 범위에서 구현하지 않고 추후 작업으로 확정했다.**
+  DefenseScene과 `PlayerController`는 기존 단일 함선 `SpriteRenderer`를 그대로 유지한다. 상점용
+  아이콘은 인게임 오버레이와 피벗·합성 규격이 다른 자산이므로, 이번 아이콘을 임시 오버레이로
+  재사용해 잘못된 기준을 굳히지 않는다.
+- 실제 상점·구매·영속 장착 대신 `PlayerPartDebugSession`을 계정 메모리 테스트 드라이버로 두었다.
+  TitleScene의 기존 Home 오퍼레이터 강화 오버레이 아래에 5슬롯 순환 선택 UI를 배치하고, 선택값은
+  다음 DefenseScene 진입 때만 조립한다. 앱 재실행 시 초기화되어 `PlayerProfile`과 재화를 오염시키지
+  않는다.
+
+### 의도적으로 하지 않은 것
+
+- `PlayerProfile` 스키마 확장, 재화 소비, 구매·판매·소유권 검증, 실제 상점 UI는 만들지 않았다.
+  현재 UI는 전투 수치와 Effect 조립을 먼저 검증하기 위한 드라이버이며, 상점 구현 시
+  `PlayerPartDebugSession`만 영속 로드아웃 공급자로 교체할 수 있게 조립 경계를 유지했다.
+- 별도 아트 저장소에서 투명 RGBA 상점 아이콘 24개만 `Assets/Art/PlayerParts/Icons`로 이관했다.
+  마젠타 원본과 크로마키 재현 스크립트는 아트 저장소에 남겼다. Mk1/Mk2는 같은 아키타입 아이콘을
+  공유하며 `PlayerPartAssetBuilder`가 `slot/archetypeId` 경로 규칙으로 38개 Definition에 배선한다.
+  WebGL UI 메모리를 고려해 임포트 상한은 512px, mipmap 비활성, 압축 Sprite로 통일한다.
+- `RCCom/Player Parts/Build All Player Part Assets`를 실행해 24개 Sprite를 38개 생성 Definition의
+  `icon` 필드에 저장했다. 이 호출은 에셋 배선만 수행했으며, 사용자 요청에 따라 별도의 컴파일
+  조회·검증 메뉴·플레이 모드 확인은 실행하지 않았다.
+- 새 asmdef나 테스트 어셈블리는 도입하지 않았다. 회귀 확인은 에디터 메뉴 검증기로 제공하며,
+  최종 플레이 모드 검수와 컴파일 확인은 사용자 요청에 따라 사람에게 위임한다.
+
+## 2026-08-25 — 플레이어 포탑 파츠에 공용 전투 VFX 재사용
+
+- 최초 구현은 관통·스플래시의 판정 수학만 재사용하고 기존 타워/아군 Effect가 이미 사용하던
+  레이저·착탄 연출을 누락했다. 그 결과 관통 대상과 스플래시 2차 피해자마다 플레이어발 일반
+  투사체가 생겨 판정 모양과 표현이 어긋났다. 이는 아트 미완성과 무관한 누락이므로 별도 신규
+  VFX를 만들지 않고 기존 공용 자산을 그대로 연결했다.
+- 관통과 오버로드 관통은 피해를 투사체 없이 적용하고, `LaserBeamView` 한 개를 플레이어에서
+  사거리 끝까지 재생한다. 스플래시는 주 대상에만 기존 포물선 투사체를 표시하고 착탄 지점에
+  `ParticleBurst`·`ShockwaveRing`·`ScorchDecal`을 한 번 재생하며, 2차 피해의 넉백 원점도 실제
+  폭발 중심으로 맞췄다.
+- 연쇄 스파크는 같은 레이저 프리팹을 공격 구간마다 재사용하되 좌표를 `플레이어 → 첫 적 → 다음
+  적 → 다음 적`으로 갱신한다. 모든 적을 플레이어와 방사형으로 잇지 않아 최근접 전이 판정과
+  화면의 사슬 구조가 일치한다.
+- `PlayerPartAssetBuilder`는 `CombatVfxAssetBuilder`의 공개 경로 상수를 정본으로 사용해 생성 Effect
+  SO에 공용 VFX를 자동 배선한다. `PlayerPartAssetValidator`는 다른 프리팹 복제본이나 null이
+  연결되면 오류로 중단해 타워·아군·플레이어의 연출 자산이 갈라지는 것을 막는다.
+- 사용자 요청에 따라 이 후속 수정에서는 Unity CLI·플레이 모드 검증을 실행하지 않았다. 에셋
+  재생성, 컴파일 및 실제 연쇄 구간 확인은 에디터에서 사람 검수로 인계한다.

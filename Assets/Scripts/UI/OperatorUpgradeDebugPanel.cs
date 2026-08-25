@@ -5,6 +5,7 @@ using RCCom.Definitions.Operator;
 using RCCom.Runtime;
 using TMPro;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 namespace RCCom.UI
@@ -29,6 +30,8 @@ namespace RCCom.UI
         [SerializeField] private Button refreshButton;
 
         private IProfileStorage _storage;
+        private CanvasGroup _panelGroup;
+        private bool _isPanelVisible;
 
         private void Awake()
         {
@@ -38,6 +41,16 @@ namespace RCCom.UI
             return;
 #else
             _storage = new PlayerPrefsProfileStorage();
+            _panelGroup = GetComponent<CanvasGroup>();
+            if (_panelGroup == null)
+            {
+                // 루트 오브젝트를 끄면 이 컴포넌트도 Home 입력을 받을 수 없으므로
+                // 표시 상태만 제어할 CanvasGroup을 런타임에 보장한다.
+                _panelGroup = gameObject.AddComponent<CanvasGroup>();
+            }
+
+            _isPanelVisible = _panelGroup.alpha > 0f;
+            ApplyPanelVisibility();
             EnsureOperatorIdInput();
             RefreshFromProfile();
 #endif
@@ -67,7 +80,39 @@ namespace RCCom.UI
 #endif
         }
 
+        private void Update()
+        {
 #if UNITY_EDITOR
+            if (Time.timeScale <= 0f)
+            {
+                return;
+            }
+
+            if (Keyboard.current != null && Keyboard.current.homeKey.wasPressedThisFrame)
+            {
+                _isPanelVisible = !_isPanelVisible;
+                ApplyPanelVisibility();
+                if (_isPanelVisible)
+                {
+                    RefreshFromProfile();
+                }
+            }
+#endif
+        }
+
+#if UNITY_EDITOR
+        private void ApplyPanelVisibility()
+        {
+            if (_panelGroup == null)
+            {
+                return;
+            }
+
+            _panelGroup.alpha = _isPanelVisible ? 1f : 0f;
+            _panelGroup.interactable = _isPanelVisible;
+            _panelGroup.blocksRaycasts = _isPanelVisible;
+        }
+
         private void EnsureOperatorIdInput()
         {
             if (operatorIdInput == null || !string.IsNullOrWhiteSpace(operatorIdInput.text))
