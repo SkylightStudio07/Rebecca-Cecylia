@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using RCCom.Definitions.Stage;
+using RCCom.Data;
 using UnityEditor;
 using UnityEditor.AddressableAssets;
 using UnityEditor.AddressableAssets.Settings;
@@ -121,10 +122,59 @@ namespace RCCom.EditorTools
                 hasWaves = definition.waves != null && definition.waves.Count > 0,
                 address = GetAddress(definition.stageId),
                 remoteContent = remote,
+                enemyPreviews = BuildEnemyPreviews(definition),
+                rewards = BuildRewardPreviews(definition, remote),
                 // 원격 스테이지는 직접 참조를 비워야 한다. 남겨두면 Definition이 본체 빌드에
                 // 딸려 들어가 원격으로 뺀 의미가 사라진다.
                 stageDefinition = remote ? null : definition,
             };
+        }
+
+        private static List<StageEnemyPreview> BuildEnemyPreviews(StageDefinition definition)
+        {
+            var result = new List<StageEnemyPreview>();
+            var byId = new Dictionary<string, StageEnemyPreview>(StringComparer.Ordinal);
+            if (definition.waves == null) { return result; }
+
+            foreach (StageWaveDefinition wave in definition.waves)
+            {
+                if (wave == null || wave.spawns == null) { continue; }
+                foreach (StageEnemySpawn spawn in wave.spawns)
+                {
+                    if (spawn == null || string.IsNullOrWhiteSpace(spawn.enemyId)) { continue; }
+                    if (!byId.TryGetValue(spawn.enemyId, out StageEnemyPreview preview))
+                    {
+                        preview = new StageEnemyPreview { enemyId = spawn.enemyId };
+                        byId.Add(spawn.enemyId, preview);
+                        result.Add(preview);
+                    }
+
+                    preview.totalCount += Mathf.Max(0, spawn.count);
+                }
+            }
+
+            return result;
+        }
+
+        private static List<StageReward> BuildRewardPreviews(StageDefinition definition, bool remote)
+        {
+            var result = new List<StageReward>();
+            if (definition.rewards == null) { return result; }
+            foreach (StageReward reward in definition.rewards)
+            {
+                if (reward == null) { continue; }
+                result.Add(new StageReward
+                {
+                    rewardId = reward.rewardId,
+                    displayName = reward.displayName,
+                    // 원격 스테이지의 전용 아이콘을 직접 물리면 본체 번들로 참조가 샌다.
+                    // 공용 골드 아이콘은 UI 컴포넌트가 별도로 공급한다.
+                    icon = remote ? null : reward.icon,
+                    amount = reward.amount,
+                });
+            }
+
+            return result;
         }
 
         /// <summary>

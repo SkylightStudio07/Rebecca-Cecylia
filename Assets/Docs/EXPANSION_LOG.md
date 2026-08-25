@@ -2107,3 +2107,12 @@ Phase 0 자동화 경로를 실제로 열고, 이후 오퍼레이터별 원격 �
 
 - `PartCard_01~05`의 배경 Image에 `SubgearSpriteSheet_0`을 Normal, `SubgearSpriteSheet_1`을 Hover로 공통 배선한다. 카드마다 별도 로직을 만들지 않고 `UISpriteHoverSwap`과 `PlayerPartShopCardView.Bind`의 선택 상태 전달을 재사용한다.
 - 카드가 선택되면 Hover 스프라이트를 유지하고, 선택되지 않은 카드도 Image 색상을 흰색으로 보존해 아트에 포함된 외곽 발광과 텍스트가 런타임 색상 곱으로 어두워지지 않게 했다. `PlayerPartShopPanelSetup`을 다시 실행하면 다섯 카드의 배선이 동일하게 갱신된다.
+
+## 2026-08-26 — 스테이지 선택 우측 정보 패널
+
+- `StageSelectionRightPanel`의 제작된 배경은 유지하고, 런타임에 스테이지 제목·권장 레벨·브리핑·적 편성 4칸·보상 5칸만 채우는 `StageSelectionRightPanelUI`를 추가했다.
+- 선택 화면이 원격 `StageDefinition`을 미리 내려받지 않는 기존 원칙을 유지하기 위해, 웨이브의 적 ID·총 등장 수와 일반 보상 표시 데이터를 `StageCatalogEntry`의 경량 메타데이터로 복사한다. 적 아이콘과 이름은 내장 `EnemyCatalog`에서 ID로 해석한다.
+- 골드 보상은 스테이지마다 같은 아이콘을 중복 참조하지 않고 우측 패널의 공용 `goldsprite`를 사용한다. 스테이지 클리어 오퍼레이터 보상은 일반 보상 목록에 중복 저장하지 않고, 해금 조건의 정본인 `OperatorCatalog`를 스테이지 ID로 역조회해 마지막 보상 칸에 합성한다.
+- `RCCom/UI/Wire Stage Selection Right Panel`은 새 패널 아래에 없는 자식만 만들고 기존 RectTransform을 다시 쓰지 않는다. 수동으로 위치를 다듬은 뒤 재실행해도 배치를 덮어쓰지 않기 위한 제한이다.
+- 최초 배선에서 상단 기준 `offsetMin/offsetMax`의 Y 순서가 뒤집혀 생성 요소의 높이가 음수가 된 문제를 수정했다. 잘못 생성된 음수 높이만 자동 복구하고, 정상 크기로 수동 조정된 요소는 보존한다. 빈 슬롯은 비활성화해 Scene View의 빨간 X를 없애고, 현재 카탈로그 데이터로 편집 모드 미리보기를 채운다.
+- 모든 스테이지에 실제 결과 정산의 기본 재화 100과 플레이타임 보너스가 있으므로, 명시적인 골드 보상이 없는 경우 `goldsprite`와 `100+`를 기본 표시한다. Stage Studio에서 `gold`/`commodity` 보상을 명시하면 그 수치를 우선한다.

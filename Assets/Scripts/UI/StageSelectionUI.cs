@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using RCCom.Core;
 using RCCom.Data;
 using RCCom.Definitions.Operator;
+using RCCom.Definitions.Enemy;
 using RCCom.Definitions.Stage;
 using RCCom.Runtime;
 using TMPro;
@@ -17,6 +18,7 @@ namespace RCCom.UI
     {
         [SerializeField] private StageCatalog catalog;
         [SerializeField] private OperatorCatalog operatorCatalog;
+        [SerializeField] private EnemyCatalog enemyCatalog;
         [SerializeField] private GameObject panel;
         [SerializeField] private CanvasGroup mainMenuGroup;
         [SerializeField] private ModeSelectionUI modeSelectionUI;
@@ -37,6 +39,7 @@ namespace RCCom.UI
         [SerializeField] private Image operatorRewardPortrait;
         [SerializeField] private TextMeshProUGUI operatorRewardNameText;
         [SerializeField] private TextMeshProUGUI statusText;
+        [SerializeField] private StageSelectionRightPanelUI rightPanel;
         [SerializeField] private Button startStageButton;
         [SerializeField] private Button backButton;
 
@@ -235,7 +238,15 @@ namespace RCCom.UI
                     entry.descriptionBackgroundAddress, Color.clear);
             }
 
-            RenderOperatorReward(entry.stageId);
+            if (rightPanel != null)
+            {
+                rightPanel.Render(entry, _profile, enemyCatalog, operatorCatalog);
+                if (operatorRewardPanel != null) { operatorRewardPanel.SetActive(false); }
+            }
+            else
+            {
+                RenderOperatorReward(entry.stageId);
+            }
             if (statusText != null)
             {
                 statusText.text = "스테이지를 선택하면 작전 정보가 표시됩니다.";
@@ -387,6 +398,7 @@ namespace RCCom.UI
         private void SetPanelVisible(bool visible)
         {
             if (panel != null) { panel.SetActive(visible); }
+            if (rightPanel != null) { rightPanel.gameObject.SetActive(visible); }
             SetMainMenuVisible(!visible);
         }
 

@@ -28,6 +28,12 @@ MonoBehaviour:
     hasWaves: 1
     address: stage/ch1-01
     remoteContent: 0
+    enemyPreviews:
+    - enemyId: enemy-normal
+      totalCount: 12
+    - enemyId: enemy-rusher
+      totalCount: 2
+    rewards: []
     stageDefinition: {fileID: 11400000, guid: 1a1c0ff1d5a3a5542b19ff059d43d5e6, type: 2}
   - stageId: ch1-02
     chapterId: ch1
@@ -43,6 +49,12 @@ MonoBehaviour:
     hasWaves: 1
     address: stage/ch1-02
     remoteContent: 0
+    enemyPreviews:
+    - enemyId: enemy-normal
+      totalCount: 15
+    - enemyId: enemy-rusher
+      totalCount: 2
+    rewards: []
     stageDefinition: {fileID: 11400000, guid: 05124672d13eb9741956d39e7a2bb14e, type: 2}
   - stageId: ch1-03
     chapterId: ch1
@@ -58,6 +70,14 @@ MonoBehaviour:
     hasWaves: 1
     address: stage/ch1-03
     remoteContent: 0
+    enemyPreviews:
+    - enemyId: enemy-normal
+      totalCount: 18
+    - enemyId: enemy-rusher
+      totalCount: 4
+    - enemyId: enemy-tanker
+      totalCount: 1
+    rewards: []
     stageDefinition: {fileID: 11400000, guid: c29c9ca653fb4404bb0bd81920a2e05f, type: 2}
   - stageId: ch1-04
     chapterId: ch1
@@ -73,6 +93,14 @@ MonoBehaviour:
     hasWaves: 1
     address: stage/ch1-04
     remoteContent: 0
+    enemyPreviews:
+    - enemyId: enemy-normal
+      totalCount: 21
+    - enemyId: enemy-rusher
+      totalCount: 4
+    - enemyId: enemy-tanker
+      totalCount: 1
+    rewards: []
     stageDefinition: {fileID: 11400000, guid: 354873302ecaeab4fa9515e82192abd7, type: 2}
   - stageId: ch1-05
     chapterId: ch1
@@ -88,6 +116,14 @@ MonoBehaviour:
     hasWaves: 1
     address: stage/ch1-05
     remoteContent: 0
+    enemyPreviews:
+    - enemyId: enemy-normal
+      totalCount: 24
+    - enemyId: enemy-rusher
+      totalCount: 6
+    - enemyId: enemy-tanker
+      totalCount: 1
+    rewards: []
     stageDefinition: {fileID: 11400000, guid: 725af784fef2d4b418a7262c978f6fc4, type: 2}
   - stageId: ch1-06
     chapterId: ch1
@@ -103,6 +139,14 @@ MonoBehaviour:
     hasWaves: 1
     address: stage/ch1-06
     remoteContent: 0
+    enemyPreviews:
+    - enemyId: enemy-normal
+      totalCount: 27
+    - enemyId: enemy-rusher
+      totalCount: 6
+    - enemyId: enemy-tanker
+      totalCount: 1
+    rewards: []
     stageDefinition: {fileID: 11400000, guid: ae2eff284fd55944da3df33a3d6e7f36, type: 2}
   - stageId: ch1-07
     chapterId: ch1
@@ -118,4 +162,12 @@ MonoBehaviour:
     hasWaves: 1
     address: stage/ch1-07
     remoteContent: 0
+    enemyPreviews:
+    - enemyId: enemy-normal
+      totalCount: 30
+    - enemyId: enemy-rusher
+      totalCount: 8
+    - enemyId: enemy-tanker
+      totalCount: 1
+    rewards: []
     stageDefinition: {fileID: 11400000, guid: 18d5af02fe1fcdc45ba65f65285f8c52, type: 2}

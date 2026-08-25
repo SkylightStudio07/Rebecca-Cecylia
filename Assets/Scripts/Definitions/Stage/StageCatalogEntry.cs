@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using RCCom.Data;
 using UnityEngine;
 
 namespace RCCom.Definitions.Stage
@@ -40,6 +42,12 @@ namespace RCCom.Definitions.Stage
 
         [Tooltip("선택 화면에서 다운로드 콘텐츠임을 안내하기 위한 표시값")]
         public bool remoteContent;
+
+        [Tooltip("Definition을 받기 전 ENEMY PREVIEW에 표시할 적 편성 요약")]
+        public List<StageEnemyPreview> enemyPreviews = new();
+
+        [Tooltip("Definition을 받기 전 REWARDS에 표시할 일반 보상 요약")]
+        public List<StageReward> rewards = new();
 
         /// <summary>
         /// 로컬 스테이지의 직접 참조. 주소 기반 로딩으로 옮겨간 뒤에도 남겨 둔 이유는 두 가지다.
