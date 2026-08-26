@@ -66,6 +66,11 @@ namespace RCCom.EditorTools
         /// </summary>
         public static string ArchiveContentState(BuildTarget target)
         {
+            return ArchiveContentState(target, PlayerSettings.bundleVersion);
+        }
+
+        public static string ArchiveContentState(BuildTarget target, string version)
+        {
             AddressableAssetSettings settings = RequireSettings();
             string sourcePath = ContentUpdateScript.GetContentStateDataPath(false, settings);
             if (string.IsNullOrEmpty(sourcePath) || !File.Exists(sourcePath))
@@ -75,7 +80,6 @@ namespace RCCom.EditorTools
                     "Addressables 콘텐츠를 한 번 빌드한 뒤에 보관할 수 있습니다.");
             }
 
-            string version = PlayerSettings.bundleVersion;
             if (string.IsNullOrWhiteSpace(version))
             {
                 throw new InvalidOperationException(
