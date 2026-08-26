@@ -131,6 +131,33 @@ namespace RCCom.EditorTools
             Debug.Log("[AllyUnitVerticalSliceBuilder] UnitDeployButton 배경을 투명하게 변경했습니다.");
         }
 
+        [MenuItem("RCCom/Ally Units/Fix Deploy Selection Indicator Insets")]
+        public static void FixDeploySelectionIndicatorInsets()
+        {
+            GameObject root = PrefabUtility.LoadPrefabContents(ButtonPrefabPath);
+            try
+            {
+                Transform selection = root.transform.Find("SelectionIndicator");
+                if (selection == null || selection is not RectTransform selectionRect)
+                {
+                    throw new InvalidOperationException("UnitDeployButton SelectionIndicator를 찾지 못했습니다.");
+                }
+
+                SetRect(selectionRect, new Vector2(8f, 10f), new Vector2(-8f, -10f),
+                    Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f));
+                EditorUtility.SetDirty(selectionRect);
+                PrefabUtility.SaveAsPrefabAsset(root, ButtonPrefabPath);
+            }
+            finally
+            {
+                PrefabUtility.UnloadPrefabContents(root);
+            }
+
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+            Debug.Log("[AllyUnitVerticalSliceBuilder] UnitDeployButton 선택 표시 여백을 수정했습니다.");
+        }
+
         [MenuItem("RCCom/Ally Units/Wire Deployment Input Mode")]
         public static void WireDeploymentInputModeInDefenseScene()
         {
@@ -331,7 +358,9 @@ namespace RCCom.EditorTools
                     new Vector2(0f, 0f), new Vector2(1f, 1f), new Vector2(0.5f, 0.5f));
 
                 Image selection = CreateImage("SelectionIndicator", root.transform, new Color(0.95f, 0.8f, 0.18f, 0.22f));
-                Stretch((RectTransform)selection.transform, 2f);
+                SetRect((RectTransform)selection.transform,
+                    new Vector2(8f, 10f), new Vector2(-8f, -10f),
+                    Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f));
                 selection.raycastTarget = false;
                 selection.gameObject.SetActive(false);
 
