@@ -21,6 +21,7 @@ namespace RCCom.UI
         [SerializeField] private Image tutorialImage;
         [SerializeField] private TextMeshProUGUI descriptionText;
         [SerializeField] private Button nextButton;
+        [SerializeField] private Button skipButton;
 
         private int _pageIndex;
 
@@ -29,6 +30,11 @@ namespace RCCom.UI
             if (nextButton != null)
             {
                 nextButton.onClick.AddListener(HandleNext);
+            }
+
+            if (skipButton != null)
+            {
+                skipButton.onClick.AddListener(HandleSkip);
             }
 
             if (tutorialSet != null && tutorialSet.pages.Count > 0)
@@ -41,6 +47,19 @@ namespace RCCom.UI
             else
             {
                 Hide();
+            }
+        }
+
+        private void OnDestroy()
+        {
+            if (nextButton != null)
+            {
+                nextButton.onClick.RemoveListener(HandleNext);
+            }
+
+            if (skipButton != null)
+            {
+                skipButton.onClick.RemoveListener(HandleSkip);
             }
         }
 
@@ -81,12 +100,27 @@ namespace RCCom.UI
 
             if (_pageIndex >= tutorialSet.pages.Count)
             {
-                Time.timeScale = 1f;
-                Hide();
+                CompleteTutorial();
                 return;
             }
 
             ShowPage();
+        }
+
+        private void HandleSkip()
+        {
+            if (SoundManager.Instance != null)
+            {
+                SoundManager.Instance.PlayButtonClick();
+            }
+
+            CompleteTutorial();
+        }
+
+        private void CompleteTutorial()
+        {
+            Time.timeScale = 1f;
+            Hide();
         }
 
         private void Show()

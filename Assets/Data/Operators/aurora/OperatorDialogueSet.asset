@@ -24,6 +24,12 @@ MonoBehaviour:
       lobbySprite: {fileID: 5558651059094571980, guid: fbf0aa06b56c04c428b157a771df7796, type: 3}
       portraitSprite: {fileID: 0}
     lines: []
+  titleLobbyGreeting:
+    defaultPortraitSprite: {fileID: 0}
+    portraitSprite: {fileID: 0}
+    defaultLobbySprite: {fileID: 0}
+    entries: []
+    lines: []
   lobbyInteraction:
     defaultPortraitSprite: {fileID: 0}
     portraitSprite: {fileID: 5289064701412196668, guid: bb1abba075bbd6d4ead988923493eb6d, type: 3}

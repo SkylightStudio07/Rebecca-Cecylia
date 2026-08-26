@@ -9,7 +9,32 @@
     "shopUpperBodyPortraitPath": "Assets/Art/Character Standing Arts/실비아/실비아.shop_highlight.png",
     "shopUpperBodyPortraitDimmedPath": "Assets/Art/Character Standing Arts/실비아/실비아.shop.inactive.png",
     "alternateName": "Racer",
-    "shopDialogue": "Get, Set, GO!\n달려볼까요, 감독관!",
+    "shopDialogue": "Get, Set, GO!\n달려볼까, 감독관!",
+    "codename": "Racer",
+    "role": "R&C 컴퍼니 오퍼레이터",
+    "faction": "R&C 컴퍼니",
+    "height": "168cm",
+    "birthday": "1/19",
+    "speciality": "레이싱",
+    "weapon": "M1911 권총 '앤티크'",
+    "origin": "아칸소 주, 미합중국",
+    "bondRecords": [
+        {
+            "description": "이름 : 실비아 (Sylvia / 성씨 불상)\r\n나이 : 20세\r\n신장/체중 : 168cm / 52kg\r\n활동 지역 : 칼리스탄 공화국. R&C 컴퍼니 기동 관제 구역\r\n속성 : 혼돈 선 (Chaotic Good)\r\n\r\n\"Get, Set, GO!\n달려볼까, 감독관!\""
+        },
+        {
+            "description": "학생 시절부터 미 남부 전역의 트랙을 휩쓸며 '아칸소의 청색 번개'로 불리던 천재 레이서. 미국 남부에 만연한 심각한 남녀차별에도 불구하고 따낸 기념비적인 성과였다.\r\n\r\n또한, 산전수전 다 겪은 군인과 첩보원들이 즐비한 R&C 컴퍼니에서 보기 드물게 순수한 민간인 출신이다.\r\n\r\n제3차 미국 내전이 발발하고 고향 아칸소 일대에 연방군이 들이닥치고 애지중지하던 서킷과 차고가 잿더미로 변해버리자, 가족과 함께 무작정 피난을 떠났다.\r\n\r\n특유의 밝고 시원시원한 남부 아가씨의 에너지로 캠프 주변을 환하게 밝히며, 감독관을 자신의 '전담 드라이버'로 상당한 흥미를 보이고 있다."
+        },
+        {
+            "description": "그녀의 경이로운 반사신경과 코너링 감각은 단순한 재능을 넘어, 신체 내에서 발흥하기 시작한 미약한 '경계공명 능력'의 조짐으로 밝혀졌다.\r\n전장에서 빗발치는 포화와 적들의 기습조차 동물적인 직감으로 피해내는 탁월한 사선 회피력을 자랑한다. \r\n군사 훈련을 받지 않은 일반인이기에 전쟁터의 공포를 서킷의 엔진 배기음으로 애써 치환하며 버티고 있지만, 밤이 되면 불타던 고향 트랙의 악몽에 시달리곤 한다.\n\n결국 그녀 또한 전쟁의 참화를 피해가진 못했던 것이다."
+        },
+        {
+            "description": "살인과 파괴가 일상인 전선 한복판에서도 때로는 기괴할 정도로 밝아보이지만, 이것은 그녀의 정신을 방어하기 위한 방어기제에 가깝다.\n\n인생에 많은 굴곡점이 있었던 다른 오퍼레이터들과 달리 순수한 민간인에 가깝기에 별 수 없는 것.\n\n그래서인지, 그 소중했던 '어제'의 이야기를 가져다줄지도 모르는 감독관에게 감정을 보이는 것은, 어떻게 보면 상당히 뻔한 이야기다."
+        },
+        {
+            "description": "체커 플래그가 내려와도 우리의 레이스는 절대 끝나지 않아.\r\n내 서킷의 피트레인에는 언제나 네가 있고, 내 조수석은 영원히 너만의 지정석이야.\n\n.....저기, 감독관.\n아칸소... 지금은 좀 나쁘다지만, 공기도 좋고, 사람들도... 괜찮고.\n\n...\n\n모든 일이 끝나면... 아칸소로, 같이 갔으면 하는데.\n\n마테리얼에 왜 내 이야기가 적혀 있냐고? 후후, 그야 해킹한게 당연하잖아!"
+        }
+    ],
     "unlockRewardPortraitPath": "Assets/Art/Character Standing Arts/실비아/실비아.default-1.png",
     "sourceTowerRosterPath": "Assets/Data/Operators/cassia/TowerRoster.asset",
     "sourceCardRosterPath": "Assets/Data/Cards/Unlock/플레이어 카드 로스터.asset",
@@ -26,7 +51,11 @@
         "projectileSpeed": 1.0,
         "skillCooldown": 12.0,
         "skillRange": 5.0,
-        "skillDamage": 5.0
+        "skillDamage": 5.0,
+        "skillBurstCount": 4,
+        "skillBurstInterval": 0.30000001192092898,
+        "skillOverdriveMoveSpeedMultiplier": 1.5,
+        "skillChargeCapacity": 1
     },
     "requiredBestWave": 0,
     "unlockType": 3,
@@ -37,7 +66,7 @@
             "type": 3,
             "requiredBestWave": 0,
             "purchasePrice": 0,
-            "requiredStageId": "ch1-02"
+            "requiredStageId": "ch1-04"
         },
         {
             "type": 2,

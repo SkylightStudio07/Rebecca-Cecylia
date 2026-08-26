@@ -9,7 +9,32 @@
     "shopUpperBodyPortraitPath": "Assets/Art/Character Standing Arts/레베카/레베카/카시아.shop.highlight.png",
     "shopUpperBodyPortraitDimmedPath": "Assets/Art/Character Standing Arts/레베카/레베카/카시아.shop.normal.png",
     "alternateName": "Operator",
-    "shopDialogue": "",
+    "shopDialogue": "꿈에 저편에서,\n다시 만나자.",
+    "codename": "Admin",
+    "role": "R&C 컴퍼니 기술행정총무",
+    "faction": "R&C 컴퍼니",
+    "height": "164",
+    "birthday": "???",
+    "speciality": "데스크워크",
+    "weapon": "백송제 K17 자동권총",
+    "origin": "그로스프로이센, 바르샤우(독일 치하 폴란드)",
+    "bondRecords": [
+        {
+            "description": "이름 : 카시아 (Cassia / 성씨 불상)\r\n나이 : 21세\r\n신장/체중 : 165cm / 51kg\r\n활동 지역 : R&C 컴퍼니 본부 및 전선 지휘소\r\n속성 : 질서 선 (Lawful Good)\r\n\"어서 오세요, 감독관님~ R&C 컴퍼니에 오신 걸 환영해요!\r\n후훗, 앞으로 제가 아주 톡톡히 부려먹어 줄 테니까 단단히 각오하세요?\""
+        },
+        {
+            "description": "R&C 컴퍼니의 기술행정총무이자, 신임 감독관이 회사에 첫발을 디뎠을 때 가장 먼저 맞아준 오퍼레이터.\r\n언뜻 보면 살랑거리는 소악마 같은 말투와 짓궂은 장난으로 감독관을 쥐락펴락하는 것처럼 보이지만, 실상은 산더미 같은 보급 품의서와 장비 발주, 오퍼레이터들의 일정 및 급여 정산까지 도맡아 처리하는 회사의 핵심 살림꾼이다."
+        },
+        {
+            "description": "평소에는 직급이 직급이라 데스크워크에 파묻혀 지내지만, 거대 기업들과 준거대기업에 치여 상시 인력난인 R&C 컴퍼니 특성상 그녀가 콘솔을 잡을 때도 있다.\n\n다른 오퍼레이터들과 달리 각성자도, 그 전조도 없기에 특출난 능력은 없지만, 컴퍼니 올드비로서의 연륜은 분명하다."
+        },
+        {
+            "description": "그녀의 출신지는 옛 폴란드 일대로 추정되나, 인사 기록부의 과거 이력은 창업자 레베카에 의해 최고 등급 보안(Blackout)으로 엄격히 봉인되어 있다.\n\n정황상, 제 5차 바르샤바 봉기의 혼란상 속에서 혼자 남겨져, 컴퍼니까지 흘러들어왔다는 해석이 우세하다.\n\n다만, 본인은 민족주의적인 정체성보다는 애사심이 강한 편이라 과거를 캐묻기도 쉽지 않은 편.\n\n......그녀에게, 이 컴퍼니야말로 '집'인 것일 뿐인 이야기."
+        },
+        {
+            "description": "자아자아, 재밌게 읽었어?\n아하하, 아마 이걸 읽고 있는 당신은 바보같은 얼굴일 거야.,\n\n이제... 감독관 앞에서는 소악마 흉내 같은 건 더 못 내겠어.\r\n\n처음엔 놀려주는 게 재미있었을 뿐인데... 어느샌가 내 모든 서류의 끝에도, 모든 기도의 끝에도 당신이 있었어.\n오퍼레이이터들이라면 모를까... 당신의 직속상관은 나니까, 내 말을 잘 들어야겠지? 큐후후...\n\r\n......그러니까 말이지, 컴퍼니에 평생 남아줘? 참고로 선택권은 없으니까?"
+        }
+    ],
     "unlockRewardPortraitPath": "",
     "sourceTowerRosterPath": "Assets/Data/Prefabs/TowerRoaster.asset",
     "sourceCardRosterPath": "Assets/Data/Cards/Unlock/플레이어 카드 로스터.asset",
@@ -26,7 +51,11 @@
         "projectileSpeed": 1.0,
         "skillCooldown": 12.0,
         "skillRange": 5.0,
-        "skillDamage": 5.0
+        "skillDamage": 5.0,
+        "skillBurstCount": 4,
+        "skillBurstInterval": 0.30000001192092898,
+        "skillOverdriveMoveSpeedMultiplier": 1.5,
+        "skillChargeCapacity": 1
     },
     "requiredBestWave": 0,
     "unlockType": 0,

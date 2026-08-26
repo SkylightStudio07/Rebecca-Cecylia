@@ -29,7 +29,7 @@ MonoBehaviour:
     shopUpperBodyPortraitAddress: 
     shopUpperBodyPortraitDimmedAddress: 
     alternateName: Operator
-    shopDialogue: 
+    shopDialogue: "\uAFC8\uC5D0 \uC800\uD3B8\uC5D0\uC11C,\n\uB2E4\uC2DC \uB9CC\uB098\uC790."
     address: operator/cassia
     remoteContent: 0
     unlockType: 0
@@ -120,7 +120,7 @@ MonoBehaviour:
     shopUpperBodyPortraitAddress: 
     shopUpperBodyPortraitDimmedAddress: 
     alternateName: Racer
-    shopDialogue: "Get, Set, GO!\n\uB2EC\uB824\uBCFC\uAE4C\uC694, \uAC10\uB3C5\uAD00!"
+    shopDialogue: "Get, Set, GO!\n\uB2EC\uB824\uBCFC\uAE4C, \uAC10\uB3C5\uAD00!"
     address: operator/racing
     remoteContent: 0
     unlockType: 3
@@ -131,7 +131,7 @@ MonoBehaviour:
     - type: 3
       requiredBestWave: 0
       purchasePrice: 0
-      requiredStageId: ch1-02
+      requiredStageId: ch1-04
     - type: 2
       requiredBestWave: 0
       purchasePrice: 500

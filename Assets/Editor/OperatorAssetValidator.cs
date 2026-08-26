@@ -593,7 +593,7 @@ namespace RCCom.EditorTools
 
             string[] names =
             {
-                "lobbyInteraction", "lobbyReturnTogether", "lobbyReturn",
+                "titleLobbyGreeting", "lobbyInteraction", "lobbyReturnTogether", "lobbyReturn",
                 "lobbyTouchUnfamiliar", "lobbyTouchFavorable", "lobbyTouchJoy",
                 "lobbyTouchLove", "lobbyTouchEx", "gameStart", "skillUsed",
                 "baseAttacked", "playerHit", "playerHitCritical", "insufficientGold",
@@ -601,7 +601,8 @@ namespace RCCom.EditorTools
             };
             OperatorLineSet[] lineSets =
             {
-                dialogueSet.lobbyInteraction, dialogueSet.lobbyReturnTogether, dialogueSet.lobbyReturn,
+                dialogueSet.titleLobbyGreeting, dialogueSet.lobbyInteraction,
+                dialogueSet.lobbyReturnTogether, dialogueSet.lobbyReturn,
                 dialogueSet.lobbyTouchUnfamiliar, dialogueSet.lobbyTouchFavorable, dialogueSet.lobbyTouchJoy,
                 dialogueSet.lobbyTouchLove, dialogueSet.lobbyTouchEx, dialogueSet.gameStart, dialogueSet.skillUsed,
                 dialogueSet.baseAttacked, dialogueSet.playerHit, dialogueSet.playerHitCritical,
@@ -624,7 +625,7 @@ namespace RCCom.EditorTools
                     continue;
                 }
 
-                bool isLobbySlot = slotIndex <= 7;
+                bool isLobbySlot = slotIndex <= 8;
                 if (!isLobbySlot && lineSet.ResolveCombatPortrait() == null)
                 {
                     warnings.Add($"전투 상황 포트레잇이 비어 있습니다: {names[slotIndex]} ({path})");

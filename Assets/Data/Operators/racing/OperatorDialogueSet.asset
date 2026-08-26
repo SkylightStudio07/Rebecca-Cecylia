@@ -20,6 +20,16 @@ MonoBehaviour:
     defaultLobbySprite: {fileID: 0}
     entries: []
     lines: []
+  titleLobbyGreeting:
+    defaultPortraitSprite: {fileID: 0}
+    portraitSprite: {fileID: 0}
+    defaultLobbySprite: {fileID: 1201513191657923921, guid: bee7a0e492a863d4d82d57515c3ae16b, type: 3}
+    entries:
+    - text: "\uB2A6\uC796\uC544!! \uB808\uC774\uC2F1\uC740 \uC6B0\uB9B4 \uAE30\uB2E4\uB824\uC8FC\uC9C0
+        \uC54A\uB294\uB2E4\uACE0!!"
+      lobbySprite: {fileID: -8069811602518966249, guid: 00a13e5a9953e184192b0575b1ea8c83, type: 3}
+      portraitSprite: {fileID: 0}
+    lines: []
   lobbyInteraction:
     defaultPortraitSprite: {fileID: 0}
     portraitSprite: {fileID: 0}
