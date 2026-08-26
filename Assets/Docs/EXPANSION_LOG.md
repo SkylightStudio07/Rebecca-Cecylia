@@ -2349,3 +2349,9 @@ Phase 0 자동화 경로를 실제로 열고, 이후 오퍼레이터별 원격 �
 
 - Unity `6000.3.13f1` 배치 컴파일과 전체 CH1 웨이브 수 검증이 PASS했다. 모든 추가 웨이브에 이름,
   적 편성, 양수 체력 배율이 존재하고 Stage Catalog 재생성 및 `StageAssetValidator` 오류 0건을 확인했다.
+
+## 2026-08-26 — WebGL 1.1.0 릴리스
+
+- PR #29의 적 특수 능력과 CH1 확장은 새 런타임 C#과 셰이더를 포함하므로 1.0.1 콘텐츠 드랍으로 우회하지 않고, 최신 main과 통합한 새 플레이어 호환성 라인 `1.1.0`으로 빌드했다.
+- Unity `6000.3.13f1`에서 컴파일, Defend·Heavy Tanker·사망 플립북·자폭드론·1-8·CH1 웨이브 수 검증과 Addressables WebGL 사전 검증을 통과했다. WebGL 플레이어는 241,555,970바이트로 완료됐고 `ReleaseStates/WebGL/1.1.0/addressables_content_state.bin`을 같은 빌드 직후 보관했다.
+- 업로드용 `ServerData.zip`은 62,637,955바이트이며 `catalog_1.1.0`과 기존 원격 오퍼레이터 번들을 포함한다. 신규 Defend와 1-8은 Local 그룹이므로 플레이어 빌드에 포함되고, ZIP만 기존 1.0.1 플레이어에 올리는 배포는 지원하지 않는다.
