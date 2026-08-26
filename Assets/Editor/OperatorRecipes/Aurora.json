@@ -51,7 +51,11 @@
         "projectileSpeed": 1.0,
         "skillCooldown": 12.0,
         "skillRange": 5.0,
-        "skillDamage": 5.0
+        "skillDamage": 5.0,
+        "skillBurstCount": 4,
+        "skillBurstInterval": 0.30000001192092898,
+        "skillOverdriveMoveSpeedMultiplier": 1.5,
+        "skillChargeCapacity": 1
     },
     "requiredBestWave": 2,
     "unlockType": 1,

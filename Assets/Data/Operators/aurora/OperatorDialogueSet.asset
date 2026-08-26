@@ -27,8 +27,13 @@ MonoBehaviour:
   titleLobbyGreeting:
     defaultPortraitSprite: {fileID: 0}
     portraitSprite: {fileID: 0}
-    defaultLobbySprite: {fileID: 0}
-    entries: []
+    defaultLobbySprite: {fileID: -1696766399809024371, guid: 434f315a1c30a994ebd11eaa8d98dc37, type: 3}
+    entries:
+    - text: "\uC800\uAE30\uC774~ \uB2A6\uC796\uC544!\n\uAC8C\uC784\uD574\uC57C \uD560
+        \uC2DC\uAC04\uC778\uB370 \uAC10\uB3C5\uAD00\uC744 \uAE30\uB2E4\uB9AC\uACE0
+        \uC788\uC5C8\uB2E4\uACE0!"
+      lobbySprite: {fileID: -1696766399809024371, guid: 434f315a1c30a994ebd11eaa8d98dc37, type: 3}
+      portraitSprite: {fileID: 0}
     lines: []
   lobbyInteraction:
     defaultPortraitSprite: {fileID: 0}
