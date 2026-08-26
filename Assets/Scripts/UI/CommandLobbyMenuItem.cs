@@ -72,12 +72,14 @@ namespace RCCom.UI
                 return;
             }
 
-            // 아트 교체 직후에는 Read/Write가 꺼진 텍스처가 들어올 수 있다. 이 경우 UGUI가
-            // 예외를 던지므로, 투명 판정 대신 기본 사각형 판정을 유지해 로비 초기화를 막지 않는다.
+            // alphaHitTestMinimumThreshold는 0을 대입하는 경우에도 Read/Write가 꺼진 텍스처면
+            // 예외를 던진다. 읽기 가능한 아트에만 값을 쓰고, 나머지는 Image 기본 사각 판정을
+            // 그대로 두어 로비 메뉴 하나의 아트 설정이 전체 초기화를 중단하지 않게 한다.
             Texture2D texture = panelImage.sprite != null ? panelImage.sprite.texture : null;
-            panelImage.alphaHitTestMinimumThreshold = texture != null && texture.isReadable
-                ? alphaHitTestThreshold
-                : 0f;
+            if (texture != null && texture.isReadable)
+            {
+                panelImage.alphaHitTestMinimumThreshold = alphaHitTestThreshold;
+            }
         }
     }
 }

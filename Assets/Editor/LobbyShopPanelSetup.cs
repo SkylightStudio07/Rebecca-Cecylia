@@ -24,6 +24,7 @@ namespace RCCom.EditorTools
         private const string UnitPreviewPrefabPath =
             "Assets/Data/Prefabs/OperatorRosterPreviewItem.prefab";
         private const int ShopUnitSlotCount = 2;
+        private static readonly Vector4 BackButtonRaycastPadding = new(0f, 270f, 0f, 200f);
 
         [MenuItem("RCCom/UI/Setup Lobby Shop Navigation")]
         public static void Setup()
@@ -45,6 +46,9 @@ namespace RCCom.EditorTools
             Button entryButton = GetOrAddButton(entryObject);
             Button recruitButton = ConfigureSpriteSwap(recruitObject, RecruitNormalPath, RecruitHoverPath);
             Button backButton = ConfigureSpriteSwap(backObject, BackNormalPath, BackHoverPath);
+            // Back 아트는 전체 캔버스의 위·아래에 큰 투명 여백이 있다. RectTransform을 줄이면
+            // 표시 이미지까지 찌그러지므로, 실제 패널 영역만 포인터를 받도록 Raycast만 줄인다.
+            RequireComponent<Image>(backObject).raycastPadding = BackButtonRaycastPadding;
             Button previousButton = GetOrAddButton(previousObject);
             Button nextButton = GetOrAddButton(nextObject);
             previousButton.targetGraphic = RequireComponent<Image>(previousObject);
@@ -254,6 +258,12 @@ namespace RCCom.EditorTools
             }
             ValidateSpriteSwap(RequirePath(shopPanel.transform, "StrategistPanel/BackButton"),
                 BackNormalPath, BackHoverPath);
+            Image backImage = RequireComponent<Image>(
+                RequirePath(shopPanel.transform, "StrategistPanel/BackButton"));
+            if (backImage.raycastPadding != BackButtonRaycastPadding)
+            {
+                throw new InvalidOperationException("BackButton의 투명 여백 제외 클릭 범위가 올바르지 않습니다.");
+            }
             ValidateShopLeftNavigation(shopPanel.transform);
             Debug.Log("[LobbyShopPanelSetup] Shop 이동·호버 배선 검증 통과");
         }

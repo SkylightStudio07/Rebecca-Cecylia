@@ -2116,3 +2116,30 @@ Phase 0 자동화 경로를 실제로 열고, 이후 오퍼레이터별 원격 �
 - `RCCom/UI/Wire Stage Selection Right Panel`은 새 패널 아래에 없는 자식만 만들고 기존 RectTransform을 다시 쓰지 않는다. 수동으로 위치를 다듬은 뒤 재실행해도 배치를 덮어쓰지 않기 위한 제한이다.
 - 최초 배선에서 상단 기준 `offsetMin/offsetMax`의 Y 순서가 뒤집혀 생성 요소의 높이가 음수가 된 문제를 수정했다. 잘못 생성된 음수 높이만 자동 복구하고, 정상 크기로 수동 조정된 요소는 보존한다. 빈 슬롯은 비활성화해 Scene View의 빨간 X를 없애고, 현재 카탈로그 데이터로 편집 모드 미리보기를 채운다.
 - 모든 스테이지에 실제 결과 정산의 기본 재화 100과 플레이타임 보너스가 있으므로, 명시적인 골드 보상이 없는 경우 `goldsprite`와 `100+`를 기본 표시한다. Stage Studio에서 `gold`/`commodity` 보상을 명시하면 그 수치를 우선한다.
+
+## 2026-08-26 — Addressables 끊어진 그룹 참조 복구
+
+- `AddressableAssetSettings.asset`의 그룹 목록에 삭제된 에셋을 가리키는 null 참조가 2개 남아 있었다. Addressables가 Undo/Redo 직후 모든 그룹의 해시를 다시 계산할 때 이 항목을 역참조해 `ResetHashes()`에서 `NullReferenceException`이 발생했다.
+- 설정 YAML을 직접 고치지 않고 `RCCom/Addressables/Repair Null Group References` 에디터 메뉴를 추가했다. 이 도구는 그룹 목록을 뒤에서부터 검사해 null 항목만 제거하며, 정상 그룹의 이름·엔트리·스키마·주소는 재작성하지 않는다.
+- 복구 메뉴 실행 후 에셋을 `SaveAssets`/`Refresh`로 저장했고, `m_GroupAssets`에 유효한 그룹 참조만 남은 것을 확인했다. Unity 스크립트 재컴파일도 `failed=false`, `errors=[]`로 완료됐다.
+
+## 2026-08-26 — 리크루트 Shop Back 버튼 클릭 범위 축소
+
+- `StrategistPanel/BackButton`의 2172×724 상태 이미지에는 실제 패널 위·아래로 큰 투명 여백이 있지만, uGUI `Image`가 전체 RectTransform을 Raycast 영역으로 사용해 버튼 밖에서도 눌리는 문제가 있었다.
+- 표시 크기와 Normal/Hover 정렬을 바꾸지 않고 `Image.raycastPadding = (0, 270, 0, 200)`을 적용해 실제 패널이 있는 세로 영역만 포인터를 받게 했다. `LobbyShopPanelSetup`에 설정과 검증을 함께 넣어 재배선해도 클릭 범위가 다시 커지지 않는다.
+
+## 2026-08-26 — 로비 스테이지 이행 기록 화면
+
+- 로비 `Records` 메뉴에서 진입하는 `LobbyRecordsUI`를 추가했다. 화면 전환은 다른 로비 하위 화면과 동일하게
+  `UILoadingTransition`이 완전히 덮은 시점에 수행하며, Back으로 로비를 복원한다.
+- 현행 `PlayerProfile`의 정본 데이터인 `clearedStageIds`와 `bestWave`만 읽어 CH1 스테이지를
+  `CLEARED / AVAILABLE / LOCKED`로 표시하고, 챕터 달성률·엔드리스 최고 웨이브·다음 작전을 함께 보여준다.
+  아직 저장하지 않는 클리어 시간·점수·등급은 목업 수치로 위조하지 않았다.
+- 스테이지 행은 `StageRecordItemView` 프리팹과 `ScrollRect` 목록으로 분리했다. CH1 스테이지 수가 늘어나도
+  화면 계층을 다시 손보지 않고 `StageCatalog` 데이터만 추가하면 기록 목록이 확장된다.
+- `RCCom/UI/Setup Lobby Records Panel` 에디터 메뉴가 화면 계층, 행 프리팹, TMP 텍스트, 버튼 및 런타임 참조를
+  한 번에 생성·배선한다. 완성 아트가 들어오면 데이터 바인딩을 유지한 채 배경 Image만 교체할 수 있다.
+
+**근거** — 기록 화면은 전투 결과를 새로 소유하지 않고 프로필을 읽기만 하게 해 UI→데이터 단방향을 유지했다.
+별도 기록 매니저나 중복 저장 구조를 만들지 않았으며, 추후 클리어 시간·별·점수가 실제 프로필 데이터로
+정의될 때 같은 행 뷰에 필드만 확장할 수 있도록 했다.
