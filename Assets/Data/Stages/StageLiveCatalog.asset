@@ -12,4 +12,78 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0e5dd9db6f0ae674eb612790d7d1dcf0, type: 3}
   m_Name: StageLiveCatalog
   m_EditorClassIdentifier: Assembly-CSharp::RCCom.Definitions.Stage.StageCatalog
-  entries: []
+  entries:
+  - stageId: ch1-06
+    chapterId: ch1
+    displayName: 1-6
+    subtitle: BREACH POINT
+    description: "\uBC29\uC5B4\uC120 \uC678\uACFD\uC758 \uB3CC\uD30C \uC9C0\uC810\uC744
+      \uBD09\uC1C4\uD558\uC2ED\uC2DC\uC624."
+    order: 5
+    requiredBestWave: 5
+    recommendedLevel: 21
+    descriptionBackground: {fileID: 0}
+    descriptionBackgroundAddress: 
+    hasWaves: 1
+    address: stage/ch1-06
+    remoteContent: 1
+    enemyPreviews:
+    - enemyId: enemy-normal
+      totalCount: 108
+    - enemyId: enemy-heal
+      totalCount: 24
+    - enemyId: enemy-rusher
+      totalCount: 24
+    - enemyId: enemy-tanker
+      totalCount: 7
+    rewards: []
+    stageDefinition: {fileID: 0}
+  - stageId: ch1-07
+    chapterId: ch1
+    displayName: 1-7
+    subtitle: SIGNAL CORE
+    description: "\uC801 \uC2E0\uD638\uC758 \uD575\uC2EC\uBD80\uB97C \uC81C\uC555\uD558\uACE0
+      \uC791\uC804\uC744 \uC885\uACB0\uD558\uC2ED\uC2DC\uC624."
+    order: 6
+    requiredBestWave: 6
+    recommendedLevel: 25
+    descriptionBackground: {fileID: 0}
+    descriptionBackgroundAddress: 
+    hasWaves: 1
+    address: stage/ch1-07
+    remoteContent: 1
+    enemyPreviews:
+    - enemyId: enemy-normal
+      totalCount: 135
+    - enemyId: enemy-explode
+      totalCount: 27
+    - enemyId: enemy-rusher
+      totalCount: 36
+    - enemyId: enemy-tanker
+      totalCount: 8
+    rewards: []
+    stageDefinition: {fileID: 0}
+  - stageId: ch1-08
+    chapterId: ch1
+    displayName: 1-8
+    subtitle: STAGE 1-8
+    description: "1-8 \uC791\uC804 \uAD6C\uC5ED\uC785\uB2C8\uB2E4."
+    order: 7
+    requiredBestWave: 7
+    recommendedLevel: 29
+    descriptionBackground: {fileID: 0}
+    descriptionBackgroundAddress: stage/ch1-08/description-background
+    hasWaves: 1
+    address: stage/ch1-08
+    remoteContent: 1
+    enemyPreviews:
+    - enemyId: enemy-normal
+      totalCount: 105
+    - enemyId: enemy-heavytanker
+      totalCount: 20
+    - enemyId: enemy-rusher
+      totalCount: 10
+    - enemyId: enemy-defend
+      totalCount: 19
+    rewards: []
+    stageDefinition: {fileID: 0}

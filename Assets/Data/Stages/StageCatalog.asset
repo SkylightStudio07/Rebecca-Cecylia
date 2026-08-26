@@ -51,9 +51,11 @@ MonoBehaviour:
     remoteContent: 0
     enemyPreviews:
     - enemyId: enemy-normal
-      totalCount: 15
+      totalCount: 30
+    - enemyId: enemy-defend
+      totalCount: 8
     - enemyId: enemy-rusher
-      totalCount: 2
+      totalCount: 4
     rewards: []
     stageDefinition: {fileID: 11400000, guid: 05124672d13eb9741956d39e7a2bb14e, type: 2}
   - stageId: ch1-03
@@ -72,11 +74,11 @@ MonoBehaviour:
     remoteContent: 0
     enemyPreviews:
     - enemyId: enemy-normal
-      totalCount: 18
+      totalCount: 45
     - enemyId: enemy-rusher
-      totalCount: 4
+      totalCount: 10
     - enemyId: enemy-tanker
-      totalCount: 1
+      totalCount: 4
     rewards: []
     stageDefinition: {fileID: 11400000, guid: c29c9ca653fb4404bb0bd81920a2e05f, type: 2}
   - stageId: ch1-04
@@ -95,11 +97,11 @@ MonoBehaviour:
     remoteContent: 0
     enemyPreviews:
     - enemyId: enemy-normal
-      totalCount: 21
+      totalCount: 63
     - enemyId: enemy-rusher
-      totalCount: 4
+      totalCount: 12
     - enemyId: enemy-tanker
-      totalCount: 1
+      totalCount: 5
     rewards: []
     stageDefinition: {fileID: 11400000, guid: 354873302ecaeab4fa9515e82192abd7, type: 2}
   - stageId: ch1-05
@@ -118,70 +120,10 @@ MonoBehaviour:
     remoteContent: 0
     enemyPreviews:
     - enemyId: enemy-normal
-      totalCount: 24
+      totalCount: 84
     - enemyId: enemy-rusher
-      totalCount: 6
+      totalCount: 21
     - enemyId: enemy-tanker
-      totalCount: 1
+      totalCount: 6
     rewards: []
     stageDefinition: {fileID: 11400000, guid: 725af784fef2d4b418a7262c978f6fc4, type: 2}
-  - stageId: ch1-06
-    chapterId: ch1
-    displayName: 1-6
-    subtitle: BREACH POINT
-    description: "\uBC29\uC5B4\uC120 \uC678\uACFD\uC758 \uB3CC\uD30C \uC9C0\uC810\uC744
-      \uBD09\uC1C4\uD558\uC2ED\uC2DC\uC624."
-    order: 5
-    requiredBestWave: 5
-    recommendedLevel: 21
-    descriptionBackground: {fileID: 0}
-    descriptionBackgroundAddress: 
-    hasWaves: 1
-    address: stage/ch1-06
-    remoteContent: 0
-    enemyPreviews:
-    - enemyId: enemy-normal
-      totalCount: 27
-    - enemyId: enemy-rusher
-      totalCount: 6
-    - enemyId: enemy-tanker
-      totalCount: 1
-    rewards: []
-    stageDefinition: {fileID: 11400000, guid: ae2eff284fd55944da3df33a3d6e7f36, type: 2}
-  - stageId: ch1-07
-    chapterId: ch1
-    displayName: 1-7
-    subtitle: SIGNAL CORE
-    description: "\uC801 \uC2E0\uD638\uC758 \uD575\uC2EC\uBD80\uB97C \uC81C\uC555\uD558\uACE0
-      \uC791\uC804\uC744 \uC885\uACB0\uD558\uC2ED\uC2DC\uC624."
-    order: 6
-    requiredBestWave: 6
-    recommendedLevel: 25
-    descriptionBackground: {fileID: 0}
-    descriptionBackgroundAddress: 
-    hasWaves: 1
-    address: stage/ch1-07
-    remoteContent: 0
-    enemyPreviews:
-    - enemyId: enemy-normal
-      totalCount: 30
-    - enemyId: enemy-rusher
-      totalCount: 8
-    - enemyId: enemy-tanker
-      totalCount: 1
-    rewards: []
-    stageDefinition: {fileID: 11400000, guid: 18d5af02fe1fcdc45ba65f65285f8c52, type: 2}
-  - stageId: ch1-08
-    chapterId: ch1
-    displayName: 1-8
-    subtitle: STAGE 1-8
-    description: "1-8 \uC791\uC804 \uAD6C\uC5ED\uC785\uB2C8\uB2E4."
-    order: 7
-    requiredBestWave: 7
-    recommendedLevel: 29
-    descriptionBackground: {fileID: -1690174829667754741, guid: 4025fccd83f1e0c4cb1a9e14e61be74b, type: 3}
-    descriptionBackgroundAddress: 
-    hasWaves: 1
-    address: stage/ch1-08
-    remoteContent: 0
-    stageDefinition: {fileID: 11400000, guid: de6c2302e2ed9d248b72b924b84ce7f2, type: 2}

@@ -50,9 +50,9 @@ WebGL은 IL2CPP AOT라 어셈블리 동적 로드라는 우회로도 없다.
 ```
 [1] 내장 카탈로그        OperatorCatalog.asset / StageCatalog.asset
     플레이어 빌드에 박힘.  씬 UI가 [SerializeField]로 직접 참조한다.
-    빌드 시점의 전체 목록. 배포 후에는 절대 바뀌지 않는다.
+    로컬 콘텐츠만 담는다. 배포 후에는 절대 바뀌지 않는다.
                               │
-                              │ LiveCatalogService가 부팅 시 병합 (추가 전용)
+                              │ LiveContent 버튼이 서버 갱신을 명시적으로 요청
                               ▼
 [2] 라이브 카탈로그       catalog/operator, catalog/stage
     원격 그룹 Catalog-Live-Remote.  "빌드 이후 추가된 항목"만 담는다.
@@ -67,8 +67,9 @@ WebGL은 IL2CPP AOT라 어셈블리 동적 로드라는 우회로도 없다.
 
 ### 병합 규칙 — 추가 전용
 
-`LiveCatalogService`는 **내장 카탈로그에 없는 ID만** 뒤에 덧붙인다. 이미 빌드에 있는 항목은
-내장본을 그대로 쓴다.
+`LiveCatalogService`는 LiveContent 버튼을 누른 뒤에만 서버를 확인하고, 성공하면
+**내장 카탈로그에 없는 ID만** 뒤에 덧붙인다. 이미 빌드에 있는 항목은 내장본을 그대로 쓴다.
+버튼을 누르기 전과 오프라인 실패 시에는 내장 카탈로그만 사용한다.
 
 기존 항목까지 원격본으로 갈아치우지 않는 이유: 로컬 오퍼레이터의 카탈로그 항목은 스프라이트를
 직접 참조하므로, 그걸 원격 번들에 실으면 로컬 아트가 전부 원격 번들의 의존으로 딸려 들어간다.
@@ -86,10 +87,14 @@ WebGL은 IL2CPP AOT라 어셈블리 동적 로드라는 우회로도 없다.
 `AddressableGroupPolicy`가 강제한다. 로컬 그룹은 `StaticContent = true`(인스펙터의
 "Prevent Updates"), 원격 그룹은 `false`.
 
-이 프로젝트는 `BuildRemoteCatalog`가 켜져 있고 `DisableCatalogUpdateOnStart`가 꺼져 있어서,
-배포된 플레이어가 **부팅할 때마다 원격 카탈로그로 자기 카탈로그를 갈아탄다.** 그런데 그
-카탈로그에는 원격 그룹뿐 아니라 **로컬 그룹 엔트리까지 전부** 들어 있고, 그 엔트리의 로드
-경로는 플레이어 자신의 StreamingAssets를 가리킨다.
+이 프로젝트는 `BuildRemoteCatalog`를 켜되 `DisableCatalogUpdateOnStart`도 켠다. 따라서
+배포된 플레이어는 부팅 시 서버를 확인하지 않고 StreamingAssets의 로컬 카탈로그만 사용한다.
+원격 카탈로그 확인과 갱신은 `LiveContentButton`이 `LiveCatalogService.RequestRefresh()`를
+호출했을 때만 시작한다.
+
+이 경계가 필요한 이유는 원격 카탈로그에 원격 그룹뿐 아니라 **로컬 그룹 엔트리까지 전부**
+들어 있기 때문이다. 원격 카탈로그를 갱신한 뒤에도 로컬 엔트리의 로드 경로는 플레이어 자신의
+StreamingAssets를 가리킨다.
 
 로컬 그룹이 static이 아니면 콘텐츠 업데이트가 로컬 번들까지 새 해시로 다시 굽고, 새 카탈로그가
 구 플레이어에 없는 파일명을 가리키게 되어 **잘 돌던 기존 콘텐츠까지 통째로 깨진다.**
@@ -354,6 +359,7 @@ RCCom/Addressables/Package ServerData Zip
 | 메뉴 | 하는 일 |
 |---|---|
 | `RCCom/Addressables/Configure Active Remote Profile From Environment` | 환경 변수에서 원격 경로 주입, `BuildRemoteCatalog` 켜기 |
+| `RCCom/Addressables/Configure Explicit Live Content Loading` | 시작 시 자동 카탈로그 갱신 끄기, 원격 번들용 커스텀 셰이더 보존 |
 | `RCCom/Addressables/Apply Group Update Policy` | 모든 그룹의 로컬=static / 원격=non-static 정렬 |
 | `RCCom/Addressables/Validate Active Build Configuration` | 빌드 전 전체 검증 |
 | `RCCom/Addressables/Build Content Update (Live Drop)` | 보관 상태 기준 증분 빌드 |
@@ -369,7 +375,9 @@ RCCom/Addressables/Package ServerData Zip
 | `Assets/Editor/OperatorLiveCatalogBuilder.cs` | `catalog/operator` 생성·배선 |
 | `Assets/Editor/StageLiveCatalogBuilder.cs` | `catalog/stage` 생성·배선 |
 | `Assets/Editor/AddressablesBuildValidator.cs` | 빌드 전 검증 |
-| `Assets/Scripts/Runtime/LiveCatalogService.cs` | 부팅 시 원격 카탈로그 병합 |
+| `Assets/Editor/LiveContentBuildConfigurator.cs` | 명시적 갱신 설정과 원격 셰이더 보존 구성 |
+| `Assets/Scripts/Runtime/LiveCatalogService.cs` | 버튼 요청 시 원격 카탈로그 갱신·병합 |
+| `Assets/Scripts/UI/LiveContentButton.cs` | 서버 갱신과 신규 콘텐츠 선다운로드의 유일한 사용자 시작점 |
 | `Assets/Scripts/Runtime/OperatorContentLoader.cs` | 오퍼레이터 온디맨드 다운로드 |
 | `Assets/Scripts/Runtime/StageContentLoader.cs` | 스테이지 온디맨드 다운로드 |
 | `Assets/Scripts/Runtime/RemotePreviewSpriteLoader.cs` | 초상화·배경 한 장만 경량 로드 |

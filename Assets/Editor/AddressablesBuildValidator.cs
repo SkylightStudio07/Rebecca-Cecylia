@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
-using RCCom.Definitions.Enemy;
 using RCCom.Definitions.Operator;
+using RCCom.Definitions.Stage;
 using RCCom.Definitions.Unit;
 using UnityEditor;
 using UnityEditor.AddressableAssets;
@@ -42,20 +42,13 @@ namespace RCCom.EditorTools
                 throw new InvalidOperationException("활성 Addressables 프로필이 없습니다.");
             }
 
-            OperatorCatalog operatorCatalog = AssetDatabase.LoadAssetAtPath<OperatorCatalog>(OperatorCatalogBuilder.CatalogPath);
-            bool hasRemoteContent = operatorCatalog != null && operatorCatalog.entries != null &&
-                                    operatorCatalog.entries.Exists(entry => entry != null && entry.remoteContent);
+            LiveContentBuildConfigurator.ValidateOrThrow(settings);
 
-            // EnemyCatalog는 이 시점엔 아직 존재하지 않을 수 있다(마이그레이션 전 단계) —
-            // 없거나 비어 있는 것을 오류로 취급하면 이 커밋만으로 기존 빌드가 막힌다.
-            EnemyCatalog enemyCatalog = AssetDatabase.LoadAssetAtPath<EnemyCatalog>(EnemyCatalogBuilder.CatalogPath);
-            hasRemoteContent |= enemyCatalog != null && enemyCatalog.entries != null &&
-                                enemyCatalog.entries.Exists(entry => entry != null && entry.remoteContent);
-
-            AllyUnitCatalog allyUnitCatalog = AssetDatabase.LoadAssetAtPath<AllyUnitCatalog>(
-                AllyUnitCatalogBuilder.CatalogPath);
-            hasRemoteContent |= allyUnitCatalog != null && allyUnitCatalog.entries != null &&
-                                allyUnitCatalog.entries.Exists(entry => entry != null && entry.remoteContent);
+            // 로컬 카탈로그는 의도적으로 원격 항목을 포함하지 않으므로 그룹 배치가 원격
+            // 콘텐츠 존재 여부의 정본이다.
+            bool hasRemoteContent = settings.groups.Exists(group =>
+                group != null && !group.ReadOnly && group.entries.Count > 0 &&
+                AddressableGroupPolicy.IsRemoteGroup(settings, group));
 
             if (hasRemoteContent)
             {
@@ -72,6 +65,7 @@ namespace RCCom.EditorTools
             }
 
             ValidateGroupUpdatePolicy(settings);
+            ValidateLocalCatalogBoundary();
             ValidateLiveCatalogs(settings);
 
             Debug.Log($"[AddressablesBuildValidator] {target} 사전 검증 통과");
@@ -80,8 +74,8 @@ namespace RCCom.EditorTools
         /// <summary>
         /// 로컬 그룹이 static인지, 원격 그룹이 static이 아닌지 검사한다.
         ///
-        /// 이 프로젝트는 원격 카탈로그를 켜 두고 시작 시 카탈로그 갱신도 막지 않아서, 이미
-        /// 배포된 플레이어가 부팅할 때마다 원격 카탈로그로 갈아탄다. 그 카탈로그에는 로컬 그룹
+        /// 이 프로젝트는 원격 카탈로그를 LiveContent 버튼에서 명시적으로 갱신한다. 갱신된
+        /// 카탈로그에는 로컬 그룹
         /// 엔트리까지 들어 있고 로드 경로가 플레이어 자신의 StreamingAssets를 가리키므로, 로컬
         /// 그룹이 static이 아니면 콘텐츠 업데이트가 로컬 번들을 새 해시로 다시 굽고 새 카탈로그가
         /// 구 플레이어에 없는 파일명을 가리키게 된다 — 잘 돌던 기존 콘텐츠까지 통째로 깨진다.
@@ -123,6 +117,43 @@ namespace RCCom.EditorTools
             }
         }
 
+        private static void ValidateLocalCatalogBoundary()
+        {
+            var leaked = new List<string>();
+            OperatorCatalog operators = AssetDatabase.LoadAssetAtPath<OperatorCatalog>(
+                OperatorCatalogBuilder.CatalogPath);
+            if (operators != null && operators.entries != null)
+            {
+                foreach (OperatorCatalogEntry entry in operators.entries)
+                {
+                    if (entry != null && entry.remoteContent)
+                    {
+                        leaked.Add("operator/" + entry.operatorId);
+                    }
+                }
+            }
+
+            StageCatalog stages = AssetDatabase.LoadAssetAtPath<StageCatalog>(StageCatalogBuilder.CatalogPath);
+            if (stages != null && stages.entries != null)
+            {
+                foreach (StageCatalogEntry entry in stages.entries)
+                {
+                    if (entry != null && entry.remoteContent)
+                    {
+                        leaked.Add("stage/" + entry.stageId);
+                    }
+                }
+            }
+
+            if (leaked.Count > 0)
+            {
+                throw new InvalidOperationException(
+                    "로컬 카탈로그에 원격 항목이 섞여 버튼 전에 노출됩니다:\n  " +
+                    string.Join("\n  ", leaked) +
+                    "\n오퍼레이터/스테이지 카탈로그 빌더를 다시 실행하세요.");
+            }
+        }
+
         /// <summary>
         /// 원격 콘텐츠가 있는데 라이브 카탈로그가 없으면, 그 콘텐츠는 배포해도 이미 나간 빌드의
         /// 화면에 끝내 나타나지 않는다. 빌드는 성공하고 CDN 업로드도 성공하는데 결과만 없는
@@ -155,6 +186,25 @@ namespace RCCom.EditorTools
             }
 
             ValidateOperatorCatalogAddresses(settings, liveOperators);
+
+            StageCatalog liveStages = AssetDatabase.LoadAssetAtPath<StageCatalog>(
+                StageLiveCatalogBuilder.LiveCatalogPath);
+            if (liveStages == null)
+            {
+                throw new InvalidOperationException(
+                    $"라이브 스테이지 카탈로그가 없습니다: {StageLiveCatalogBuilder.LiveCatalogPath}\n" +
+                    "RCCom/Stages/Rebuild Stage Catalog를 실행하세요.");
+            }
+
+            AddressableAssetEntry stageEntry = settings.FindAssetEntry(
+                AssetDatabase.AssetPathToGUID(StageLiveCatalogBuilder.LiveCatalogPath));
+            if (stageEntry == null || stageEntry.address != StageCatalog.LiveCatalogAddress ||
+                stageEntry.parentGroup == null ||
+                !AddressableGroupPolicy.IsRemoteGroup(settings, stageEntry.parentGroup))
+            {
+                throw new InvalidOperationException(
+                    $"라이브 스테이지 카탈로그가 원격 {StageCatalog.LiveCatalogAddress} 주소로 등록되지 않았습니다.");
+            }
         }
 
         private static void ValidateOperatorCatalogAddresses(

@@ -4,37 +4,28 @@ using RCCom.Definitions.Operator;
 using RCCom.Definitions.Stage;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
+using UnityEngine.AddressableAssets.ResourceLocators;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.ResourceManagement.ResourceLocations;
 
 namespace RCCom.Runtime
 {
     /// <summary>
-    /// 플레이어 빌드 이후에 추가된 콘텐츠를 "발견"하게 해 주는 층.
+    /// LiveContent 버튼을 누른 뒤에만 원격 카탈로그를 갱신하고 로컬 목록에 추가한다.
     ///
-    /// 배경: 오퍼레이터·스테이지 목록의 정본인 카탈로그 SO는 씬 UI가 [SerializeField]로 직접
-    /// 참조해서 플레이어 데이터에 통째로 직렬화된다. Definition과 아트는 원격 그룹에 있어
-    /// CDN에서 받을 수 있지만, "그런 항목이 존재한다"는 사실 자체가 빌드에 박혀 있어서 원격
-    /// 번들을 아무리 잘 올려도 구 플레이어의 화면에는 끝내 나타나지 않았다. 즉 라이브 드랍의
-    /// 마지막 한 칸이 비어 있었다.
-    ///
-    /// 이 서비스는 원격에서 "신규 항목만 담긴" 경량 카탈로그를 받아 빌드 내장 카탈로그 위에
-    /// 얹는다. 병합은 **추가 전용**이다 — 이미 빌드에 있는 항목은 내장본을 그대로 쓴다.
-    /// 기존 항목까지 원격본으로 갈아치우면 그 항목이 참조하는 로컬 에셋을 원격 번들이 끌어안게
-    /// 되어 번들이 비대해지고, static으로 묶어둔 로컬 그룹과 교차 의존이 생긴다. 신규 항목은
-    /// 정의상 원격 콘텐츠라 로컬 에셋을 직접 참조하지 않고 주소 문자열만 들고 있어 그런 의존이
-    /// 애초에 생기지 않는다(빌더가 그 불변식을 빌드 시점에 검사한다).
-    ///
-    /// 세션 내내 유지되는 static 캐시지만 씬 재로드 시 초기화할 필요가 없다. 담고 있는 것이
-    /// 세션 상태가 아니라 계정 단위 콘텐츠 목록이라, 전투 씬을 오갈 때마다 다시 받는 쪽이
-    /// 오히려 잘못된 동작이다.
+    /// Addressables 초기화와 원격 카탈로그 갱신은 서로 다른 일이다. 빌드 설정에서 시작 시
+    /// 자동 갱신을 끄고, 이 서비스가 명시적으로 CheckForCatalogUpdates/UpdateCatalogs를
+    /// 호출해야만 서버를 확인한다. 따라서 타이틀 초기 화면과 오프라인 플레이는 항상 로컬
+    /// 카탈로그만 보며, 버튼 요청이 성공한 세션에서만 원격 항목이 활성화된다.
     /// </summary>
     public static class LiveCatalogService
     {
-        /// <summary>원격 조회가 끝났는지. 실패해도(오프라인 등) 끝나면 true가 된다.</summary>
+        public static bool IsRunning { get; private set; }
         public static bool IsResolved { get; private set; }
+        public static bool IsActivated { get; private set; }
+        public static string FailureMessage { get; private set; } = string.Empty;
 
-        /// <summary>원격 조회 완료 시 한 번 발생한다. 이미 완료된 뒤 구독하면 즉시 호출된다.</summary>
+        /// <summary>현재 요청이 끝날 때 발생한다. 이미 끝난 뒤 구독하면 즉시 호출된다.</summary>
         public static event Action Resolved
         {
             add
@@ -51,169 +42,333 @@ namespace RCCom.Runtime
         }
 
         private static Action _resolved;
-        private static bool _started;
-
         private static OperatorCatalog _liveOperators;
         private static StageCatalog _liveStages;
 
-        // 내장 카탈로그 인스턴스별로 병합 결과를 한 번만 만들어 재사용한다.
-        private static readonly Dictionary<OperatorCatalog, OperatorCatalog> _mergedOperators = new();
-        private static readonly Dictionary<StageCatalog, StageCatalog> _mergedStages = new();
+        // 씬의 직렬화 카탈로그가 실수로 원격 항목을 포함한 구버전 에셋이어도 버튼 전에는
+        // 노출하지 않는다. 빌더도 같은 경계를 강제하지만 런타임 방어선을 별도로 둔다.
+        private static readonly Dictionary<OperatorCatalog, OperatorCatalog> LocalOperators = new();
+        private static readonly Dictionary<StageCatalog, StageCatalog> LocalStages = new();
+        private static readonly Dictionary<OperatorCatalog, OperatorCatalog> MergedOperators = new();
+        private static readonly Dictionary<StageCatalog, StageCatalog> MergedStages = new();
+        private static readonly HashSet<ScriptableObject> LocalResults = new();
+        private static readonly HashSet<ScriptableObject> MergedResults = new();
 
-        // Resolve가 자기 결과물을 다시 입력으로 받아도 두 번 병합하지 않게 한다.
-        // (화면이 Awake와 Open에서 각각 Resolve를 부르는 구조라 실제로 일어난다.)
-        private static readonly HashSet<ScriptableObject> _mergedResults = new();
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetForNewApplicationRun()
+        {
+            IsRunning = false;
+            IsResolved = false;
+            IsActivated = false;
+            FailureMessage = string.Empty;
+            _resolved = null;
+            _liveOperators = null;
+            _liveStages = null;
+            LocalOperators.Clear();
+            LocalStages.Clear();
+            MergedOperators.Clear();
+            MergedStages.Clear();
+            LocalResults.Clear();
+            MergedResults.Clear();
+        }
 
         /// <summary>
-        /// 씬 로드 전에 원격 조회를 시작한다. 코루틴 호스트가 필요 없도록 완료 콜백만 사용한다 —
-        /// 이 서비스는 화면에 딸린 것이 아니라 앱 수명 전체를 사는 것이라, 어느 씬의 어떤
-        /// MonoBehaviour에도 매달지 않는 편이 옳다.
+        /// 사용자 행동으로 원격 갱신을 시작한다. 성공 뒤 재호출은 이미 적용된 결과를 유지하고,
+        /// 실패 뒤 재호출은 네트워크 복구를 위해 다시 시도한다.
         /// </summary>
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-        public static void Begin()
+        public static void RequestRefresh()
         {
-            if (_started)
+            if (IsRunning || IsActivated)
             {
                 return;
             }
 
-            _started = true;
+            IsRunning = true;
+            IsResolved = false;
+            FailureMessage = string.Empty;
 
-            // 자동 해제를 허용하면 콜백 시점에 핸들이 이미 무효화되어 Status 조회가 예외를 낸다.
-            // (OperatorContentLoader가 같은 이유로 false를 넘긴다.)
             Addressables.InitializeAsync(false).Completed += initialization =>
             {
                 bool initialized = initialization.Status == AsyncOperationStatus.Succeeded;
                 Addressables.Release(initialization);
                 if (!initialized)
                 {
-                    // 오프라인이거나 원격 카탈로그를 못 받은 상태. 빌드 내장 콘텐츠만으로
-                    // 계속 굴러가야 하므로 실패를 조용히 흡수하고 완료로 처리한다.
-                    Finish();
+                    Finish(false, "온라인 콘텐츠 시스템을 초기화하지 못했습니다.");
                     return;
                 }
 
-                LoadIfPublished<OperatorCatalog>(
-                    OperatorCatalog.LiveCatalogAddress,
-                    catalog => _liveOperators = catalog,
-                    // 스테이지 카탈로그를 이어서 받는다. 둘 다 같은 원격 번들에 있어 두 번째
-                    // 조회는 이미 받아둔 번들에서 해결되므로 순차 처리 비용이 사실상 없다.
-                    () => LoadIfPublished<StageCatalog>(
-                        StageCatalog.LiveCatalogAddress,
-                        catalog => _liveStages = catalog,
-                        Finish));
+                CheckForCatalogUpdates();
             };
         }
 
-        /// <summary>
-        /// 내장 카탈로그에 원격 신규 항목을 얹은 결과를 돌려준다. 얹을 것이 없거나 아직 조회가
-        /// 끝나지 않았으면 내장본을 그대로 돌려주므로, 호출부는 결과가 null인지만 신경 쓰면 된다.
-        /// </summary>
         public static OperatorCatalog Resolve(OperatorCatalog builtIn)
         {
-            if (builtIn == null || _mergedResults.Contains(builtIn))
+            OperatorCatalog local = ResolveLocalOnly(builtIn);
+            if (local == null || MergedResults.Contains(local) || !IsActivated ||
+                _liveOperators == null || _liveOperators.entries == null ||
+                _liveOperators.entries.Count == 0)
             {
-                return builtIn;
+                return local;
             }
 
-            if (_liveOperators == null || _liveOperators.entries == null || _liveOperators.entries.Count == 0)
-            {
-                return builtIn;
-            }
-
-            if (_mergedOperators.TryGetValue(builtIn, out OperatorCatalog cached) && cached != null)
+            if (MergedOperators.TryGetValue(local, out OperatorCatalog cached) && cached != null)
             {
                 return cached;
             }
 
             List<OperatorCatalogEntry> entries = MergeEntries(
-                builtIn.entries, _liveOperators.entries, entry => entry.operatorId, out int added);
+                local.entries, _liveOperators.entries, entry => entry.operatorId, out int added);
             if (added == 0)
             {
-                _mergedOperators[builtIn] = builtIn;
-                return builtIn;
+                MergedOperators[local] = local;
+                return local;
             }
 
-            OperatorCatalog merged = CreateRuntimeCopy<OperatorCatalog>(builtIn.name);
+            OperatorCatalog merged = CreateRuntimeCopy<OperatorCatalog>(local.name, "Live");
             merged.entries = entries;
-            _mergedOperators[builtIn] = merged;
-            _mergedResults.Add(merged);
-            Debug.Log($"[LiveCatalog] 원격 오퍼레이터 {added}명을 카탈로그에 추가했습니다.");
+            MergedOperators[local] = merged;
+            MergedResults.Add(merged);
+            Debug.Log($"[LiveCatalog] 원격 오퍼레이터 {added}명을 활성화했습니다.");
             return merged;
         }
 
-        /// <inheritdoc cref="Resolve(OperatorCatalog)"/>
         public static StageCatalog Resolve(StageCatalog builtIn)
         {
-            if (builtIn == null || _mergedResults.Contains(builtIn))
+            StageCatalog local = ResolveLocalOnly(builtIn);
+            if (local == null || MergedResults.Contains(local) || !IsActivated ||
+                _liveStages == null || _liveStages.entries == null || _liveStages.entries.Count == 0)
             {
-                return builtIn;
+                return local;
             }
 
-            if (_liveStages == null || _liveStages.entries == null || _liveStages.entries.Count == 0)
-            {
-                return builtIn;
-            }
-
-            if (_mergedStages.TryGetValue(builtIn, out StageCatalog cached) && cached != null)
+            if (MergedStages.TryGetValue(local, out StageCatalog cached) && cached != null)
             {
                 return cached;
             }
 
             List<StageCatalogEntry> entries = MergeEntries(
-                builtIn.entries, _liveStages.entries, entry => entry.stageId, out int added);
+                local.entries, _liveStages.entries, entry => entry.stageId, out int added);
             if (added == 0)
             {
-                _mergedStages[builtIn] = builtIn;
-                return builtIn;
+                MergedStages[local] = local;
+                return local;
             }
 
-            StageCatalog merged = CreateRuntimeCopy<StageCatalog>(builtIn.name);
+            StageCatalog merged = CreateRuntimeCopy<StageCatalog>(local.name, "Live");
             merged.entries = entries;
-            _mergedStages[builtIn] = merged;
-            _mergedResults.Add(merged);
-            Debug.Log($"[LiveCatalog] 원격 스테이지 {added}개를 카탈로그에 추가했습니다.");
+            MergedStages[local] = merged;
+            MergedResults.Add(merged);
+            Debug.Log($"[LiveCatalog] 원격 스테이지 {added}개를 활성화했습니다.");
             return merged;
         }
 
         /// <summary>
-        /// 내장 목록 뒤에 "아직 모르는 ID"만 덧붙인다. 순서를 뒤섞지 않는 이유는 기존 화면의
-        /// 인덱스 기반 선택 상태(저장된 선택 인덱스, 스크롤 위치)가 그대로 유지되어야 하기 때문이다.
+        /// 버튼이 카탈로그 갱신 뒤 실제 원격 번들까지 한 번에 받을 수 있도록 새 항목의 주소를
+        /// 돌려준다. 주소 문자열만 모으며 존재 여부는 호출자가 Addressables 로케이션으로 확인한다.
         /// </summary>
+        public static List<string> GetDownloadAddresses()
+        {
+            var addresses = new HashSet<string>(StringComparer.Ordinal);
+            if (_liveOperators != null && _liveOperators.entries != null)
+            {
+                foreach (OperatorCatalogEntry entry in _liveOperators.entries)
+                {
+                    if (entry == null) { continue; }
+                    AddAddress(addresses, entry.address);
+                    AddAddress(addresses, entry.previewPortraitAddress);
+                    AddAddress(addresses, entry.managementPortraitAddress);
+                    AddAddress(addresses, entry.shopPortraitAddress);
+                    AddAddress(addresses, entry.shopUpperBodyPortraitAddress);
+                    AddAddress(addresses, entry.shopUpperBodyPortraitDimmedAddress);
+                    AddAddress(addresses, entry.unlockRewardPortraitAddress);
+
+                    if (entry.unitPreviews == null) { continue; }
+                    foreach (var unit in entry.unitPreviews)
+                    {
+                        if (unit == null) { continue; }
+                        AddAddress(addresses, unit.address);
+                        AddAddress(addresses, unit.previewIconAddress);
+                    }
+                }
+            }
+
+            if (_liveStages != null && _liveStages.entries != null)
+            {
+                foreach (StageCatalogEntry entry in _liveStages.entries)
+                {
+                    if (entry == null) { continue; }
+                    AddAddress(addresses, entry.address);
+                    AddAddress(addresses, entry.descriptionBackgroundAddress);
+                    if (entry.enemyPreviews == null) { continue; }
+                    foreach (var enemy in entry.enemyPreviews)
+                    {
+                        if (enemy == null || string.IsNullOrWhiteSpace(enemy.enemyId)) { continue; }
+                        AddAddress(addresses, BattleContentCache.EnemyAddressPrefix + enemy.enemyId);
+                    }
+                }
+            }
+
+            return new List<string>(addresses);
+        }
+
+        private static void CheckForCatalogUpdates()
+        {
+            AsyncOperationHandle<List<string>> check = Addressables.CheckForCatalogUpdates(false);
+            check.Completed += completed =>
+            {
+                var updates = completed.Status == AsyncOperationStatus.Succeeded && completed.Result != null
+                    ? new List<string>(completed.Result)
+                    : new List<string>();
+                bool checkSucceeded = completed.Status == AsyncOperationStatus.Succeeded;
+                Addressables.Release(completed);
+
+                if (!checkSucceeded)
+                {
+                    // 네트워크 조회가 실패해도 이전에 캐시된 원격 카탈로그가 있으면 사용할 수
+                    // 있으므로 현재 로케이터에서 라이브 카탈로그를 한 번 찾아본다.
+                    Debug.LogWarning("[LiveCatalog] 원격 카탈로그 갱신 확인에 실패해 캐시된 콘텐츠를 확인합니다.");
+                    LoadLiveCatalogs();
+                    return;
+                }
+
+                if (updates.Count == 0)
+                {
+                    LoadLiveCatalogs();
+                    return;
+                }
+
+                AsyncOperationHandle<List<IResourceLocator>> update =
+                    Addressables.UpdateCatalogs(updates, false);
+                update.Completed += updated =>
+                {
+                    bool succeeded = updated.Status == AsyncOperationStatus.Succeeded;
+                    Addressables.Release(updated);
+                    if (!succeeded)
+                    {
+                        Finish(false, "온라인 카탈로그를 갱신하지 못했습니다.");
+                        return;
+                    }
+
+                    LoadLiveCatalogs();
+                };
+            };
+        }
+
+        private static void LoadLiveCatalogs()
+        {
+            _liveOperators = null;
+            _liveStages = null;
+            LoadIfPublished<OperatorCatalog>(
+                OperatorCatalog.LiveCatalogAddress,
+                catalog => _liveOperators = catalog,
+                () => LoadIfPublished<StageCatalog>(
+                    StageCatalog.LiveCatalogAddress,
+                    catalog => _liveStages = catalog,
+                    () =>
+                    {
+                        bool found = _liveOperators != null || _liveStages != null;
+                        Finish(found, found ? string.Empty : "서버에서 적용할 신규 콘텐츠를 찾지 못했습니다.");
+                    }));
+        }
+
+        private static OperatorCatalog ResolveLocalOnly(OperatorCatalog source)
+        {
+            if (source == null || LocalResults.Contains(source) || MergedResults.Contains(source))
+            {
+                return source;
+            }
+
+            if (LocalOperators.TryGetValue(source, out OperatorCatalog cached) && cached != null)
+            {
+                return cached;
+            }
+
+            List<OperatorCatalogEntry> entries = FilterLocal(
+                source.entries, entry => entry.remoteContent, out int removed);
+            if (removed == 0)
+            {
+                LocalOperators[source] = source;
+                return source;
+            }
+
+            OperatorCatalog local = CreateRuntimeCopy<OperatorCatalog>(source.name, "Local");
+            local.entries = entries;
+            LocalOperators[source] = local;
+            LocalResults.Add(local);
+            return local;
+        }
+
+        private static StageCatalog ResolveLocalOnly(StageCatalog source)
+        {
+            if (source == null || LocalResults.Contains(source) || MergedResults.Contains(source))
+            {
+                return source;
+            }
+
+            if (LocalStages.TryGetValue(source, out StageCatalog cached) && cached != null)
+            {
+                return cached;
+            }
+
+            List<StageCatalogEntry> entries = FilterLocal(
+                source.entries, entry => entry.remoteContent, out int removed);
+            if (removed == 0)
+            {
+                LocalStages[source] = source;
+                return source;
+            }
+
+            StageCatalog local = CreateRuntimeCopy<StageCatalog>(source.name, "Local");
+            local.entries = entries;
+            LocalStages[source] = local;
+            LocalResults.Add(local);
+            return local;
+        }
+
+        private static List<TEntry> FilterLocal<TEntry>(
+            List<TEntry> source, Func<TEntry, bool> isRemote, out int removed) where TEntry : class
+        {
+            var result = new List<TEntry>();
+            removed = 0;
+            if (source == null) { return result; }
+            foreach (TEntry entry in source)
+            {
+                if (entry == null) { continue; }
+                if (isRemote(entry))
+                {
+                    removed++;
+                    continue;
+                }
+
+                result.Add(entry);
+            }
+
+            return result;
+        }
+
         private static List<TEntry> MergeEntries<TEntry>(
-            List<TEntry> builtIn, List<TEntry> live, Func<TEntry, string> getId, out int added)
+            List<TEntry> local, List<TEntry> live, Func<TEntry, string> getId, out int added)
             where TEntry : class
         {
             var known = new HashSet<string>(StringComparer.Ordinal);
             var entries = new List<TEntry>();
-            if (builtIn != null)
+            if (local != null)
             {
-                foreach (TEntry entry in builtIn)
+                foreach (TEntry entry in local)
                 {
-                    if (entry == null)
-                    {
-                        continue;
-                    }
-
+                    if (entry == null) { continue; }
                     entries.Add(entry);
                     known.Add(getId(entry));
                 }
             }
 
             added = 0;
+            if (live == null) { return entries; }
             foreach (TEntry entry in live)
             {
-                if (entry == null)
-                {
-                    continue;
-                }
-
+                if (entry == null) { continue; }
                 string id = getId(entry);
-                if (string.IsNullOrWhiteSpace(id) || !known.Add(id))
-                {
-                    continue;
-                }
-
+                if (string.IsNullOrWhiteSpace(id) || !known.Add(id)) { continue; }
                 entries.Add(entry);
                 added++;
             }
@@ -221,23 +376,14 @@ namespace RCCom.Runtime
             return entries;
         }
 
-        /// <summary>
-        /// SO 원본을 고치지 않기 위한 세션 전용 복제본(TowerDefinition의 CreateRuntimeInstance와
-        /// 같은 이유). HideAndDontSave가 아니면 에디터 Play 모드에서 이 임시 에셋이 저장 대상으로 잡힌다.
-        /// </summary>
-        private static T CreateRuntimeCopy<T>(string sourceName) where T : ScriptableObject
+        private static T CreateRuntimeCopy<T>(string sourceName, string suffix) where T : ScriptableObject
         {
             T instance = ScriptableObject.CreateInstance<T>();
-            instance.name = sourceName + " (Live)";
+            instance.name = sourceName + " (" + suffix + ")";
             instance.hideFlags = HideFlags.HideAndDontSave;
             return instance;
         }
 
-        /// <summary>
-        /// 주소를 바로 LoadAssetAsync에 넘기면, 라이브 카탈로그를 아직 한 번도 배포하지 않은
-        /// 빌드에서 InvalidKeyException이 콘솔 오류로 남는다. 정상 상태를 오류로 보이게 하지
-        /// 않으려고 로케이션 조회로 존재 여부를 먼저 확인한다.
-        /// </summary>
         private static void LoadIfPublished<T>(string address, Action<T> onLoaded, Action onFinished)
             where T : ScriptableObject
         {
@@ -256,15 +402,14 @@ namespace RCCom.Runtime
 
                 Addressables.LoadAssetAsync<T>(address).Completed += loaded =>
                 {
-                    if (loaded.Status == AsyncOperationStatus.Succeeded)
+                    if (loaded.Status == AsyncOperationStatus.Succeeded && loaded.Result != null)
                     {
-                        // 핸들은 의도적으로 Release하지 않는다. 이 카탈로그는 앱이 사는 동안
-                        // 계속 참조되므로 해제하면 곧바로 다시 받아야 한다.
+                        // 앱 수명 동안 카탈로그를 계속 참조하므로 핸들을 의도적으로 유지한다.
                         onLoaded(loaded.Result);
                     }
                     else
                     {
-                        Debug.LogWarning($"[LiveCatalog] 원격 카탈로그를 받지 못했습니다: {address}. 내장 카탈로그로 진행합니다.");
+                        Debug.LogWarning($"[LiveCatalog] 라이브 카탈로그를 받지 못했습니다: {address}");
                     }
 
                     onFinished();
@@ -272,9 +417,20 @@ namespace RCCom.Runtime
             };
         }
 
-        private static void Finish()
+        private static void AddAddress(HashSet<string> addresses, string address)
         {
+            if (!string.IsNullOrWhiteSpace(address))
+            {
+                addresses.Add(address);
+            }
+        }
+
+        private static void Finish(bool activated, string failureMessage)
+        {
+            IsRunning = false;
             IsResolved = true;
+            IsActivated = activated;
+            FailureMessage = failureMessage ?? string.Empty;
             Action callbacks = _resolved;
             _resolved = null;
             callbacks?.Invoke();

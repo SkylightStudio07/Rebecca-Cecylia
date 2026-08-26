@@ -75,6 +75,7 @@ namespace RCCom.UI
 
         private void Render()
         {
+            stageCatalog = LiveCatalogService.Resolve(stageCatalog);
             _profileStorage ??= new PlayerPrefsProfileStorage();
             PlayerProfile profile = _profileStorage.Load();
             ClearItems();

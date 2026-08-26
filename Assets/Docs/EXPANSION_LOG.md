@@ -2355,3 +2355,112 @@ Phase 0 자동화 경로를 실제로 열고, 이후 오퍼레이터별 원격 �
 - PR #29의 적 특수 능력과 CH1 확장은 새 런타임 C#과 셰이더를 포함하므로 1.0.1 콘텐츠 드랍으로 우회하지 않고, 최신 main과 통합한 새 플레이어 호환성 라인 `1.1.0`으로 빌드했다.
 - Unity `6000.3.13f1`에서 컴파일, Defend·Heavy Tanker·사망 플립북·자폭드론·1-8·CH1 웨이브 수 검증과 Addressables WebGL 사전 검증을 통과했다. WebGL 플레이어는 241,555,970바이트로 완료됐고 `ReleaseStates/WebGL/1.1.0/addressables_content_state.bin`을 같은 빌드 직후 보관했다.
 - 업로드용 `ServerData.zip`은 62,637,955바이트이며 `catalog_1.1.0`과 기존 원격 오퍼레이터 번들을 포함한다. 신규 Defend와 1-8은 Local 그룹이므로 플레이어 빌드에 포함되고, ZIP만 기존 1.0.1 플레이어에 올리는 배포는 지원하지 않는다.
+
+## 2026-08-26 — TitleScene "LiveContent" 버튼 첫 시도(폐기): 기존 자동 병합 완료를 기다리는 UX
+
+> 아래 접근은 버튼이 서버 요청을 시작하지 않고 부팅 시 자동 병합을 관찰하기만 해 요구사항을
+> 충족하지 못했다. 바로 다음 "LiveContent 명시적 활성화 경계 복구"에서 원인과 최종 결정을 기록한다.
+
+### 배경 조사
+
+- 요청은 "LiveContent 버튼 → 로딩 블로커 → 콘텐츠 확장" 흐름이었지만, 조사 결과 이 프로젝트는
+  이미 `LiveCatalogService`/`OperatorContentLoader`/`StageContentLoader`로 원격 카탈로그 병합과
+  온디맨드 다운로드 인프라를 전부 갖추고 있었다(`ADDRESSABLES_LIVE_DROP.md` 정본). 그래서 새
+  다운로드 시스템을 만들지 않고, 이미 있는 서비스의 완료 시점을 명시적 사용자 행동(버튼)에
+  묶는 UX 레이어만 얹었다.
+- local/remote 분리 전수조사: `OperatorCatalogEntry`/`StageCatalogEntry.remoteContent`로 이미
+  항목 단위 분리가 되어 있고, 빌더가 원격 항목의 로컬 에셋 참조 잔존을 빌드 시점에 검사해
+  예외를 던진다. 실제 데이터는 오퍼레이터 5명 중 Valentina 1명만 원격, 스테이지는 8개 전부
+  로컬이었다.
+- 세이브 충돌 조사: `OperatorSelectionUI`/`StageSelectionUI`가 `Awake`/`Open` 시점에
+  `LiveCatalogService.Resolve()`를 "그때까지 온 것만" 반영하고 완료를 기다리지 않는 레이스를
+  발견했다. 원격 조회가 화면이 열리는 시점보다 늦게 끝나면, 이미 `acquiredOperatorIds`에 있는
+  원격 오퍼레이터가 그 세션 한정으로 목록에서 빠질 수 있다(크래시는 아니고 표시 누락). 이
+  버튼이 그 레이스를 없애는 지점이다. `OperatorLoadoutSession`은 실행마다 리셋되고 항상 선택
+  화면을 거쳐야 채워지므로, 저장된 원격 선택이 카탈로그 없이 바로 전투에 들어가는 치명적
+  경로는 없음을 확인했다.
+
+### 결정
+
+- 스테이지 `ch1-06`~`ch1-08`을 `remoteContent = true`로 전환해 "챕터 후반부가 라이브 드랍으로
+  확장된다"는 시연 대상을 늘렸다(`RCCom/Stages/Rebuild Stage Catalog`로 로컬→원격 그룹 이전,
+  `Apply Group Update Policy`/`Validate Active Build Configuration` 통과 확인). ch1-01~05는
+  그대로 로컬 유지. 두 스테이지 모두 보상이 비어 있고(`rewards: []`) 어떤 오퍼레이터 해금 조건도
+  `requiredStageId`로 이 세 스테이지를 참조하지 않아, 재분류가 기존 보상/해금 배선에 영향을 주지
+  않음을 확인했다.
+- `LiveContentButton`(신규, `Assets/Scripts/UI/`)을 기존 `LiveContent` 버튼 GameObject에 부착.
+  누르면 `LiveContentLoadingPanel`(신규)을 페이드 인하고, `LiveCatalogService.IsResolved`가 될
+  때까지 대기한 뒤 페이드 아웃한다. 최대 8초 타임아웃을 두어 오프라인에서도 로컬 콘텐츠로
+  계속 진행하게 했다(무한 블로킹 방지) — `LiveCatalogService` 자체는 이후에도 계속 완료를
+  기다리므로 늦게라도 끝나면 다음 화면 진입 때 저절로 반영된다.
+- `LiveCatalogService`는 그대로 두었다(문서화된 "코루틴 호스트를 붙이지 않는다" 설계를 존중).
+  대신 다운로드 속도 표시는 버튼 쪽에서 같은 라이브 카탈로그 주소로 별도 관찰용
+  `DownloadDependenciesAsync` 핸들을 열어 `GetDownloadStatus()`를 폴링한다. Addressables가
+  같은 키의 다운로드를 내부적으로 공유하므로 중복 전송은 만들지 않는다. 카탈로그를 배포한 적
+  없는 빌드에서는 주소가 없는 게 정상이라(§7 함정 모음) 존재 확인 후 없으면 조용히 진행률
+  표시를 생략한다.
+- 진행률 텍스트의 구분자는 `·` 대신 ASCII `|`를 썼다. `·`가 주 폰트(Pretendard-Bold SDF)
+  정적 아틀라스에 없어 프로젝트 공용 `LiberationSans SDF - Fallback`으로 새면서 그 에셋에
+  동적 글리프가 구워져 매번 diff가 생기는 것을 실제로 겪었다.
+
+### 검증
+
+- Unity `6000.3.13f1` 컴파일 통과, `Validate Active Build Configuration`(WebGL) 통과.
+- Play 모드에서 버튼을 직접 호출해 페이드 인 → 대기 → 페이드 아웃이 예외 없이 완료되고 버튼이
+  다시 `interactable`로 돌아오는 것을 확인했다. `capture_game_view --source screen`으로 실제
+  합성 화면을 캡처해 한글 렌더링(첫 시도는 기본 폰트라 두부로 깨짐 → Pretendard-Bold SDF로
+  교체 후 정상)과 두 줄 레이아웃(안내 문구 + 진행률)이 겹치지 않는 것을 시각 확인했다.
+- 로컬 개발 환경에는 아직 실제 서버에 업로드된 라이브 카탈로그가 없어(§6은 별도 사람 작업)
+  진행률 텍스트는 이번 세션에서 빈 값으로만 확인했다 — 다운로드 대상 주소가 존재하지 않을 때
+  조용히 생략하는 경로가 정상 동작함을 확인한 것이며, 실제 바이트 진행률/속도 표시는 실서버
+  드랍 이후 확인이 필요하다.
+
+### 사람이 남겨야 할 일
+
+- ch1-06~08을 실제로 CDN에 올리려면 `ADDRESSABLES_LIVE_DROP.md` §4(플레이어 릴리스로 기준점
+  생성) 또는 §5(이미 기준점이 있다면 라이브 드랍)를 이어서 진행해야 한다 — 이번 세션은 로컬
+  Addressables 그룹/카탈로그 재배선까지만 하고 서버 업로드는 하지 않았다.
+
+## 2026-08-26 — LiveContent 명시적 활성화 경계 복구
+
+### 회귀 원인
+
+- 앞선 구현은 버튼을 다운로드 시작점으로 만들지 않고, 부팅 시 자동 실행되는
+  `LiveCatalogService`의 완료만 기다렸다. Addressables의 시작 시 카탈로그 자동 갱신도 켜져
+  있었으므로 버튼을 누르지 않아도 서버를 확인하는 구조였다.
+- 로컬 `OperatorCatalog`와 `StageCatalog` 빌더가 `remoteContent` 항목까지 함께 넣어 Valentina와
+  ch1-06~08이 처음부터 UI에 노출됐다. 원격 여부는 표시 경계가 아니라 로드 방법에만 쓰이고 있었다.
+- 원격 적과 공격 이펙트가 사용하는 커스텀 셰이더가 플레이어의 Always Included Shaders에 없어,
+  원격 번들에서 셰이더 변형을 복원하지 못하면 핑크색 또는 보라색으로 렌더링될 수 있었다.
+
+### 결정
+
+- `LiveCatalogService`의 부팅 자동 실행을 제거하고 `LiveContentButton`만
+  `RequestRefresh()`를 호출하도록 했다. 서비스는 클릭 뒤
+  `CheckForCatalogUpdates`/`UpdateCatalogs`를 실행하고 라이브 카탈로그를 찾은 세션에서만
+  원격 항목을 활성화한다.
+- Addressables의 `DisableCatalogUpdateOnStart`를 켰다. `PlayerPartContentLoader`처럼 시작 시
+  로컬 Addressables를 읽는 코드가 있어도 원격 카탈로그 갱신은 발생하지 않는다.
+- 로컬 카탈로그 빌더는 `remoteContent == false`만 넣고, 라이브 카탈로그 빌더는 원격 항목만
+  넣는다. 이미 잘못 생성된 내장 카탈로그를 사용하는 빌드에서도 버튼 전 노출이 생기지 않도록
+  런타임 `Resolve`에 로컬 항목 필터를 함께 뒀다.
+- 버튼은 라이브 카탈로그가 공개한 오퍼레이터·스테이지·아군·적·프리뷰 주소를 모아 의존성을
+  선다운로드한다. 다운로드가 실패해도 로컬 플레이는 유지하고, 해당 원격 항목을 다시 선택하면
+  기존 온디맨드 로더가 재시도할 수 있게 했다.
+- `LaserBeam`, `EnemyRangeAura`, `EnemyFrontShield`, `RangePulseAura` 셰이더를 Always Included
+  Shaders에 등록했다. 원격 번들 빌드 순서나 변형 스트리핑 결과와 무관하게 플레이어가 셰이더를
+  보유하게 하려는 선택이다.
+- 빌드 검증기는 로컬 카탈로그에 원격 항목이 섞인 경우, 시작 시 자동 카탈로그 갱신이 켜진 경우,
+  필수 셰이더가 누락된 경우를 실패로 처리한다. 오퍼레이터 검증은 로컬과 라이브 카탈로그의 합집합을
+  기준으로 바꿔 원격 전용 항목도 검증하되 로컬 카탈로그 오염을 요구하지 않게 했다.
+
+### 검증
+
+- Unity `6000.3.13f1` 컴파일을 통과했다.
+- TitleScene Play 모드 초기 검증에서 `LiveCatalogService`가 실행·해결·활성화되지 않았고,
+  표시 카탈로그가 로컬 오퍼레이터 4명과 로컬 스테이지 5개인 것을 확인했다. 이때 원격 요청은
+  0회였다.
+- `RCCom/Addressables/Validate Active Build Configuration` WebGL 사전 검증을 통과했다.
+- LiveContent 버튼 클릭 뒤 원격 카탈로그와 ch1-06~08 및 Valentina가 적용되고, 해당 콘텐츠의
+  적·레이저 렌더링이 정상인 것을 Play 모드에서 확인했다. 플레이어 빌드는 이번 수정에서 임의로
+  실행하지 않았다.
