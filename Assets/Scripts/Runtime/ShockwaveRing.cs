@@ -22,6 +22,7 @@ namespace RCCom.Runtime
     [RequireComponent(typeof(MeshRenderer))]
     public class ShockwaveRing : MonoBehaviour
     {
+        private const string ShaderName = "RCCom/Unit Visuals/Range Pulse Aura";
         private static readonly int ColorId = Shader.PropertyToID("_Color");
         private static readonly int ProgressId = Shader.PropertyToID("_Progress");
         private static readonly int StrokeWidthId = Shader.PropertyToID("_StrokeWidth");
@@ -46,6 +47,8 @@ namespace RCCom.Runtime
         private void Awake()
         {
             _renderer = GetComponent<MeshRenderer>();
+            _renderer.sharedMaterial = RuntimeShaderMaterialResolver.Resolve(
+                _renderer.sharedMaterial, ShaderName);
             _properties = new MaterialPropertyBlock();
             _renderer.enabled = false;
         }

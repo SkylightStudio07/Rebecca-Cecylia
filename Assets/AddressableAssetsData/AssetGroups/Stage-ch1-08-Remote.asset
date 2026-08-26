@@ -10,13 +10,19 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
-  m_Name: Stage-ch1-07-Local
+  m_Name: Stage-ch1-08-Remote
   m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
-  m_GroupName: Stage-ch1-07-Local
-  m_GUID: 5ddcade493c0ee54c801e9c5b2fb9bb6
+  m_GroupName: Stage-ch1-08-Remote
+  m_GUID: 84b48e694f983a9438a73e8726d3655a
   m_SerializeEntries:
-  - m_GUID: 18d5af02fe1fcdc45ba65f65285f8c52
-    m_Address: stage/ch1-07
+  - m_GUID: 4025fccd83f1e0c4cb1a9e14e61be74b
+    m_Address: stage/ch1-08/description-background
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - stage-background
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: de6c2302e2ed9d248b72b924b84ce7f2
+    m_Address: stage/ch1-08
     m_ReadOnly: 0
     m_SerializedLabels:
     - stage-definition
@@ -25,5 +31,5 @@ MonoBehaviour:
   m_Settings: {fileID: 11400000, guid: 2afb846ca87b5fb4d915c11291554efd, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: 85e66dfac0e4779448ed3653ef5cbc71, type: 2}
-    - {fileID: 11400000, guid: 367e5c14a79328c43a875d88358d00aa, type: 2}
+    - {fileID: 11400000, guid: 0573ca8553607d84db35cb366975bac8, type: 2}
+    - {fileID: 11400000, guid: b66e07cc1186b1a4e99df48477089ed1, type: 2}

@@ -62,7 +62,13 @@ namespace RCCom.EditorTools
 
                 ConfigureAddressable(settings, definitionPath, recipe, GetAddress(recipe.operatorId));
                 expectedGroupNames.Add(GetGroupName(recipe.operatorId, recipe.remoteContent));
-                entries.Add(CreateEntry(recipe, definition));
+                // 로컬 카탈로그는 플레이어가 서버에 접속하기 전에도 읽는 목록이다.
+                // 원격 항목을 여기에 넣으면 LiveContent 버튼과 무관하게 상점에 노출되므로,
+                // 원격 레시피는 아래의 라이브 카탈로그에만 기록한다.
+                if (!recipe.remoteContent)
+                {
+                    entries.Add(CreateEntry(recipe, definition));
+                }
             }
 
             RemoveStaleGeneratedGroups(settings, expectedGroupNames);
@@ -116,17 +122,19 @@ namespace RCCom.EditorTools
             var entries = catalog.entries == null
                 ? new List<OperatorCatalogEntry>()
                 : new List<OperatorCatalogEntry>(catalog.entries);
-            OperatorCatalogEntry updated = CreateEntry(recipe, definition);
             int index = entries.FindIndex(
                 entry => entry != null &&
                          string.Equals(entry.operatorId, recipe.operatorId, StringComparison.Ordinal));
             if (index >= 0)
             {
-                entries[index] = updated;
+                entries.RemoveAt(index);
             }
-            else
+
+            // 단일 빌드도 전체 빌드와 같은 로컬/원격 경계를 지켜야 한다. 원격으로 전환한
+            // 오퍼레이터의 예전 로컬 항목은 위에서 제거하고 라이브 카탈로그에만 남긴다.
+            if (!recipe.remoteContent)
             {
-                entries.Add(updated);
+                entries.Add(CreateEntry(recipe, definition));
             }
 
             SortEntriesByRecipeOrder(entries);

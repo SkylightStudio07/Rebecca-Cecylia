@@ -162,6 +162,7 @@ namespace RCCom.UI
 
         private void RebuildOwnedEntries()
         {
+            catalog = LiveCatalogService.Resolve(catalog);
             string selectedId = GetSelectedEntry()?.operatorId;
             if (string.IsNullOrWhiteSpace(selectedId))
             {

@@ -20,7 +20,7 @@ MonoBehaviour:
   recommendedLevel: 29
   order: 7
   requiredBestWave: 7
-  remoteContent: 0
+  remoteContent: 1
   description: "1-8 \uC791\uC804 \uAD6C\uC5ED\uC785\uB2C8\uB2E4."
   descriptionBackground: {fileID: -1690174829667754741, guid: 4025fccd83f1e0c4cb1a9e14e61be74b, type: 3}
   battleBackground: {fileID: -1690174829667754741, guid: 4025fccd83f1e0c4cb1a9e14e61be74b, type: 3}

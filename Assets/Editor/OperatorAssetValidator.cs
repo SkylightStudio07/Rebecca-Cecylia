@@ -64,10 +64,18 @@ namespace RCCom.EditorTools
         private static void ValidateCatalog(List<string> errors)
         {
             OperatorCatalog catalog = AssetDatabase.LoadAssetAtPath<OperatorCatalog>(OperatorCatalogBuilder.CatalogPath);
+            OperatorCatalog liveCatalog = AssetDatabase.LoadAssetAtPath<OperatorCatalog>(
+                OperatorLiveCatalogBuilder.LiveCatalogPath);
             AddressableAssetSettings settings = AddressableAssetSettingsDefaultObject.Settings;
             if (catalog == null || catalog.entries == null || catalog.entries.Count == 0)
             {
                 errors.Add("OperatorCatalog가 없거나 비어 있습니다.");
+                return;
+            }
+
+            if (liveCatalog == null || liveCatalog.entries == null)
+            {
+                errors.Add("OperatorLiveCatalog가 없습니다.");
                 return;
             }
 
@@ -81,7 +89,9 @@ namespace RCCom.EditorTools
             var addresses = new HashSet<string>(StringComparer.Ordinal);
             var expectedGroups = new HashSet<string>(StringComparer.Ordinal);
             var catalogDefinitions = new HashSet<OperatorDefinition>();
-            foreach (OperatorCatalogEntry catalogEntry in catalog.entries)
+            var allEntries = new List<OperatorCatalogEntry>(catalog.entries);
+            allEntries.AddRange(liveCatalog.entries);
+            foreach (OperatorCatalogEntry catalogEntry in allEntries)
             {
                 if (catalogEntry == null || string.IsNullOrWhiteSpace(catalogEntry.operatorId) ||
                     string.IsNullOrWhiteSpace(catalogEntry.address))

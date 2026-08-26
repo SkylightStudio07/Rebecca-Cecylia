@@ -10,10 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
-  m_Name: Stage-ch1-06-Local
+  m_Name: Stage-ch1-06-Remote
   m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
-  m_GroupName: Stage-ch1-06-Local
-  m_GUID: 1d9b8d4b4bc319542a310a3ba7191bfb
+  m_GroupName: Stage-ch1-06-Remote
+  m_GUID: c13eb806f165b564f95e403e9cbf35d7
   m_SerializeEntries:
   - m_GUID: ae2eff284fd55944da3df33a3d6e7f36
     m_Address: stage/ch1-06
@@ -25,5 +25,5 @@ MonoBehaviour:
   m_Settings: {fileID: 11400000, guid: 2afb846ca87b5fb4d915c11291554efd, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: eec11ada42cc57c4b80752dbbeb692ea, type: 2}
-    - {fileID: 11400000, guid: 0c01a3a70d509774a874a8d5c27fb06e, type: 2}
+    - {fileID: 11400000, guid: 34285b5df00855246932c6706fce379b, type: 2}
+    - {fileID: 11400000, guid: c40b5ffe4eb9bd844bd575d2a5d837a4, type: 2}

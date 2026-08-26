@@ -286,6 +286,10 @@ namespace RCCom.UI
 
         private void ResolveNextStage(BattleOutcome outcome, PlayerProfile profile)
         {
+            // LiveContent 활성화 전에는 로컬 1~5만, 활성화 뒤에는 라이브 6~8까지 이어야 한다.
+            // 씬에 직렬화된 내장 카탈로그만 순회하면 원격 스테이지에서 현재 항목조차 찾지 못해
+            // main의 NEXT STAGE 흐름이 끊기므로, 결과를 계산하는 순간의 세션 경계를 적용한다.
+            stageCatalog = LiveCatalogService.Resolve(stageCatalog);
             _nextStageEntry = null;
             if (outcome == BattleOutcome.Victory && BattleSession.IsStageMode &&
                 BattleSession.SelectedStage != null && stageCatalog != null &&

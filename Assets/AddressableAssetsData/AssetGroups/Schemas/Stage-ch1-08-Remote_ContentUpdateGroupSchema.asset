@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5834b5087d578d24c926ce20cd31e6d6, type: 3}
-  m_Name: Stage-ch1-08-Local_ContentUpdateGroupSchema
+  m_Name: Stage-ch1-08-Remote_ContentUpdateGroupSchema
   m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.GroupSchemas.ContentUpdateGroupSchema
-  m_Group: {fileID: 11400000, guid: eb92da7ebff88dc41a665a1d685f05cd, type: 2}
-  m_StaticContent: 1
+  m_Group: {fileID: 11400000, guid: fc40fc533e48eaf489356585b18ba3a1, type: 2}
+  m_StaticContent: 0

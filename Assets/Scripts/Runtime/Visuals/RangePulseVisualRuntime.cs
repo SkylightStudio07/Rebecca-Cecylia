@@ -10,6 +10,7 @@ namespace RCCom.Runtime.Visuals
     /// </summary>
     public sealed class RangePulseVisualRuntime : IAllyUnitVisualRuntime
     {
+        private const string ShaderName = "RCCom/Unit Visuals/Range Pulse Aura";
         private static readonly int ColorId = Shader.PropertyToID("_Color");
         private static readonly int ProgressId = Shader.PropertyToID("_Progress");
         private static readonly int StrokeWidthId = Shader.PropertyToID("_StrokeWidth");
@@ -49,7 +50,7 @@ namespace RCCom.Runtime.Visuals
             }
 
             _renderer = _visualObject.GetComponent<MeshRenderer>();
-            _renderer.sharedMaterial = definition.Material;
+            _renderer.sharedMaterial = RuntimeShaderMaterialResolver.Resolve(definition.Material, ShaderName);
             _renderer.sortingLayerID = context.sortingLayerId;
             _renderer.sortingOrder = context.sortingOrder;
             _renderer.shadowCastingMode = ShadowCastingMode.Off;

@@ -10,6 +10,7 @@ namespace RCCom.Runtime.Visuals
     /// </summary>
     public sealed class EnemyFrontShieldVisualRuntime
     {
+        private const string ShaderName = "RCCom/Enemy Visuals/Frontal Shield";
         private static readonly int ColorId = Shader.PropertyToID("_Color");
         private static readonly int StrokeWidthId = Shader.PropertyToID("_StrokeWidth");
         private static readonly int GlowIntensityId = Shader.PropertyToID("_GlowIntensity");
@@ -51,7 +52,7 @@ namespace RCCom.Runtime.Visuals
             }
 
             _renderer = _visualObject.GetComponent<MeshRenderer>();
-            _renderer.sharedMaterial = definition.Material;
+            _renderer.sharedMaterial = RuntimeShaderMaterialResolver.Resolve(definition.Material, ShaderName);
             _renderer.sortingLayerID = sortingLayerId;
             _renderer.sortingOrder = sortingOrder;
             _renderer.shadowCastingMode = ShadowCastingMode.Off;

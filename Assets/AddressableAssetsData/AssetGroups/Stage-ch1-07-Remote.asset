@@ -10,13 +10,13 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
-  m_Name: Stage-ch1-08-Local
+  m_Name: Stage-ch1-07-Remote
   m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
-  m_GroupName: Stage-ch1-08-Local
-  m_GUID: c83698ec13d709f408c6d03af58989e7
+  m_GroupName: Stage-ch1-07-Remote
+  m_GUID: ee30b7a524f60f94caf6e70eeadc1253
   m_SerializeEntries:
-  - m_GUID: de6c2302e2ed9d248b72b924b84ce7f2
-    m_Address: stage/ch1-08
+  - m_GUID: 18d5af02fe1fcdc45ba65f65285f8c52
+    m_Address: stage/ch1-07
     m_ReadOnly: 0
     m_SerializedLabels:
     - stage-definition
@@ -25,5 +25,5 @@ MonoBehaviour:
   m_Settings: {fileID: 11400000, guid: 2afb846ca87b5fb4d915c11291554efd, type: 2}
   m_SchemaSet:
     m_Schemas:
-    - {fileID: 11400000, guid: 3fb34b20e0410c64aa18792f3d903b69, type: 2}
-    - {fileID: 11400000, guid: 08c292a179e64a64195b9e1723f1316e, type: 2}
+    - {fileID: 11400000, guid: affc5e55baf247c4a8fc35965cc18975, type: 2}
+    - {fileID: 11400000, guid: 073ae54bcca521145b9c5427006858ce, type: 2}

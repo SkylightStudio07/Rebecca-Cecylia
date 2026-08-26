@@ -61,8 +61,11 @@ MonoBehaviour:
   titleLobbyGreeting:
     defaultPortraitSprite: {fileID: 0}
     portraitSprite: {fileID: 0}
-    defaultLobbySprite: {fileID: 0}
-    entries: []
+    defaultLobbySprite: {fileID: 21300000, guid: 5931c3c2c10fbf0499e55f194e0a27fe, type: 3}
+    entries:
+    - text: "\uC5B4\uC774 \uAC10\uB3C5\uAD00, \uC798 \uC7A4\uC5B4?"
+      lobbySprite: {fileID: 21300000, guid: 5931c3c2c10fbf0499e55f194e0a27fe, type: 3}
+      portraitSprite: {fileID: 0}
     lines: []
   lobbyInteraction:
     defaultPortraitSprite: {fileID: 0}

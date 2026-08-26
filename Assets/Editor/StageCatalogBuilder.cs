@@ -80,12 +80,17 @@ namespace RCCom.EditorTools
             {
                 ConfigureAddressable(settings, definition);
                 expectedGroupNames.Add(GetGroupName(definition.stageId, definition.remoteContent));
-                catalog.entries.Add(CreateEntry(definition));
                 if (definition.remoteContent)
                 {
                     // 정본 카탈로그와 라이브 카탈로그가 같은 객체를 공유하면 한쪽 편집이 다른
                     // 쪽에 새어 들어가므로 별도 인스턴스를 만든다.
                     liveEntries.Add(CreateEntry(definition));
+                }
+                else
+                {
+                    // 플레이어 내장 카탈로그에는 로컬 스테이지만 둔다. 원격 메타데이터까지
+                    // 넣으면 서버 조회 전에도 후반 스테이지가 노출되어 버튼 경계가 무너진다.
+                    catalog.entries.Add(CreateEntry(definition));
                 }
             }
 
