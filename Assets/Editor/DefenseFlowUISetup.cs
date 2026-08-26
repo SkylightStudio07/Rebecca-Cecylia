@@ -62,12 +62,12 @@ namespace RCCom.EditorTools
                 bool valid = tutorial != null && result != null &&
                              HasObjectReference(tutorial, "skipButton") &&
                              HasObjectReference(result, "nextStageButton") &&
-                             HasObjectReference(result, "nextStageButtonText") &&
+                             HasNextStageVisual(result) &&
                              HasObjectReference(result, "stageCatalog");
                 if (!valid)
                 {
                     throw new System.InvalidOperationException(
-                        "튜토리얼 SKIP 또는 스토리 NEXT STAGE의 인스펙터 참조가 비어 있습니다.");
+                        "튜토리얼 SKIP 또는 스토리 NEXT STAGE의 필수 참조·표시 에셋이 비어 있습니다.");
                 }
 
                 EventSystem[] eventSystems = Object.FindObjectsByType<EventSystem>(
@@ -193,6 +193,16 @@ namespace RCCom.EditorTools
             }
 
             buttonObject.layer = LayerMask.NameToLayer("UI");
+            Image image = buttonObject.GetComponent<Image>();
+            Button button = buttonObject.GetComponent<Button>();
+            bool usesAuthoredSprite = existing != null && image.sprite != null;
+            if (usesAuthoredSprite)
+            {
+                // 최종 UI는 텍스트 라벨 대신 글자가 포함된 전용 스프라이트를 쓴다. 반복 배선에서
+                // 사람이 맞춘 크기·위치·색을 구형 자동 생성 기본값으로 되돌리지 않는다.
+                return button;
+            }
+
             RectTransform rect = buttonObject.GetComponent<RectTransform>();
             rect.anchorMin = anchorMin;
             rect.anchorMax = anchorMax;
@@ -201,11 +211,9 @@ namespace RCCom.EditorTools
             rect.sizeDelta = sizeDelta;
             rect.localScale = Vector3.one;
 
-            Image image = buttonObject.GetComponent<Image>();
             image.color = normalColor;
             image.raycastTarget = true;
 
-            Button button = buttonObject.GetComponent<Button>();
             button.targetGraphic = image;
             button.transition = Selectable.Transition.ColorTint;
             ColorBlock colors = button.colors;
@@ -256,6 +264,20 @@ namespace RCCom.EditorTools
         {
             SerializedProperty property = new SerializedObject(target).FindProperty(propertyName);
             return property != null && property.objectReferenceValue != null;
+        }
+
+        private static bool HasNextStageVisual(GameResultUI result)
+        {
+            var serialized = new SerializedObject(result);
+            TMP_Text label = serialized.FindProperty("nextStageButtonText").objectReferenceValue as TMP_Text;
+            if (label != null)
+            {
+                return true;
+            }
+
+            Button button = serialized.FindProperty("nextStageButton").objectReferenceValue as Button;
+            Image image = button != null ? button.targetGraphic as Image : null;
+            return image != null && image.sprite != null;
         }
 
         private static T FindInScene<T>(Scene scene) where T : Component
