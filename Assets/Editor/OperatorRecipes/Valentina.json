@@ -10,6 +10,31 @@
     "shopUpperBodyPortraitDimmedPath": "Assets/Art/Character Standing Arts/발렌티나/portrait/발렌티나.Chibby.embarrassed.png",
     "alternateName": "Mad Scientist",
     "shopDialogue": "안전 규정? 그런 건 실험실 책상에나 꽂아두라고.",
+    "codename": "",
+    "role": "",
+    "faction": "",
+    "height": "",
+    "birthday": "",
+    "speciality": "",
+    "weapon": "",
+    "origin": "",
+    "bondRecords": [
+        {
+            "description": ""
+        },
+        {
+            "description": ""
+        },
+        {
+            "description": ""
+        },
+        {
+            "description": ""
+        },
+        {
+            "description": ""
+        }
+    ],
     "unlockRewardPortraitPath": "Assets/Art/Character Standing Arts/발렌티나/portrait/발렌티나.Chibby.smile.png",
     "sourceTowerRosterPath": "Assets/Data/Prefabs/TowerRoaster.asset",
     "sourceCardRosterPath": "Assets/Data/Cards/Unlock/플레이어 카드 로스터.asset",
@@ -26,7 +51,11 @@
         "projectileSpeed": 1.0,
         "skillCooldown": 12.0,
         "skillRange": 5.0,
-        "skillDamage": 5.0
+        "skillDamage": 5.0,
+        "skillBurstCount": 4,
+        "skillBurstInterval": 0.30000001192092898,
+        "skillOverdriveMoveSpeedMultiplier": 1.5,
+        "skillChargeCapacity": 1
     },
     "requiredBestWave": 0,
     "unlockType": 0,
