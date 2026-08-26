@@ -17,7 +17,7 @@ MonoBehaviour:
     displayName: "\uD5E4\uBE44\uD0F1\uCEE4"
     kind: 7
     maxHealth: 55
-    moveSpeed: 1
+    moveSpeed: 2
     contactDamage: 9
     attackRange: 0
     attackInterval: 1
@@ -27,5 +27,6 @@ MonoBehaviour:
     expReward: 18
   effects:
   - {fileID: 11400000, guid: c3295b86412ca9f44b94b3a2f89ede1f, type: 2}
+  - {fileID: 11400000, guid: d19d8eb82497d3a4cb226a38f1e4ac03, type: 2}
   sprite: {fileID: -1391284571477560243, guid: d820ffd77b80d7c4ba84d593ef65a38f, type: 3}
   spriteForwardOffsetDegrees: -90

@@ -25,6 +25,8 @@ namespace RCCom.EditorTools
 
             try
             {
+                VerifyEndlessRegistration();
+
                 baseObject = new GameObject("ExploderVerifier_Base");
                 baseObject.SetActive(false);
                 BaseController baseController = baseObject.AddComponent<BaseController>();
@@ -128,6 +130,27 @@ namespace RCCom.EditorTools
                 {
                     UnityEngine.Object.DestroyImmediate(baseObject);
                 }
+            }
+        }
+
+        private static void VerifyEndlessRegistration()
+        {
+            const string enemyId = "enemy-explode";
+            EnemyRoster roster = AssetDatabase.LoadAssetAtPath<EnemyRoster>(EnemyCatalogBuilder.RosterPath);
+            EnemyCatalog catalog = AssetDatabase.LoadAssetAtPath<EnemyCatalog>(EnemyCatalogBuilder.CatalogPath);
+            EnemyDefinition assetDefinition = AssetDatabase.LoadAssetAtPath<EnemyDefinition>(
+                "Assets/Data/Enemies/enemy-explode/EnemyDefinition.asset");
+            EnemyCatalogEntry entry = catalog != null ? catalog.FindById(enemyId) : null;
+
+            if (roster == null || !roster.enemyIds.Contains(enemyId) || entry == null || assetDefinition == null)
+            {
+                throw new InvalidOperationException("자폭드론이 Endless 프리로드 Roster/Catalog에 등록되지 않았습니다.");
+            }
+            if (entry.minWave > 1 || entry.waveCost <= 0f ||
+                assetDefinition.data.kind != EnemyKind.Explode)
+            {
+                throw new InvalidOperationException(
+                    $"자폭드론 Endless 등장 조건이 올바르지 않습니다: minWave={entry.minWave}, cost={entry.waveCost}");
             }
         }
 

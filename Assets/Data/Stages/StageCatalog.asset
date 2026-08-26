@@ -171,3 +171,17 @@ MonoBehaviour:
       totalCount: 1
     rewards: []
     stageDefinition: {fileID: 11400000, guid: 18d5af02fe1fcdc45ba65f65285f8c52, type: 2}
+  - stageId: ch1-08
+    chapterId: ch1
+    displayName: 1-8
+    subtitle: STAGE 1-8
+    description: "1-8 \uC791\uC804 \uAD6C\uC5ED\uC785\uB2C8\uB2E4."
+    order: 7
+    requiredBestWave: 7
+    recommendedLevel: 29
+    descriptionBackground: {fileID: -1690174829667754741, guid: 4025fccd83f1e0c4cb1a9e14e61be74b, type: 3}
+    descriptionBackgroundAddress: 
+    hasWaves: 1
+    address: stage/ch1-08
+    remoteContent: 0
+    stageDefinition: {fileID: 11400000, guid: de6c2302e2ed9d248b72b924b84ce7f2, type: 2}

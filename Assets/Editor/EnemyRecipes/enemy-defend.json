@@ -1,0 +1,25 @@
+{
+    "enemyId": "enemy-defend",
+    "catalogOrder": 6,
+    "displayName": "방어",
+    "spritePath": "Assets/Art/Enemies/defend.png",
+    "spriteForwardOffsetDegrees": -90.0,
+    "effectPaths": [
+        "Assets/Data/Effects/Enemy_MaxHealthAuraEffect.asset"
+    ],
+    "remoteContent": false,
+    "data": {
+        "enemyId": "enemy-defend",
+        "displayName": "방어",
+        "kind": 8,
+        "maxHealth": 30.0,
+        "moveSpeed": 2.0,
+        "contactDamage": 0.0,
+        "attackRange": 4.0,
+        "attackInterval": 1.0,
+        "waveCost": 2.0,
+        "minWave": 1,
+        "goldReward": 15,
+        "expReward": 10
+    }
+}
