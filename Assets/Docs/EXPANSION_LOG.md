@@ -2156,3 +2156,9 @@ Phase 0 자동화 경로를 실제로 열고, 이후 오퍼레이터별 원격 �
 
 - 같은 PNG를 슬롯별로 복제하지 않았다. 아트 중복은 번들·저장소 용량만 늘리고 동일 이미지라는 원본 관계를 숨기므로, 주소 별칭을 데이터 생성 단계에서 canonical key로 수렴시켰다.
 - 빌드마다 브랜치를 자동 생성하지 않았다. 개발 변경은 PR 브랜치로 검토하되, 배포 식별은 main의 추적된 `PlayerSettings.bundleVersion`, `ReleaseStates`, 최종 Git 태그가 담당하도록 분리한다.
+
+### 1.0.1 릴리스 검증
+
+- Unity 6000.3.13f1에서 WebGL 플레이어와 Addressables를 같은 `1.0.1` 버전으로 빌드했고, 빌드 직후 `ReleaseStates/WebGL/1.0.1/addressables_content_state.bin`을 다시 보관했다.
+- 업로드용 `ServerData.zip`을 새 원격 콘텐츠 결과로 재생성했다. ZIP에는 `catalog_1.0.1`과 Valentina 오퍼레이터·아군 유닛 번들이 포함되며, 원격 로드 경로는 `RCCOM_REMOTE_LOAD_PATH`에서 해석한 `https://arcade.codingbot.kr/content/6a4b0df00880a934f010d7c1/live/WebGL`이다.
+- 릴리스 브랜치는 빌드 산출물 자체가 아니라 재현에 필요한 콘텐츠 상태와 릴리스 기록만 PR로 main에 반영하고, 병합 커밋에 `v1.0.1` 태그를 붙인다. `Builds/WebGL`과 `ServerData.zip`은 배포용 로컬 산출물이므로 Git에는 넣지 않는다.
