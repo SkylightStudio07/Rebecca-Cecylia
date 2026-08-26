@@ -98,7 +98,7 @@ namespace RCCom.UI
         public void StartSelectedStage()
         {
             StageCatalogEntry entry = TryGetSelectedEntry();
-            if (entry == null || !entry.IsPlayable(_profile?.bestWave ?? 0))
+            if (entry == null || catalog == null || !catalog.IsPlayable(entry, _profile))
             {
                 if (statusText != null) { statusText.text = "선택한 스테이지의 전투 데이터가 준비되지 않았습니다."; }
                 return;
@@ -162,7 +162,7 @@ namespace RCCom.UI
             }
 
             StageCatalogEntry entry = catalog.entries[index];
-            if (entry == null || !entry.IsUnlocked(_profile?.bestWave ?? 0))
+            if (entry == null || catalog == null || !catalog.IsUnlocked(entry, _profile))
             {
                 return;
             }
@@ -184,7 +184,7 @@ namespace RCCom.UI
             {
                 int index = i;
                 StageCatalogEntry entry = catalog.entries[i];
-                bool unlocked = entry != null && entry.IsUnlocked(_profile?.bestWave ?? 0);
+                bool unlocked = catalog.IsUnlocked(entry, _profile);
                 StageNodeView node = Instantiate(nodePrefab, nodeContent);
                 node.Setup(entry, unlocked, index == _selectedIndex, () => SelectStage(index));
                 _nodes.Add(node);
@@ -254,7 +254,7 @@ namespace RCCom.UI
 
             if (startStageButton != null)
             {
-                startStageButton.interactable = !_isLoadingStage && entry.IsPlayable(_profile?.bestWave ?? 0);
+                startStageButton.interactable = !_isLoadingStage && catalog.IsPlayable(entry, _profile);
             }
             for (int i = 0; i < _nodes.Count; i++)
             {
@@ -318,7 +318,7 @@ namespace RCCom.UI
             }
 
             StageCatalogEntry entry = catalog.entries[_selectedIndex];
-            return entry != null && entry.IsUnlocked(_profile?.bestWave ?? 0) ? entry : null;
+            return entry != null && catalog.IsUnlocked(entry, _profile) ? entry : null;
         }
 
         private int FindLatestUnlockedIndex()
@@ -331,7 +331,7 @@ namespace RCCom.UI
             // 선형 CH1 진행에서는 가장 뒤의 해금 노드가 현재 작전 지점이다.
             for (int i = catalog.entries.Count - 1; i >= 0; i--)
             {
-                if (catalog.entries[i] != null && catalog.entries[i].IsUnlocked(_profile?.bestWave ?? 0))
+                if (catalog.IsUnlocked(catalog.entries[i], _profile))
                 {
                     return i;
                 }
