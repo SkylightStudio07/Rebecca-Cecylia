@@ -10,29 +10,29 @@
     "shopUpperBodyPortraitDimmedPath": "Assets/Art/Character Standing Arts/발렌티나/portrait/발렌티나.Chibby.embarrassed.png",
     "alternateName": "Mad Scientist",
     "shopDialogue": "안전 규정? 그런 건 실험실 책상에나 꽂아두라고.",
-    "codename": "",
-    "role": "",
-    "faction": "",
-    "height": "",
-    "birthday": "",
-    "speciality": "",
-    "weapon": "",
-    "origin": "",
+    "codename": "Hazard Chemist",
+    "role": "R&C 컴퍼니 화학병기 개발반",
+    "faction": "R&C 컴퍼니 (前 메가코프 화학폐기물 처리반)",
+    "height": "171cm",
+    "birthday": "11월 5일",
+    "speciality": "화학공학, 폭발물 배합",
+    "weapon": "개조 소이탄 발사관 '살라만더'",
+    "origin": "루이지애나 걸프 연안, 미합중국",
     "bondRecords": [
         {
-            "description": ""
+            "description": "이름 : 발렌티나 크로프트 (Valentina Croft)\r\n나이 : 27세\r\n신장/체중 : 171cm / 58kg\r\n활동 지역 : R&C 컴퍼니 화학병기 연구동 및 최전선 폭파 거점\r\n속성 : 혼돈 선 (Chaotic Good)\r\n\"헤에~ 네가 소문의 신임 감독관이야? 화학 폐기물 처리반 출신 발렌티나 크로프트다. 내 슬러지 탱크에 불만 붙여주면 전장의 찌꺼기들은 흔적도 없이 태워줄게!\""
         },
         {
-            "description": ""
+            "description": "메가코프 화학 폐기물 특수 처리반 출신의 화학 엔지니어이자 폭파 전문가. 산업 폐기물을 안전하게 무해화하는 것이 원래 임무였지만, 정작 그녀의 흥미를 끈 건 '어떻게 하면 더 화려하고 완벽하게 태워 없앨 수 있는가'였다.\r\n지금은 R&C 컴퍼니의 화학병기 개발반에 소속되어, 산성 슬러지와 소이탄을 조합한 자신만의 화력을 전장에서 마음껏 펼치고 있다."
         },
         {
-            "description": ""
+            "description": "등에 짊어진 고압 탱크에는 배합 비율에 따라 부식성과 감속 효과가 달라지는 특제 슬러지가 저장되어 있으며, 소이탄 발사관은 물로도 꺼지지 않는 나프타 계열 화합물을 쏘아낸다.\r\n본인 曰, 파괴는 그저 부산물일 뿐이고 진짜 목적은 '완벽한 화학적 연쇄 반응'을 완성하는 것이라나. 안전 규정 위반 경고장은 이미 서랍 하나를 가득 채웠다."
         },
         {
-            "description": ""
+            "description": "메가코프 시절, 그녀가 몸담았던 처리반은 표면적으로는 산업 폐기물 무해화를 담당했지만 실상은 뒷돈을 받고 유해물질을 불법 투기하는 부서였다.\r\n동료들이 증거 인멸을 위해 저장고 전체를 폭파하려던 그날, 발렌티나는 그 폭발을 오히려 '더 완벽하게' 개조해 자신을 은폐하고 홀로 살아남았다 — 그리고 그 사건이 그녀를 진짜 폭파광으로 만들었다.\r\n메가코프에서 위험인물로 수배된 그녀를 거둔 것이 바로 R&C 컴퍼니였다."
         },
         {
-            "description": ""
+            "description": "자, 아~ 해봐. 영양제 캡슐이야... 라고 하면 믿어줄 거야? 큭큭, 농담이고.\r\n내 심장의 기폭 스위치, 완전히 네 손에 쥐여줄게. 네가 당기면 난 우주 끝까지라도 터져나갈 준비가 되어 있어.\r\n세상 모든 물질은 삭고 부식되지만, 너와 나의 화학 결합만은 영원히 안 깨져. 사랑해, 감독관♥"
         }
     ],
     "unlockRewardPortraitPath": "Assets/Art/Character Standing Arts/발렌티나/portrait/발렌티나.Chibby.smile.png",

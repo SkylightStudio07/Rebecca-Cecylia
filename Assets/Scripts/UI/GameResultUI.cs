@@ -1,5 +1,7 @@
+using System.Collections;
 using RCCom.Core;
 using RCCom.Data;
+using RCCom.Definitions.Stage;
 using RCCom.Managers;
 using RCCom.Runtime;
 using TMPro;
@@ -45,8 +47,12 @@ namespace RCCom.UI
         [SerializeField] private OperatorAcquisitionUI operatorAcquisitionUI;
 
         [SerializeField] private Button retryButton;
+        [Tooltip("스토리 승리에서 같은 챕터의 다음 스테이지가 있을 때만 표시한다.")]
+        [SerializeField] private Button nextStageButton;
+        [SerializeField] private TextMeshProUGUI nextStageButtonText;
         [SerializeField] private Button titleButton;
         [SerializeField] private string titleSceneName = "TitleScene";
+        [SerializeField] private StageCatalog stageCatalog;
 
         [Tooltip("씬 전환 전에 클릭음이 들릴 시간을 잠깐 벌어준다 — SceneManager.LoadScene은 현재 씬을 즉시 파괴해서, 지연 없이 바로 넘기면 클릭음이 거의 안 들림")]
         [SerializeField] private float sceneChangeDelay = 0.15f;
@@ -62,6 +68,8 @@ namespace RCCom.UI
         private IProfileStorage _profileStorage;
         private bool _hasGrantedCommodity;
         private int _grantedCommodity;
+        private StageCatalogEntry _nextStageEntry;
+        private bool _isLoadingNextStage;
 
         private void Awake()
         {
@@ -73,9 +81,33 @@ namespace RCCom.UI
                 retryButton.onClick.AddListener(HandleRetry);
             }
 
+            if (nextStageButton != null)
+            {
+                nextStageButton.onClick.AddListener(HandleNextStage);
+                nextStageButton.gameObject.SetActive(false);
+            }
+
             if (titleButton != null)
             {
                 titleButton.onClick.AddListener(HandleTitle);
+            }
+        }
+
+        private void OnDestroy()
+        {
+            if (retryButton != null)
+            {
+                retryButton.onClick.RemoveListener(HandleRetry);
+            }
+
+            if (nextStageButton != null)
+            {
+                nextStageButton.onClick.RemoveListener(HandleNextStage);
+            }
+
+            if (titleButton != null)
+            {
+                titleButton.onClick.RemoveListener(HandleTitle);
             }
         }
 
@@ -136,6 +168,8 @@ namespace RCCom.UI
             {
                 _profileStorage.Save(profile);
             }
+
+            ResolveNextStage(outcome, profile);
 
             reachedWaveText.text = $"{waveManager.CurrentWave}";
             defeatedEnemiesText.text = $"{gameManager.EnemiesDefeated}";
@@ -211,6 +245,114 @@ namespace RCCom.UI
             PlayClickSound();
             _pendingSceneName = titleSceneName;
             _pendingSceneDelay = sceneChangeDelay;
+        }
+
+        private void HandleNextStage()
+        {
+            if (_isLoadingNextStage || _nextStageEntry == null)
+            {
+                return;
+            }
+
+            PlayClickSound();
+            _isLoadingNextStage = true;
+            SetResultButtonsInteractable(false);
+            StartCoroutine(LoadNextStageAndEnter(_nextStageEntry));
+        }
+
+        private IEnumerator LoadNextStageAndEnter(StageCatalogEntry entry)
+        {
+            StageDefinition definition = null;
+            string failure = null;
+            yield return StageContentLoader.Load(
+                entry,
+                (message, _) => SetNextStageButtonText(message),
+                loaded => definition = loaded,
+                error => failure = error);
+
+            if (definition == null)
+            {
+                _isLoadingNextStage = false;
+                SetResultButtonsInteractable(true);
+                SetNextStageButtonText(failure ?? "NEXT STAGE LOAD FAILED");
+                yield break;
+            }
+
+            BattleSession.SelectStage(definition);
+            yield return BattleContentCache.PreloadEnemiesForStage(definition, null, null);
+            Time.timeScale = 1f;
+            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        }
+
+        private void ResolveNextStage(BattleOutcome outcome, PlayerProfile profile)
+        {
+            // LiveContent 활성화 전에는 로컬 1~5만, 활성화 뒤에는 라이브 6~8까지 이어야 한다.
+            // 씬에 직렬화된 내장 카탈로그만 순회하면 원격 스테이지에서 현재 항목조차 찾지 못해
+            // main의 NEXT STAGE 흐름이 끊기므로, 결과를 계산하는 순간의 세션 경계를 적용한다.
+            stageCatalog = LiveCatalogService.Resolve(stageCatalog);
+            _nextStageEntry = null;
+            if (outcome == BattleOutcome.Victory && BattleSession.IsStageMode &&
+                BattleSession.SelectedStage != null && stageCatalog != null &&
+                stageCatalog.entries != null)
+            {
+                string currentStageId = BattleSession.SelectedStage.stageId;
+                StageCatalogEntry current = stageCatalog.FindById(currentStageId);
+                if (current != null)
+                {
+                    for (int i = 0; i < stageCatalog.entries.Count; i++)
+                    {
+                        StageCatalogEntry candidate = stageCatalog.entries[i];
+                        if (candidate == null || candidate.order <= current.order ||
+                            candidate.chapterId != current.chapterId ||
+                            !candidate.IsPlayable(profile != null ? profile.bestWave : 0))
+                        {
+                            continue;
+                        }
+
+                        if (_nextStageEntry == null || candidate.order < _nextStageEntry.order)
+                        {
+                            _nextStageEntry = candidate;
+                        }
+                    }
+                }
+            }
+
+            if (nextStageButton != null)
+            {
+                nextStageButton.gameObject.SetActive(_nextStageEntry != null);
+                nextStageButton.interactable = _nextStageEntry != null;
+            }
+
+            if (_nextStageEntry != null)
+            {
+                SetNextStageButtonText($"NEXT STAGE  {_nextStageEntry.displayName}");
+            }
+        }
+
+        private void SetResultButtonsInteractable(bool interactable)
+        {
+            if (retryButton != null)
+            {
+                retryButton.interactable = interactable;
+            }
+
+            if (nextStageButton != null)
+            {
+                nextStageButton.interactable = interactable;
+            }
+
+            if (titleButton != null)
+            {
+                titleButton.interactable = interactable;
+            }
+        }
+
+        private void SetNextStageButtonText(string text)
+        {
+            if (nextStageButtonText != null)
+            {
+                nextStageButtonText.text = text;
+            }
         }
 
         private static void PlayClickSound()

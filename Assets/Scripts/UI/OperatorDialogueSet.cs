@@ -23,6 +23,10 @@ namespace RCCom.UI
         [Tooltip("오퍼레이터가 처음 해금되어 획득 화면에 등장할 때 출력할 대사와 전신 스프라이트")]
         public OperatorLineSet operatorAcquired;
 
+        [Header("타이틀 → 로비 진입")]
+        [Tooltip("Press Any Start 이후 메인 로비 전환이 끝났을 때 자동으로 출력할 인사 대사")]
+        public OperatorLineSet titleLobbyGreeting;
+
         [Header("0. 로비에서 오퍼레이터 클릭")]
         [Tooltip("비어 있으면 기존 게임 개시 대사를 임시로 사용한다.")]
         public OperatorLineSet lobbyInteraction;
@@ -72,6 +76,7 @@ namespace RCCom.UI
         public void EnsureLineSets()
         {
             if (operatorAcquired == null) { operatorAcquired = new OperatorLineSet(); }
+            if (titleLobbyGreeting == null) { titleLobbyGreeting = new OperatorLineSet(); }
             if (lobbyInteraction == null) { lobbyInteraction = new OperatorLineSet(); }
             if (lobbyReturnTogether == null) { lobbyReturnTogether = new OperatorLineSet(); }
             if (lobbyReturn == null) { lobbyReturn = new OperatorLineSet(); }

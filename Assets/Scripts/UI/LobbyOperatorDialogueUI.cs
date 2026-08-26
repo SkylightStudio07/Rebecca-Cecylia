@@ -145,29 +145,21 @@ namespace RCCom.UI
                 return;
             }
 
-            if (SoundManager.Instance != null)
-            {
-                SoundManager.Instance.PlayMainMenuClick();
-            }
+            PresentLineSet(lineSet, true);
+        }
 
-            if (!lineSet.TryGetRandomLobby(out string text, out Sprite lobbySprite))
+        /// <summary>
+        /// Press Any Start의 화면 전환이 완전히 끝난 뒤에만 호출한다. 전환 도중 대사창을
+        /// 켜면 MainMenu CanvasGroup의 알파에 가려져 첫 문장이 짧게 보이거나 사라진다.
+        /// </summary>
+        public void ShowTitleGreeting()
+        {
+            if (dialogueSet == null || !HasLines(dialogueSet.titleLobbyGreeting))
             {
                 return;
             }
 
-            dialogueText.text = text;
-            if (lobbyOperatorImage != null)
-            {
-                // 로비 터치 표정은 전투 포트레잇과 별개다. 문장별 전신 스프라이트가
-                // 비어 있으면 오퍼레이터의 로비 기본 전신으로 되돌린다.
-                lobbyOperatorImage.sprite = lobbySprite != null ? lobbySprite : ResolveLobbyIdleSprite();
-            }
-            dialogueGroup.alpha = 1f;
-            dialogueGroup.interactable = true;
-            dialogueGroup.blocksRaycasts = true;
-            _remainingDisplay = Mathf.Max(0f, displayDuration);
-            _remainingFade = 0f;
-            _isFading = false;
+            PresentLineSet(dialogueSet.titleLobbyGreeting, false);
         }
 
         /// <summary>
@@ -320,6 +312,34 @@ namespace RCCom.UI
         private static bool HasLines(OperatorLineSet lineSet)
         {
             return lineSet != null && lineSet.HasContent;
+        }
+
+        private void PresentLineSet(OperatorLineSet lineSet, bool playClickSound)
+        {
+            if (!HasLines(lineSet) || dialogueText == null || dialogueGroup == null ||
+                !lineSet.TryGetRandomLobby(out string text, out Sprite lobbySprite))
+            {
+                return;
+            }
+
+            if (playClickSound && SoundManager.Instance != null)
+            {
+                SoundManager.Instance.PlayMainMenuClick();
+            }
+
+            dialogueText.text = text;
+            if (lobbyOperatorImage != null)
+            {
+                // 로비 문장별 전신이 비어 있으면 현재 오퍼레이터의 기본 전신으로 되돌린다.
+                lobbyOperatorImage.sprite = lobbySprite != null ? lobbySprite : ResolveLobbyIdleSprite();
+            }
+
+            dialogueGroup.alpha = 1f;
+            dialogueGroup.interactable = true;
+            dialogueGroup.blocksRaycasts = true;
+            _remainingDisplay = Mathf.Max(0f, displayDuration);
+            _remainingFade = 0f;
+            _isFading = false;
         }
 
         private Sprite ResolveLobbyIdleSprite()

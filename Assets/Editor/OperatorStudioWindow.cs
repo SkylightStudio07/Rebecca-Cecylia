@@ -26,7 +26,7 @@ namespace RCCom.EditorTools
 
         private static readonly string[] DialogueFields =
         {
-            "operatorAcquired", "lobbyInteraction", "lobbyReturnTogether", "lobbyReturn",
+            "operatorAcquired", "titleLobbyGreeting", "lobbyInteraction", "lobbyReturnTogether", "lobbyReturn",
             "lobbyTouchUnfamiliar", "lobbyTouchFavorable", "lobbyTouchJoy",
             "lobbyTouchLove", "lobbyTouchEx", "gameStart", "skillUsed",
             "baseAttacked", "playerHit", "playerHitCritical", "insufficientGold",
@@ -35,7 +35,7 @@ namespace RCCom.EditorTools
 
         private static readonly string[] DialogueLabels =
         {
-            "오퍼레이터 획득", "로비 클릭", "귀환·참전", "귀환·비참전",
+            "오퍼레이터 획득", "타이틀 진입 인사", "로비 클릭", "귀환·참전", "귀환·비참전",
             "터치·낯섦", "터치·호감", "터치·기쁨", "터치·사랑", "터치·EX",
             "게임 개시", "스킬 사용", "거점 피격", "플레이어 피격",
             "플레이어 피격·위험", "골드 부족", "슬롯 부족", "플레이어 사망", "거점 파괴",
@@ -615,7 +615,7 @@ namespace RCCom.EditorTools
         private void DrawLineSet(SerializedProperty lineSet, int slotIndex)
         {
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-            bool isLobbySlot = slotIndex <= 8;
+            bool isLobbySlot = slotIndex <= 9;
             SerializedProperty slotSprite = lineSet.FindPropertyRelative(
                 isLobbySlot ? "defaultLobbySprite" : "portraitSprite");
             EditorGUILayout.PropertyField(slotSprite, new GUIContent(
@@ -962,6 +962,7 @@ namespace RCCom.EditorTools
             return DialogueFields[index] switch
             {
                 "operatorAcquired" => _dialogueSet.operatorAcquired,
+                "titleLobbyGreeting" => _dialogueSet.titleLobbyGreeting,
                 "lobbyInteraction" => _dialogueSet.lobbyInteraction,
                 "lobbyReturnTogether" => _dialogueSet.lobbyReturnTogether,
                 "lobbyReturn" => _dialogueSet.lobbyReturn,

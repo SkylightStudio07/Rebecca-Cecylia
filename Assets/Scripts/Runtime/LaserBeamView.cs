@@ -19,6 +19,7 @@ namespace RCCom.Runtime
     /// </summary>
     public class LaserBeamView : MonoBehaviour
     {
+        private const string ShaderName = "RCCom/Tower Visuals/Laser Beam";
         private static readonly int ColorId = Shader.PropertyToID("_Color");
         private static readonly int GlowIntensityId = Shader.PropertyToID("_GlowIntensity");
         private static readonly int SoftEdgeId = Shader.PropertyToID("_SoftEdge");
@@ -53,7 +54,17 @@ namespace RCCom.Runtime
         {
             _innerProperties = new MaterialPropertyBlock();
             _outerProperties = new MaterialPropertyBlock();
+            BindRuntimeMaterial(innerCore);
+            BindRuntimeMaterial(outerGlow);
             SetLinesEnabled(false);
+        }
+
+        private static void BindRuntimeMaterial(LineRenderer line)
+        {
+            if (line != null)
+            {
+                line.sharedMaterial = RuntimeShaderMaterialResolver.Resolve(line.sharedMaterial, ShaderName);
+            }
         }
 
         private void Update()

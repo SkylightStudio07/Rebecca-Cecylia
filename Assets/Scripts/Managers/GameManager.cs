@@ -5,6 +5,7 @@ using RCCom.Definitions.Tower;
 using RCCom.Effects.Card;
 using RCCom.Effects.Card.Concrete;
 using RCCom.Runtime;
+using RCCom.Runtime.Visuals;
 using UnityEngine;
 
 namespace RCCom.Managers
@@ -123,6 +124,9 @@ namespace RCCom.Managers
             ShockwaveRing.ClearPool();
             ScorchDecal.ClearPool();
             LaserBeamView.ClearPool();
+            // Addressables 번들 머티리얼에서 복제한 플랫폼 로컬 셰이더 인스턴스도 씬 재시작마다
+            // 비워야 도메인 리로드 없는 Retry에서 파괴된 머티리얼 참조가 남지 않는다.
+            RuntimeShaderMaterialResolver.Clear();
             // 아군 유닛 경로 진행도 캐시(참조 비교 기반)도 같은 이유로 명시적 초기화 대상이다.
             AllyUnitTargeting.ResetPathCache();
         }

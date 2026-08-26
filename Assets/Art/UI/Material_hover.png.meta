@@ -1,40 +1,10 @@
 fileFormatVersion: 2
-guid: f114c2111076e7944b846bd605d367fe
+guid: 55beb87ddc5324b42a0f711bc7e6f971
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -6697156251045208739
-    second: goldsprite_0
-  - first:
-      213: -5793500000673160537
-    second: goldsprite_1
-  - first:
-      213: -8249176826503325053
-    second: goldsprite_2
-  - first:
-      213: 8034736649098988768
-    second: goldsprite_3
-  - first:
-      213: 2666565014682989015
-    second: goldsprite_4
-  - first:
-      213: 1893873263259019914
-    second: goldsprite_5
-  - first:
-      213: -5331951695530778046
-    second: goldsprite_6
-  - first:
-      213: 8840470991972002461
-    second: goldsprite_7
-  - first:
-      213: 798208569014927471
-    second: goldsprite_8
-  - first:
-      213: -578295030085019555
-    second: goldsprite_9
-  - first:
-      213: -362194886079623780
-    second: goldsprite_10
+      213: -8973417014084551591
+    second: Material_hover_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -143,23 +113,23 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: goldsprite_0
+      name: Material_hover_0
       rect:
         serializedVersion: 2
-        x: 363
-        y: 243
-        width: 264
-        height: 265
+        x: 19
+        y: 25
+        width: 2141
+        height: 607
       alignment: 0
-      pivot: {x: 0.5, y: 0.5}
+      pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: d5dd92b6fdbee03a0800000000000000
-      internalID: -6697156251045208739
+      spriteID: 95c3b06d4c4087380800000000000000
+      internalID: -8973417014084551591
       vertices: []
       indices: 
       edges: []
@@ -168,7 +138,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 14a6a959d564cc644b658fed181955dd
+    spriteID: 
     internalID: 0
     vertices: []
     indices: 
@@ -178,17 +148,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      goldsprite_0: -6697156251045208739
-      goldsprite_1: -5793500000673160537
-      goldsprite_10: -362194886079623780
-      goldsprite_2: -8249176826503325053
-      goldsprite_3: 8034736649098988768
-      goldsprite_4: 2666565014682989015
-      goldsprite_5: 1893873263259019914
-      goldsprite_6: -5331951695530778046
-      goldsprite_7: 8840470991972002461
-      goldsprite_8: 798208569014927471
-      goldsprite_9: -578295030085019555
+      Material_hover_0: -8973417014084551591
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

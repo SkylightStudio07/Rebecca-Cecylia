@@ -18,6 +18,11 @@ namespace RCCom.UI
         [SerializeField] private GameObject mainMenuBackground;
         [SerializeField] private Graphic pressAnyButtonGraphic;
 
+        [Header("Shared Lobby UI")]
+        [Tooltip("메인 로비와 상점 화면에서만 표시하는 계정 재화 패널")]
+        [SerializeField] private GameObject commodityPanel;
+        [SerializeField] private GameObject shopPanelBackground;
+
         [Header("Timing")]
         [SerializeField] private float promptFlashDuration = 0.16f;
         [SerializeField] private float transitionDuration = 0.6f;
@@ -120,11 +125,29 @@ namespace RCCom.UI
             {
                 lobbyOperatorDialogueUI = mainMenuBackground.GetComponentInChildren<LobbyOperatorDialogueUI>(true);
             }
+
+            if (commodityPanel == null)
+            {
+                Transform panel = FindTransformByName("CommodityPanel");
+                if (panel != null)
+                {
+                    commodityPanel = panel.gameObject;
+                }
+            }
+
+            if (shopPanelBackground == null)
+            {
+                Transform panel = FindTransformByName("ShopPanelBackground");
+                if (panel != null)
+                {
+                    shopPanelBackground = panel.gameObject;
+                }
+            }
         }
 
         private void ResolveCommodityText()
         {
-            Transform panel = FindTransformByName("CommodityPanel");
+            Transform panel = commodityPanel != null ? commodityPanel.transform : FindTransformByName("CommodityPanel");
             if (panel == null)
             {
                 return;
@@ -146,6 +169,29 @@ namespace RCCom.UI
 
             PlayerProfile profile = profileStorage.Load();
             commodityText.text = profile.commodity.ToString();
+        }
+
+        private void RefreshCommodityVisibility()
+        {
+            if (commodityPanel == null)
+            {
+                return;
+            }
+
+            bool lobbyVisible = mainMenuBackground != null && mainMenuBackground.activeInHierarchy;
+            bool shopVisible = shopPanelBackground != null && shopPanelBackground.activeInHierarchy;
+            bool shouldShow = isMenuOpen && (lobbyVisible || shopVisible);
+            if (commodityPanel.activeSelf == shouldShow)
+            {
+                return;
+            }
+
+            commodityPanel.SetActive(shouldShow);
+            if (shouldShow)
+            {
+                // 상점 구매·강화 후 복귀한 경우에도 화면이 열리는 시점의 최신 계정값을 보인다.
+                RefreshCommodityText();
+            }
         }
 
         private static Transform FindTransformByName(string name)
@@ -202,6 +248,7 @@ namespace RCCom.UI
         {
             isAnimating = false;
             isMenuOpen = false;
+            RefreshCommodityVisibility();
 
             if (titleBackground != null)
             {
@@ -317,7 +364,13 @@ namespace RCCom.UI
             if (lobbyOperatorDialogueUI != null)
             {
                 lobbyOperatorDialogueUI.PresentPendingReturn();
+                lobbyOperatorDialogueUI.ShowTitleGreeting();
             }
+        }
+
+        private void LateUpdate()
+        {
+            RefreshCommodityVisibility();
         }
 
         private IEnumerator PlayReturnToTitle()

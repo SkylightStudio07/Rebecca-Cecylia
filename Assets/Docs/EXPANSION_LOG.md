@@ -2448,8 +2448,8 @@ Phase 0 자동화 경로를 실제로 열고, 이후 오퍼레이터별 원격 �
   선다운로드한다. 다운로드가 실패해도 로컬 플레이는 유지하고, 해당 원격 항목을 다시 선택하면
   기존 온디맨드 로더가 재시도할 수 있게 했다.
 - `LaserBeam`, `EnemyRangeAura`, `EnemyFrontShield`, `RangePulseAura` 셰이더를 Always Included
-  Shaders에 등록했다. 원격 번들 빌드 순서나 변형 스트리핑 결과와 무관하게 플레이어가 셰이더를
-  보유하게 하려는 선택이다.
+  Shaders에 등록했다. 플레이어가 로컬 셰이더를 항상 보유하게 한 뒤, 원격 머티리얼은 아래의
+  `RuntimeShaderMaterialResolver`가 그 로컬 인스턴스에 다시 연결한다.
 - 빌드 검증기는 로컬 카탈로그에 원격 항목이 섞인 경우, 시작 시 자동 카탈로그 갱신이 켜진 경우,
   필수 셰이더가 누락된 경우를 실패로 처리한다. 오퍼레이터 검증은 로컬과 라이브 카탈로그의 합집합을
   기준으로 바꿔 원격 전용 항목도 검증하되 로컬 카탈로그 오염을 요구하지 않게 했다.
@@ -2461,6 +2461,80 @@ Phase 0 자동화 경로를 실제로 열고, 이후 오퍼레이터별 원격 �
   표시 카탈로그가 로컬 오퍼레이터 4명과 로컬 스테이지 5개인 것을 확인했다. 이때 원격 요청은
   0회였다.
 - `RCCom/Addressables/Validate Active Build Configuration` WebGL 사전 검증을 통과했다.
-- LiveContent 버튼 클릭 뒤 원격 카탈로그와 ch1-06~08 및 Valentina가 적용되고, 해당 콘텐츠의
-  적·레이저 렌더링이 정상인 것을 Play 모드에서 확인했다. 플레이어 빌드는 이번 수정에서 임의로
-  실행하지 않았다.
+- LiveContent 버튼 클릭 뒤 원격 카탈로그와 ch1-06~08 및 Valentina 적용은 확인했다. 다만 후속
+  사용자 검수에서 WebGL `Use Existing Build`의 적·레이저가 여전히 보라색임이 확인되어, 아래의
+  플랫폼 로컬 셰이더 재바인딩을 추가했다. 플레이어 빌드는 이번 수정에서 임의로 실행하지 않았다.
+
+## 2026-08-26 — 타이틀 인사·튜토리얼 스킵·스토리 연속 출격
+
+### 결정
+
+- `OperatorDialogueSet`에 `titleLobbyGreeting`을 별도 슬롯으로 추가했다. 기존 `gameStart`는
+  DefenseScene 전투 개시 대사이고, 새 슬롯은 Press Any Start 전환이 끝나 메인 로비가 완전히
+  보이는 시점에만 재생한다. 두 상황을 같은 슬롯으로 재사용하면 전투 대사와 귀환 인사의 문맥 및
+  로비 전신 스프라이트가 묶이므로 분리했다.
+- Operator Studio의 Dialogue 탭에서 `타이틀 진입 인사`를 문장별 로비 전신 스프라이트와 함께
+  편집하도록 연결했다. 자동 출력에는 별도 클릭음을 겹치지 않고, 기존 로비 클릭 대사와 동일한
+  랜덤 문장·스프라이트·자동 페이드 경로만 재사용한다.
+- 튜토리얼 패널 우측 상단에 `SKIP` uGUI 버튼을 추가했다. Next 마지막 페이지와 Skip이 하나의
+  완료 경로를 사용해 `Time.timeScale` 복원과 패널 비활성화가 서로 달라지지 않게 했다.
+- 스토리 모드 승리 결과 화면에만 `NEXT STAGE` uGUI 버튼을 표시한다. 현재 StageCatalog 항목과
+  같은 챕터에서 더 큰 `order` 중 가장 가까운 플레이 가능 항목을 선택하고, 기존
+  `StageContentLoader`와 `BattleContentCache`를 거쳐 원격 스테이지와 적까지 준비한 뒤 같은
+  DefenseScene을 다시 로드한다. 엔드리스·패배·마지막 스테이지에는 버튼을 표시하지 않는다.
+- `DefenseFlowUISetup`을 반복 가능한 Editor 메뉴로 남겨 기존 사람이 배치한 결과·튜토리얼 패널을
+  재구성하지 않고 버튼 자식과 직렬화 참조만 생성·검증하도록 했다.
+
+### 의도적으로 하지 않은 것
+
+- 튜토리얼 스킵 여부를 계정에 저장하지 않았다. 이번 요청은 현재 튜토리얼을 즉시 닫는 조작이며,
+  최초 1회 표시 정책이나 다시 보기 정책은 별도 기획 결정이 필요하다.
+- 다음 스테이지용 새 씬이나 매니저를 만들지 않았다. 기존의 공용 DefenseScene + StageDefinition
+  주입 구조를 유지해 스테이지 추가가 씬 복제와 코드 분기로 이어지지 않게 했다.
+
+### 검증
+
+- Unity `6000.3.13f1` 연결형 CLI에서 스크립트 컴파일이 오류 없이 완료됐다.
+- Editor 검증 메뉴로 DefenseScene의 Skip/Next Stage/StageCatalog 참조와 EventSystem 1개를 확인했다.
+- PlayMode 및 플레이어 빌드는 실행하지 않았다. Pipeline의 콘솔 조회 명령이 호출 시점마다
+  `Access version should be odd when acquiring lock`을 자체 발생시키는 현상이 있어, 컴파일 성공은
+  `recompile_status`의 `failed=false, errors=[]` 결과를 정본으로 삼았다.
+
+## 2026-08-26 — 로비·상점 재화 패널 표시 범위 제한
+
+- `CommodityPanel`은 Canvas 직속 형제라 다른 전체 화면 패널을 열어도 부모와 함께 비활성화되지
+  않고 항상 최상단에 남아 있었다. 로비 자식으로 옮기면 상점에서 재사용할 수 없으므로 계층은
+  보존하고 `TitleSceneController`가 메인 로비 또는 `ShopPanelBackground`가 열린 동안에만 패널을
+  활성화하도록 했다.
+- 타이틀 첫 프레임에는 즉시 숨기고, 로비·Recruit·Exchange·Enhance·Material 화면에서는 표시한다.
+  오퍼레이터 관리, 스테이지 선택, Records, Configuration 등 나머지 화면에서는 비활성화되어
+  렌더링과 Raycast를 함께 차단한다. 다시 표시될 때 PlayerProfile의 최신 재화 값을 갱신한다.
+- Unity 연결형 CLI 컴파일은 `failed=false, errors=[]`로 완료했으며 PlayMode는 실행하지 않았다.
+
+## 2026-08-26 — 최신 main 통합과 로컬·리모트 경계 보존
+
+- 최신 main의 오퍼레이터 대사, 타이틀 인사, 튜토리얼 스킵, 다음 스테이지, 재화 패널 변경을
+  LiveContent 브랜치에 통합했다.
+- Addressables 설정 충돌은 LiveContent 브랜치를 정본으로 삼았다. main은 과거 로컬 스테이지 그룹
+  참조를 포함하고 있었기 때문에 그대로 채택하면 ch1-06~08의 리모트 분리가 되돌아간다.
+- 최종 경계는 로컬 오퍼레이터 Cassia·Calliste·Racing·Aurora와 ch1-01~05, 리모트 오퍼레이터
+  Valentina와 ch1-06~08이다. 대사 데이터의 최신화는 콘텐츠의 로컬·리모트 분류를 바꾸지 않는다.
+
+## 2026-08-26 — Addressables 번들 셰이더의 플랫폼 로컬 재바인딩
+
+- 사용자 Play Mode 검수에서 레이저가 계속 보라색인 것을 확인했다. 에셋 원본을 직접 검사한 결과
+  `LaserBeam.shader`는 `supported=true`, 컴파일 오류 0이고 프리팹의 두 LineRenderer도 올바른
+  머티리얼을 참조했다.
+- 실제 차이는 Editor 활성 타깃이 WebGL이고 Addressables Play Mode가 `Use Existing Build`라는
+  점이었다. Windows Editor가 WebGL용 번들 안의 플랫폼 종속 셰이더 인스턴스를 렌더링하면 원본
+  셰이더가 정상이어도 보라색이 될 수 있으며, 원격 번들의 머티리얼이 번들 내부 셰이더에 묶이는
+  문제도 같은 경계에서 발생한다.
+- `RuntimeShaderMaterialResolver`는 번들 머티리얼을 런타임 복제해 색·수치 튜닝은 보존하고,
+  `Shader.Find`로 현재 플레이어가 보유한 Always Included Shader에 다시 연결한다. 레이저뿐 아니라
+  원래 함께 깨졌던 적 사거리 오라·정면 실드와 같은 셰이더를 쓰는 아군 파동·충격파에도 동일하게
+  적용했다.
+- 복제 머티리얼 캐시는 `GameManager.Awake()`에서 비운다. 도메인 리로드 없는 Retry에서 이전 씬의
+  파괴된 머티리얼이 남지 않게 하면서, 효과별 런타임 인스턴스마다 머티리얼을 새로 만드는 낭비는
+  피한다.
+- 컴파일은 `failed=false, errors=[]`로 통과했다. 최종 화면 검수는 사용자가 Play Mode에서 직접
+  수행한다.
