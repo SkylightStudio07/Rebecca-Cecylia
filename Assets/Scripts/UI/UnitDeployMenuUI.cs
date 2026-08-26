@@ -22,6 +22,7 @@ namespace RCCom.UI
         [SerializeField] private TextMeshProUGUI commandPointsText;
 
         private readonly List<UnitDeployButton> _buttons = new();
+        private bool _isTemporarilyHidden;
 
         public bool IsVisible { get; private set; }
         public int ButtonCount => _buttons.Count;
@@ -63,7 +64,22 @@ namespace RCCom.UI
         public void RefreshAvailability()
         {
             bool shouldShow = deployController != null && deployController.IsAvailable;
-            SetVisible(shouldShow);
+            SetVisible(shouldShow && !_isTemporarilyHidden);
+        }
+
+        /// <summary>
+        /// 카드 선택처럼 화면 중앙의 필수 선택 UI가 배치 탭보다 우선해야 할 때 사용한다.
+        /// 해제 시 단순히 켜지 않고 현재 오퍼레이터의 로스터를 다시 확인해 원래 상태로 복원한다.
+        /// </summary>
+        public void SetTemporarilyHidden(bool hidden)
+        {
+            if (_isTemporarilyHidden == hidden)
+            {
+                return;
+            }
+
+            _isTemporarilyHidden = hidden;
+            RefreshAvailability();
         }
 
         /// <summary>현재 오퍼레이터의 유닛 Definition 목록으로 선택 버튼을 다시 만든다.</summary>

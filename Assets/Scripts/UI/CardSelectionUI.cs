@@ -29,6 +29,7 @@ namespace RCCom.UI
         [SerializeField] private Button[] cardButtons;
         [SerializeField] private TextMeshProUGUI[] cardNameTexts;
         [SerializeField] private TextMeshProUGUI[] cardDescriptionTexts;
+        [SerializeField] private UnitDeployMenuUI unitDeployMenuUI;
 
         [Tooltip("카드 종류별 프레임 이미지 (인덱스는 cardButtons 등과 동일하게 대응)")]
         [SerializeField] private Image[] cardFrameImages;
@@ -40,6 +41,13 @@ namespace RCCom.UI
 
         private void Awake()
         {
+            if (unitDeployMenuUI == null)
+            {
+                // 기존 DefenseScene을 다시 굽지 않아도 동작하게 하되, 인스펙터 연결이 있으면
+                // 그것을 우선한다. 두 UI 모두 같은 전투 Canvas에 하나씩만 존재한다.
+                unitDeployMenuUI = FindFirstObjectByType<UnitDeployMenuUI>();
+            }
+
             Hide();
         }
 
@@ -98,6 +106,11 @@ namespace RCCom.UI
 
         private void Show()
         {
+            if (unitDeployMenuUI != null)
+            {
+                unitDeployMenuUI.SetTemporarilyHidden(true);
+            }
+
             panelGroup.alpha = 1f;
             panelGroup.interactable = true;
             panelGroup.blocksRaycasts = true;
@@ -108,6 +121,11 @@ namespace RCCom.UI
             panelGroup.alpha = 0f;
             panelGroup.interactable = false;
             panelGroup.blocksRaycasts = false;
+
+            if (unitDeployMenuUI != null)
+            {
+                unitDeployMenuUI.SetTemporarilyHidden(false);
+            }
         }
     }
 }

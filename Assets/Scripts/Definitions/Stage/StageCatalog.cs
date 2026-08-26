@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using RCCom.Data;
 using UnityEngine;
 
 namespace RCCom.Definitions.Stage
@@ -34,6 +35,83 @@ namespace RCCom.Definitions.Stage
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// 유한 스테이지의 해금 정본은 같은 챕터의 클리어 기록이다. 이미 클리어한 노드와
+        /// 그 바로 다음 노드는 열어 두고, 클리어 기록이 전혀 없는 구버전 저장 데이터만
+        /// bestWave 기준으로 복구한다.
+        /// </summary>
+        public bool IsUnlocked(StageCatalogEntry target, PlayerProfile profile)
+        {
+            if (target == null)
+            {
+                return false;
+            }
+
+            if (profile == null)
+            {
+                return target.requiredBestWave <= 0;
+            }
+
+            if (profile.HasClearedStage(target.stageId))
+            {
+                return true;
+            }
+
+            StageCatalogEntry previous = FindPreviousInChapter(target);
+            if (previous == null || profile.HasClearedStage(previous.stageId))
+            {
+                return true;
+            }
+
+            bool hasStageHistory = profile.clearedStageIds != null && profile.clearedStageIds.Count > 0;
+            if (!hasStageHistory)
+            {
+                // clearedStageIds 도입 이전 저장은 진행도를 잃지 않도록 한 번만 레거시 값을 읽는다.
+                return target.IsUnlocked(profile.bestWave);
+            }
+
+            // 뒤쪽 스테이지의 클리어 기록만 남은 저장에서도 앞 노드 재도전을 막지 않는다.
+            for (int i = 0; entries != null && i < entries.Count; i++)
+            {
+                StageCatalogEntry cleared = entries[i];
+                if (cleared != null && cleared.order > target.order &&
+                    string.Equals(cleared.chapterId, target.chapterId, System.StringComparison.OrdinalIgnoreCase) &&
+                    profile.HasClearedStage(cleared.stageId))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        public bool IsPlayable(StageCatalogEntry target, PlayerProfile profile)
+        {
+            return IsUnlocked(target, profile) && target != null && target.HasBattleData;
+        }
+
+        private StageCatalogEntry FindPreviousInChapter(StageCatalogEntry target)
+        {
+            StageCatalogEntry previous = null;
+            for (int i = 0; entries != null && i < entries.Count; i++)
+            {
+                StageCatalogEntry candidate = entries[i];
+                if (candidate == null || candidate.order >= target.order ||
+                    !string.Equals(candidate.chapterId, target.chapterId,
+                        System.StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                if (previous == null || candidate.order > previous.order)
+                {
+                    previous = candidate;
+                }
+            }
+
+            return previous;
         }
     }
 }

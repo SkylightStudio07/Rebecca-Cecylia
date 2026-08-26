@@ -94,7 +94,7 @@ namespace RCCom.UI
                     }
 
                     bool cleared = profile.HasClearedStage(entry.stageId);
-                    bool unlocked = entry.IsUnlocked(profile.bestWave);
+                    bool unlocked = stageCatalog.IsUnlocked(entry, profile);
                     totalCount++;
                     if (cleared) { clearedCount++; }
                     else if (nextObjective == null && unlocked) { nextObjective = entry; }

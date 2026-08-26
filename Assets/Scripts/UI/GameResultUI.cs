@@ -300,7 +300,7 @@ namespace RCCom.UI
                         StageCatalogEntry candidate = stageCatalog.entries[i];
                         if (candidate == null || candidate.order <= current.order ||
                             candidate.chapterId != current.chapterId ||
-                            !candidate.IsPlayable(profile != null ? profile.bestWave : 0))
+                            !stageCatalog.IsPlayable(candidate, profile))
                         {
                             continue;
                         }

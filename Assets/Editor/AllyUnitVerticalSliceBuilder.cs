@@ -101,6 +101,36 @@ namespace RCCom.EditorTools
             Debug.Log("[AllyUnitVerticalSliceBuilder] 임시 유닛 2종·지휘 포인트·DefenseScene 배선 완료");
         }
 
+        [MenuItem("RCCom/Ally Units/Make Deploy Button Background Transparent")]
+        public static void MakeDeployButtonBackgroundTransparent()
+        {
+            GameObject root = PrefabUtility.LoadPrefabContents(ButtonPrefabPath);
+            try
+            {
+                Image background = root.GetComponent<Image>();
+                if (background == null)
+                {
+                    throw new InvalidOperationException("UnitDeployButton 루트 Image를 찾지 못했습니다.");
+                }
+
+                Color color = background.color;
+                color.a = 0f;
+                background.color = color;
+                // 투명해도 Button의 클릭 영역은 이 Graphic이 계속 담당해야 한다.
+                background.raycastTarget = true;
+                EditorUtility.SetDirty(background);
+                PrefabUtility.SaveAsPrefabAsset(root, ButtonPrefabPath);
+            }
+            finally
+            {
+                PrefabUtility.UnloadPrefabContents(root);
+            }
+
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+            Debug.Log("[AllyUnitVerticalSliceBuilder] UnitDeployButton 배경을 투명하게 변경했습니다.");
+        }
+
         [MenuItem("RCCom/Ally Units/Wire Deployment Input Mode")]
         public static void WireDeploymentInputModeInDefenseScene()
         {
@@ -280,7 +310,9 @@ namespace RCCom.EditorTools
             try
             {
                 Image background = root.GetComponent<Image>();
-                background.color = new Color(0.08f, 0.16f, 0.24f, 0.96f);
+                // 실제 버튼 프레임과 유닛 아이콘만 보이고 Content 뒤에 임시 색상이 남지 않게 한다.
+                // Image는 Button의 Raycast 영역으로 계속 필요하므로 제거하지 않고 알파만 0으로 둔다.
+                background.color = new Color(0.08f, 0.16f, 0.24f, 0f);
                 Button button = root.GetComponent<Button>();
                 button.targetGraphic = background;
                 LayoutElement layout = root.GetComponent<LayoutElement>();
