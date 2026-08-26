@@ -1,0 +1,255 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e7a6450cc7b31154896bf3f88cba6b7d, type: 3}
+  m_Name: ch1-08
+  m_EditorClassIdentifier: Assembly-CSharp::RCCom.Definitions.Stage.StageDefinition
+  schemaVersion: 2
+  stageId: ch1-08
+  chapterId: ch1
+  displayName: 1-8
+  subtitle: STAGE 1-8
+  recommendedLevel: 29
+  order: 7
+  requiredBestWave: 7
+  remoteContent: 0
+  description: "1-8 \uC791\uC804 \uAD6C\uC5ED\uC785\uB2C8\uB2E4."
+  descriptionBackground: {fileID: -1690174829667754741, guid: 4025fccd83f1e0c4cb1a9e14e61be74b, type: 3}
+  battleBackground: {fileID: -1690174829667754741, guid: 4025fccd83f1e0c4cb1a9e14e61be74b, type: 3}
+  battleBackgroundPosition: {x: 0, y: 0}
+  battleBackgroundScale: {x: 3.7032115, y: 3.756487}
+  routePoints:
+  - {x: -16.62, y: -3.63}
+  - {x: -12.81, y: 1.11}
+  - {x: -8.8, y: 4.65}
+  - {x: -4.29, y: 0.17}
+  - {x: -0.29, y: -4.13}
+  - {x: 3.63, y: 0.61}
+  - {x: 7.49, y: 5.11}
+  - {x: 12.16, y: 0.04}
+  - {x: 15.47, y: -2.78}
+  pathSmoothness: 1
+  maxPointSpacing: 0.25
+  buildableCells: []
+  rewards: []
+  waves:
+  - displayName: WAVE 01
+    buildPhaseDuration: 2
+    healthMultiplier: 1.04
+    spawns:
+    - enemyId: enemy-normal
+      count: 10
+      interval: 0.65
+      initialDelay: 0
+    - enemyId: enemy-heavytanker
+      count: 1
+      interval: 2.5
+      initialDelay: 1.5
+  - displayName: WAVE 02
+    buildPhaseDuration: 1.5
+    healthMultiplier: 1.12
+    spawns:
+    - enemyId: enemy-normal
+      count: 5
+      interval: 0.65
+      initialDelay: 0.5
+    - enemyId: enemy-rusher
+      count: 1
+      interval: 0.9
+      initialDelay: 1.2
+    - enemyId: enemy-defend
+      count: 1
+      interval: 2
+      initialDelay: 2.2
+    - enemyId: enemy-heavytanker
+      count: 1
+      interval: 2.5
+      initialDelay: 2.2
+  - displayName: WAVE 03
+    buildPhaseDuration: 1.5
+    healthMultiplier: 1.2
+    spawns:
+    - enemyId: enemy-normal
+      count: 6
+      interval: 0.65
+      initialDelay: 0.5
+    - enemyId: enemy-rusher
+      count: 1
+      interval: 0.9
+      initialDelay: 1.2
+    - enemyId: enemy-defend
+      count: 2
+      interval: 2
+      initialDelay: 2.2
+    - enemyId: enemy-heavytanker
+      count: 2
+      interval: 2.5
+      initialDelay: 2.2
+  - displayName: WAVE 04
+    buildPhaseDuration: 1.5
+    healthMultiplier: 1.2800001
+    spawns:
+    - enemyId: enemy-normal
+      count: 7
+      interval: 0.65
+      initialDelay: 0.5
+    - enemyId: enemy-rusher
+      count: 1
+      interval: 0.9
+      initialDelay: 1.2
+    - enemyId: enemy-defend
+      count: 2
+      interval: 2
+      initialDelay: 2.2
+    - enemyId: enemy-heavytanker
+      count: 2
+      interval: 2.5
+      initialDelay: 2.2
+  - displayName: WAVE 05
+    buildPhaseDuration: 1.5
+    healthMultiplier: 1.3600001
+    spawns:
+    - enemyId: enemy-normal
+      count: 8
+      interval: 0.65
+      initialDelay: 0.5
+    - enemyId: enemy-rusher
+      count: 1
+      interval: 0.9
+      initialDelay: 1.2
+    - enemyId: enemy-defend
+      count: 2
+      interval: 2
+      initialDelay: 2.2
+    - enemyId: enemy-heavytanker
+      count: 2
+      interval: 2.5
+      initialDelay: 2.2
+  - displayName: WAVE 06
+    buildPhaseDuration: 1.5
+    healthMultiplier: 1.4400002
+    spawns:
+    - enemyId: enemy-normal
+      count: 9
+      interval: 0.65
+      initialDelay: 0.5
+    - enemyId: enemy-rusher
+      count: 1
+      interval: 0.9
+      initialDelay: 1.2
+    - enemyId: enemy-defend
+      count: 2
+      interval: 2
+      initialDelay: 2.2
+    - enemyId: enemy-heavytanker
+      count: 2
+      interval: 2.5
+      initialDelay: 2.2
+  - displayName: WAVE 07
+    buildPhaseDuration: 1.5
+    healthMultiplier: 1.5200002
+    spawns:
+    - enemyId: enemy-normal
+      count: 10
+      interval: 0.65
+      initialDelay: 0.5
+    - enemyId: enemy-rusher
+      count: 1
+      interval: 0.9
+      initialDelay: 1.2
+    - enemyId: enemy-defend
+      count: 2
+      interval: 2
+      initialDelay: 2.2
+    - enemyId: enemy-heavytanker
+      count: 2
+      interval: 2.5
+      initialDelay: 2.2
+  - displayName: WAVE 08
+    buildPhaseDuration: 1.5
+    healthMultiplier: 1.6000003
+    spawns:
+    - enemyId: enemy-normal
+      count: 11
+      interval: 0.65
+      initialDelay: 0.5
+    - enemyId: enemy-rusher
+      count: 1
+      interval: 0.9
+      initialDelay: 1.2
+    - enemyId: enemy-defend
+      count: 2
+      interval: 2
+      initialDelay: 2.2
+    - enemyId: enemy-heavytanker
+      count: 2
+      interval: 2.5
+      initialDelay: 2.2
+  - displayName: WAVE 09
+    buildPhaseDuration: 1.5
+    healthMultiplier: 1.6800003
+    spawns:
+    - enemyId: enemy-normal
+      count: 12
+      interval: 0.65
+      initialDelay: 0.5
+    - enemyId: enemy-rusher
+      count: 1
+      interval: 0.9
+      initialDelay: 1.2
+    - enemyId: enemy-defend
+      count: 2
+      interval: 2
+      initialDelay: 2.2
+    - enemyId: enemy-heavytanker
+      count: 2
+      interval: 2.5
+      initialDelay: 2.2
+  - displayName: WAVE 10
+    buildPhaseDuration: 1.5
+    healthMultiplier: 1.7600003
+    spawns:
+    - enemyId: enemy-normal
+      count: 13
+      interval: 0.65
+      initialDelay: 0.5
+    - enemyId: enemy-rusher
+      count: 1
+      interval: 0.9
+      initialDelay: 1.2
+    - enemyId: enemy-defend
+      count: 2
+      interval: 2
+      initialDelay: 2.2
+    - enemyId: enemy-heavytanker
+      count: 2
+      interval: 2.5
+      initialDelay: 2.2
+  - displayName: WAVE 11
+    buildPhaseDuration: 1.5
+    healthMultiplier: 1.8400004
+    spawns:
+    - enemyId: enemy-normal
+      count: 14
+      interval: 0.65
+      initialDelay: 0.5
+    - enemyId: enemy-rusher
+      count: 1
+      interval: 0.9
+      initialDelay: 1.2
+    - enemyId: enemy-defend
+      count: 2
+      interval: 2
+      initialDelay: 2.2
+    - enemyId: enemy-heavytanker
+      count: 2
+      interval: 2.5
+      initialDelay: 2.2

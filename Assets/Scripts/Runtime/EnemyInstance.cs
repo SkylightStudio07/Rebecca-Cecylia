@@ -32,6 +32,9 @@ namespace RCCom.Runtime
         private AllyUnitInstance _currentTarget;
         private AllyUnitInstance _currentMovementTarget;
         private float _attackCooldownRemaining;
+        private Vector2 _facingDirection = Vector2.right;
+        private float _baseMaxHealth;
+        private RefreshableAuraBag<EnemyInstance, EnemyEffectBase, float> _maxHealthAuras;
 
         /// <summary>
         /// 빙결 오라 타워(SlowAuraEffect) 등이 적용하는 이동속도 배율. 지속시간 기반으로
@@ -80,6 +83,7 @@ namespace RCCom.Runtime
         public bool IsAlive => _isSpawned && !_isDead && !_hasReachedGoal;
         public float MaxHealth { get; private set; }
         public AllyUnitInstance CurrentTarget => _currentTarget;
+        public Vector2 FacingDirection => _facingDirection;
 
         /// <summary>
         /// 승급 보스는 외형과 물리 Collider가 함께 커지므로 아군과의 논리적 접촉 거리도 같은
@@ -132,11 +136,14 @@ namespace RCCom.Runtime
             _runtimeData = runtimeData;
             IsPromotedBoss = isBoss;
             IsBoss = isBoss || (Data != null && Data.kind == EnemyKind.Boss);
-            MaxHealth = Mathf.Max(0f, Data.maxHealth);
+            _baseMaxHealth = Mathf.Max(0f, Data.maxHealth);
+            MaxHealth = _baseMaxHealth;
             currentHealth = MaxHealth;
+            _maxHealthAuras = new RefreshableAuraBag<EnemyInstance, EnemyEffectBase, float>();
             _path = path;
             _goal = goal;
             _pathIndex = 0;
+            RefreshFacingDirectionFromPath();
             _isDead = false;
             _hasReachedGoal = false;
             _currentTarget = null;
@@ -165,6 +172,7 @@ namespace RCCom.Runtime
                 return;
             }
 
+            TickMaxHealthAuras(deltaTime);
             TickSpeedMultiplier(deltaTime);
             TickPoison(deltaTime);
             if (!IsAlive)
@@ -215,8 +223,29 @@ namespace RCCom.Runtime
         public void ApplyHealthMultiplier(float multiplier)
         {
             float safeMultiplier = Mathf.Max(0f, multiplier);
-            MaxHealth *= safeMultiplier;
-            currentHealth *= safeMultiplier;
+            _baseMaxHealth *= safeMultiplier;
+            RefreshEffectiveMaxHealth();
+        }
+
+        /// <summary>
+        /// 사거리 안에 있는 동안 방어 오라가 매 틱 갱신하는 최대 체력 배율. 공유 Effect SO에는
+        /// 상태를 두지 않고 받는 인스턴스가 (제공자, Effect)별 만료를 소유해 여러 방어 유닛의
+        /// 오라도 서로 덮어쓰지 않는다.
+        /// </summary>
+        public void ApplyMaxHealthAura(
+            EnemyInstance source,
+            EnemyEffectBase effect,
+            float multiplier,
+            float duration)
+        {
+            if (!IsAlive || source == null || effect == null || multiplier <= 0f || duration <= 0f)
+            {
+                return;
+            }
+
+            _maxHealthAuras ??= new RefreshableAuraBag<EnemyInstance, EnemyEffectBase, float>();
+            _maxHealthAuras.Set(source, effect, multiplier, duration);
+            RefreshEffectiveMaxHealth();
         }
 
         /// <summary>회복 Effect가 사용하는 진입점. 웨이브 배율이 적용된 런타임 최대 체력을 넘지 않는다.</summary>
@@ -397,6 +426,35 @@ namespace RCCom.Runtime
             }
         }
 
+        private void TickMaxHealthAuras(float deltaTime)
+        {
+            if (_maxHealthAuras == null)
+            {
+                return;
+            }
+
+            _maxHealthAuras.Tick(Mathf.Max(0f, deltaTime));
+            RefreshEffectiveMaxHealth();
+        }
+
+        private void RefreshEffectiveMaxHealth()
+        {
+            float healthRatio = MaxHealth > Mathf.Epsilon
+                ? Mathf.Clamp01(currentHealth / MaxHealth)
+                : 0f;
+            float combinedMultiplier = 1f;
+            if (_maxHealthAuras != null)
+            {
+                foreach (float multiplier in _maxHealthAuras.Values)
+                {
+                    combinedMultiplier *= Mathf.Max(0f, multiplier);
+                }
+            }
+
+            MaxHealth = Mathf.Max(0f, _baseMaxHealth * combinedMultiplier);
+            currentHealth = MaxHealth * healthRatio;
+        }
+
         private void MoveAlongPath(float deltaTime)
         {
             if (!IsAlive || _path == null || _pathIndex >= _path.Count)
@@ -418,9 +476,14 @@ namespace RCCom.Runtime
                 {
                     ResolveGoalContact();
                 }
+                else
+                {
+                    RefreshFacingDirectionFromPath();
+                }
                 return;
             }
 
+            _facingDirection = toTarget / distance;
             float movementDistance = Mathf.Min(step, distance);
             if (_currentMovementTarget != null && _currentMovementTarget.IsAlive)
             {
@@ -448,6 +511,10 @@ namespace RCCom.Runtime
             if (_pathIndex >= _path.Count)
             {
                 ResolveGoalContact();
+            }
+            else
+            {
+                RefreshFacingDirectionFromPath();
             }
         }
 
@@ -498,6 +565,18 @@ namespace RCCom.Runtime
             }
 
             amount *= _vulnerableMultiplier;
+            EnemyContext damageContext = MakeContext(0f);
+            foreach (EnemyEffectBase effect in definition.effects)
+            {
+                if (effect is IEnemyIncomingDamageModifier modifier)
+                {
+                    amount = modifier.ModifyIncomingDamage(
+                        damageContext,
+                        Mathf.Max(0f, amount),
+                        sourcePosition);
+                }
+            }
+            amount = Mathf.Max(0f, amount);
             currentHealth -= amount;
             Damaged?.Invoke(amount);
             Debug.Log($"[EnemyDebug] {Data.displayName} 피격 -{amount} (남은 체력 {currentHealth}/{MaxHealth})"); // TODO: 확인 끝나면 삭제
@@ -547,6 +626,24 @@ namespace RCCom.Runtime
                     GetEffectiveAttackRange(_currentTarget)))
             {
                 _currentTarget = null;
+            }
+        }
+
+        private void RefreshFacingDirectionFromPath()
+        {
+            if (_path == null)
+            {
+                return;
+            }
+
+            for (int i = Mathf.Max(0, _pathIndex); i < _path.Count; i++)
+            {
+                Vector2 direction = _path[i] - position;
+                if (direction.sqrMagnitude > 0.0001f)
+                {
+                    _facingDirection = direction.normalized;
+                    return;
+                }
             }
         }
 

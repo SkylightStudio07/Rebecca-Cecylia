@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4f170f8ede2915b49820431c95b7fa26, type: 3}
+  m_Name: Enemy_MaxHealthAuraEffect
+  m_EditorClassIdentifier: Assembly-CSharp::RCCom.Effects.Enemy.Concrete.MaxHealthAuraEffect
+  healthMultiplier: 1.1
+  refreshDuration: 0.2
+  includeSelf: 0
+  material: {fileID: 2100000, guid: 4095ca7649e61ca49b278cacbe8db685, type: 2}
+  auraColor: {r: 0.18, g: 1.15, b: 0.35, a: 0.75}
+  strokeWidth: 0.018
+  glowIntensity: 0.65
+  opacity: 0.75

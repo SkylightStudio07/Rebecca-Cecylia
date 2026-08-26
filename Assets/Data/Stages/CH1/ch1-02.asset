@@ -50,6 +50,10 @@ MonoBehaviour:
       count: 4
       interval: 0.65
       initialDelay: 0
+    - enemyId: enemy-defend
+      count: 1
+      interval: 2
+      initialDelay: 1.5
   - displayName: WAVE 02
     buildPhaseDuration: 1.5
     healthMultiplier: 1.12
@@ -62,6 +66,10 @@ MonoBehaviour:
       count: 1
       interval: 0.9
       initialDelay: 1.2
+    - enemyId: enemy-defend
+      count: 1
+      interval: 2
+      initialDelay: 2.2
   - displayName: WAVE 03
     buildPhaseDuration: 1.5
     healthMultiplier: 1.2
@@ -74,3 +82,39 @@ MonoBehaviour:
       count: 1
       interval: 0.9
       initialDelay: 1.2
+    - enemyId: enemy-defend
+      count: 2
+      interval: 2
+      initialDelay: 2.2
+  - displayName: WAVE 04
+    buildPhaseDuration: 1.5
+    healthMultiplier: 1.2800001
+    spawns:
+    - enemyId: enemy-normal
+      count: 7
+      interval: 0.65
+      initialDelay: 0.5
+    - enemyId: enemy-rusher
+      count: 1
+      interval: 0.9
+      initialDelay: 1.2
+    - enemyId: enemy-defend
+      count: 2
+      interval: 2
+      initialDelay: 2.2
+  - displayName: WAVE 05
+    buildPhaseDuration: 1.5
+    healthMultiplier: 1.3600001
+    spawns:
+    - enemyId: enemy-normal
+      count: 8
+      interval: 0.65
+      initialDelay: 0.5
+    - enemyId: enemy-rusher
+      count: 1
+      interval: 0.9
+      initialDelay: 1.2
+    - enemyId: enemy-defend
+      count: 2
+      interval: 2
+      initialDelay: 2.2

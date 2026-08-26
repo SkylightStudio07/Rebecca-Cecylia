@@ -1,5 +1,7 @@
 using RCCom.Core;
+using RCCom.Effects.Enemy;
 using RCCom.Runtime.Visuals;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace RCCom.Runtime
@@ -46,11 +48,12 @@ namespace RCCom.Runtime
         private Color _baseColor;
         private float _hitFlashRemaining;
         private bool _hasFacing;
-        private float _boundMaxHealth;
         private bool _isDying;
         private Vector3 _baseLocalScale;
         private Vector3 _healthBarBaseLocalScale;
         private readonly DeathKnockbackSequencer _deathSequencer = new();
+        private readonly List<EnemyRangeAuraVisualRuntime> _rangeAuraVisuals = new();
+        private readonly List<EnemyFrontShieldVisualRuntime> _frontShieldVisuals = new();
 
         public EnemyInstance Instance { get; private set; }
 
@@ -69,10 +72,6 @@ namespace RCCom.Runtime
         public void Bind(EnemyInstance instance)
         {
             Instance = instance;
-            // WaveManager가 웨이브/스테이지 체력 배율을 적용한 뒤 View를 Bind한다. 원본
-            // Definition의 maxHealth를 분모로 쓰면 배율로 늘어난 체력이 100%를 초과해,
-            // 실제로 피해를 받아도 체력바가 한동안 만피로 Clamp되어 숨겨진다.
-            _boundMaxHealth = Mathf.Max(instance.currentHealth, Mathf.Epsilon);
             Instance.Died += HandleDied;
             Instance.ReachedGoal += HandleReachedGoal;
             Instance.Damaged += HandleDamaged;
@@ -96,6 +95,8 @@ namespace RCCom.Runtime
             }
 
             ApplyVisualSize(_spriteRenderer.sprite);
+            BuildRangeAuraVisuals();
+            BuildFrontShieldVisuals();
         }
 
         /// <summary>
@@ -122,6 +123,8 @@ namespace RCCom.Runtime
 
         private void OnDestroy()
         {
+            DisposeRangeAuraVisuals();
+            DisposeFrontShieldVisuals();
             if (Instance != null)
             {
                 Instance.Died -= HandleDied;
@@ -142,6 +145,8 @@ namespace RCCom.Runtime
             UpdateFacing(currentPosition);
 
             transform.position = currentPosition;
+            TickRangeAuraVisuals();
+            TickFrontShieldVisuals();
             TickHitFlash();
             UpdateHealthBar();
         }
@@ -168,7 +173,92 @@ namespace RCCom.Runtime
                 _healthBarBaseLocalScale.x / visualMultiplier,
                 _healthBarBaseLocalScale.y / visualMultiplier,
                 _healthBarBaseLocalScale.z);
-            healthBar.SetHealthPercent(Instance.currentHealth / _boundMaxHealth);
+            healthBar.SetHealthPercent(
+                Instance.MaxHealth > Mathf.Epsilon ? Instance.currentHealth / Instance.MaxHealth : 0f);
+        }
+
+        private void BuildRangeAuraVisuals()
+        {
+            DisposeRangeAuraVisuals();
+            if (Instance == null || Instance.definition == null || Instance.definition.effects == null)
+            {
+                return;
+            }
+
+            foreach (EnemyEffectBase effect in Instance.definition.effects)
+            {
+                if (effect is not IEnemyRangeAuraVisualEffect visualEffect ||
+                    visualEffect.Material == null)
+                {
+                    continue;
+                }
+
+                _rangeAuraVisuals.Add(new EnemyRangeAuraVisualRuntime(
+                    visualEffect,
+                    this,
+                    Instance,
+                    _spriteRenderer.sortingLayerID,
+                    _spriteRenderer.sortingOrder - 1));
+            }
+        }
+
+        private void TickRangeAuraVisuals()
+        {
+            for (int i = 0; i < _rangeAuraVisuals.Count; i++)
+            {
+                _rangeAuraVisuals[i].Tick();
+            }
+        }
+
+        private void DisposeRangeAuraVisuals()
+        {
+            for (int i = 0; i < _rangeAuraVisuals.Count; i++)
+            {
+                _rangeAuraVisuals[i].Dispose();
+            }
+            _rangeAuraVisuals.Clear();
+        }
+
+        private void BuildFrontShieldVisuals()
+        {
+            DisposeFrontShieldVisuals();
+            if (Instance == null || Instance.definition == null || Instance.definition.effects == null)
+            {
+                return;
+            }
+
+            foreach (EnemyEffectBase effect in Instance.definition.effects)
+            {
+                if (effect is not IEnemyFrontShieldVisualEffect visualEffect ||
+                    visualEffect.Material == null)
+                {
+                    continue;
+                }
+
+                _frontShieldVisuals.Add(new EnemyFrontShieldVisualRuntime(
+                    visualEffect,
+                    this,
+                    Instance,
+                    _spriteRenderer.sortingLayerID,
+                    _spriteRenderer.sortingOrder + 1));
+            }
+        }
+
+        private void TickFrontShieldVisuals()
+        {
+            for (int i = 0; i < _frontShieldVisuals.Count; i++)
+            {
+                _frontShieldVisuals[i].Tick();
+            }
+        }
+
+        private void DisposeFrontShieldVisuals()
+        {
+            for (int i = 0; i < _frontShieldVisuals.Count; i++)
+            {
+                _frontShieldVisuals[i].Dispose();
+            }
+            _frontShieldVisuals.Clear();
         }
 
         /// <summary>
@@ -261,6 +351,8 @@ namespace RCCom.Runtime
             }
 
             _isDying = true;
+            DisposeRangeAuraVisuals();
+            DisposeFrontShieldVisuals();
             if (_collider != null)
             {
                 _collider.enabled = false;

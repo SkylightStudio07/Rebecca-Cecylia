@@ -5,7 +5,8 @@
     "spritePath": "Assets/Art/Enemies/heavy tanker.png",
     "spriteForwardOffsetDegrees": -90.0,
     "effectPaths": [
-        "Assets/Data/Effects/Enemy_ContactDamageEffect_Default.asset"
+        "Assets/Data/Effects/Enemy_ContactDamageEffect_Default.asset",
+        "Assets/Data/Effects/Enemy_HeavyTankerFrontalShieldEffect.asset"
     ],
     "remoteContent": false,
     "data": {

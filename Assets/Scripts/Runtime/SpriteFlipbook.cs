@@ -107,9 +107,18 @@ namespace RCCom.Runtime
 
         private static SpriteFlipbook GetOrCreate(GameObject prefab)
         {
-            if (_availablePool.TryGetValue(prefab, out Queue<SpriteFlipbook> queue) && queue.Count > 0)
+            if (_availablePool.TryGetValue(prefab, out Queue<SpriteFlipbook> queue))
             {
-                return queue.Dequeue();
+                while (queue.Count > 0)
+                {
+                    SpriteFlipbook pooled = queue.Dequeue();
+                    // GameManager 초기화가 보장되는 정상 경로 외에도 도메인 리로드 비활성화나
+                    // 비정상 씬 전환이 있을 수 있으므로 Unity의 파괴된 참조는 여기서도 폐기한다.
+                    if (pooled != null)
+                    {
+                        return pooled;
+                    }
+                }
             }
 
             GameObject instance = Instantiate(prefab, Vector3.zero, Quaternion.identity);

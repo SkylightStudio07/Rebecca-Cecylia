@@ -115,9 +115,11 @@ namespace RCCom.Managers
             AttackFlash.ClearPool();
             FakeProjectile.ClearPool();
             ParticleBurst.ClearPool();
-            // ShockwaveRing/ScorchDecal(전투 VFX 4단계)과 LaserBeamView(5단계)가 각각 도입될 때
-            // 여기 등록이 누락돼 있었다 — 같은 이유(씬 재로드로 풀 안 인스턴스는 파괴되는데 이
-            // static 대기열은 안 비워짐)로 나머지와 동일하게 등록.
+            // 사망 플립북도 씬 오브젝트를 static 대기열에 보관하므로 누락하면 Retry/모드 전환 뒤
+            // 파괴된 참조를 꺼내 MissingReferenceException이 발생한다.
+            SpriteFlipbook.ClearPool();
+            // ShockwaveRing/ScorchDecal(전투 VFX 4단계)과 LaserBeamView(5단계)도 같은 이유로
+            // 씬 재로드 전에 남은 static 대기열을 세션 시작점에서 비운다.
             ShockwaveRing.ClearPool();
             ScorchDecal.ClearPool();
             LaserBeamView.ClearPool();

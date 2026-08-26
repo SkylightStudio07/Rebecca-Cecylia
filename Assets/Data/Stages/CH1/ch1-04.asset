@@ -339,3 +339,67 @@ MonoBehaviour:
       count: 1
       interval: 1.2
       initialDelay: 1.5
+  - displayName: WAVE 04
+    buildPhaseDuration: 1.5
+    healthMultiplier: 1.36
+    spawns:
+    - enemyId: enemy-normal
+      count: 9
+      interval: 0.65
+      initialDelay: 0.5
+    - enemyId: enemy-rusher
+      count: 2
+      interval: 0.9
+      initialDelay: 1.2
+    - enemyId: enemy-tanker
+      count: 1
+      interval: 1.2
+      initialDelay: 1.5
+  - displayName: WAVE 05
+    buildPhaseDuration: 1.5
+    healthMultiplier: 1.44
+    spawns:
+    - enemyId: enemy-normal
+      count: 10
+      interval: 0.65
+      initialDelay: 0.5
+    - enemyId: enemy-rusher
+      count: 2
+      interval: 0.9
+      initialDelay: 1.2
+    - enemyId: enemy-tanker
+      count: 1
+      interval: 1.2
+      initialDelay: 1.5
+  - displayName: WAVE 06
+    buildPhaseDuration: 1.5
+    healthMultiplier: 1.5200001
+    spawns:
+    - enemyId: enemy-normal
+      count: 11
+      interval: 0.65
+      initialDelay: 0.5
+    - enemyId: enemy-rusher
+      count: 2
+      interval: 0.9
+      initialDelay: 1.2
+    - enemyId: enemy-tanker
+      count: 1
+      interval: 1.2
+      initialDelay: 1.5
+  - displayName: WAVE 07
+    buildPhaseDuration: 1.5
+    healthMultiplier: 1.6000001
+    spawns:
+    - enemyId: enemy-normal
+      count: 12
+      interval: 0.65
+      initialDelay: 0.5
+    - enemyId: enemy-rusher
+      count: 2
+      interval: 0.9
+      initialDelay: 1.2
+    - enemyId: enemy-tanker
+      count: 1
+      interval: 1.2
+      initialDelay: 1.5
