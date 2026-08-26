@@ -63,6 +63,16 @@ MonoBehaviour:
     goldReward: 10
     expReward: 5
     previewSprite: {fileID: -6474883903819434044, guid: ce5a3bb8aa10ccb4496f938a4eede15f, type: 3}
+  - enemyId: enemy-defend
+    displayName: "\uBC29\uC5B4"
+    kind: 8
+    address: enemy/enemy-defend
+    remoteContent: 0
+    waveCost: 2
+    minWave: 1
+    goldReward: 15
+    expReward: 10
+    previewSprite: {fileID: 6068523354536302315, guid: 5d6c206d1e0d7f74d9262def6dc4215c, type: 3}
   - enemyId: enemy-heavytanker
     displayName: "\uD5E4\uBE44\uD0F1\uCEE4"
     kind: 7

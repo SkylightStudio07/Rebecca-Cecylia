@@ -15,5 +15,6 @@ namespace RCCom.Data
         Explode = 5,
         Heal = 6,
         HeavyTanker = 7,
+        Defend = 8,
     }
 }

@@ -20,6 +20,7 @@ MonoBehaviour:
   recommendedLevel: 1
   order: 4
   requiredBestWave: 4
+  remoteContent: 0
   description: "\uCC55\uD130 1\uC758 \uB9C8\uC9C0\uB9C9 \uBC29\uC5B4\uC120\uC744
     \uC9C0\uD0A4\uC2ED\uC2DC\uC624."
   descriptionBackground: {fileID: 0}
@@ -38,6 +39,7 @@ MonoBehaviour:
   - {x: 15.47, y: -2.78}
   pathSmoothness: 1
   maxPointSpacing: 0.25
+  buildableCells: []
   rewards: []
   waves:
   - displayName: WAVE 01
@@ -66,6 +68,86 @@ MonoBehaviour:
     spawns:
     - enemyId: enemy-normal
       count: 9
+      interval: 0.65
+      initialDelay: 0.5
+    - enemyId: enemy-rusher
+      count: 3
+      interval: 0.9
+      initialDelay: 1.2
+    - enemyId: enemy-tanker
+      count: 1
+      interval: 1.2
+      initialDelay: 1.5
+  - displayName: WAVE 04
+    buildPhaseDuration: 1.5
+    healthMultiplier: 1.4
+    spawns:
+    - enemyId: enemy-normal
+      count: 10
+      interval: 0.65
+      initialDelay: 0.5
+    - enemyId: enemy-rusher
+      count: 3
+      interval: 0.9
+      initialDelay: 1.2
+    - enemyId: enemy-tanker
+      count: 1
+      interval: 1.2
+      initialDelay: 1.5
+  - displayName: WAVE 05
+    buildPhaseDuration: 1.5
+    healthMultiplier: 1.48
+    spawns:
+    - enemyId: enemy-normal
+      count: 11
+      interval: 0.65
+      initialDelay: 0.5
+    - enemyId: enemy-rusher
+      count: 3
+      interval: 0.9
+      initialDelay: 1.2
+    - enemyId: enemy-tanker
+      count: 1
+      interval: 1.2
+      initialDelay: 1.5
+  - displayName: WAVE 06
+    buildPhaseDuration: 1.5
+    healthMultiplier: 1.5600001
+    spawns:
+    - enemyId: enemy-normal
+      count: 12
+      interval: 0.65
+      initialDelay: 0.5
+    - enemyId: enemy-rusher
+      count: 3
+      interval: 0.9
+      initialDelay: 1.2
+    - enemyId: enemy-tanker
+      count: 1
+      interval: 1.2
+      initialDelay: 1.5
+  - displayName: WAVE 07
+    buildPhaseDuration: 1.5
+    healthMultiplier: 1.6400001
+    spawns:
+    - enemyId: enemy-normal
+      count: 13
+      interval: 0.65
+      initialDelay: 0.5
+    - enemyId: enemy-rusher
+      count: 3
+      interval: 0.9
+      initialDelay: 1.2
+    - enemyId: enemy-tanker
+      count: 1
+      interval: 1.2
+      initialDelay: 1.5
+  - displayName: WAVE 08
+    buildPhaseDuration: 1.5
+    healthMultiplier: 1.7200001
+    spawns:
+    - enemyId: enemy-normal
+      count: 14
       interval: 0.65
       initialDelay: 0.5
     - enemyId: enemy-rusher

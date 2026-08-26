@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: Enemy-enemy-defend-Local
+  m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
+  m_GroupName: Enemy-enemy-defend-Local
+  m_GUID: 73a1234911a672449a10c8b52fc098c1
+  m_SerializeEntries:
+  - m_GUID: f135af12783024d4ba48c80df6e311aa
+    m_Address: enemy/enemy-defend
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - enemy-definition
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 2afb846ca87b5fb4d915c11291554efd, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 422a945536be4ff4ca727279a9824414, type: 2}
+    - {fileID: 11400000, guid: d3192d6afe37f164c988d6b28b818d65, type: 2}

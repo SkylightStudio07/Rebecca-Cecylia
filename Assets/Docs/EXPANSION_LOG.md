@@ -2162,3 +2162,196 @@ Phase 0 자동화 경로를 실제로 열고, 이후 오퍼레이터별 원격 �
 - Unity 6000.3.13f1에서 WebGL 플레이어와 Addressables를 같은 `1.0.1` 버전으로 빌드했고, 빌드 직후 `ReleaseStates/WebGL/1.0.1/addressables_content_state.bin`을 다시 보관했다.
 - 업로드용 `ServerData.zip`을 새 원격 콘텐츠 결과로 재생성했다. ZIP에는 `catalog_1.0.1`과 Valentina 오퍼레이터·아군 유닛 번들이 포함되며, 원격 로드 경로는 `RCCOM_REMOTE_LOAD_PATH`에서 해석한 `https://arcade.codingbot.kr/content/6a4b0df00880a934f010d7c1/live/WebGL`이다.
 - 릴리스 브랜치는 빌드 산출물 자체가 아니라 재현에 필요한 콘텐츠 상태와 릴리스 기록만 PR로 main에 반영하고, 병합 커밋에 `v1.0.1` 태그를 붙인다. `Builds/WebGL`과 `ServerData.zip`은 배포용 로컬 산출물이므로 Git에는 넣지 않는다.
+## 2026-08-26 — 1-6 힐러·1-7 자폭 드론 지형별 편성
+
+### 결정
+
+- `StageRouteTestScene`은 스테이지별 런타임 씬이 아니라 선택한 `StageDefinition`의 배경·경로·설치 셀을
+  임시로 펼치는 공용 제작 작업대로 유지한다. 마지막으로 불러온 스테이지 모습이 씬에 저장되더라도 실제
+  전투는 선택한 Definition을 공용 `DefenseScene`에 주입하므로 런타임 스테이지 선택에는 영향을 주지 않는다.
+- `enemy-heal`은 1-6, `enemy-explode`는 용암 지형 1-7의 대표 특수 적으로 분리했다. 두 적 모두 첫
+  웨이브부터 등장하고 3개 웨이브에서 수량이 `1 → 2 → 3`으로 늘어나, 마지막 웨이브 한 기만 보는
+  단조로운 구성을 피하면서 능력을 단계적으로 학습하게 한다.
+- `StageEnemyCompositionSetup`은 동일 적 ID를 찾아 갱신하고 반대 지형의 특수 적 행을 제거하는 멱등형
+  Editor 도구로 만들었다. 메뉴를 다시 실행해도 행이 중복되지 않으며, 저장 후 Stage Catalog 재생성과
+  전체 검증까지 수행한다.
+
+### 의도적으로 하지 않은 것
+
+- `enemy-heavytanker`는 등장 스테이지가 정해지지 않아 임의로 배치하지 않았다.
+- 테스트 씬이나 전투 씬을 추가로 복제하지 않았고 런타임 C#도 변경하지 않았다.
+
+## 2026-08-26 — Defend 최대 체력 오라와 1-2 첫 등장
+
+### 결정
+
+- 직렬화 호환성을 지키기 위해 `EnemyKind.Defend = 8`을 기존 값 뒤에 추가했다. `enemy-defend` 레시피는
+  접촉 공격력 0, 오라 반경 4, `MaxHealthAuraEffect` 한 개를 조립한다.
+- 방어 오라는 반경 안의 **다른 적** 최대 체력을 제공자 한 기당 10% 높이고, 사거리 안에서 매 틱 짧은
+  지속시간을 갱신한다. 사거리 이탈 또는 제공자 제거로 갱신이 끊기면 원래 상한으로 돌아간다. 여러 방어
+  유닛이 겹치면 제공자별 항목이 곱연산으로 중첩된다.
+- 오라 진입·이탈 시 현재 체력의 비율을 보존한다. 범위를 오가는 것만으로 영구 회복을 얻거나, 오라가
+  사라지는 순간 체력 수치가 비정상적으로 잘리는 일을 막기 위한 선택이다. 웨이브 체력 배율은 오라보다
+  아래의 런타임 기본 상한에 적용한다.
+- 공유 Effect SO에는 상태를 저장하지 않고, 받는 `EnemyInstance`가
+  `RefreshableAuraBag<EnemyInstance, EnemyEffectBase, float>`로 제공자별 만료 상태를 소유한다.
+- `IEnemyRangeAuraVisualEffect` 계약과 공용 `EnemyRangeAuraVisualRuntime`을 추가했다. `EnemyView`는 구체
+  적 종류를 분기하지 않고 이 계약을 구현한 Effect를 찾아 월드 반경 4와 일치하는 초록색 지속 링을 만들며,
+  사망 시 즉시 정리한다.
+- 1-2에서 처음 두 웨이브는 1기, 세 번째 이후는 2기로 등장하도록 `StageEnemyCompositionSetup`에 넣었다.
+  초반부터 능력을 보여주되 최대 체력 오라의 중첩 난도가 갑자기 커지지 않게 제한한 편성이다.
+
+### 의도적으로 하지 않은 것
+
+- Defend 전용 프리팹이나 전용 MonoBehaviour/Manager를 만들지 않았다. 공용 `EnemyView`와 Effect 조립을
+  그대로 사용해 같은 오라를 이후 다른 적 Definition에도 재사용할 수 있다.
+- 힐러처럼 일정 주기로 현재 체력을 회복시키지 않았다. 이번 능력은 범위 안에서 유지되는 최대 체력 버프로
+  분리해 두 역할이 겹치지 않게 했다.
+
+### 검증
+
+- Unity `6000.3.13f1` 배치 컴파일과 `EnemyDefenderVerifier`가 PASS했다. 범위 안·경계·범위 밖 판정,
+  웨이브 체력 배율 뒤 +10%, 자기 제외, 이탈 만료, 현재 체력 비율 보존, 초록 머티리얼 배선을 확인했다.
+- 같은 최대 체력 경로를 사용하는 `EnemyHealerVerifier`와 `EndlessBossPromotionVerifier`도 함께 PASS해
+  기존 회복 상한과 무한 보스 체력 승급 계산에 회귀가 없음을 확인했다.
+- 에디터 API로 Effect·Material·Definition·Addressables 전용 그룹을 생성하고 Roster/Catalog를 갱신했다.
+  1-1에는 Defend가 없고 1-2의 모든 웨이브에는 `1 → 1 → 2` 편성이 존재하는지를 검증한다.
+
+### 후속 크기 보정
+
+- Defend 원본은 445px 폭에 100 PPU라 Tight Sprite 실제 폭도 약 3.46으로 표시되어 다른 특수 적보다 지나치게 컸다.
+  전용 프리팹이나 런타임 배율 분기를 추가하지 않고 TextureImporter를 160 PPU로 설정했다. 투명 여백을
+  제외한 Tight Sprite의 실제 최장축은 약 2.16으로 줄어 다른 특수 적과 비슷한 체급이며, 빌더 재실행
+  시에도 이 값이 유지된다.
+
+## 2026-08-26 — Endless 사망 플립북 풀의 파괴 참조 예외 수정
+
+### 원인과 결정
+
+- 적 사망 폭발 `SpriteFlipbook`은 씬 오브젝트를 prefab별 static 대기열에 반납하지만,
+  `GameManager.Awake()`의 Retry/씬 재로드 초기화 목록에서 이 풀만 빠져 있었다. 이전 DefenseScene의
+  대기 인스턴스가 파괴된 뒤 다음 세션 첫 적 사망에서 그 참조를 꺼내 `Play()`가 transform에 접근하면서
+  `MissingReferenceException`이 발생했다.
+- `SpriteFlipbook.ClearPool()`을 `GameManager`의 최선행 세션 초기화에 등록했다. 동시에
+  `GetOrCreate()`도 대기열에서 Unity null인 파괴 참조를 발견하면 폐기하고 새 인스턴스를 만들도록 보강해,
+  도메인 리로드 비활성화나 비정상 씬 전환에서도 사망 처리가 멈추지 않게 했다.
+- 이 예외는 `EnemyInstance.Died` 이벤트 호출 도중 발생하므로 뒤쪽 구독자의 목록 정리·보상·웨이브 진행을
+  끊을 수 있었다. 자폭드론의 스폰 로직 자체를 바꾸지 않고 이벤트 체인을 정상화하는 쪽으로 수정했다.
+
+### 검증
+
+- `SpriteFlipbookPoolVerifier`가 의도적으로 파괴된 컴포넌트를 static 풀에 넣은 뒤 다음 요청에서 이를
+  건너뛰고 새 인스턴스를 생성하는지 확인한다.
+- `EnemySelfDestructVerifier`에 `enemy-explode`가 Endless 프리로드 Roster/Catalog에 등록되어 있고
+  `minWave <= 1`, 양수 `waveCost`, `EnemyKind.Explode`인지 확인하는 검증을 추가했다.
+- Unity `6000.3.13f1` 배치 컴파일에서 `SpriteFlipbookPoolVerifier`, `EnemySelfDestructVerifier`,
+  `EndlessBossPromotionVerifier`가 모두 PASS했고 프로세스가 return code 0으로 종료됐다.
+
+## 2026-08-26 — Heavy Tanker 정면 반원 방어막
+
+### 결정
+
+- `FrontalShieldEffect`를 Heavy Tanker Definition에 조립했다. 적의 현재 이동 방향과 공격 발신 위치를
+  내적해 앞쪽 180도 안의 직접 피해만 `×0.5`로 줄인다. 측면·후면 공격과 발신 위치가 없는 독 지속
+  피해는 원래 피해를 받으므로, 무조건적인 피해 절반이 아니라 배치와 측면 공격으로 대응할 수 있다.
+- `IEnemyIncomingDamageModifier` 선택 계약을 추가했다. `EnemyInstance.TakeDamage`는 이 계약을 구현한
+  Effect만 순서대로 적용하며, 다른 Enemy Effect의 기존 훅 계약은 늘리지 않았다. 공유 SO에는 상태를
+  저장하지 않고 현재 위치·이동 방향·발신 위치만으로 매 피격을 계산한다.
+- `EnemyInstance.FacingDirection`은 스폰 시 경로의 첫 유효 선분으로 초기화하고 이동 및 웨이포인트 도착
+  때 다음 선분으로 갱신한다. 따라서 코너 도착 프레임에도 피해 판정과 방어막 방향이 어긋나지 않는다.
+- `IEnemyFrontShieldVisualEffect`와 `EnemyFrontShieldVisualRuntime`을 추가해 공용 `EnemyView`가 구체 적
+  종류를 분기하지 않고 Effect 설정으로 파란 반원 방어막을 만든다. 반경 2.15의 반원은 이동 방향을
+  계속 따라가며 사망 시 즉시 제거된다.
+
+### 의도적으로 하지 않은 것
+
+- 공격을 완전히 무효화하거나 현재 체력과 별도의 방어막 HP를 만들지 않았다. 요청한 정면 피해 50%
+  감소만 적용해 기존 Heavy Tanker의 체력·이동·접촉 공격 밸런스를 유지했다.
+- Heavy Tanker 전용 프리팹·MonoBehaviour·Manager를 만들지 않았다. 다른 적도 같은 Effect 에셋을
+  Definition에 조립하면 같은 능력을 재사용할 수 있다.
+
+### 검증
+
+- `EnemyHeavyTankerShieldVerifier`가 정면 20 피해→10 적용, 측면·후면·지속 피해 20 유지, 경로 회전과
+  코너 도착 즉시 방향 갱신, 파란 Material·반경·Definition 배선을 확인한다.
+- 자폭드론, Defend 오라, 무한 보스 승급 회귀 검증도 함께 실행한다.
+- Unity `6000.3.13f1` 배치 컴파일과 위 네 검증이 모두 PASS했고 return code 0으로 종료됐다.
+
+## 2026-08-26 — Stage Studio 1-8 전장 초안 추가
+
+### 결정
+
+- `ch1-08` StageDefinition을 1-2의 전장 제작 데이터에서 복제했다. 경로 제어점, 설치 가능 셀,
+  배경 위치·배율과 웨이브 편성을 그대로 초안으로 사용하고, 식별자는 `ch1-08`, 표시 순서는 7,
+  진입 조건은 이전 진행도 7, 권장 레벨은 29로 분리했다.
+- 사용자가 만든 `stage 1-8.png`를 스테이지 선택 설명 배경과 실제 전투 배경에 모두 연결했다.
+  원본 픽셀 크기가 1-2보다 작아 같은 Transform 배율만 복사하면 전장에서 절반가량 작아지므로,
+  Sprite bounds 비율로 배율을 보정해 1-2와 동일한 월드 영역을 채우게 했다.
+  Stage Studio를 다시 열면 Definition 검색 결과에 1-8이 나타나며, 공용
+  `StageRouteTestScene`에 불러와 경로와 설치 셀을 수정할 수 있다.
+- `StageEightSetup`은 최초 생성에만 1-2를 복제한다. 이후 같은 메뉴를 실행하면 기존 1-8을
+  덮어쓰지 않고 Catalog만 다시 생성해, Stage Studio에서 사람이 수정한 동선·설치 셀이 보존된다.
+- Stage Catalog에 로컬 직접 참조를 등록하고 `Stage-ch1-08-Local` Addressables 그룹을 생성했다.
+
+### 의도적으로 하지 않은 것
+
+- 런타임 스테이지별 `.unity` 씬은 만들지 않았다. `_정현stage1-2.unity` 같은 파일은 개인 제작용
+  보조 복사본이고, 실제 전투는 공용 `DefenseScene`이 선택된 StageDefinition을 주입받는 구조다.
+  스테이지마다 씬을 복제하면 배선 수정이 여러 씬으로 갈라지므로 기존 아키텍처를 유지했다.
+- 1-8의 최종 경로와 설치 셀은 임의로 확정하지 않았다. 요청대로 1-2 초안까지만 제공하고 실제
+  배경 도로에 맞춘 좌표 편집은 Stage Studio의 Map 탭에서 이어서 수행하도록 남겼다.
+
+### 검증
+
+- Unity `6000.3.13f1` 배치 컴파일이 성공했고 `StageEightSetup` 검증이 PASS했다. 1-8 배경 연결,
+  1-2 전장 초안 복제, 배경 월드 크기 보정, 3개 웨이브 유지, Stage Catalog 로컬 참조와
+  Addressables 그룹 생성을 확인했다.
+
+### 제작 보조 씬 크기 보정
+
+- 별도로 복제되어 있던 `_정현stage1-8.unity`는 1-7 배경 참조와 `2 × 2` 배율을 그대로 갖고 있었다.
+  1-8 이미지는 1-2보다 픽셀 크기가 작아 이 보조 씬에서만 전장이 작게 보였다.
+- Editor API로 `AuthoringBattleBackground`를 1-8 Sprite에 다시 연결하고 StageDefinition의 보정 배율
+  `3.703 × 3.756`을 적용했다. MapManager의 제작 프리뷰 Definition과 배경 Renderer도 1-8에 맞춰
+  다시 배선했으며, 씬 저장 뒤 Sprite GUID·Transform 배율과 Unity 컴파일 성공을 확인했다.
+
+### 1-8 Heavy Tanker 정식 편성
+
+- 1-2 전장 초안을 복제하면서 1웨이브에만 우연히 남아 있던 `enemy-heavytanker`를 1-8의 대표 특수
+  적 편성으로 명시했다. 모든 웨이브에 등장하며 수량은 `1 → 1 → 2`, 간격은 2.5초로 설정했다.
+- Heavy Tanker는 체력 55와 정면 직접 피해 50% 감소를 함께 가지므로 일반 특수 적의 `1 → 2 → 3`
+  증가를 그대로 쓰지 않았다. 처음 두 웨이브에서 한 기의 측면 대응을 학습시키고 마지막 웨이브에만
+  두 기를 배치해 난이도 급등을 제한했다.
+- `StageEnemyCompositionSetup`의 멱등형 편성에 포함했다. 메뉴를 반복 실행해도 Heavy Tanker 행이
+  중복되지 않고 기존 행의 수량·간격만 확정값으로 갱신된다.
+
+### 검증
+
+- Unity `6000.3.13f1` 배치 컴파일과 Heavy Tanker 웨이브별 수량 검증이 PASS했다. Stage Catalog를
+  다시 생성했고 `StageAssetValidator`는 8개 스테이지에서 오류 0건을 확인했다.
+
+## 2026-08-26 — CH1 스테이지 웨이브 수 확장
+
+### 결정
+
+- 스테이지별 웨이브 수를 `1-1=3`, `1-2=5`, `1-3=6`, `1-4=7`, `1-5=8`, `1-6=9`,
+  `1-7=10`, `1-8=11`로 확장했다. 1-1은 입문 길이를 유지하고 1-2부터 스테이지 번호에 3을
+  더한 수만큼 진행한다.
+- 기존 1~3웨이브는 사람이 조정한 편성을 그대로 보존했다. 추가 웨이브는 직전 웨이브를 깊은 복사한
+  뒤 일반 적을 한 기 늘리고 체력 배율을 `+0.08` 적용해 기존 생성기의 난이도 증가 규칙을 이어간다.
+- 힐러와 자폭 드론은 기존 `waveIndex + 1` 규칙을 11웨이브까지 적용하면 최대 10~11기가 동시에
+  편성되므로 3기 상한을 추가했다. Defend와 Heavy Tanker는 처음 두 웨이브 1기, 이후 2기 상한을
+  유지해 후반 난이도는 일반 적 수와 체력 배율이 담당하게 했다.
+- `StageWaveCountExpander` Editor 도구를 추가했다. 목표보다 부족한 웨이브만 추가하며, 이미 목표보다
+  많은 수작업 데이터는 자동 삭제하지 않고 중단해 제작 데이터 유실을 막는다.
+
+### 검증
+
+- Unity `6000.3.13f1` 배치 컴파일과 전체 CH1 웨이브 수 검증이 PASS했다. 모든 추가 웨이브에 이름,
+  적 편성, 양수 체력 배율이 존재하고 Stage Catalog 재생성 및 `StageAssetValidator` 오류 0건을 확인했다.
+
+## 2026-08-26 — WebGL 1.1.0 릴리스
+
+- PR #29의 적 특수 능력과 CH1 확장은 새 런타임 C#과 셰이더를 포함하므로 1.0.1 콘텐츠 드랍으로 우회하지 않고, 최신 main과 통합한 새 플레이어 호환성 라인 `1.1.0`으로 빌드했다.
+- Unity `6000.3.13f1`에서 컴파일, Defend·Heavy Tanker·사망 플립북·자폭드론·1-8·CH1 웨이브 수 검증과 Addressables WebGL 사전 검증을 통과했다. WebGL 플레이어는 241,555,970바이트로 완료됐고 `ReleaseStates/WebGL/1.1.0/addressables_content_state.bin`을 같은 빌드 직후 보관했다.
+- 업로드용 `ServerData.zip`은 62,637,955바이트이며 `catalog_1.1.0`과 기존 원격 오퍼레이터 번들을 포함한다. 신규 Defend와 1-8은 Local 그룹이므로 플레이어 빌드에 포함되고, ZIP만 기존 1.0.1 플레이어에 올리는 배포는 지원하지 않는다.
