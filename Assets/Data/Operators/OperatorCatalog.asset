@@ -214,7 +214,7 @@ MonoBehaviour:
     shopUpperBodyPortrait: {fileID: 0}
     shopUpperBodyPortraitDimmed: {fileID: 0}
     previewPortraitAddress: operator/valentina/portrait/selection
-    managementPortraitAddress: operator/valentina/portrait/management
+    managementPortraitAddress: operator/valentina/portrait/shop
     shopPortraitAddress: operator/valentina/portrait/shop
     shopUpperBodyPortraitAddress: operator/valentina/portrait/shop-upper
     shopUpperBodyPortraitDimmedAddress: operator/valentina/portrait/shop-upper-dimmed

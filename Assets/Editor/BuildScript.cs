@@ -47,6 +47,12 @@ public static class BuildScript
     private static void BuildPlayer(BuildTarget target, string outputPath)
     {
         string[] scenes = ValidateConfiguration(target);
+        string buildVersion = PlayerSettings.bundleVersion;
+        if (string.IsNullOrWhiteSpace(buildVersion))
+        {
+            throw new InvalidOperationException("PlayerSettings.bundleVersion이 비어 있습니다.");
+        }
+
         if (EditorUserBuildSettings.activeBuildTarget != target)
         {
             throw new InvalidOperationException(
@@ -86,11 +92,18 @@ public static class BuildScript
 
             Debug.Log($"[BuildScript] {target} 빌드 완료: {outputPath} ({report.summary.totalSize} bytes)");
 
+            if (!string.Equals(PlayerSettings.bundleVersion, buildVersion, StringComparison.Ordinal))
+            {
+                throw new InvalidOperationException(
+                    $"빌드 도중 PlayerSettings.bundleVersion이 바뀌었습니다: {buildVersion} -> " +
+                    $"{PlayerSettings.bundleVersion}. 플레이어와 릴리스 기록이 어긋날 수 있어 보관을 중단합니다.");
+            }
+
             // 콘텐츠 상태 파일은 이 플레이어 빌드와 짝을 이룰 때만 의미가 있으므로 빌드가
             // 성공한 뒤에만 보관한다. 기본 경로의 상태 파일은 콘텐츠를 다시 구울 때마다
             // 덮어써지고 .gitignore 대상이라, 여기서 버전 폴더로 복사해두지 않으면 이 빌드에는
             // 두 번 다시 라이브 드랍을 내려보낼 수 없게 된다.
-            AddressablesContentUpdateBuilder.ArchiveContentState(target);
+            AddressablesContentUpdateBuilder.ArchiveContentState(target, buildVersion);
         }
         finally
         {

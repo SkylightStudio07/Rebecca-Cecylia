@@ -1,50 +1,14 @@
 using UnityEditor;
-using UnityEditor.Callbacks;
 using UnityEngine;
 
-[InitializeOnLoad]
 public class VersionManager
 {
-    private static bool AutoIncrease = true;
-    private const string AutoIncreaseMenuName = "Build/Auto Increase Build Version";
-
-    static VersionManager()
-    {
-        AutoIncrease = EditorPrefs.GetBool(AutoIncreaseMenuName, true);
-    }
-
-    /////////////////////// Settings ///////////////////////
-
-    [MenuItem(AutoIncreaseMenuName, false, 1)]
-    private static void SetAutoIncrease()
-    {
-        AutoIncrease = !AutoIncrease;
-        EditorPrefs.SetBool(AutoIncreaseMenuName, AutoIncrease);
-        Debug.Log("Auto Increase : " + AutoIncrease);
-    }
-
-    [MenuItem(AutoIncreaseMenuName, true)]
-    private static bool SetAutoIncreaseValidate()
-    {
-        Menu.SetChecked(AutoIncreaseMenuName, AutoIncrease);
-        return true;
-    }
-
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     [MenuItem("Build/Check Current Version", false, 2)]
     private static void CheckCurrentVersion()
     {
         Debug.Log("Build v" + PlayerSettings.bundleVersion +
             " (" + PlayerSettings.Android.bundleVersionCode + ")");
     }
-
-    [PostProcessBuild(1)]
-    public static void OnPostprocessBuild(BuildTarget target, string pathToBuiltProject)
-    {
-        if (AutoIncrease) IncreaseBuild();
-    }
-
-    /////////////////////// Increase ///////////////////////
 
     [MenuItem("Build/Increase Major Version", false, 51)]
     private static void IncreaseMajor()
@@ -60,7 +24,8 @@ public class VersionManager
         EditVersion(0, 1, -int.Parse(lines[2]));
     }
 
-    private static void IncreaseBuild()
+    [MenuItem("Build/Increase Patch Version", false, 53)]
+    private static void IncreasePatch()
     {
         EditVersion(0, 0, 1);
     }
@@ -78,6 +43,9 @@ public class VersionManager
                                        Build.ToString("0");
         PlayerSettings.Android.bundleVersionCode =
             MajorVersion * 10000 + MinorVersion * 1000 + Build;
+        // 빌드 완료 뒤 자동으로 다음 번호를 쓰면 방금 만든 플레이어와 ReleaseStates 폴더가
+        // 서로 다른 버전을 기록한다. 릴리스 번호는 빌드 전에 명시적으로 바꾸고 즉시 저장한다.
+        AssetDatabase.SaveAssets();
         CheckCurrentVersion();
     }
 }

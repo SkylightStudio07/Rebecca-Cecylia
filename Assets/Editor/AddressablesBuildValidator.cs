@@ -153,6 +153,89 @@ namespace RCCom.EditorTools
                     "라이브 오퍼레이터 카탈로그가 원격 그룹에 있지 않습니다. 로컬 그룹에 있으면 " +
                     "이미 배포된 빌드는 이 카탈로그를 영영 받지 못합니다.");
             }
+
+            ValidateOperatorCatalogAddresses(settings, liveOperators);
+        }
+
+        private static void ValidateOperatorCatalogAddresses(
+            AddressableAssetSettings settings, OperatorCatalog catalog)
+        {
+            var availableAddresses = new HashSet<string>(StringComparer.Ordinal);
+            foreach (AddressableAssetGroup group in settings.groups)
+            {
+                if (group == null)
+                {
+                    continue;
+                }
+
+                foreach (AddressableAssetEntry addressableEntry in group.entries)
+                {
+                    if (addressableEntry != null && !string.IsNullOrWhiteSpace(addressableEntry.address))
+                    {
+                        availableAddresses.Add(addressableEntry.address);
+                    }
+                }
+            }
+
+            var missing = new List<string>();
+            foreach (OperatorCatalogEntry catalogEntry in catalog.entries)
+            {
+                if (catalogEntry == null)
+                {
+                    continue;
+                }
+
+                RequireAddress(catalogEntry.operatorId, "definition", catalogEntry.address,
+                    availableAddresses, missing);
+                RequireAddress(catalogEntry.operatorId, "selection", catalogEntry.previewPortraitAddress,
+                    availableAddresses, missing);
+                RequireAddress(catalogEntry.operatorId, "management", catalogEntry.managementPortraitAddress,
+                    availableAddresses, missing);
+                RequireAddress(catalogEntry.operatorId, "shop", catalogEntry.shopPortraitAddress,
+                    availableAddresses, missing);
+                RequireAddress(catalogEntry.operatorId, "shop-upper", catalogEntry.shopUpperBodyPortraitAddress,
+                    availableAddresses, missing);
+                RequireAddress(catalogEntry.operatorId, "shop-upper-dimmed",
+                    catalogEntry.shopUpperBodyPortraitDimmedAddress, availableAddresses, missing);
+                RequireAddress(catalogEntry.operatorId, "unlock-reward",
+                    catalogEntry.unlockRewardPortraitAddress, availableAddresses, missing);
+
+                if (catalogEntry.unitPreviews == null)
+                {
+                    continue;
+                }
+
+                foreach (AllyUnitCatalogEntry unit in catalogEntry.unitPreviews)
+                {
+                    if (unit == null)
+                    {
+                        continue;
+                    }
+
+                    RequireAddress(catalogEntry.operatorId, $"unit:{unit.unitId}", unit.address,
+                        availableAddresses, missing);
+                    RequireAddress(catalogEntry.operatorId, $"unit-preview:{unit.unitId}",
+                        unit.previewIconAddress, availableAddresses, missing);
+                }
+            }
+
+            if (missing.Count > 0)
+            {
+                throw new InvalidOperationException(
+                    "라이브 카탈로그가 실제 Addressables 엔트리에 없는 주소를 참조합니다:\n  " +
+                    string.Join("\n  ", missing) +
+                    "\nRCCom/Operators/Build Operator Catalog And Addressables를 다시 실행하세요.");
+            }
+        }
+
+        private static void RequireAddress(
+            string operatorId, string slot, string address, HashSet<string> availableAddresses,
+            List<string> missing)
+        {
+            if (!string.IsNullOrWhiteSpace(address) && !availableAddresses.Contains(address))
+            {
+                missing.Add($"{operatorId}/{slot}: {address}");
+            }
         }
     }
 }

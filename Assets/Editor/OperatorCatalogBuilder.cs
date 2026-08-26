@@ -393,30 +393,30 @@ namespace RCCom.EditorTools
         {
             bool changed = false;
             changed |= AssignPortraitEntry(
-                settings, group, recipe.selectionPortraitPath, recipe.operatorId, PortraitSlotSelection);
+                settings, group, recipe, recipe.selectionPortraitPath, PortraitSlotSelection);
             changed |= AssignPortraitEntry(
-                settings, group, recipe.managementPortraitPath, recipe.operatorId, PortraitSlotManagement);
+                settings, group, recipe, recipe.managementPortraitPath, PortraitSlotManagement);
             changed |= AssignPortraitEntry(
-                settings, group, recipe.shopPortraitPath, recipe.operatorId, PortraitSlotShop);
+                settings, group, recipe, recipe.shopPortraitPath, PortraitSlotShop);
             changed |= AssignPortraitEntry(
-                settings, group, recipe.shopUpperBodyPortraitPath, recipe.operatorId, PortraitSlotShopUpper);
+                settings, group, recipe, recipe.shopUpperBodyPortraitPath, PortraitSlotShopUpper);
             changed |= AssignPortraitEntry(
-                settings, group, recipe.shopUpperBodyPortraitDimmedPath, recipe.operatorId,
+                settings, group, recipe, recipe.shopUpperBodyPortraitDimmedPath,
                 PortraitSlotShopUpperDimmed);
             // unlockRewardPortraitPath가 비어 있으면 CreateEntry가 selection 주소로
             // 대신 채운다 — 이미 등록된 selection 항목을 재사용하므로 여기서는 등록하지 않는다.
             if (!string.IsNullOrWhiteSpace(recipe.unlockRewardPortraitPath))
             {
                 changed |= AssignPortraitEntry(
-                    settings, group, recipe.unlockRewardPortraitPath, recipe.operatorId, PortraitSlotUnlockReward);
+                    settings, group, recipe, recipe.unlockRewardPortraitPath, PortraitSlotUnlockReward);
             }
 
             return changed;
         }
 
         private static bool AssignPortraitEntry(
-            AddressableAssetSettings settings, AddressableAssetGroup group, string spritePath, string operatorId,
-            string slot)
+            AddressableAssetSettings settings, AddressableAssetGroup group, OperatorAssetRecipe recipe,
+            string spritePath, string slot)
         {
             if (string.IsNullOrWhiteSpace(spritePath))
             {
@@ -424,7 +424,8 @@ namespace RCCom.EditorTools
             }
 
             return AssignAddressableEntry(
-                settings, group, spritePath, GetPortraitAddress(operatorId, slot), PortraitAddressablesLabel);
+                settings, group, spritePath, ResolvePortraitAddress(recipe, spritePath, slot),
+                PortraitAddressablesLabel);
         }
 
         private static bool AssignAddressableEntry(
@@ -467,9 +468,65 @@ namespace RCCom.EditorTools
 
         private static string ResolvePortraitAddress(OperatorAssetRecipe recipe, string spritePath, string slot)
         {
-            return recipe.remoteContent && !string.IsNullOrWhiteSpace(spritePath)
-                ? GetPortraitAddress(recipe.operatorId, slot)
-                : null;
+            if (!recipe.remoteContent || string.IsNullOrWhiteSpace(spritePath))
+            {
+                return null;
+            }
+
+            // Addressables는 하나의 GUID에 주소를 하나만 보유한다. 같은 PNG를 여러 화면 슬롯이
+            // 공유하면 예전 빌더는 나중 슬롯의 주소로 엔트리를 덮어쓰면서 카탈로그에는 앞 슬롯
+            // 주소를 남겼다. 기존 산출물의 승자(마지막 등록 슬롯)를 canonical 주소로 유지하면
+            // 불필요한 번들 주소 교체 없이 모든 카탈로그 필드가 실제 엔트리를 함께 가리킨다.
+            string canonicalSlot = ResolveCanonicalPortraitSlot(recipe, spritePath, slot);
+            return GetPortraitAddress(recipe.operatorId, canonicalSlot);
+        }
+
+        private static string ResolveCanonicalPortraitSlot(
+            OperatorAssetRecipe recipe, string spritePath, string fallbackSlot)
+        {
+            if (MatchesPortraitAsset(spritePath, recipe.unlockRewardPortraitPath))
+            {
+                return PortraitSlotUnlockReward;
+            }
+
+            if (MatchesPortraitAsset(spritePath, recipe.shopUpperBodyPortraitDimmedPath))
+            {
+                return PortraitSlotShopUpperDimmed;
+            }
+
+            if (MatchesPortraitAsset(spritePath, recipe.shopUpperBodyPortraitPath))
+            {
+                return PortraitSlotShopUpper;
+            }
+
+            if (MatchesPortraitAsset(spritePath, recipe.shopPortraitPath))
+            {
+                return PortraitSlotShop;
+            }
+
+            if (MatchesPortraitAsset(spritePath, recipe.managementPortraitPath))
+            {
+                return PortraitSlotManagement;
+            }
+
+            if (MatchesPortraitAsset(spritePath, recipe.selectionPortraitPath))
+            {
+                return PortraitSlotSelection;
+            }
+
+            return fallbackSlot;
+        }
+
+        private static bool MatchesPortraitAsset(string leftPath, string rightPath)
+        {
+            if (string.IsNullOrWhiteSpace(leftPath) || string.IsNullOrWhiteSpace(rightPath))
+            {
+                return false;
+            }
+
+            string leftGuid = AssetDatabase.AssetPathToGUID(leftPath);
+            string rightGuid = AssetDatabase.AssetPathToGUID(rightPath);
+            return !string.IsNullOrEmpty(leftGuid) && string.Equals(leftGuid, rightGuid, StringComparison.Ordinal);
         }
 
         public static string GetGroupName(string operatorId, bool remoteContent)
