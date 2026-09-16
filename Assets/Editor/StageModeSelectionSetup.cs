@@ -602,6 +602,9 @@ namespace RCCom.EditorTools
             Button button = created.AddComponent<Button>();
             button.targetGraphic = created.GetComponent<Image>();
             button.transition = Selectable.Transition.ColorTint;
+            Navigation nav = button.navigation;
+            nav.mode = Navigation.Mode.None;
+            button.navigation = nav;
             CreateText("Label", created.transform, label, font, 20f, Vector2.zero, Vector2.one,
                 TextAlignmentOptions.Center);
             return button;

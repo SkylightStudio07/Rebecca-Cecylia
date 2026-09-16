@@ -32,6 +32,19 @@ namespace RCCom.UI
         private void Awake()
         {
             SetPanelVisible(false);
+            DisableNavigation(stageButton);
+            DisableNavigation(endlessButton);
+            DisableNavigation(backButton);
+        }
+
+        private static void DisableNavigation(Button button)
+        {
+            if (button != null)
+            {
+                Navigation nav = button.navigation;
+                nav.mode = Navigation.Mode.None;
+                button.navigation = nav;
+            }
         }
 
         public void Open()
@@ -126,15 +139,10 @@ namespace RCCom.UI
 
         private void FocusDefaultButton()
         {
-            if (EventSystem.current == null)
+            if (EventSystem.current != null)
             {
-                return;
-            }
-
-            Button target = stageButton != null && stageButton.interactable ? stageButton : endlessButton;
-            if (target != null && target.interactable)
-            {
-                EventSystem.current.SetSelectedGameObject(target.gameObject);
+                // 마우스 호버 스프라이트가 즉시 정상 전환되도록 강제 포커스를 비워둡니다.
+                EventSystem.current.SetSelectedGameObject(null);
             }
         }
     }
